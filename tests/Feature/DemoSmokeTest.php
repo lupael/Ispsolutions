@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class DemoSmokeTest extends TestCase
@@ -34,7 +32,7 @@ class DemoSmokeTest extends TestCase
             $response = $this->get($url);
 
             $response->assertStatus(200)
-                    ->assertViewIs("pages.{$demo}.index");
+                ->assertViewIs("pages.{$demo}.index");
 
             // Check that the page doesn't have actual errors (not navigation links)
             $content = $response->getContent();
@@ -101,7 +99,7 @@ class DemoSmokeTest extends TestCase
     {
         $response = $this->get('/demo8');
         $response->assertStatus(200)
-                ->assertViewIs('pages.demo8.index');
+            ->assertViewIs('pages.demo8.index');
 
         // Demo8 specific content check
         $content = $response->getContent();

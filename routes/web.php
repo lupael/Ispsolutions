@@ -1,9 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-Route::get('/', function () { return redirect('/demo1'); });
-use App\Http\Controllers\Demo1Controller;
-use App\Http\Controllers\Demo2Controller;
+
+Route::get('/', function () {
+    return redirect('/demo1');
+});
 
 /*
 |--------------------------------------------------------------------------

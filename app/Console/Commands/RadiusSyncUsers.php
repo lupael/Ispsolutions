@@ -33,18 +33,19 @@ class RadiusSyncUsers extends Command
         $force = $this->option('force');
 
         $query = NetworkUser::query();
-        
+
         if ($status) {
             $query->where('status', $status);
         }
-        
+
         $users = $query->get();
         $total = $users->count();
 
         $this->info("Found {$total} users to sync");
 
-        if (!$force && !$this->confirm('Do you want to continue?', true)) {
+        if (! $force && ! $this->confirm('Do you want to continue?', true)) {
             $this->info('Sync cancelled.');
+
             return Command::SUCCESS;
         }
 
@@ -67,7 +68,7 @@ class RadiusSyncUsers extends Command
                 $this->newLine();
                 $this->error("Failed to sync user '{$user->username}': " . $e->getMessage());
             }
-            
+
             $bar->advance();
         }
 

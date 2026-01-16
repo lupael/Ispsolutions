@@ -16,7 +16,7 @@ class IpSubnetFactory extends Factory
     public function definition(): array
     {
         $thirdOctet = fake()->numberBetween(1, 254);
-        
+
         return [
             'ip_pool_id' => IpPool::factory(),
             'network' => "192.168.{$thirdOctet}.0",

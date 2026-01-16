@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('remote_address', 45)->nullable();
             $table->enum('status', ['active', 'inactive', 'synced'])->default('active');
             $table->timestamps();
-            
+
             $table->index('router_id');
             $table->index('username');
             $table->index('status');

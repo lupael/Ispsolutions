@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('nas_ip', 45)->nullable();
             $table->enum('status', ['active', 'terminated'])->default('active');
             $table->timestamps();
-            
+
             $table->index('user_id');
             $table->index('session_id');
             $table->index('status');

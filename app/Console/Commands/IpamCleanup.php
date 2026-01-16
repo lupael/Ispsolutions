@@ -33,11 +33,12 @@ class IpamCleanup extends Command
         $days = (int) $this->option('days');
         $force = $this->option('force');
 
-        $this->info("Starting IPAM cleanup...");
+        $this->info('Starting IPAM cleanup...');
         $this->info("Cleaning up allocations older than {$days} days");
 
-        if (!$force && !$this->confirm('Do you want to continue?', true)) {
+        if (! $force && ! $this->confirm('Do you want to continue?', true)) {
             $this->info('Cleanup cancelled.');
+
             return Command::SUCCESS;
         }
 
@@ -46,11 +47,12 @@ class IpamCleanup extends Command
 
             $this->info("✓ Cleaned up {$result['expired_count']} expired allocations");
             $this->info("✓ Cleaned up {$result['history_count']} old history records");
-            $this->info("Cleanup completed successfully!");
+            $this->info('Cleanup completed successfully!');
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error("Cleanup failed: " . $e->getMessage());
+            $this->error('Cleanup failed: ' . $e->getMessage());
+
             return Command::FAILURE;
         }
     }

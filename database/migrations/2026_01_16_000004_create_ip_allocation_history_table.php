@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('allocated_at')->nullable();
             $table->timestamp('released_at')->nullable();
             $table->timestamps();
-            
+
             $table->index('ip_address');
             $table->index('username');
             $table->index('action');

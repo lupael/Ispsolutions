@@ -41,7 +41,7 @@ class IpamIntegrationTest extends TestCase
 
         // Attempt allocation with invalid data should not create records
         $initialCount = DB::table('ip_allocations')->count();
-        
+
         try {
             // This should succeed
             $allocation = $this->ipamService->allocateIP(
@@ -91,7 +91,7 @@ class IpamIntegrationTest extends TestCase
 
         // Get pool utilization
         $utilization = $this->ipamService->getPoolUtilization($pool->id);
-        
+
         // Each /29 has 6 usable IPs, total = 12, allocated = 2
         $this->assertEquals(12, $utilization['total']);
         $this->assertEquals(2, $utilization['allocated']);

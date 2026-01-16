@@ -22,7 +22,7 @@ class RadiusIntegrationTest extends TestCase
     {
         parent::setUp();
         $this->radiusService = app(RadiusService::class);
-        
+
         // Run migrations for RADIUS database
         $this->artisan('migrate', ['--database' => 'radius']);
     }
@@ -88,7 +88,7 @@ class RadiusIntegrationTest extends TestCase
         }
 
         // Verify all users in RADIUS
-        $radiusUsers = RadCheck::whereIn('username', array_map(fn($u) => $u->username, $users))
+        $radiusUsers = RadCheck::whereIn('username', array_map(fn ($u) => $u->username, $users))
             ->count();
         $this->assertEquals(5, $radiusUsers);
 
@@ -98,7 +98,7 @@ class RadiusIntegrationTest extends TestCase
         $this->assertTrue($result);
 
         // Verify user removed from RADIUS
-        $radiusUsers = RadCheck::whereIn('username', array_map(fn($u) => $u->username, $users))
+        $radiusUsers = RadCheck::whereIn('username', array_map(fn ($u) => $u->username, $users))
             ->count();
         $this->assertEquals(4, $radiusUsers);
     }

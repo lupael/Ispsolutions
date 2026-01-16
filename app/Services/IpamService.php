@@ -7,15 +7,15 @@ namespace App\Services;
 use App\Contracts\IpamServiceInterface;
 use App\Models\IpAllocation;
 use App\Models\IpAllocationHistory;
-use App\Models\IpSubnet;
 use App\Models\IpPool;
+use App\Models\IpSubnet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class IpamService implements IpamServiceInterface
 {
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function allocateIP(int $subnetId, string $macAddress, string $username): ?IpAllocation
     {
@@ -26,17 +26,19 @@ class IpamService implements IpamServiceInterface
                 ->lockForUpdate()
                 ->first();
 
-            if (!$subnet) {
-                Log::error("Subnet not found or inactive", ['subnet_id' => $subnetId]);
-                return null;
+            if (! $subnet) {
+                Log::error('Subnet not found or inactive', ['subnet_id' => $subnetId]);
+
+                return;
             }
 
             // Get the first available IP
             $availableIP = $this->findFirstAvailableIP($subnet);
 
-            if (!$availableIP) {
-                Log::warning("No available IPs in subnet", ['subnet_id' => $subnetId]);
-                return null;
+            if (! $availableIP) {
+                Log::warning('No available IPs in subnet', ['subnet_id' => $subnetId]);
+
+                return;
             }
 
             // Create the allocation
@@ -59,7 +61,7 @@ class IpamService implements IpamServiceInterface
                 'allocated_at' => now(),
             ]);
 
-            Log::info("IP allocated", [
+            Log::info('IP allocated', [
                 'allocation_id' => $allocation->id,
                 'ip' => $availableIP,
                 'username' => $username,
@@ -70,20 +72,22 @@ class IpamService implements IpamServiceInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function releaseIP(int $allocationId): bool
     {
         return DB::transaction(function () use ($allocationId) {
             $allocation = IpAllocation::lockForUpdate()->find($allocationId);
 
-            if (!$allocation) {
-                Log::error("Allocation not found", ['allocation_id' => $allocationId]);
+            if (! $allocation) {
+                Log::error('Allocation not found', ['allocation_id' => $allocationId]);
+
                 return false;
             }
 
             if ($allocation->status === 'released') {
-                Log::warning("Allocation already released", ['allocation_id' => $allocationId]);
+                Log::warning('Allocation already released', ['allocation_id' => $allocationId]);
+
                 return false;
             }
 
@@ -104,7 +108,7 @@ class IpamService implements IpamServiceInterface
                 'released_at' => now(),
             ]);
 
-            Log::info("IP released", [
+            Log::info('IP released', [
                 'allocation_id' => $allocationId,
                 'ip' => $allocation->ip_address,
             ]);
@@ -114,18 +118,18 @@ class IpamService implements IpamServiceInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getAvailableIPs(int $subnetId): array
     {
         $subnet = IpSubnet::find($subnetId);
 
-        if (!$subnet) {
+        if (! $subnet) {
             return [];
         }
 
         $allIPs = $this->generateIPRange($subnet->network, $subnet->prefix_length);
-        
+
         // Get allocated IPs
         $allocatedIPs = IpAllocation::where('subnet_id', $subnetId)
             ->where('status', 'allocated')
@@ -137,13 +141,13 @@ class IpamService implements IpamServiceInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getPoolUtilization(int $poolId): array
     {
         $pool = IpPool::find($poolId);
 
-        if (!$pool) {
+        if (! $pool) {
             return [
                 'total' => 0,
                 'allocated' => 0,
@@ -195,7 +199,7 @@ class IpamService implements IpamServiceInterface
 
         // Find first IP not in allocated set
         foreach ($allIPs as $ip) {
-            if (!isset($allocatedIPs[$ip])) {
+            if (! isset($allocatedIPs[$ip])) {
                 return $ip;
             }
         }
@@ -205,7 +209,7 @@ class IpamService implements IpamServiceInterface
 
     /**
      * Generate IP range from network and prefix length
-     * 
+     *
      * Note: This method currently only supports IPv4 addresses.
      * IPv6 support is not yet implemented.
      *
@@ -223,7 +227,7 @@ class IpamService implements IpamServiceInterface
         $end = $networkLong + $numHosts - 2;
 
         for ($i = $start; $i <= $end; $i++) {
-            $ips[] = long2ip((int)$i);
+            $ips[] = long2ip((int) $i);
         }
 
         return $ips;
@@ -235,6 +239,7 @@ class IpamService implements IpamServiceInterface
     private function calculateSubnetSize(int $prefixLength): int
     {
         $hostBits = 32 - $prefixLength;
+
         // Subtract 2 for network and broadcast addresses
         return max(0, pow(2, $hostBits) - 2);
     }

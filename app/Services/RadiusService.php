@@ -6,9 +6,9 @@ namespace App\Services;
 
 use App\Contracts\RadiusServiceInterface;
 use App\Models\NetworkUser;
+use App\Models\RadAcct;
 use App\Models\RadCheck;
 use App\Models\RadReply;
-use App\Models\RadAcct;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,14 +16,14 @@ class RadiusService implements RadiusServiceInterface
 {
     /**
      * Create a new RADIUS user
-     * 
+     *
      * SECURITY NOTE: This implementation stores passwords in cleartext using
      * the Cleartext-Password attribute, which is standard for RADIUS but has
      * security implications. Ensure the RADIUS database has appropriate access
      * controls. For enhanced security, consider using PAP with hashed passwords
      * or CHAP authentication methods.
-     * 
-     * @inheritDoc
+     *
+     * {@inheritDoc}
      */
     public function createUser(string $username, string $password, array $attributes = []): bool
     {
@@ -48,19 +48,21 @@ class RadiusService implements RadiusServiceInterface
                 }
             });
 
-            Log::info("RADIUS user created", ['username' => $username]);
+            Log::info('RADIUS user created', ['username' => $username]);
+
             return true;
         } catch (\Exception $e) {
-            Log::error("Failed to create RADIUS user", [
+            Log::error('Failed to create RADIUS user', [
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function updateUser(string $username, array $attributes): bool
     {
@@ -89,19 +91,21 @@ class RadiusService implements RadiusServiceInterface
                 }
             });
 
-            Log::info("RADIUS user updated", ['username' => $username]);
+            Log::info('RADIUS user updated', ['username' => $username]);
+
             return true;
         } catch (\Exception $e) {
-            Log::error("Failed to update RADIUS user", [
+            Log::error('Failed to update RADIUS user', [
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function deleteUser(string $username): bool
     {
@@ -111,19 +115,21 @@ class RadiusService implements RadiusServiceInterface
                 RadReply::where('username', $username)->delete();
             });
 
-            Log::info("RADIUS user deleted", ['username' => $username]);
+            Log::info('RADIUS user deleted', ['username' => $username]);
+
             return true;
         } catch (\Exception $e) {
-            Log::error("Failed to delete RADIUS user", [
+            Log::error('Failed to delete RADIUS user', [
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function syncUser(NetworkUser $user): bool
     {
@@ -145,19 +151,21 @@ class RadiusService implements RadiusServiceInterface
                 if ($exists) {
                     return $this->deleteUser($user->username);
                 }
+
                 return true;
             }
         } catch (\Exception $e) {
-            Log::error("Failed to sync RADIUS user", [
+            Log::error('Failed to sync RADIUS user', [
                 'username' => $user->username,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getAccountingData(string $username): array
     {
@@ -176,7 +184,7 @@ class RadiusService implements RadiusServiceInterface
                 $totalUpload += $session->acctinputoctets ?? 0;
                 $totalDownload += $session->acctoutputoctets ?? 0;
                 $totalSessionTime += $session->acctsessiontime ?? 0;
-                
+
                 if ($session->acctstoptime === null) {
                     $activeSessions++;
                 }
@@ -203,10 +211,11 @@ class RadiusService implements RadiusServiceInterface
                 })->toArray(),
             ];
         } catch (\Exception $e) {
-            Log::error("Failed to get RADIUS accounting data", [
+            Log::error('Failed to get RADIUS accounting data', [
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
+
             return [
                 'username' => $username,
                 'total_sessions' => 0,

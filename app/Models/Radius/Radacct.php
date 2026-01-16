@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Radacct extends Model
 {
     protected $connection = 'radius';
+
     protected $table = 'radacct';
+
     protected $primaryKey = 'radacctid';
 
     protected $fillable = [

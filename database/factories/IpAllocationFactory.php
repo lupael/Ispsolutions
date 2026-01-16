@@ -17,7 +17,7 @@ class IpAllocationFactory extends Factory
     public function definition(): array
     {
         $lastOctet = fake()->numberBetween(2, 254);
-        
+
         return [
             'ip_subnet_id' => IpSubnet::factory(),
             'ip_address' => "192.168.1.{$lastOctet}",

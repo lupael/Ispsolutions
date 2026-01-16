@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('package_id')->nullable()->constrained('packages')->onDelete('set null');
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->timestamps();
-            
+
             $table->index('username');
             $table->index('service_type');
             $table->index('status');

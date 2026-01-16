@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('attribute', 64);
             $table->string('op', 2)->default('=');
             $table->string('value', 253);
-            
+
             $table->index(['username', 'attribute']);
         });
     }

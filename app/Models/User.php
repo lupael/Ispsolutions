@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, BelongsToTenant;
+    use BelongsToTenant, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -122,8 +122,7 @@ class User extends Authenticatable
         if (! $this->relationLoaded('servicePackage')) {
             $this->load('servicePackage');
         }
-        
+
         return $this->servicePackage;
     }
 }
-

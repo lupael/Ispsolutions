@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
-use App\Models\MikrotikRouter;
 use App\Models\MikrotikPppoeUser;
+use App\Models\MikrotikRouter;
 use App\Services\MikrotikService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -20,7 +20,7 @@ class MikrotikServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->mikrotikService = new MikrotikService();
+        $this->mikrotikService = new MikrotikService;
     }
 
     public function test_connect_router_successfully(): void
@@ -99,7 +99,7 @@ class MikrotikServiceTest extends TestCase
         $result = $this->mikrotikService->createPppoeUser($userData);
 
         $this->assertTrue($result);
-        
+
         // Verify user stored in local database
         $this->assertDatabaseHas('mikrotik_pppoe_users', [
             'router_id' => $router->id,
@@ -138,7 +138,7 @@ class MikrotikServiceTest extends TestCase
         ]);
 
         $this->assertTrue($result);
-        
+
         // Verify user updated in local database
         $pppoeUser->refresh();
         $this->assertEquals('newpass', $pppoeUser->password);
@@ -172,7 +172,7 @@ class MikrotikServiceTest extends TestCase
         $result = $this->mikrotikService->deletePppoeUser('testuser');
 
         $this->assertTrue($result);
-        
+
         // Verify user status updated
         $pppoeUser->refresh();
         $this->assertEquals('inactive', $pppoeUser->status);

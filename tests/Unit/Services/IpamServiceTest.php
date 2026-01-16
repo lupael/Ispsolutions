@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
-use App\Models\IpAllocation;
-use App\Models\IpAllocationHistory;
 use App\Models\IpPool;
 use App\Models\IpSubnet;
 use App\Services\IpamService;
@@ -21,7 +19,7 @@ class IpamServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->ipamService = new IpamService();
+        $this->ipamService = new IpamService;
     }
 
     public function test_allocate_ip_successfully(): void
@@ -148,7 +146,7 @@ class IpamServiceTest extends TestCase
         $result = $this->ipamService->releaseIP($allocation->id);
 
         $this->assertTrue($result);
-        
+
         // Verify allocation was updated
         $allocation->refresh();
         $this->assertEquals('released', $allocation->status);

@@ -40,7 +40,7 @@ return new class extends Migration
             $table->string('framedipv6prefix', 45)->nullable();
             $table->string('framedinterfaceid', 44)->nullable();
             $table->string('delegatedipv6prefix', 45)->nullable();
-            
+
             $table->index(['username', 'nasipaddress']);
             $table->index('acctstarttime');
             $table->index('acctstoptime');

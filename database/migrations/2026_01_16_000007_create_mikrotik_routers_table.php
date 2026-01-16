@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->enum('status', ['active', 'inactive', 'error'])->default('active');
             $table->timestamps();
-            
+
             $table->index('status');
             $table->index('ip_address');
         });

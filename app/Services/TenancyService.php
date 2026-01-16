@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Cache;
 class TenancyService
 {
     private const CACHE_KEY = 'current_tenant';
+
     private const CACHE_TTL = 3600; // 1 hour
 
     private ?Tenant $currentTenant = null;
+
     private bool $initialized = false;
 
     /**
@@ -50,6 +52,7 @@ class TenancyService
     public function getCurrentTenantId(): ?int
     {
         $tenant = $this->getCurrentTenant();
+
         return $tenant?->id;
     }
 
@@ -93,9 +96,10 @@ class TenancyService
     public function runForTenant(?Tenant $tenant, callable $callback): mixed
     {
         $previousTenant = $this->currentTenant;
-        
+
         try {
             $this->setCurrentTenant($tenant);
+
             return $callback();
         } finally {
             $this->setCurrentTenant($previousTenant);
@@ -116,11 +120,11 @@ class TenancyService
     private function loadTenantFromCache(): void
     {
         $tenantId = Cache::get($this->getCacheKey());
-        
+
         if ($tenantId) {
             $this->currentTenant = Tenant::find($tenantId);
         }
-        
+
         $this->initialized = true;
     }
 

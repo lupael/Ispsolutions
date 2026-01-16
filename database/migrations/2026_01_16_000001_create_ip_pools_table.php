@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('vlan_id')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
-            
+
             $table->index('status');
         });
     }

@@ -19,7 +19,7 @@ trait BelongsToTenant
             if (! $model->tenant_id) {
                 $tenancyService = app(TenancyService::class);
                 $currentTenant = $tenancyService->getCurrentTenant();
-                
+
                 if ($currentTenant) {
                     $model->tenant_id = $currentTenant->id;
                 }

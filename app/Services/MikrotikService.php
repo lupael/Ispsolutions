@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\MikrotikServiceInterface;
-use App\Models\MikrotikRouter;
 use App\Models\MikrotikPppoeUser;
+use App\Models\MikrotikRouter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
  * MikroTik Service
- * 
+ *
  * SECURITY NOTES:
  * 1. Authentication: This implementation uses HTTP for the mock server. Real MikroTik routers
  *    require proper authentication. Router credentials from the database should be included
@@ -28,15 +28,16 @@ class MikrotikService implements MikrotikServiceInterface
     private ?MikrotikRouter $currentRouter = null;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function connectRouter(int $routerId): bool
     {
         try {
             $router = MikrotikRouter::find($routerId);
 
-            if (!$router) {
-                Log::error("Router not found", ['router_id' => $routerId]);
+            if (! $router) {
+                Log::error('Router not found', ['router_id' => $routerId]);
+
                 return false;
             }
 
@@ -46,33 +47,36 @@ class MikrotikService implements MikrotikServiceInterface
 
             if ($response->successful()) {
                 $this->currentRouter = $router;
-                Log::info("Connected to MikroTik router", ['router_id' => $routerId]);
+                Log::info('Connected to MikroTik router', ['router_id' => $routerId]);
+
                 return true;
             }
 
-            Log::warning("Failed to connect to MikroTik router", [
+            Log::warning('Failed to connect to MikroTik router', [
                 'router_id' => $routerId,
                 'status' => $response->status(),
             ]);
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Error connecting to MikroTik router", [
+            Log::error('Error connecting to MikroTik router', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function createPppoeUser(array $userData): bool
     {
         try {
             $router = $this->getRouter($userData['router_id'] ?? null);
-            
-            if (!$router) {
+
+            if (! $router) {
                 return false;
             }
 
@@ -100,38 +104,42 @@ class MikrotikService implements MikrotikServiceInterface
                     'status' => 'synced',
                 ]);
 
-                Log::info("PPPoE user created on MikroTik", [
+                Log::info('PPPoE user created on MikroTik', [
                     'router_id' => $router->id,
                     'username' => $userData['username'],
                 ]);
+
                 return true;
             }
 
-            Log::error("Failed to create PPPoE user on MikroTik", [
+            Log::error('Failed to create PPPoE user on MikroTik', [
                 'router_id' => $router->id,
                 'username' => $userData['username'],
                 'response' => $response->body(),
             ]);
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Error creating PPPoE user", [
+            Log::error('Error creating PPPoE user', [
                 'username' => $userData['username'] ?? 'unknown',
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function updatePppoeUser(string $username, array $userData): bool
     {
         try {
             $localUser = MikrotikPppoeUser::where('username', $username)->first();
-            
-            if (!$localUser) {
-                Log::error("PPPoE user not found in local database", ['username' => $username]);
+
+            if (! $localUser) {
+                Log::error('PPPoE user not found in local database', ['username' => $username]);
+
                 return false;
             }
 
@@ -159,38 +167,42 @@ class MikrotikService implements MikrotikServiceInterface
                     'status' => 'synced',
                 ]);
 
-                Log::info("PPPoE user updated on MikroTik", [
+                Log::info('PPPoE user updated on MikroTik', [
                     'router_id' => $router->id,
                     'username' => $username,
                 ]);
+
                 return true;
             }
 
-            Log::error("Failed to update PPPoE user on MikroTik", [
+            Log::error('Failed to update PPPoE user on MikroTik', [
                 'router_id' => $router->id,
                 'username' => $username,
                 'response' => $response->body(),
             ]);
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Error updating PPPoE user", [
+            Log::error('Error updating PPPoE user', [
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function deletePppoeUser(string $username): bool
     {
         try {
             $localUser = MikrotikPppoeUser::where('username', $username)->first();
-            
-            if (!$localUser) {
-                Log::error("PPPoE user not found in local database", ['username' => $username]);
+
+            if (! $localUser) {
+                Log::error('PPPoE user not found in local database', ['username' => $username]);
+
                 return false;
             }
 
@@ -206,38 +218,42 @@ class MikrotikService implements MikrotikServiceInterface
                 // Update local database status
                 $localUser->update(['status' => 'inactive']);
 
-                Log::info("PPPoE user deleted from MikroTik", [
+                Log::info('PPPoE user deleted from MikroTik', [
                     'router_id' => $router->id,
                     'username' => $username,
                 ]);
+
                 return true;
             }
 
-            Log::error("Failed to delete PPPoE user from MikroTik", [
+            Log::error('Failed to delete PPPoE user from MikroTik', [
                 'router_id' => $router->id,
                 'username' => $username,
                 'response' => $response->body(),
             ]);
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Error deleting PPPoE user", [
+            Log::error('Error deleting PPPoE user', [
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getActiveSessions(int $routerId): array
     {
         try {
             $router = MikrotikRouter::find($routerId);
 
-            if (!$router) {
-                Log::error("Router not found", ['router_id' => $routerId]);
+            if (! $router) {
+                Log::error('Router not found', ['router_id' => $routerId]);
+
                 return [];
             }
 
@@ -247,31 +263,35 @@ class MikrotikService implements MikrotikServiceInterface
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['sessions'] ?? [];
             }
 
-            Log::error("Failed to get active sessions from MikroTik", [
+            Log::error('Failed to get active sessions from MikroTik', [
                 'router_id' => $routerId,
                 'response' => $response->body(),
             ]);
+
             return [];
         } catch (\Exception $e) {
-            Log::error("Error getting active sessions", [
+            Log::error('Error getting active sessions', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function disconnectSession(string $sessionId): bool
     {
         try {
-            if (!$this->currentRouter) {
-                Log::error("No router connected");
+            if (! $this->currentRouter) {
+                Log::error('No router connected');
+
                 return false;
             }
 
@@ -282,24 +302,27 @@ class MikrotikService implements MikrotikServiceInterface
                 ]);
 
             if ($response->successful()) {
-                Log::info("Session disconnected on MikroTik", [
+                Log::info('Session disconnected on MikroTik', [
                     'router_id' => $this->currentRouter->id,
                     'session_id' => $sessionId,
                 ]);
+
                 return true;
             }
 
-            Log::error("Failed to disconnect session on MikroTik", [
+            Log::error('Failed to disconnect session on MikroTik', [
                 'router_id' => $this->currentRouter->id,
                 'session_id' => $sessionId,
                 'response' => $response->body(),
             ]);
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Error disconnecting session", [
+            Log::error('Error disconnecting session', [
                 'session_id' => $sessionId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

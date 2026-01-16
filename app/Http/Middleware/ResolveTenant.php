@@ -14,24 +14,23 @@ class ResolveTenant
      */
     public function __construct(
         private readonly TenancyService $tenancyService
-    ) {
-    }
+    ) {}
 
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response) $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $host = $request->getHost();
-        
+
         // Resolve tenant by domain/subdomain
         $tenant = $this->tenancyService->resolveTenantByDomain($host);
-        
+
         // Set current tenant
         $this->tenancyService->setCurrentTenant($tenant);
-        
+
         // If tenant is required but not found, abort
         if (! $tenant && $this->requiresTenant($request)) {
             abort(404, 'Tenant not found');

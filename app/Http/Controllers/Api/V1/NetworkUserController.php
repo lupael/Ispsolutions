@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Contracts\RadiusServiceInterface;
+use App\Http\Controllers\Controller;
 use App\Models\NetworkUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,25 +23,25 @@ class NetworkUserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = NetworkUser::with(['package', 'ipAllocations']);
-        
+
         if ($request->has('service_type')) {
             $query->where('service_type', $request->service_type);
         }
-        
+
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-        
+
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
-        
+
         $users = $query->paginate($request->get('per_page', 15));
-        
+
         return response()->json($users);
     }
 
@@ -62,14 +62,14 @@ class NetworkUserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
         $password = $data['password'];
         unset($data['password']); // Don't store plain password in network_users
-        
+
         $user = NetworkUser::create($data);
 
         // Sync to RADIUS
@@ -77,7 +77,7 @@ class NetworkUserController extends Controller
 
         return response()->json([
             'message' => 'Network user created successfully',
-            'data' => $user->load('package')
+            'data' => $user->load('package'),
         ], 201);
     }
 
@@ -88,7 +88,7 @@ class NetworkUserController extends Controller
     {
         $user = NetworkUser::with(['package', 'ipAllocations', 'sessions'])
             ->findOrFail($id);
-        
+
         return response()->json($user);
     }
 
@@ -98,7 +98,7 @@ class NetworkUserController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = NetworkUser::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'email' => 'nullable|email|unique:network_users,email,' . $id,
             'service_type' => 'sometimes|in:pppoe,hotspot,static_ip',
@@ -109,7 +109,7 @@ class NetworkUserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -122,7 +122,7 @@ class NetworkUserController extends Controller
 
         return response()->json([
             'message' => 'Network user updated successfully',
-            'data' => $user->load('package')
+            'data' => $user->load('package'),
         ]);
     }
 
@@ -132,14 +132,14 @@ class NetworkUserController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $user = NetworkUser::findOrFail($id);
-        
+
         // Delete from RADIUS
         $this->radiusService->deleteUser($user->username);
-        
+
         $user->delete();
 
         return response()->json([
-            'message' => 'Network user deleted successfully'
+            'message' => 'Network user deleted successfully',
         ]);
     }
 
@@ -149,7 +149,7 @@ class NetworkUserController extends Controller
     public function syncToRadius(Request $request, int $id): JsonResponse
     {
         $user = NetworkUser::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'password' => 'nullable|string|min:6',
         ]);
@@ -157,22 +157,22 @@ class NetworkUserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $password = $request->password ?? null;
-        
+
         $success = $this->radiusService->syncUser($user, $password);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to sync user to RADIUS'
+                'message' => 'Failed to sync user to RADIUS',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'User synced to RADIUS successfully'
+            'message' => 'User synced to RADIUS successfully',
         ]);
     }
 }

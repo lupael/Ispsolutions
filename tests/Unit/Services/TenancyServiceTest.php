@@ -16,7 +16,7 @@ class TenancyServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->tenancyService = new TenancyService();
+        $this->tenancyService = new TenancyService;
     }
 
     public function test_can_set_and_get_current_tenant(): void

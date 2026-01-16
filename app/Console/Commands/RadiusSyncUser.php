@@ -44,8 +44,9 @@ class RadiusSyncUser extends Command
 
             $success = $radiusService->syncUser($user, $password);
 
-            if (!$success) {
-                $this->error("Failed to sync user to RADIUS");
+            if (! $success) {
+                $this->error('Failed to sync user to RADIUS');
+
                 return Command::FAILURE;
             }
 
@@ -59,9 +60,11 @@ class RadiusSyncUser extends Command
             return Command::SUCCESS;
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             $this->error("User not found: {$userIdentifier}");
+
             return Command::FAILURE;
         } catch (\Exception $e) {
-            $this->error("Sync failed: " . $e->getMessage());
+            $this->error('Sync failed: ' . $e->getMessage());
+
             return Command::FAILURE;
         }
     }

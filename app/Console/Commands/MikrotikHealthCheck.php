@@ -34,19 +34,21 @@ class MikrotikHealthCheck extends Command
         $routerId = $this->option('router');
         $verbose = $this->option('verbose');
 
-        $this->info("Checking MikroTik router health...");
+        $this->info('Checking MikroTik router health...');
 
         try {
             if ($routerId) {
                 // Check specific router
                 $router = MikrotikRouter::findOrFail($routerId);
+
                 return $this->checkRouter($router, $mikrotikService, $verbose);
             } else {
                 // Check all active routers
                 $routers = MikrotikRouter::where('status', 'active')->get();
-                
+
                 if ($routers->isEmpty()) {
-                    $this->warn("No active routers found");
+                    $this->warn('No active routers found');
+
                     return Command::SUCCESS;
                 }
 
@@ -58,7 +60,7 @@ class MikrotikHealthCheck extends Command
 
                 foreach ($routers as $router) {
                     $success = $mikrotikService->connectRouter($router->id);
-                    
+
                     if ($success) {
                         $this->info("✓ {$router->name} ({$router->ip_address}) - Healthy");
                         $healthy++;
@@ -76,7 +78,7 @@ class MikrotikHealthCheck extends Command
                 }
 
                 $this->newLine();
-                $this->info("Health Check Summary:");
+                $this->info('Health Check Summary:');
                 $this->info("  Healthy: {$healthy}");
                 if ($unhealthy > 0) {
                     $this->warn("  Unhealthy: {$unhealthy}");
@@ -85,10 +87,12 @@ class MikrotikHealthCheck extends Command
                 return $unhealthy > 0 ? Command::FAILURE : Command::SUCCESS;
             }
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $this->error("Router not found");
+            $this->error('Router not found');
+
             return Command::FAILURE;
         } catch (\Exception $e) {
-            $this->error("Health check failed: " . $e->getMessage());
+            $this->error('Health check failed: ' . $e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -99,18 +103,19 @@ class MikrotikHealthCheck extends Command
 
         if ($success) {
             $this->info("✓ Router '{$router->name}' is healthy");
-            
+
             if ($verbose) {
-                $this->info("Details:");
+                $this->info('Details:');
                 $this->line("  IP: {$router->ip_address}");
                 $this->line("  Port: {$router->api_port}");
                 $this->line("  Status: {$router->status}");
             }
-            
+
             return Command::SUCCESS;
         } else {
             $this->error("✗ Router '{$router->name}' is unreachable");
-            $this->warn("Check network connectivity and credentials");
+            $this->warn('Check network connectivity and credentials');
+
             return Command::FAILURE;
         }
     }

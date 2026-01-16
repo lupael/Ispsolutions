@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Contracts\RadiusServiceInterface;
+use App\Http\Controllers\Controller;
 use App\Models\NetworkUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class RadiusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -42,14 +42,14 @@ class RadiusController extends Controller
         if ($result === false) {
             return response()->json([
                 'message' => 'Authentication failed',
-                'authenticated' => false
+                'authenticated' => false,
             ], 401);
         }
 
         return response()->json([
             'message' => 'Authentication successful',
             'authenticated' => true,
-            'attributes' => $result
+            'attributes' => $result,
         ]);
     }
 
@@ -71,20 +71,20 @@ class RadiusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $success = $this->radiusService->accountingStart($validator->validated());
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to start accounting session'
+                'message' => 'Failed to start accounting session',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'Accounting session started successfully'
+            'message' => 'Accounting session started successfully',
         ], 201);
     }
 
@@ -104,20 +104,20 @@ class RadiusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $success = $this->radiusService->accountingUpdate($validator->validated());
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to update accounting session'
+                'message' => 'Failed to update accounting session',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'Accounting session updated successfully'
+            'message' => 'Accounting session updated successfully',
         ]);
     }
 
@@ -138,20 +138,20 @@ class RadiusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $success = $this->radiusService->accountingStop($validator->validated());
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to stop accounting session'
+                'message' => 'Failed to stop accounting session',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'Accounting session stopped successfully'
+            'message' => 'Accounting session stopped successfully',
         ]);
     }
 
@@ -169,26 +169,26 @@ class RadiusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
-        
+
         $success = $this->radiusService->createUser(
             $data['username'],
             $data['password'],
             $data['attributes'] ?? []
         );
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to create RADIUS user'
+                'message' => 'Failed to create RADIUS user',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'RADIUS user created successfully'
+            'message' => 'RADIUS user created successfully',
         ], 201);
     }
 
@@ -205,31 +205,31 @@ class RadiusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
         $updateData = [];
-        
+
         if (isset($data['password'])) {
             $updateData['password'] = $data['password'];
         }
-        
+
         if (isset($data['attributes'])) {
             $updateData['attributes'] = $data['attributes'];
         }
 
         $success = $this->radiusService->updateUser($username, $updateData);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to update RADIUS user. User may not exist.'
+                'message' => 'Failed to update RADIUS user. User may not exist.',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'RADIUS user updated successfully'
+            'message' => 'RADIUS user updated successfully',
         ]);
     }
 
@@ -240,14 +240,14 @@ class RadiusController extends Controller
     {
         $success = $this->radiusService->deleteUser($username);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to delete RADIUS user. User may not exist.'
+                'message' => 'Failed to delete RADIUS user. User may not exist.',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'RADIUS user deleted successfully'
+            'message' => 'RADIUS user deleted successfully',
         ]);
     }
 
@@ -263,24 +263,24 @@ class RadiusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $user = NetworkUser::where('username', $username)->firstOrFail();
-        
+
         $password = $request->password ?? null;
-        
+
         $success = $this->radiusService->syncUser($user, $password);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to sync user to RADIUS'
+                'message' => 'Failed to sync user to RADIUS',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'User synced to RADIUS successfully'
+            'message' => 'User synced to RADIUS successfully',
         ]);
     }
 
@@ -291,15 +291,15 @@ class RadiusController extends Controller
     {
         $stats = $this->radiusService->getUserStats($username);
 
-        if (!$stats) {
+        if (! $stats) {
             return response()->json([
-                'message' => 'User not found or has no statistics'
+                'message' => 'User not found or has no statistics',
             ], 404);
         }
 
         return response()->json([
             'username' => $username,
-            'stats' => $stats
+            'stats' => $stats,
         ]);
     }
 }

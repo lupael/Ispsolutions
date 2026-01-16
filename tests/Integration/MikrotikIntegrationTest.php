@@ -15,6 +15,7 @@ class MikrotikIntegrationTest extends TestCase
     use RefreshDatabase;
 
     private MikrotikService $mikrotikService;
+
     private MikrotikRouter $router;
 
     protected function setUp(): void
@@ -49,6 +50,7 @@ class MikrotikIntegrationTest extends TestCase
                 if (str_contains($request->url(), '/api/ppp/secret/remove')) {
                     return Http::response(['success' => true], 200);
                 }
+
                 return Http::response([], 404);
             },
         ]);

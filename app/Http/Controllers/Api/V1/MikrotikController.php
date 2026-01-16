@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Contracts\MikrotikServiceInterface;
-use App\Models\MikrotikRouter;
+use App\Http\Controllers\Controller;
 use App\Models\MikrotikPppoeUser;
+use App\Models\MikrotikRouter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -24,13 +24,13 @@ class MikrotikController extends Controller
     public function listRouters(Request $request): JsonResponse
     {
         $query = MikrotikRouter::query();
-        
+
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-        
+
         $routers = $query->paginate($request->get('per_page', 15));
-        
+
         return response()->json($routers);
     }
 
@@ -41,14 +41,14 @@ class MikrotikController extends Controller
     {
         $success = $this->mikrotikService->connectRouter($id);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to connect to router. Check credentials and connectivity.'
+                'message' => 'Failed to connect to router. Check credentials and connectivity.',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'Connected to router successfully'
+            'message' => 'Connected to router successfully',
         ]);
     }
 
@@ -58,13 +58,13 @@ class MikrotikController extends Controller
     public function healthCheck(int $id): JsonResponse
     {
         $router = MikrotikRouter::findOrFail($id);
-        
+
         $success = $this->mikrotikService->connectRouter($id);
 
         return response()->json([
             'router' => $router,
             'healthy' => $success,
-            'checked_at' => now()
+            'checked_at' => now(),
         ]);
     }
 
@@ -74,17 +74,17 @@ class MikrotikController extends Controller
     public function listPppoeUsers(Request $request): JsonResponse
     {
         $query = MikrotikPppoeUser::with('router');
-        
+
         if ($request->has('router_id')) {
             $query->where('router_id', $request->router_id);
         }
-        
+
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-        
+
         $users = $query->paginate($request->get('per_page', 15));
-        
+
         return response()->json($users);
     }
 
@@ -107,18 +107,18 @@ class MikrotikController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
-        
+
         // Create the user via MikroTik API
         $success = $this->mikrotikService->createPppoeUser($data);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to create PPPoE user on router'
+                'message' => 'Failed to create PPPoE user on router',
             ], 400);
         }
 
@@ -127,7 +127,7 @@ class MikrotikController extends Controller
 
         return response()->json([
             'message' => 'PPPoE user created successfully',
-            'data' => $user->load('router')
+            'data' => $user->load('router'),
         ], 201);
     }
 
@@ -148,20 +148,20 @@ class MikrotikController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $user = MikrotikPppoeUser::where('username', $username)->firstOrFail();
-        
+
         $data = $validator->validated();
-        
+
         // Update on MikroTik router
         $success = $this->mikrotikService->updatePppoeUser($username, $data);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to update PPPoE user on router'
+                'message' => 'Failed to update PPPoE user on router',
             ], 400);
         }
 
@@ -170,7 +170,7 @@ class MikrotikController extends Controller
 
         return response()->json([
             'message' => 'PPPoE user updated successfully',
-            'data' => $user
+            'data' => $user,
         ]);
     }
 
@@ -180,13 +180,13 @@ class MikrotikController extends Controller
     public function deletePppoeUser(string $username): JsonResponse
     {
         $user = MikrotikPppoeUser::where('username', $username)->firstOrFail();
-        
+
         // Delete from MikroTik router
         $success = $this->mikrotikService->deletePppoeUser($username);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to delete PPPoE user from router'
+                'message' => 'Failed to delete PPPoE user from router',
             ], 400);
         }
 
@@ -194,7 +194,7 @@ class MikrotikController extends Controller
         $user->delete();
 
         return response()->json([
-            'message' => 'PPPoE user deleted successfully'
+            'message' => 'PPPoE user deleted successfully',
         ]);
     }
 
@@ -210,7 +210,7 @@ class MikrotikController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -218,14 +218,14 @@ class MikrotikController extends Controller
 
         if ($sessions === null) {
             return response()->json([
-                'message' => 'Failed to retrieve sessions from router'
+                'message' => 'Failed to retrieve sessions from router',
             ], 400);
         }
 
         return response()->json([
             'router_id' => $request->router_id,
             'sessions' => $sessions,
-            'count' => count($sessions)
+            'count' => count($sessions),
         ]);
     }
 
@@ -236,14 +236,14 @@ class MikrotikController extends Controller
     {
         $success = $this->mikrotikService->disconnectSession($id);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to disconnect session. Session may not exist.'
+                'message' => 'Failed to disconnect session. Session may not exist.',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'Session disconnected successfully'
+            'message' => 'Session disconnected successfully',
         ]);
     }
 
@@ -259,7 +259,7 @@ class MikrotikController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -267,14 +267,14 @@ class MikrotikController extends Controller
 
         if ($profiles === null) {
             return response()->json([
-                'message' => 'Failed to retrieve profiles from router'
+                'message' => 'Failed to retrieve profiles from router',
             ], 400);
         }
 
         return response()->json([
             'router_id' => $request->router_id,
             'profiles' => $profiles,
-            'count' => count($profiles)
+            'count' => count($profiles),
         ]);
     }
 }

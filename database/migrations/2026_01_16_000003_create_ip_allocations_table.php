@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('released_at')->nullable();
             $table->enum('status', ['allocated', 'released', 'reserved'])->default('allocated');
             $table->timestamps();
-            
+
             $table->unique(['subnet_id', 'ip_address']);
             $table->index('status');
             $table->index('username');

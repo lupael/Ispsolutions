@@ -6,9 +6,9 @@ namespace Tests\Unit\Services;
 
 use App\Models\NetworkUser;
 use App\Models\Package;
+use App\Models\RadAcct;
 use App\Models\RadCheck;
 use App\Models\RadReply;
-use App\Models\RadAcct;
 use App\Services\RadiusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -22,8 +22,8 @@ class RadiusServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->radiusService = new RadiusService();
-        
+        $this->radiusService = new RadiusService;
+
         // Run migrations for both databases
         $this->artisan('migrate', ['--database' => 'radius']);
     }
@@ -33,7 +33,7 @@ class RadiusServiceTest extends TestCase
         $result = $this->radiusService->createUser('testuser', 'testpass');
 
         $this->assertTrue($result);
-        
+
         // Verify user in radcheck
         $this->assertDatabaseHas('radcheck', [
             'username' => 'testuser',
@@ -52,7 +52,7 @@ class RadiusServiceTest extends TestCase
         $result = $this->radiusService->createUser('testuser', 'testpass', $attributes);
 
         $this->assertTrue($result);
-        
+
         // Verify attributes in radreply
         foreach ($attributes as $attribute => $value) {
             $this->assertDatabaseHas('radreply', [
@@ -74,12 +74,12 @@ class RadiusServiceTest extends TestCase
         ]);
 
         $this->assertTrue($result);
-        
+
         // Verify password updated
         $check = RadCheck::where('username', 'testuser')
             ->where('attribute', 'Cleartext-Password')
             ->first();
-        
+
         $this->assertEquals('newpass', $check->value);
     }
 
@@ -94,7 +94,7 @@ class RadiusServiceTest extends TestCase
         ]);
 
         $this->assertTrue($result);
-        
+
         // Verify attribute created
         $this->assertDatabaseHas('radreply', [
             'username' => 'testuser',
@@ -114,12 +114,12 @@ class RadiusServiceTest extends TestCase
         $result = $this->radiusService->deleteUser('testuser');
 
         $this->assertTrue($result);
-        
+
         // Verify user removed from radcheck
         $this->assertDatabaseMissing('radcheck', [
             'username' => 'testuser',
         ], 'radius');
-        
+
         // Verify attributes removed from radreply
         $this->assertDatabaseMissing('radreply', [
             'username' => 'testuser',
@@ -145,7 +145,7 @@ class RadiusServiceTest extends TestCase
         $result = $this->radiusService->syncUser($user);
 
         $this->assertTrue($result);
-        
+
         // Verify user in RADIUS
         $this->assertDatabaseHas('radcheck', [
             'username' => 'testuser',
@@ -174,7 +174,7 @@ class RadiusServiceTest extends TestCase
         $result = $this->radiusService->syncUser($user);
 
         $this->assertTrue($result);
-        
+
         // Verify user removed from RADIUS
         $this->assertDatabaseMissing('radcheck', [
             'username' => 'testuser',

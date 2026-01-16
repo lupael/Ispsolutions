@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Contracts\IpamServiceInterface;
+use App\Http\Controllers\Controller;
+use App\Models\IpAllocation;
 use App\Models\IpPool;
 use App\Models\IpSubnet;
-use App\Models\IpAllocation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -25,13 +25,13 @@ class IpamController extends Controller
     public function listPools(Request $request): JsonResponse
     {
         $query = IpPool::query();
-        
+
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-        
+
         $pools = $query->with('subnets')->paginate($request->get('per_page', 15));
-        
+
         return response()->json($pools);
     }
 
@@ -54,7 +54,7 @@ class IpamController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -62,7 +62,7 @@ class IpamController extends Controller
 
         return response()->json([
             'message' => 'IP pool created successfully',
-            'data' => $pool
+            'data' => $pool,
         ], 201);
     }
 
@@ -72,7 +72,7 @@ class IpamController extends Controller
     public function getPool(int $id): JsonResponse
     {
         $pool = IpPool::with(['subnets', 'subnets.allocations'])->findOrFail($id);
-        
+
         return response()->json($pool);
     }
 
@@ -82,7 +82,7 @@ class IpamController extends Controller
     public function updatePool(Request $request, int $id): JsonResponse
     {
         $pool = IpPool::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255|unique:ip_pools,name,' . $id,
             'description' => 'nullable|string',
@@ -97,7 +97,7 @@ class IpamController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -105,7 +105,7 @@ class IpamController extends Controller
 
         return response()->json([
             'message' => 'IP pool updated successfully',
-            'data' => $pool
+            'data' => $pool,
         ]);
     }
 
@@ -115,20 +115,20 @@ class IpamController extends Controller
     public function deletePool(int $id): JsonResponse
     {
         $pool = IpPool::findOrFail($id);
-        
+
         // Check if pool has active allocations
         if ($pool->subnets()->whereHas('allocations', function ($query) {
             $query->where('status', 'allocated');
         })->exists()) {
             return response()->json([
-                'message' => 'Cannot delete pool with active allocations'
+                'message' => 'Cannot delete pool with active allocations',
             ], 400);
         }
-        
+
         $pool->delete();
 
         return response()->json([
-            'message' => 'IP pool deleted successfully'
+            'message' => 'IP pool deleted successfully',
         ]);
     }
 
@@ -138,17 +138,17 @@ class IpamController extends Controller
     public function listSubnets(Request $request): JsonResponse
     {
         $query = IpSubnet::with('pool');
-        
+
         if ($request->has('pool_id')) {
             $query->where('pool_id', $request->pool_id);
         }
-        
+
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-        
+
         $subnets = $query->paginate($request->get('per_page', 15));
-        
+
         return response()->json($subnets);
     }
 
@@ -169,16 +169,16 @@ class IpamController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
-        
+
         // Check for subnet overlap
         if ($this->ipamService->detectOverlap($data['network'], $data['prefix_length'])) {
             return response()->json([
-                'message' => 'Subnet overlaps with existing subnet'
+                'message' => 'Subnet overlaps with existing subnet',
             ], 400);
         }
 
@@ -186,7 +186,7 @@ class IpamController extends Controller
 
         return response()->json([
             'message' => 'IP subnet created successfully',
-            'data' => $subnet->load('pool')
+            'data' => $subnet->load('pool'),
         ], 201);
     }
 
@@ -196,7 +196,7 @@ class IpamController extends Controller
     public function getSubnet(int $id): JsonResponse
     {
         $subnet = IpSubnet::with(['pool', 'allocations'])->findOrFail($id);
-        
+
         return response()->json($subnet);
     }
 
@@ -206,7 +206,7 @@ class IpamController extends Controller
     public function updateSubnet(Request $request, int $id): JsonResponse
     {
         $subnet = IpSubnet::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'gateway' => 'nullable|ip',
             'vlan_id' => 'nullable|integer|min:1|max:4094',
@@ -216,7 +216,7 @@ class IpamController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -224,7 +224,7 @@ class IpamController extends Controller
 
         return response()->json([
             'message' => 'IP subnet updated successfully',
-            'data' => $subnet
+            'data' => $subnet,
         ]);
     }
 
@@ -234,18 +234,18 @@ class IpamController extends Controller
     public function deleteSubnet(int $id): JsonResponse
     {
         $subnet = IpSubnet::findOrFail($id);
-        
+
         // Check if subnet has active allocations
         if ($subnet->allocations()->where('status', 'allocated')->exists()) {
             return response()->json([
-                'message' => 'Cannot delete subnet with active allocations'
+                'message' => 'Cannot delete subnet with active allocations',
             ], 400);
         }
-        
+
         $subnet->delete();
 
         return response()->json([
-            'message' => 'IP subnet deleted successfully'
+            'message' => 'IP subnet deleted successfully',
         ]);
     }
 
@@ -255,21 +255,21 @@ class IpamController extends Controller
     public function listAllocations(Request $request): JsonResponse
     {
         $query = IpAllocation::with(['subnet', 'subnet.pool']);
-        
+
         if ($request->has('subnet_id')) {
             $query->where('subnet_id', $request->subnet_id);
         }
-        
+
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-        
+
         if ($request->has('username')) {
             $query->where('username', $request->username);
         }
-        
+
         $allocations = $query->paginate($request->get('per_page', 15));
-        
+
         return response()->json($allocations);
     }
 
@@ -280,7 +280,7 @@ class IpamController extends Controller
     {
         // MAC address validation pattern
         $macAddressPattern = '/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/';
-        
+
         $validator = Validator::make($request->all(), [
             'subnet_id' => 'required|exists:ip_subnets,id',
             'mac_address' => ['required', 'string', 'regex:' . $macAddressPattern],
@@ -290,27 +290,27 @@ class IpamController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
-        
+
         $allocation = $this->ipamService->allocateIP(
             $data['subnet_id'],
             $data['mac_address'],
             $data['username']
         );
 
-        if (!$allocation) {
+        if (! $allocation) {
             return response()->json([
-                'message' => 'Failed to allocate IP address. Subnet may be full or inactive.'
+                'message' => 'Failed to allocate IP address. Subnet may be full or inactive.',
             ], 400);
         }
 
         return response()->json([
             'message' => 'IP address allocated successfully',
-            'data' => $allocation->load('subnet')
+            'data' => $allocation->load('subnet'),
         ], 201);
     }
 
@@ -321,14 +321,14 @@ class IpamController extends Controller
     {
         $success = $this->ipamService->releaseIP($id);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'Failed to release IP address. Allocation may not exist.'
+                'message' => 'Failed to release IP address. Allocation may not exist.',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'IP address released successfully'
+            'message' => 'IP address released successfully',
         ]);
     }
 
@@ -338,12 +338,12 @@ class IpamController extends Controller
     public function getPoolUtilization(int $id): JsonResponse
     {
         $pool = IpPool::findOrFail($id);
-        
+
         $utilization = $this->ipamService->getPoolUtilization($id);
 
         return response()->json([
             'pool' => $pool,
-            'utilization' => $utilization
+            'utilization' => $utilization,
         ]);
     }
 
@@ -353,13 +353,13 @@ class IpamController extends Controller
     public function getAvailableIPs(int $id): JsonResponse
     {
         $subnet = IpSubnet::findOrFail($id);
-        
+
         $availableIPs = $this->ipamService->getAvailableIPs($id);
 
         return response()->json([
             'subnet' => $subnet,
             'available_ips' => $availableIPs,
-            'count' => count($availableIPs)
+            'count' => count($availableIPs),
         ]);
     }
 }
