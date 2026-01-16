@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ispsolution-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./storage:/var/www/storage
+    networks:
+      - ispsolution
+    depends_on:
+      - db
+      - radius-db
+      - redis
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-ispsolution}
+      - DB_USERNAME=${DB_USERNAME:-ispsolution}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - RADIUS_DB_HOST=radius-db
+      - REDIS_HOST=redis
+    ports:
+      - "8000:8000"
+
+  db:
+    image: mysql:8.0
+    container_name: ispsolution-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-ispsolution}
+      MYSQL_USER: ${DB_USERNAME:-ispsolution}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - ispsolution
+    ports:
+      - "3306:3306"
+
+  radius-db:
+    image: mysql:8.0
+    container_name: ispsolution-radius-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${RADIUS_DB_DATABASE:-radius}
+      MYSQL_USER: ${RADIUS_DB_USERNAME:-radius}
+      MYSQL_PASSWORD: ${RADIUS_DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${RADIUS_DB_ROOT_PASSWORD:-root}
+    volumes:
+      - radius-db-data:/var/lib/mysql
+    networks:
+      - ispsolution
+    ports:
+      - "3307:3306"
+
+  redis:
+    image: redis:7-alpine
+    container_name: ispsolution-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - ispsolution
+    ports:
+      - "6379:6379"
+
+  mock-mikrotik:
+    image: python:3.11-alpine
+    container_name: ispsolution-mock-mikrotik
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./tests/mock-servers/mikrotik:/app
+    command: sh -c "pip install flask && python server.py"
+    networks:
+      - ispsolution
+    ports:
+      - "8728:8728"
+
+networks:
+  ispsolution:
+    driver: bridge
+
+volumes:
+  db-data:
+  radius-db-data:
+  redis-data:
