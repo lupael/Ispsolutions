@@ -63,7 +63,7 @@ return [
         ],
 
         'radius' => [
-            'driver' => 'mysql',
+            'driver' => env('RADIUS_DB_CONNECTION', 'mysql'),
             'url' => env('RADIUS_DB_URL'),
             'host' => env('RADIUS_DB_HOST', '127.0.0.1'),
             'port' => env('RADIUS_DB_PORT', '3306'),

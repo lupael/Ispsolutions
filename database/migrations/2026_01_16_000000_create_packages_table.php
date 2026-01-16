@@ -14,11 +14,13 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100);
             $table->text('description')->nullable();
+            $table->integer('bandwidth_up')->nullable(); // in kbps
+            $table->integer('bandwidth_down')->nullable(); // in kbps
             $table->decimal('price', 10, 2);
-            $table->integer('bandwidth_upload')->nullable(); // in kbps
-            $table->integer('bandwidth_download')->nullable(); // in kbps
+            $table->string('billing_cycle')->default('monthly');
             $table->integer('validity_days')->nullable();
             $table->enum('billing_type', ['daily', 'monthly', 'onetime'])->default('monthly');
+            $table->boolean('is_active')->default(true);
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
             

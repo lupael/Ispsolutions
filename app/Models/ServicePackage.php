@@ -10,6 +10,8 @@ class ServicePackage extends Model
 {
     use HasFactory;
 
+    protected $table = 'packages';
+
     protected $fillable = [
         'name',
         'description',

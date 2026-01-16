@@ -21,9 +21,9 @@ return new class extends Migration
             $table->string('nasipaddress', 15)->index();
             $table->string('nasportid', 15)->nullable();
             $table->string('nasporttype', 32)->nullable();
-            $table->timestamp('acctstarttime')->nullable()->index();
+            $table->timestamp('acctstarttime')->nullable();
             $table->timestamp('acctupdatetime')->nullable();
-            $table->timestamp('acctstoptime')->nullable()->index();
+            $table->timestamp('acctstoptime')->nullable();
             $table->integer('acctsessiontime')->unsigned()->nullable();
             $table->string('acctauthentic', 32)->nullable();
             $table->string('connectinfo_start', 50)->nullable();
