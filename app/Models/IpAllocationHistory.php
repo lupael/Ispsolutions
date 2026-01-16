@@ -1,37 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class IpAllocationHistory extends Model
 {
-    use HasFactory;
-
-    public $timestamps = false;
+    protected $table = 'ip_allocation_history';
 
     protected $fillable = [
-        'ip_allocation_id',
-        'user_id',
+        'allocation_id',
         'ip_address',
+        'mac_address',
+        'username',
         'action',
-        'reason',
-        'created_at',
+        'allocated_at',
+        'released_at',
     ];
 
     protected $casts = [
+        'allocation_id' => 'integer',
+        'allocated_at' => 'datetime',
+        'released_at' => 'datetime',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function allocation(): BelongsTo
     {
-        return $this->belongsTo(IpAllocation::class, 'ip_allocation_id');
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(IpAllocation::class, 'allocation_id');
     }
 }

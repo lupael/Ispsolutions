@@ -1,51 +1,42 @@
 FROM php:8.2-fpm-alpine
 
-# Set working directory
-WORKDIR /var/www/html
-
 # Install system dependencies
 RUN apk add --no-cache \
     git \
     curl \
     libpng-dev \
-    libxml2-dev \
+    libzip-dev \
     zip \
     unzip \
     mysql-client \
     nodejs \
-    npm \
-    supervisor
+    npm
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql pcntl bcmath opcache
+RUN docker-php-ext-install pdo pdo_mysql zip
 
-# Install Redis extension
-RUN apk add --no-cache redis \
-    && mkdir -p /usr/src/php/ext/redis \
-    && curl -fsSL https://github.com/phpredis/phpredis/archive/refs/tags/6.0.2.tar.gz | tar xz -C /usr/src/php/ext/redis --strip 1 \
-    && docker-php-ext-install redis
-
-# Get latest Composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Create system user to run Composer and Artisan Commands
-RUN addgroup -g 1000 www && adduser -u 1000 -G www -s /bin/sh -D www
+# Set working directory
+WORKDIR /var/www
 
 # Copy application files
-COPY --chown=www:www . /var/www/html
+COPY . .
 
-# PHP production configuration (must be copied before switching user)
-COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set proper permissions
-RUN chown -R www:www /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+# Install Node dependencies
+RUN npm install
 
-# Switch to non-root user for running the application
-USER www
+# Set permissions
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Expose port 9000 and start php-fpm server
-EXPOSE 9000
+# Expose port 8000
+EXPOSE 8000
 
-CMD ["php-fpm"]
+# DEVELOPMENT: Start PHP built-in server
+# PRODUCTION: Use php-fpm with nginx/Apache instead of artisan serve
+# For production, change CMD to: CMD ["php-fpm"] and configure with nginx/Apache
+CMD php artisan serve --host=0.0.0.0 --port=8000

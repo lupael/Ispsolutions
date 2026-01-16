@@ -1,33 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class IpPool extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
         'description',
-        'pool_type',
-        'is_active',
+        'start_ip',
+        'end_ip',
+        'gateway',
+        'dns_servers',
+        'vlan_id',
+        'status',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'vlan_id' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function subnets(): HasMany
     {
-        return $this->hasMany(IpSubnet::class);
-    }
-
-    public function allocations(): HasMany
-    {
-        return $this->hasManyThrough(IpAllocation::class, IpSubnet::class);
+        return $this->hasMany(IpSubnet::class, 'pool_id');
     }
 }

@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use App\Contracts\IpamServiceInterface;
-use App\Contracts\MikroTikServiceInterface;
+use App\Contracts\MikrotikServiceInterface;
 use App\Contracts\RadiusServiceInterface;
+use App\Services\IpamService;
+use App\Services\MikrotikService;
+use App\Services\RadiusService;
 use Illuminate\Support\ServiceProvider;
 
 class NetworkServiceProvider extends ServiceProvider
@@ -14,30 +19,14 @@ class NetworkServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Register IPAM service
-        // TODO: Uncomment when IpamService is implemented
-        // $this->app->singleton(IpamServiceInterface::class, function ($app) {
-        //     return new \App\Services\IpamService();
-        // });
+        // Bind IPAM Service
+        $this->app->singleton(IpamServiceInterface::class, IpamService::class);
 
-        // Register RADIUS service (singleton for connection reuse)
-        // TODO: Uncomment when RadiusService is implemented
-        // $this->app->singleton(RadiusServiceInterface::class, function ($app) {
-        //     return new \App\Services\RadiusService();
-        // });
+        // Bind RADIUS Service
+        $this->app->singleton(RadiusServiceInterface::class, RadiusService::class);
 
-        // Register MikroTik service (singleton for connection reuse)
-        // TODO: Uncomment when MikroTikService is implemented
-        // $this->app->singleton(MikroTikServiceInterface::class, function ($app) {
-        //     return new \App\Services\MikroTikService(
-        //         config('mikrotik.host'),
-        //         config('mikrotik.port'),
-        //         config('mikrotik.username'),
-        //         config('mikrotik.password'),
-        //         config('mikrotik.timeout'),
-        //         config('mikrotik.retry_attempts')
-        //     );
-        // });
+        // Bind MikroTik Service (scoped per request to avoid sharing stateful instances)
+        $this->app->scoped(MikrotikServiceInterface::class, MikrotikService::class);
     }
 
     /**

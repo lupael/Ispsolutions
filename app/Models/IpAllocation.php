@@ -1,57 +1,40 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 
 class IpAllocation extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'ip_subnet_id',
+        'subnet_id',
         'ip_address',
-        'user_id',
-        'allocation_type',
-        'status',
+        'mac_address',
+        'username',
         'allocated_at',
         'released_at',
-        'expires_at',
+        'status',
     ];
 
     protected $casts = [
+        'subnet_id' => 'integer',
         'allocated_at' => 'datetime',
         'released_at' => 'datetime',
-        'expires_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function subnet(): BelongsTo
     {
-        return $this->belongsTo(IpSubnet::class, 'ip_subnet_id');
+        return $this->belongsTo(IpSubnet::class, 'subnet_id');
     }
 
-    public function user(): BelongsTo
+    public function history(): HasMany
     {
-        return $this->belongsTo(User::class);
-    }
-
-    public function histories(): HasMany
-    {
-        return $this->hasMany(IpAllocationHistory::class);
-    }
-
-    public function scopeActive(Builder $query): Builder
-    {
-        return $query->where('status', 'active');
-    }
-
-    public function scopeExpired(Builder $query): Builder
-    {
-        return $query->where('expires_at', '<=', now())
-                     ->where('status', 'active');
+        return $this->hasMany(IpAllocationHistory::class, 'allocation_id');
     }
 }

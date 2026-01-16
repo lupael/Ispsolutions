@@ -1,68 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Contracts;
 
 use App\Models\IpAllocation;
-use App\Models\IpPool;
-use App\Models\IpSubnet;
-use Illuminate\Support\Collection;
 
 interface IpamServiceInterface
 {
     /**
-     * Create a new IP pool
+     * Allocate an IP address from a subnet
+     *
+     * @param int $subnetId
+     * @param string $macAddress
+     * @param string $username
+     * @return IpAllocation|null
      */
-    public function createPool(string $name, string $type, ?string $description = null): IpPool;
+    public function allocateIP(int $subnetId, string $macAddress, string $username): ?IpAllocation;
 
     /**
-     * Create a new subnet within a pool
+     * Release an allocated IP address
+     *
+     * @param int $allocationId
+     * @return bool
      */
-    public function createSubnet(
-        int $poolId,
-        string $network,
-        int $prefix,
-        ?string $gateway = null,
-        ?int $vlanId = null,
-        ?string $description = null
-    ): IpSubnet;
+    public function releaseIP(int $allocationId): bool;
 
     /**
-     * Allocate an IP address to a user
+     * Get list of available IP addresses in a subnet
+     *
+     * @param int $subnetId
+     * @return array<string>
      */
-    public function allocateIP(
-        int $subnetId,
-        int $userId,
-        string $type = 'dynamic',
-        ?int $ttl = null
-    ): IpAllocation;
+    public function getAvailableIPs(int $subnetId): array;
 
     /**
-     * Release an IP allocation
+     * Get utilization statistics for a pool
+     *
+     * @param int $poolId
+     * @return array{total: int, allocated: int, available: int, utilization_percent: float}
      */
-    public function releaseIP(int $allocationId, ?string $reason = null): bool;
-
-    /**
-     * Reserve a specific IP address
-     */
-    public function reserveIP(int $subnetId, string $ipAddress, ?string $reason = null): IpAllocation;
-
-    /**
-     * List all allocations for a user
-     */
-    public function listAllocations(int $userId): Collection;
-
-    /**
-     * Clean up expired allocations
-     */
-    public function cleanupExpired(): int;
-
-    /**
-     * Detect if a network overlaps with existing subnets
-     */
-    public function detectOverlap(string $network, int $prefix): bool;
-
-    /**
-     * Get next available IP in a subnet
-     */
-    public function getNextAvailableIP(int $subnetId): ?string;
+    public function getPoolUtilization(int $poolId): array;
 }

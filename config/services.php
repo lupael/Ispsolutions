@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'mikrotik' => [
+        'timeout' => env('MIKROTIK_API_TIMEOUT', 30),
+        'default_port' => env('MIKROTIK_DEFAULT_PORT', 8728),
+    ],
+
 ];

@@ -1,45 +1,53 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Contracts;
 
-use App\Models\User;
+use App\Models\NetworkUser;
 
 interface RadiusServiceInterface
 {
     /**
-     * Authenticate a user against RADIUS database
-     * 
-     * @return array|false Returns RADIUS attributes on success, false on failure
+     * Create a new RADIUS user
+     *
+     * @param string $username
+     * @param string $password
+     * @param array<string, mixed> $attributes
+     * @return bool
      */
-    public function authenticate(string $username, string $password): array|false;
+    public function createUser(string $username, string $password, array $attributes = []): bool;
 
     /**
-     * Start accounting session
+     * Update an existing RADIUS user
+     *
+     * @param string $username
+     * @param array<string, mixed> $attributes
+     * @return bool
      */
-    public function accountingStart(array $data): bool;
+    public function updateUser(string $username, array $attributes): bool;
 
     /**
-     * Update accounting session
+     * Delete a RADIUS user
+     *
+     * @param string $username
+     * @return bool
      */
-    public function accountingUpdate(array $data): bool;
+    public function deleteUser(string $username): bool;
 
     /**
-     * Stop accounting session
+     * Sync a network user to RADIUS
+     *
+     * @param NetworkUser $user
+     * @return bool
      */
-    public function accountingStop(array $data): bool;
+    public function syncUser(NetworkUser $user): bool;
 
     /**
-     * Sync user credentials and attributes to RADIUS database
+     * Get accounting data for a user
+     *
+     * @param string $username
+     * @return array<string, mixed>
      */
-    public function syncUser(User $user, ?string $password = null): bool;
-
-    /**
-     * Remove user from RADIUS database
-     */
-    public function removeUser(User $user): bool;
-
-    /**
-     * Get user statistics from accounting records
-     */
-    public function getUserStats(string $username): array;
+    public function getAccountingData(string $username): array;
 }

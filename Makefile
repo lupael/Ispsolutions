@@ -1,4 +1,4 @@
-.PHONY: help up down restart shell logs install migrate seed test lint build clean
+.PHONY: help setup up down restart logs shell test lint migrate seed fresh
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -6,64 +6,56 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-up: ## Start all Docker containers
-	docker-compose up -d
+setup: ## Initial project setup
+	@echo "Setting up project..."
+	cp -n .env.example .env || true
+	composer install
+	npm install
+	php artisan key:generate
+	@echo "Setup complete. Run 'make up' to start Docker services."
 
-down: ## Stop all Docker containers
+up: ## Start Docker services
+	docker-compose up -d
+	@echo "Services started. App available at http://localhost:8000"
+
+down: ## Stop Docker services
 	docker-compose down
 
-restart: down up ## Restart all Docker containers
+restart: ## Restart Docker services
+	docker-compose restart
 
-shell: ## Enter app container shell
-	docker-compose exec app sh
-
-logs: ## Show container logs
+logs: ## View Docker logs
 	docker-compose logs -f
 
-install: ## Install composer and npm dependencies
-	docker-compose exec app composer install
-	docker-compose exec app npm install
+shell: ## Open shell in app container
+	docker-compose exec app sh
+
+test: ## Run all tests
+	php artisan test
+
+lint: ## Run linters
+	./vendor/bin/pint
+	npm run lint || true
 
 migrate: ## Run database migrations
-	docker-compose exec app php artisan migrate
+	php artisan migrate --force
 
-migrate-fresh: ## Fresh migrations with seed
-	docker-compose exec app php artisan migrate:fresh --seed
+seed: ## Seed databases
+	php artisan db:seed --force
 
-seed: ## Run database seeders
-	docker-compose exec app php artisan db:seed
+fresh: ## Fresh migration with seed
+	php artisan migrate:fresh --seed --force
 
-test: ## Run PHPUnit tests
-	docker-compose exec app php artisan test
+install-deps: ## Install PHP and Node dependencies
+	composer install
+	npm install
 
-test-coverage: ## Run tests with coverage
-	docker-compose exec app php artisan test --coverage
+build: ## Build frontend assets
+	npm run build
 
-lint: ## Run code linters (PHPStan and Pint)
-	docker-compose exec app vendor/bin/phpstan analyse || true
-	docker-compose exec app vendor/bin/pint --test || true
-
-fix: ## Fix code style issues
-	docker-compose exec app vendor/bin/pint
-
-build: ## Build production assets
-	docker-compose exec app npm run build
-
-clean: ## Clean up containers and volumes
-	docker-compose down -v
-
-db-shell: ## Enter database shell
-	docker-compose exec db sh -c 'mysql -u"$$DB_USERNAME" -p"$$DB_PASSWORD" "$$DB_DATABASE"'
-
-radius-shell: ## Enter RADIUS database shell
-	docker-compose exec radius-db sh -c 'mysql -u"$$RADIUS_DB_USERNAME" -p"$$RADIUS_DB_PASSWORD" "$$RADIUS_DB_DATABASE"'
-
-# Artisan commands shortcuts
-ipam-cleanup: ## Run IPAM cleanup command
-	docker-compose exec app php artisan ipam:cleanup
-
-radius-sync: ## Sync user to RADIUS (usage: make radius-sync USER_ID=1)
-	docker-compose exec app php artisan radius:sync-user $(USER_ID)
-
-mikrotik-health: ## Check MikroTik router health
-	docker-compose exec app php artisan mikrotik:health-check
+dev: ## Start development servers
+	@echo "Starting development servers..."
+	@echo "Press Ctrl+C to stop all servers"
+	@trap 'echo "Stopping servers..."; kill 0' EXIT INT TERM; \
+	php artisan serve & \
+	npm run dev
