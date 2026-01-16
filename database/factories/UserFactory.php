@@ -29,6 +29,9 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'service_package_id' => \App\Models\ServicePackage::factory(),
+            'is_active' => true,
+            'activated_at' => now(),
         ];
     }
 
