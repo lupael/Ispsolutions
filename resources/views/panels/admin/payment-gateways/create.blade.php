@@ -24,6 +24,7 @@
         </div>
     </div>
 
+    <!-- Note: Form action is placeholder - actual store functionality needs to be implemented -->
     <form action="#" method="POST" class="space-y-6">
         @csrf
         
@@ -177,8 +178,8 @@
                 <div class="grid grid-cols-1 gap-6">
                     <div>
                         <label for="webhook_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Webhook URL</label>
-                        <input type="url" name="webhook_url" id="webhook_url" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="https://your-domain.com/webhook/payment" readonly>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Configure this URL in your payment gateway dashboard</p>
+                        <input type="url" name="webhook_url" id="webhook_url" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" value="{{ url('/webhook/payment') }}" readonly>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">This URL will be auto-generated. Configure it in your payment gateway dashboard</p>
                     </div>
 
                     <div>
