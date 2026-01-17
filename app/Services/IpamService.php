@@ -29,7 +29,7 @@ class IpamService implements IpamServiceInterface
             if (! $subnet) {
                 Log::error('Subnet not found or inactive', ['subnet_id' => $subnetId]);
 
-                return;
+                return null;
             }
 
             // Get the first available IP
@@ -38,7 +38,7 @@ class IpamService implements IpamServiceInterface
             if (! $availableIP) {
                 Log::warning('No available IPs in subnet', ['subnet_id' => $subnetId]);
 
-                return;
+                return null;
             }
 
             // Create the allocation
