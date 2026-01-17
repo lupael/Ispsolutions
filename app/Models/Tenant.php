@@ -43,6 +43,14 @@ class Tenant extends Model
     }
 
     /**
+     * Get the payment gateways for the tenant.
+     */
+    public function paymentGateways(): HasMany
+    {
+        return $this->hasMany(PaymentGateway::class);
+    }
+
+    /**
      * Get the IP pools for the tenant.
      */
     public function ipPools(): HasMany

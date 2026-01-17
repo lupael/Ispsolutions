@@ -19,6 +19,8 @@ class ServicePackage extends Model
         'bandwidth_down',
         'price',
         'billing_cycle',
+        'billing_type',
+        'validity_days',
         'is_active',
     ];
 

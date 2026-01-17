@@ -24,3 +24,8 @@ Schedule::command('monitoring:collect')->everyFiveMinutes();
 Schedule::command('monitoring:aggregate-hourly')->hourly();
 Schedule::command('monitoring:aggregate-daily')->daily()->at('01:00');
 Schedule::command('monitoring:cleanup --days=90')->daily()->at('03:00');
+
+// Schedule billing commands
+Schedule::command('billing:generate-daily --force')->daily()->at('00:30');
+Schedule::command('billing:generate-monthly --force')->monthlyOn(1, '01:00');
+Schedule::command('billing:lock-expired --force')->daily()->at('04:00');

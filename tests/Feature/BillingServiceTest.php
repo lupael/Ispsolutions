@@ -37,7 +37,6 @@ class BillingServiceTest extends TestCase
         $this->customer->roles()->attach($customerRole);
 
         $this->package = ServicePackage::factory()->create([
-            'tenant_id' => $tenant->id,
             'name' => 'Test Package',
             'price' => 1000.00,
         ]);

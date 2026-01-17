@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('invoice_number')->unique();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('package_id')->nullable()->constrained('service_packages')->nullOnDelete();
+            $table->foreignId('package_id')->nullable()->constrained('packages')->nullOnDelete();
             $table->decimal('amount', 10, 2);
             $table->decimal('tax_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2);

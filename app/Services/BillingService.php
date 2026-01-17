@@ -70,9 +70,85 @@ class BillingService
                     'status' => 'paid',
                     'paid_at' => now(),
                 ]);
+                
+                // Auto-unlock account on payment
+                $user = $invoice->user;
+                if ($user) {
+                    $this->unlockAccountOnPayment($user);
+                }
             }
 
             return $payment;
+        });
+    }
+
+    /**
+     * Generate invoice for daily billing
+     */
+    public function generateDailyInvoice(User $user, ServicePackage $package, int $validityDays = 1): Invoice
+    {
+        $billingDate = now();
+        
+        return DB::transaction(function () use ($user, $package, $validityDays, $billingDate) {
+            // Calculate pro-rated amount based on validity days
+            $dailyBaseDays = config('billing.daily_billing_base_days', 30);
+            $dailyRate = $package->price / $dailyBaseDays;
+            $amount = $dailyRate * $validityDays;
+            
+            $taxRate = config('billing.tax_rate', 0);
+            $taxAmount = $amount * ($taxRate / 100);
+            $totalAmount = $amount + $taxAmount;
+
+            $periodStart = $billingDate->copy()->startOfDay();
+            $periodEnd = $periodStart->copy()->addDays($validityDays - 1)->endOfDay();
+            $dueDate = $periodEnd->copy(); // Due immediately at end of period
+
+            return Invoice::create([
+                'tenant_id' => $user->tenant_id,
+                'invoice_number' => $this->generateInvoiceNumber(),
+                'user_id' => $user->id,
+                'package_id' => $package->id,
+                'amount' => round($amount, 2),
+                'tax_amount' => round($taxAmount, 2),
+                'total_amount' => round($totalAmount, 2),
+                'status' => 'pending',
+                'billing_period_start' => $periodStart,
+                'billing_period_end' => $periodEnd,
+                'due_date' => $dueDate,
+            ]);
+        });
+    }
+
+    /**
+     * Generate invoice for monthly billing
+     */
+    public function generateMonthlyInvoice(User $user, ServicePackage $package, ?Carbon $billingDate = null): Invoice
+    {
+        $billingDate = $billingDate ?? now();
+        
+        return DB::transaction(function () use ($user, $package, $billingDate) {
+            $amount = $package->price;
+            $taxRate = config('billing.tax_rate', 0);
+            $taxAmount = $amount * ($taxRate / 100);
+            $totalAmount = $amount + $taxAmount;
+
+            $periodStart = $billingDate->copy()->startOfDay();
+            $periodEnd = $periodStart->copy()->addMonth()->endOfDay();
+            $dueDate = $periodEnd->copy()->addDays(7); // 7 days grace period
+
+            return Invoice::create([
+                'tenant_id' => $user->tenant_id,
+                'invoice_number' => $this->generateInvoiceNumber(),
+                'user_id' => $user->id,
+                'package_id' => $package->id,
+                'amount' => $amount,
+                'tax_amount' => $taxAmount,
+                'total_amount' => $totalAmount,
+                'status' => 'pending',
+                'billing_period_start' => $periodStart,
+                'billing_period_end' => $periodEnd,
+                'due_date' => $dueDate,
+            ]);
         });
     }
 
@@ -83,12 +159,55 @@ class BillingService
     {
         $periodStart = $billingDate->copy()->startOfDay();
         
-        // Determine period based on package duration or type
-        // For monthly packages
-        $periodEnd = $periodStart->copy()->addMonth()->endOfDay();
-        $dueDate = $periodEnd->copy()->addDays(7); // 7 days grace period
+        // Determine period based on package billing type
+        $billingType = $package->billing_type ?? 'monthly';
+        
+        if ($billingType === 'daily') {
+            $validityDays = $package->validity_days ?? 1;
+            $periodEnd = $periodStart->copy()->addDays($validityDays)->endOfDay();
+            $dueDate = $periodEnd->copy();
+        } else {
+            // Monthly or default
+            $periodEnd = $periodStart->copy()->addMonth()->endOfDay();
+            $dueDate = $periodEnd->copy()->addDays(7); // 7 days grace period
+        }
 
         return [$periodStart, $periodEnd, $dueDate];
+    }
+
+    /**
+     * Lock expired accounts
+     */
+    public function lockExpiredAccounts(): int
+    {
+        $expiredUsers = User::whereHas('invoices', function ($query) {
+            $query->where('status', '!=', 'paid')
+                ->whereDate('due_date', '<', today());
+        })->where('is_active', true)->get();
+
+        $count = 0;
+        foreach ($expiredUsers as $user) {
+            $user->update(['is_active' => false]);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Unlock account on payment
+     */
+    public function unlockAccountOnPayment(User $user): void
+    {
+        // Check if all invoices are paid or user has no overdue invoices
+        $hasOverdueInvoices = $user->invoices()
+            ->whereIn('status', ['pending', 'overdue'])
+            ->whereDate('due_date', '<', today())
+            ->exists();
+
+        if (!$hasOverdueInvoices && !$user->is_active) {
+            $user->update(['is_active' => true]);
+        }
     }
 
     /**
