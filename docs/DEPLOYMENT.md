@@ -17,7 +17,178 @@ This guide covers deploying the ISP Solution application to production environme
 11. [Monitoring & Logging](#monitoring--logging)
 12. [Backup & Recovery](#backup--recovery)
 13. [Security Hardening](#security-hardening)
-14. [Troubleshooting](#troubleshooting)
+14. [Role-Based Access & Menu Generation](#role-based-access--menu-generation)
+15. [Troubleshooting](#troubleshooting)
+
+---
+
+## Role-Based Access & Menu Generation
+
+The ISP Solution implements a comprehensive role-based access control (RBAC) system with automatic menu generation based on user roles and permissions.
+
+### Role Hierarchy
+
+The system supports 9 distinct roles with hierarchical levels:
+
+1. **Developer (Level 1000)** - Supreme authority
+   - Source code owner with all permissions (*)
+   - Can create tenancies (Super Admin/ISP)
+   - Define subscription pricing
+   - Access any panel across all tenancies
+   - Search and view all customer details
+   - View audit logs and system logs
+   - Suspend/activate tenancies
+
+2. **Super Admin (Level 100)** - Tenancy administrator
+   - Add new ISP/Admin
+   - Configure billing (fixed/user-based/panel-based)
+   - Add and manage payment gateways
+   - Add and manage SMS gateways
+   - View logs within tenancy
+   - Full user and role management
+
+3. **Admin (Level 90)** - Tenant administrator
+   - Full access within their tenant
+   - Manage users, roles, network, and billing
+   - Access all device types (MikroTik, NAS, Cisco, OLT)
+
+4. **Manager (Level 70)** - Operational permissions
+   - View and manage users
+   - Network management
+   - View billing and reports
+
+5. **Reseller (Level 60)** - Customer management
+   - Manage customers
+   - View packages and billing
+   - Access commission reports
+
+6. **Sub-Reseller (Level 55)** - Subordinate to reseller
+   - Similar to reseller with limited scope
+
+7. **Staff (Level 50)** - Limited operational access
+   - View users, network, and billing
+   - Manage tickets
+
+8. **Card Distributor (Level 40)** - Recharge card management
+   - Manage and sell cards
+   - View balance
+
+9. **Customer (Level 10)** - Self-service access
+   - View and update profile
+   - View billing and usage
+   - Create and view tickets
+
+### Menu Generation
+
+The system automatically generates role-appropriate menus using the `MenuService` class.
+
+#### Using MenuService in Views
+
+```php
+@inject('menuService', 'App\Services\MenuService')
+
+@php
+    $menu = $menuService->generateMenu();
+@endphp
+
+@foreach($menu as $item)
+    <div class="menu-item">
+        <i class="{{ $item['icon'] }}"></i>
+        <a href="{{ route($item['route']) }}">{{ $item['title'] }}</a>
+        
+        @if(isset($item['children']))
+            <ul class="submenu">
+                @foreach($item['children'] as $child)
+                    <li><a href="{{ route($child['route']) }}">{{ $child['title'] }}</a></li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
+@endforeach
+```
+
+#### Developer Panel Routes
+
+Developer has access to supreme functionality:
+
+- **Dashboard**: `/panel/developer/dashboard`
+- **Tenancy Management**: 
+  - View all: `/panel/developer/tenancies`
+  - Create new: `/panel/developer/tenancies/create`
+  - Toggle status: POST `/panel/developer/tenancies/{tenant}/toggle-status`
+- **System Access**:
+  - Access any panel: `/panel/developer/access-panel`
+  - Search customers: `/panel/developer/customers/search`
+  - View all customers: `/panel/developer/customers`
+- **Audit & Logs**:
+  - Audit logs: `/panel/developer/audit-logs`
+  - System logs: `/panel/developer/logs`
+  - Error logs: `/panel/developer/error-logs`
+
+#### Super Admin Panel Routes
+
+Super Admin manages ISP/Admin and system configuration:
+
+- **Dashboard**: `/panel/super-admin/dashboard`
+- **ISP Management**:
+  - View ISPs: `/panel/super-admin/isp`
+  - Create ISP: `/panel/super-admin/isp/create`
+- **Billing Configuration**:
+  - Fixed billing: `/panel/super-admin/billing/fixed`
+  - User-based billing: `/panel/super-admin/billing/user-base`
+  - Panel-based billing: `/panel/super-admin/billing/panel-base`
+- **Payment Gateway**:
+  - View gateways: `/panel/super-admin/payment-gateway`
+  - Add gateway: `/panel/super-admin/payment-gateway/create`
+- **SMS Gateway**:
+  - View gateways: `/panel/super-admin/sms-gateway`
+  - Add gateway: `/panel/super-admin/sms-gateway/create`
+- **Logs**: `/panel/super-admin/logs`
+
+### Permission Checking
+
+Check permissions in controllers:
+
+```php
+// Check if user has specific permission
+if ($user->hasPermission('users.manage')) {
+    // Allow action
+}
+
+// Check if user has specific role
+if ($user->hasRole('super-admin')) {
+    // Allow action
+}
+
+// Check if user has any of the specified roles
+if ($user->hasAnyRole(['admin', 'super-admin'])) {
+    // Allow action
+}
+```
+
+### Middleware Usage
+
+Routes are protected using the `role` middleware:
+
+```php
+Route::middleware(['auth', 'role:developer'])->group(function () {
+    // Developer-only routes
+});
+
+Route::middleware(['auth', 'role:super-admin,admin'])->group(function () {
+    // Super Admin and Admin routes
+});
+```
+
+### Database Seeding
+
+Seed roles after deployment:
+
+```bash
+php artisan db:seed --class=RoleSeeder
+```
+
+This creates all 9 roles with appropriate permissions.
 
 ---
 
