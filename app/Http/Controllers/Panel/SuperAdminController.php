@@ -96,31 +96,36 @@ class SuperAdminController extends Controller
 
     /**
      * Display user-based billing configuration.
+     *
+     * Currently not implemented.
      */
-    public function billingUserBase(): View
+    public function billingUserBase()
     {
-        // Load user-based billing configuration
-        return view('panels.super-admin.billing.user-base');
+        // User-based billing configuration view not yet implemented.
+        abort(501, 'User-based billing configuration is not yet implemented.');
     }
 
     /**
      * Display panel-based billing configuration.
+     *
+     * Currently not implemented.
      */
-    public function billingPanelBase(): View
+    public function billingPanelBase()
     {
-        // Load panel-based billing configuration
-        return view('panels.super-admin.billing.panel-base');
+        // Panel-based billing configuration is not yet implemented.
+        abort(501, 'Panel-based billing configuration is not yet implemented.');
     }
 
     /**
      * Display payment gateways listing.
+     *
+     * Currently not implemented.
      */
-    public function paymentGatewayIndex(): View
+    public function paymentGatewayIndex()
     {
-        // To be implemented with payment gateway model
-        $gateways = [];
-
-        return view('panels.super-admin.payment-gateway.index', compact('gateways'));
+        // To be implemented with payment gateway model and corresponding view.
+        // Currently not implemented to avoid referencing a non-existent view.
+        throw new \RuntimeException('Payment gateways listing is not yet implemented.');
     }
 
     /**
@@ -133,6 +138,11 @@ class SuperAdminController extends Controller
 
     /**
      * Store a new payment gateway.
+     *
+     * Note: webhook_url validation currently only checks URL format.
+     * Consider adding additional validation to ensure the webhook URL
+     * is either within the application's domain or on an allowlist to
+     * prevent potential SSRF vulnerabilities or misconfiguration.
      */
     public function paymentGatewayStore(Request $request): RedirectResponse
     {
@@ -140,10 +150,24 @@ class SuperAdminController extends Controller
             'name' => 'required|string|max:255',
             'provider' => 'required|string|max:255',
             'api_key' => 'required|string|max:255',
-            'api_secret' => 'required|string|max:255',
+            'api_secret' => 'nullable|string|max:255',
             'webhook_url' => 'nullable|url',
-            'is_active' => 'required|boolean',
+            'is_active' => 'sometimes|boolean',
         ]);
+
+        // Encrypt sensitive credentials before storage with error handling
+        try {
+            if (isset($validated['api_key'])) {
+                $validated['api_key'] = encrypt($validated['api_key']);
+            }
+            if (isset($validated['api_secret'])) {
+                $validated['api_secret'] = encrypt($validated['api_secret']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to encrypt credentials. Please try again.']);
+        }
 
         // To be implemented with payment gateway model
         // PaymentGateway::create($validated);
@@ -154,13 +178,13 @@ class SuperAdminController extends Controller
 
     /**
      * Display SMS gateways listing.
+     *
+     * Currently not implemented.
      */
-    public function smsGatewayIndex(): View
+    public function smsGatewayIndex()
     {
-        // To be implemented with SMS gateway model
-        $gateways = [];
-
-        return view('panels.super-admin.sms-gateway.index', compact('gateways'));
+        // SMS gateway listing view is not yet implemented.
+        abort(501, 'SMS gateway listing view is not yet implemented.');
     }
 
     /**
@@ -182,8 +206,22 @@ class SuperAdminController extends Controller
             'api_key' => 'required|string|max:255',
             'api_secret' => 'nullable|string|max:255',
             'sender_id' => 'required|string|max:20',
-            'is_active' => 'required|boolean',
+            'is_active' => 'sometimes|boolean',
         ]);
+
+        // Encrypt sensitive credentials before storage with error handling
+        try {
+            if (isset($validated['api_key'])) {
+                $validated['api_key'] = encrypt($validated['api_key']);
+            }
+            if (isset($validated['api_secret'])) {
+                $validated['api_secret'] = encrypt($validated['api_secret']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to encrypt credentials. Please try again.']);
+        }
 
         // To be implemented with SMS gateway model
         // SmsGateway::create($validated);
@@ -194,11 +232,15 @@ class SuperAdminController extends Controller
 
     /**
      * Display logs.
+     *
+     * To be implemented with a log viewer.
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
-    public function logs(): View
+    public function logs()
     {
-        // To be implemented with log viewer
-        return view('panels.super-admin.logs');
+        // Not yet implemented: no logs view exists.
+        abort(501, 'Logs view not implemented yet.');
     }
 
     /**

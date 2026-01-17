@@ -18,6 +18,8 @@
                     <h5 class="card-title mb-0">Fixed Monthly Bill Settings</h5>
                 </div>
                 <div class="card-body">
+                    {{-- Note: Form action currently set to '#'. A proper route and controller method 
+                         should be implemented to handle the billing configuration POST request. --}}
                     <form action="#" method="POST">
                         @csrf
 

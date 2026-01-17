@@ -66,35 +66,41 @@ class DeveloperController extends Controller
 
     /**
      * Suspend or activate a tenancy.
+     *
+     * Note: This method allows any Developer to suspend or activate any tenancy.
+     * Consider adding explicit authorization checks and comprehensive audit logging
+     * for this sensitive operation that could impact all users in a tenancy.
      */
-    public function toggleTenancyStatus(Tenant $tenant): RedirectResponse
+    public function toggleTenancyStatus(Tenant $tenancy): RedirectResponse
     {
-        $tenant->status = $tenant->status === 'active' ? 'suspended' : 'active';
-        $tenant->save();
+        $tenancy->status = $tenancy->status === 'active' ? 'suspended' : 'active';
+        $tenancy->save();
 
         return redirect()->back()
-            ->with('success', "Tenancy status updated to {$tenant->status}.");
+            ->with('success', "Tenancy status updated to {$tenancy->status}.");
     }
 
     /**
      * Display subscription plans.
+     *
+     * Currently not implemented.
      */
-    public function subscriptions(): View
+    public function subscriptions()
     {
-        // To be implemented with subscription model
-        $subscriptions = [];
-
-        return view('panels.developer.subscriptions.index', compact('subscriptions'));
+        // To be implemented with subscription model and corresponding view.
+        abort(501, 'Subscriptions feature is not implemented yet.');
     }
 
     /**
      * Access any panel (select panel to access).
+     *
+     * Currently not implemented.
      */
-    public function accessPanel(): View
+    public function accessPanel()
     {
-        $tenancies = Tenant::active()->get();
-
-        return view('panels.developer.access-panel', compact('tenancies'));
+        // Feature not yet implemented: the corresponding view does not exist.
+        // Once implemented, replace this with a valid view() call.
+        abort(501, 'Access panel feature is not yet implemented.');
     }
 
     /**
@@ -102,17 +108,27 @@ class DeveloperController extends Controller
      */
     public function searchCustomers(Request $request): View
     {
+        $request->validate([
+            'query' => 'nullable|string|max:255',
+        ]);
+
         $query = $request->input('query');
         $customers = [];
 
         if ($query) {
-            $customers = User::where('email', 'like', "%{$query}%")
-                ->orWhere('name', 'like', "%{$query}%")
+            // Escape special LIKE characters to prevent unintended wildcard matching
+            $escapedQuery = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query);
+            
+            $customers = User::allTenants()
+                ->where(function($q) use ($escapedQuery) {
+                    $q->where('email', 'like', "%{$escapedQuery}%")
+                      ->orWhere('name', 'like', "%{$escapedQuery}%");
+                })
                 ->with(['tenant', 'roles'])
                 ->paginate(20);
         }
 
-        return view('panels.developer.customers.search', compact('customers', 'query'));
+        return view('panels.developer.customers.index', compact('customers', 'query'));
     }
 
     /**
@@ -120,22 +136,25 @@ class DeveloperController extends Controller
      */
     public function allCustomers(): View
     {
-        $customers = User::with(['tenant', 'roles'])
+        $query = null;
+
+        $customers = User::allTenants()
+            ->with(['tenant', 'roles'])
             ->latest()
             ->paginate(20);
 
-        return view('panels.developer.customers.index', compact('customers'));
+        return view('panels.developer.customers.index', compact('customers', 'query'));
     }
 
     /**
      * Display audit logs.
+     *
+     * Currently not implemented.
      */
-    public function auditLogs(): View
+    public function auditLogs()
     {
-        // To be implemented with audit log model
-        $logs = [];
-
-        return view('panels.developer.audit-logs', compact('logs'));
+        // Not yet implemented: audit log model and view will be added later.
+        abort(501, 'Audit logs view is not yet implemented.');
     }
 
     /**
@@ -149,11 +168,13 @@ class DeveloperController extends Controller
 
     /**
      * Display error logs.
+     *
+     * Currently not implemented.
      */
-    public function errorLogs(): View
+    public function errorLogs()
     {
-        // To be implemented with error log viewer
-        return view('panels.developer.error-logs');
+        // Not yet implemented: error log viewer
+        abort(501, 'Error logs view is not yet implemented.');
     }
 
     /**
@@ -166,10 +187,12 @@ class DeveloperController extends Controller
 
     /**
      * Manage API keys.
+     *
+     * Currently not implemented.
      */
-    public function apiKeys(): View
+    public function apiKeys()
     {
-        return view('panels.developer.api-keys');
+        abort(501, 'API key management is not yet implemented.');
     }
 
     /**

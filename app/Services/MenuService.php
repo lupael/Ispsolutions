@@ -9,6 +9,21 @@ class MenuService
     /**
      * Generate menu items based on user roles and permissions.
      *
+     * Role handling:
+     * - A user may have multiple roles assigned.
+     * - Menus are generated based on a fixed role priority/hierarchy.
+     * - The menu for the highest-priority role that the user has will be returned.
+     * - Role priority order (highest to lowest):
+     *   1. Developer (supreme authority)
+     *   2. Super Admin
+     *   3. Admin
+     *   4. Manager
+     *   5. Reseller
+     *   6. Sub-Reseller
+     *   7. Staff
+     *   8. Card Distributor
+     *   9. Customer
+     *
      * @return array
      */
     public function generateMenu(): array
