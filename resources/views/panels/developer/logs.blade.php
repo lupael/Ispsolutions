@@ -196,7 +196,7 @@
             </div>
 
             <!-- Pagination -->
-            @if($logs->hasPages())
+            @if(is_object($logs) && method_exists($logs, 'hasPages') && $logs->hasPages())
                 <div class="mt-4">
                     {{ $logs->links() }}
                 </div>

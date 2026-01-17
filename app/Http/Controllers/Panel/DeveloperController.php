@@ -16,6 +16,10 @@ class DeveloperController extends Controller
      */
     public function dashboard(): View
     {
+        // Get system statistics
+        $systemStats = $this->getSystemStats();
+        
+        // Get ISP statistics
         $stats = [
             'total_tenancies' => Tenant::count(),
             'active_tenancies' => Tenant::where('status', 'active')->count(),
@@ -23,9 +27,94 @@ class DeveloperController extends Controller
             'api_calls_today' => 0, // To be implemented
             'total_endpoints' => 0, // To be implemented
             'system_health' => 'Healthy',
+            
+            // ISP Statistics (reusing active_tenancies for total_isp)
+            'ppp_users' => \App\Models\MikrotikPppoeUser::count(),
+            'hotspot_users' => \App\Models\HotspotUser::count(),
+            'total_routers' => \App\Models\MikrotikRouter::count(),
+            'total_olts' => \App\Models\Olt::count(),
         ];
 
-        return view('panels.developer.dashboard', compact('stats'));
+        return view('panels.developer.dashboard', compact('stats', 'systemStats'));
+    }
+    
+    /**
+     * Get system statistics (RAM, CPU, HDD, etc.)
+     */
+    private function getSystemStats(): array
+    {
+        $stats = [
+            'ram' => [
+                'total' => 0,
+                'used' => 0,
+                'free' => 0,
+                'percentage' => 0,
+            ],
+            'disk' => [
+                'total' => 0,
+                'used' => 0,
+                'free' => 0,
+                'percentage' => 0,
+            ],
+            'cpu' => [
+                'cores' => 0,
+                'load_1' => 0,
+                'load_5' => 0,
+                'load_15' => 0,
+            ],
+        ];
+        
+        // Try to get actual system stats (Linux only)
+        if (PHP_OS_FAMILY === 'Linux') {
+            try {
+                // Get RAM info
+                if (file_exists('/proc/meminfo')) {
+                    $meminfo = file_get_contents('/proc/meminfo');
+                    preg_match('/MemTotal:\s+(\d+)/', $meminfo, $total);
+                    preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $available);
+                    
+                    if (!empty($total[1]) && !empty($available[1])) {
+                        $stats['ram']['total'] = round($total[1] / 1024 / 1024, 2); // Convert to GB
+                        $stats['ram']['free'] = round($available[1] / 1024 / 1024, 2);
+                        $stats['ram']['used'] = round($stats['ram']['total'] - $stats['ram']['free'], 2);
+                        $stats['ram']['percentage'] = $stats['ram']['total'] > 0 
+                            ? round(($stats['ram']['used'] / $stats['ram']['total']) * 100, 1) 
+                            : 0;
+                    }
+                }
+                
+                // Get disk info
+                $diskTotal = disk_total_space('/');
+                $diskFree = disk_free_space('/');
+                if ($diskTotal && $diskFree) {
+                    $stats['disk']['total'] = round($diskTotal / 1024 / 1024 / 1024, 2); // Convert to GB
+                    $stats['disk']['free'] = round($diskFree / 1024 / 1024 / 1024, 2);
+                    $stats['disk']['used'] = round($stats['disk']['total'] - $stats['disk']['free'], 2);
+                    $stats['disk']['percentage'] = $stats['disk']['total'] > 0 
+                        ? round(($stats['disk']['used'] / $stats['disk']['total']) * 100, 1) 
+                        : 0;
+                }
+                
+                // Get CPU info
+                if (file_exists('/proc/cpuinfo')) {
+                    $cpuinfo = file_get_contents('/proc/cpuinfo');
+                    preg_match_all('/^processor/m', $cpuinfo, $matches);
+                    $stats['cpu']['cores'] = count($matches[0]);
+                }
+                
+                // Get load average
+                if (function_exists('sys_getloadavg')) {
+                    $load = sys_getloadavg();
+                    $stats['cpu']['load_1'] = round($load[0], 2);
+                    $stats['cpu']['load_5'] = round($load[1], 2);
+                    $stats['cpu']['load_15'] = round($load[2], 2);
+                }
+            } catch (\Exception $e) {
+                // Silent fail - return default values
+            }
+        }
+        
+        return $stats;
     }
 
     /**
@@ -163,8 +252,19 @@ class DeveloperController extends Controller
      */
     public function logs(): View
     {
-        // To be implemented with log viewer
-        return view('panels.developer.logs');
+        // For now, return empty collection for logs
+        // This can be implemented with a proper log model later
+        $logs = collect([]);
+        
+        $stats = [
+            'info' => 0,
+            'warning' => 0,
+            'error' => 0,
+            'debug' => 0,
+            'total' => 0,
+        ];
+        
+        return view('panels.developer.logs', compact('logs', 'stats'));
     }
 
     /**
