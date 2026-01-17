@@ -67,6 +67,22 @@ class Tenant extends Model
     }
 
     /**
+     * Get the OLTs for the tenant.
+     */
+    public function olts(): HasMany
+    {
+        return $this->hasMany(Olt::class);
+    }
+
+    /**
+     * Get the ONUs for the tenant.
+     */
+    public function onus(): HasMany
+    {
+        return $this->hasMany(Onu::class);
+    }
+
+    /**
      * Check if tenant is active.
      */
     public function isActive(): bool

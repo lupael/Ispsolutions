@@ -44,4 +44,9 @@ class NetworkUser extends Model
     {
         return $this->hasMany(NetworkUserSession::class, 'user_id');
     }
+
+    public function onus(): HasMany
+    {
+        return $this->hasMany(Onu::class);
+    }
 }
