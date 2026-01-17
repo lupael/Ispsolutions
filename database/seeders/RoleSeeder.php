@@ -14,11 +14,31 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             [
+                'name' => 'Developer',
+                'slug' => 'developer',
+                'description' => 'Source code owner and supreme authority with all permissions. Can create tenancies, define subscription prices, access any panel, view all customer details, audit logs, and suspend/activate tenancies.',
+                'level' => 1000,
+                'permissions' => ['*'],
+            ],
+            [
                 'name' => 'Super Admin',
                 'slug' => 'super-admin',
-                'description' => 'Full system access with all privileges across all tenants',
+                'description' => 'Tenancy administrator with full privileges. Can add ISPs/admins, configure billing, payment gateways, SMS gateways, and view logs.',
                 'level' => 100,
-                'permissions' => ['*'],
+                'permissions' => [
+                    'tenants.manage',
+                    'isp.create',
+                    'billing.configure',
+                    'payment-gateway.manage',
+                    'sms-gateway.manage',
+                    'logs.view',
+                    'users.manage',
+                    'roles.manage',
+                    'network.manage',
+                    'billing.manage',
+                    'reports.view',
+                    'settings.manage',
+                ],
             ],
             [
                 'name' => 'Admin',
@@ -54,18 +74,6 @@ class RoleSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Staff',
-                'slug' => 'staff',
-                'description' => 'Staff member with limited operational access',
-                'level' => 50,
-                'permissions' => [
-                    'users.view',
-                    'network.view',
-                    'billing.view',
-                    'tickets.manage',
-                ],
-            ],
-            [
                 'name' => 'Reseller',
                 'slug' => 'reseller',
                 'description' => 'Reseller with customer management and commission access',
@@ -91,6 +99,18 @@ class RoleSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'Staff',
+                'slug' => 'staff',
+                'description' => 'Staff member with limited operational access',
+                'level' => 50,
+                'permissions' => [
+                    'users.view',
+                    'network.view',
+                    'billing.view',
+                    'tickets.manage',
+                ],
+            ],
+            [
                 'name' => 'Card Distributor',
                 'slug' => 'card-distributor',
                 'description' => 'Recharge card distributor',
@@ -112,18 +132,6 @@ class RoleSeeder extends Seeder
                     'billing.view',
                     'tickets.create',
                     'tickets.view',
-                ],
-            ],
-            [
-                'name' => 'Developer',
-                'slug' => 'developer',
-                'description' => 'Developer with API and system access',
-                'level' => 95,
-                'permissions' => [
-                    'api.access',
-                    'system.debug',
-                    'logs.view',
-                    'settings.manage',
                 ],
             ],
         ];

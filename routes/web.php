@@ -96,6 +96,29 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::get('/roles', [SuperAdminController::class, 'roles'])->name('roles');
+    
+    // ISP/Admin Management
+    Route::get('/isp', [SuperAdminController::class, 'ispIndex'])->name('isp.index');
+    Route::get('/isp/create', [SuperAdminController::class, 'ispCreate'])->name('isp.create');
+    Route::post('/isp', [SuperAdminController::class, 'ispStore'])->name('isp.store');
+    
+    // Billing Configuration
+    Route::get('/billing/fixed', [SuperAdminController::class, 'billingFixed'])->name('billing.fixed');
+    Route::get('/billing/user-base', [SuperAdminController::class, 'billingUserBase'])->name('billing.user-base');
+    Route::get('/billing/panel-base', [SuperAdminController::class, 'billingPanelBase'])->name('billing.panel-base');
+    
+    // Payment Gateway Management
+    Route::get('/payment-gateway', [SuperAdminController::class, 'paymentGatewayIndex'])->name('payment-gateway.index');
+    Route::get('/payment-gateway/create', [SuperAdminController::class, 'paymentGatewayCreate'])->name('payment-gateway.create');
+    Route::post('/payment-gateway', [SuperAdminController::class, 'paymentGatewayStore'])->name('payment-gateway.store');
+    
+    // SMS Gateway Management
+    Route::get('/sms-gateway', [SuperAdminController::class, 'smsGatewayIndex'])->name('sms-gateway.index');
+    Route::get('/sms-gateway/create', [SuperAdminController::class, 'smsGatewayCreate'])->name('sms-gateway.create');
+    Route::post('/sms-gateway', [SuperAdminController::class, 'smsGatewayStore'])->name('sms-gateway.store');
+    
+    // Logs & Settings
+    Route::get('/logs', [SuperAdminController::class, 'logs'])->name('logs');
     Route::get('/settings', [SuperAdminController::class, 'settings'])->name('settings');
 });
 
@@ -228,11 +251,34 @@ Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'r
     Route::get('/tickets', [CustomerController::class, 'tickets'])->name('tickets');
 });
 
-// Developer Panel
+// Developer Panel (Supreme Authority)
 Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 'role:developer'])->group(function () {
     Route::get('/dashboard', [DeveloperController::class, 'dashboard'])->name('dashboard');
-    Route::get('/api-docs', [DeveloperController::class, 'apiDocs'])->name('api-docs');
+    
+    // Tenancy Management
+    Route::get('/tenancies', [DeveloperController::class, 'tenancies'])->name('tenancies.index');
+    Route::get('/tenancies/create', [DeveloperController::class, 'createTenancy'])->name('tenancies.create');
+    Route::post('/tenancies', [DeveloperController::class, 'storeTenancy'])->name('tenancies.store');
+    Route::post('/tenancies/{tenant}/toggle-status', [DeveloperController::class, 'toggleTenancyStatus'])->name('tenancies.toggle-status');
+    
+    // Subscription Management
+    Route::get('/subscriptions', [DeveloperController::class, 'subscriptions'])->name('subscriptions.index');
+    
+    // System Access
+    Route::get('/access-panel', [DeveloperController::class, 'accessPanel'])->name('access-panel');
+    Route::get('/customers/search', [DeveloperController::class, 'searchCustomers'])->name('customers.search');
+    Route::get('/customers', [DeveloperController::class, 'allCustomers'])->name('customers.index');
+    
+    // Audit & Logs
+    Route::get('/audit-logs', [DeveloperController::class, 'auditLogs'])->name('audit-logs');
     Route::get('/logs', [DeveloperController::class, 'logs'])->name('logs');
+    Route::get('/error-logs', [DeveloperController::class, 'errorLogs'])->name('error-logs');
+    
+    // API Management
+    Route::get('/api-docs', [DeveloperController::class, 'apiDocs'])->name('api-docs');
+    Route::get('/api-keys', [DeveloperController::class, 'apiKeys'])->name('api-keys');
+    
+    // System Tools
     Route::get('/settings', [DeveloperController::class, 'settings'])->name('settings');
     Route::get('/debug', [DeveloperController::class, 'debug'])->name('debug');
 });
