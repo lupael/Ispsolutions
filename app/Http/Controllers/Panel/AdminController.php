@@ -326,4 +326,129 @@ class AdminController extends Controller
     {
         return view('panels.admin.accounting.gateway-customer-payments');
     }
+
+    /**
+     * Display operators listing.
+     */
+    public function operators(): View
+    {
+        $operators = User::with('roles')
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
+            })
+            ->latest()
+            ->paginate(20);
+
+        $stats = [
+            'total' => User::whereHas('roles', function ($query) {
+                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
+            })->count(),
+            'active' => User::whereHas('roles', function ($query) {
+                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
+            })->where('is_active', true)->count(),
+            'managers' => User::whereHas('roles', function ($query) {
+                $query->where('slug', 'manager');
+            })->count(),
+            'staff' => User::whereHas('roles', function ($query) {
+                $query->where('slug', 'staff');
+            })->count(),
+        ];
+
+        return view('panels.admin.operators.index', compact('operators', 'stats'));
+    }
+
+    /**
+     * Show create operator form.
+     */
+    public function operatorsCreate(): View
+    {
+        return view('panels.admin.operators.create');
+    }
+
+    /**
+     * Show edit operator form.
+     */
+    public function operatorsEdit($id): View
+    {
+        $operator = User::with('roles')->findOrFail($id);
+
+        return view('panels.admin.operators.edit', compact('operator'));
+    }
+
+    /**
+     * Display sub-operators hierarchy.
+     */
+    public function subOperators(): View
+    {
+        $hierarchy = User::with(['roles', 'subordinates.roles'])
+            ->whereHas('roles', function ($query) {
+                $query->where('slug', 'manager');
+            })
+            ->get();
+
+        $stats = [
+            'supervisors' => User::whereHas('roles', function ($query) {
+                $query->where('slug', 'manager');
+            })->count(),
+            'subordinates' => User::whereHas('roles', function ($query) {
+                $query->where('slug', 'staff');
+            })->count(),
+            'avg_team_size' => 0,
+        ];
+
+        return view('panels.admin.operators.sub-operators', compact('hierarchy', 'stats'));
+    }
+
+    /**
+     * Display staff members.
+     */
+    public function staff(): View
+    {
+        $staff = User::with(['roles', 'supervisor'])
+            ->whereHas('roles', function ($query) {
+                $query->where('slug', 'staff');
+            })
+            ->latest()
+            ->paginate(20);
+
+        $stats = [
+            'total' => User::whereHas('roles', function ($query) {
+                $query->where('slug', 'staff');
+            })->count(),
+            'active' => User::whereHas('roles', function ($query) {
+                $query->where('slug', 'staff');
+            })->where('is_active', true)->count(),
+            'on_duty' => 0,
+            'departments' => 4,
+        ];
+
+        return view('panels.admin.operators.staff', compact('staff', 'stats'));
+    }
+
+    /**
+     * Display operator profile.
+     */
+    public function operatorProfile($id): View
+    {
+        $operator = User::with(['roles', 'supervisor'])->findOrFail($id);
+
+        $stats = [
+            'customers_created' => 0,
+            'tickets_resolved' => 0,
+            'total_logins' => 0,
+            'days_active' => $operator->created_at->diffInDays(now()),
+        ];
+
+        return view('panels.admin.operators.profile', compact('operator', 'stats'));
+    }
+
+    /**
+     * Manage operator special permissions.
+     */
+    public function operatorSpecialPermissions($id): View
+    {
+        $operator = User::with('roles')->findOrFail($id);
+
+        return view('panels.admin.operators.special-permissions', compact('operator'));
+    }
 }

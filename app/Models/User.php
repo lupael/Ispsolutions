@@ -130,4 +130,20 @@ class User extends Authenticatable
 
         return $package instanceof ServicePackage ? $package : null;
     }
+
+    /**
+     * Get the supervisor (manager) of this user.
+     */
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'supervisor_id');
+    }
+
+    /**
+     * Get subordinates reporting to this user.
+     */
+    public function subordinates(): HasMany
+    {
+        return $this->hasMany(User::class, 'supervisor_id');
+    }
 }
