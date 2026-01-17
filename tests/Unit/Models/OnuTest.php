@@ -125,13 +125,19 @@ class OnuTest extends TestCase
 
     public function test_onu_get_full_pon_path_handles_missing_olt(): void
     {
-        $onu = Onu::factory()->make([
+        $olt = Olt::factory()->create(['name' => 'Test OLT']);
+        $onu = Onu::factory()->create([
+            'olt_id' => $olt->id,
             'pon_port' => '0/1/1',
             'onu_id' => 5,
         ]);
-        $onu->olt_id = 999; // Non-existent OLT
-        $onu->save();
 
+        // Delete the OLT to simulate missing relationship
+        $olt->delete();
+
+        // Refresh the ONU to clear the relationship cache
+        $onu->refresh();
+        
         $path = $onu->getFullPonPath();
 
         $this->assertEquals('Unknown OLT / 0/1/1 / 5', $path);
