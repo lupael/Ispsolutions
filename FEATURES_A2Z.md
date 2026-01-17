@@ -1,3 +1,145 @@
+# Unified Enhanced Multi-Tenancy ISP Billing System
+
+This document consolidates and rephrases the previous ISP Billing System Feature List with the new multi-tenancy isolation architecture and upgraded technology stack.
+
+---
+
+## Governance & Roles
+- **Developer**: Supreme authority and source code owner, with unrestricted permissions.  
+- **Tenancy (formerly Super Admin)**: Represents the overarching tenant context.  
+- **Admin (ISP, formerly Group Admin)**: Manages ISP-specific operations within a tenancy.  
+
+---
+
+## Technology Stack
+- **Laravel**: 12.x (latest)  
+- **PHP**: 8.2+  
+- **Database**: MySQL 8.0 (Application + RADIUS)  
+- **Redis**: Latest release for caching and queues  
+- **Tailwind CSS**: 4.x  
+- **Vite**: 7.x asset bundler  
+- **Docker**: Containerized development environment  
+- **Node.js**: Latest LTS version  
+- **Metronic**: Demo1 UI framework  
+
+---
+
+## Multi-Tenancy Infrastructure
+- **Tenant Isolation**: Global scopes enforce tenant-specific query filtering.  
+- **Automatic Tenant Assignment**: Models with `BelongsToTenant` auto-assign `tenant_id`.  
+- **Domain/Subdomain Resolution**: Middleware resolves tenant from request host.  
+- **Role-Based Permissions**: Fine-grained access control.  
+- **Soft Deletes**: Tenant data preserved with soft deletion.  
+
+---
+
+## Models
+- **Tenant Model**: Manages tenant metadata (domain, subdomain, database, settings, status).  
+  - Supports soft deletes  
+  - Relationships with users, IP pools, packages, and network users  
+
+- **Role Model**: Defines hierarchical roles (levels 0–100) with permissions.  
+  - Helpers: `hasPermission()`, `getPermissions()`  
+  - Many-to-many user relationships  
+
+---
+
+## Migrations
+- `create_tenants_table`: Tenant metadata with domain/subdomain  
+- `create_roles_table`: Roles and role_user pivot  
+- `add_tenant_id_to_tables`: Adds `tenant_id` to users, service_packages, ip_pools, ip_subnets, ip_allocations, network_users, mikrotik_routers  
+
+---
+
+## Services
+- **TenancyService**:  
+  - Manages tenant context  
+  - Resolves tenant by domain/subdomain  
+  - Executes callbacks in tenant scope  
+  - Caches for performance  
+
+---
+
+## Traits
+- **BelongsToTenant**:  
+  - Auto-sets `tenant_id`  
+  - Adds global scope  
+  - Provides `forTenant()` and `allTenants()` scopes  
+
+---
+
+## Middleware
+- **ResolveTenant**:  
+  - Resolves tenant from request host  
+  - Sets tenant in `TenancyService`  
+  - Allows public routes  
+  - Returns 404 for invalid tenants  
+
+---
+
+## Service Provider
+- **TenancyServiceProvider**: Registers `TenancyService` as singleton in `bootstrap/providers.php`.  
+
+---
+
+## Network Resource Management
+- Routers CRUD, logs, Netwatch  
+- VPN accounts  
+- Cable TV  
+- IPv4/IPv6 pools  
+- MikroTik auto-recovery  
+- OLT management  
+- Configuration application and auto-backup  
+- CISCO and Juniper support  
+- Network map visualization  
+
+---
+
+## Performance Monitoring
+- CPU, memory, temperature tracking  
+- Bandwidth usage visualization  
+- PON port utilization  
+- ONU status distribution  
+- Time-range selection (1h, 6h, 24h, 7d, 30d)  
+
+---
+
+## Configuration Templates
+- Create/edit/delete templates  
+- Vendor-specific (Huawei, vsol, bdcom, ZTE, Fiberhome, Nokia)  
+- Variable substitution (`{{variable_name}}`)  
+- Active/inactive status  
+- Real-time alerts for offline/degraded devices  
+- Threshold alerts (CPU > 90%, Memory > 95%)  
+- Historical trend analysis and predictions  
+- Bandwidth quota enforcement  
+- Notification system integration  
+- Dashboard widgets  
+- Report export functionality  
+
+---
+
+## Financial Management
+- Payment gateways: bKash, Nagad, SSLCommerz, Stripe, PayPal  
+- AP/AR dashboards  
+- Ledger (daily/monthly)  
+- Gateway reports  
+- Admin credit and manual payment reports  
+- Reseller statements  
+- Commission distribution  
+- Transaction recording (auto/manual)  
+
+---
+
+## Globalization & Accessibility
+- Multi-language support  
+- Multi-currency support  
+- VAT management  
+- Global mobile support  
+- Android App  
+
+
+
 # ISP Billing System - Complete Feature List (A-Z)
 
 This document provides a comprehensive list of all features available in the ISP Billing System, derived from analyzing the codebase architecture, controllers, models, routes, and configurations.
