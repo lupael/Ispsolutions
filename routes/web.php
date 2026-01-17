@@ -27,6 +27,28 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 /*
 |--------------------------------------------------------------------------
+| Payment Routes
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\PaymentController;
+
+Route::prefix('payments')->name('payments.')->middleware(['auth'])->group(function () {
+    Route::get('invoices/{invoice}', [PaymentController::class, 'show'])->name('show');
+    Route::post('invoices/{invoice}/initiate', [PaymentController::class, 'initiate'])->name('initiate');
+    Route::post('invoices/{invoice}/manual', [PaymentController::class, 'recordManualPayment'])->name('manual');
+    
+    // Payment callbacks
+    Route::get('success', [PaymentController::class, 'success'])->name('success');
+    Route::get('failure', [PaymentController::class, 'failure'])->name('failure');
+    Route::get('cancel', [PaymentController::class, 'cancel'])->name('cancel');
+});
+
+// Payment webhooks (no auth required)
+Route::post('webhooks/payment/{gateway}', [PaymentController::class, 'webhook'])->name('webhooks.payment');
+
+/*
+|--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 |
