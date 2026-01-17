@@ -46,8 +46,9 @@ RUN apk add --no-cache \
     npm \
     bash
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql zip
+# Copy compiled PHP extensions from builder instead of recompiling
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 # Set working directory
 WORKDIR /var/www
