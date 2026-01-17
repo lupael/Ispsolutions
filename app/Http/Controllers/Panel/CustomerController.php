@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\NetworkUser;
 use App\Models\NetworkUserSession;
+use App\Models\Invoice;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -20,11 +22,17 @@ class CustomerController extends Controller
         // Get customer's network user account
         $networkUser = NetworkUser::where('user_id', $user->id)->first();
         
+        // Calculate next billing due
+        $nextInvoice = Invoice::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'overdue'])
+            ->orderBy('due_date')
+            ->first();
+        
         $stats = [
             'current_package' => $user->currentPackage()?->name ?? 'No Package',
             'account_status' => $user->is_active ? 'Active' : 'Inactive',
-            'data_usage' => 0, // To be calculated
-            'billing_due' => 0, // To be calculated
+            'data_usage' => 0, // To be calculated from sessions
+            'billing_due' => $nextInvoice?->total_amount ?? 0,
         ];
 
         return view('panels.customer.dashboard', compact('stats', 'networkUser'));
@@ -45,8 +53,19 @@ class CustomerController extends Controller
      */
     public function billing(): View
     {
-        // To be implemented with billing system
-        return view('panels.customer.billing');
+        $user = auth()->user();
+        
+        $invoices = Invoice::where('user_id', $user->id)
+            ->with('package', 'payments')
+            ->latest()
+            ->paginate(20);
+
+        $payments = Payment::where('user_id', $user->id)
+            ->with('invoice', 'gateway')
+            ->latest()
+            ->paginate(20);
+
+        return view('panels.customer.billing', compact('invoices', 'payments'));
     }
 
     /**

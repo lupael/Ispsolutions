@@ -3,11 +3,20 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
+use App\Models\RechargeCard;
+use App\Services\CardDistributionService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CardDistributorController extends Controller
 {
+    protected CardDistributionService $cardService;
+
+    public function __construct(CardDistributionService $cardService)
+    {
+        $this->cardService = $cardService;
+    }
+
     /**
      * Display the card distributor dashboard.
      */
@@ -15,11 +24,7 @@ class CardDistributorController extends Controller
     {
         $distributorId = auth()->id();
         
-        $stats = [
-            'total_cards' => 0, // To be implemented
-            'sold_cards' => 0, // To be implemented
-            'available_balance' => 0, // To be implemented
-        ];
+        $stats = $this->cardService->getDistributorSummary(auth()->user());
 
         return view('panels.card-distributor.dashboard', compact('stats'));
     }
@@ -29,8 +34,12 @@ class CardDistributorController extends Controller
      */
     public function cards(): View
     {
-        // To be implemented with card system
-        return view('panels.card-distributor.cards.index');
+        $cards = RechargeCard::where('assigned_to', auth()->id())
+            ->with(['generatedBy', 'usedBy'])
+            ->latest()
+            ->paginate(20);
+
+        return view('panels.card-distributor.cards.index', compact('cards'));
     }
 
     /**
@@ -38,8 +47,13 @@ class CardDistributorController extends Controller
      */
     public function sales(): View
     {
-        // To be implemented with card system
-        return view('panels.card-distributor.sales.index');
+        $sales = RechargeCard::where('assigned_to', auth()->id())
+            ->where('status', 'used')
+            ->with(['generatedBy', 'usedBy'])
+            ->latest('used_at')
+            ->paginate(20);
+
+        return view('panels.card-distributor.sales.index', compact('sales'));
     }
 
     /**
@@ -47,6 +61,8 @@ class CardDistributorController extends Controller
      */
     public function balance(): View
     {
-        return view('panels.card-distributor.balance');
+        $summary = $this->cardService->getDistributorSummary(auth()->user());
+        
+        return view('panels.card-distributor.balance', compact('summary'));
     }
 }

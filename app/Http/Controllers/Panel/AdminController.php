@@ -10,6 +10,10 @@ use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Models\CiscoDevice;
 use App\Models\Olt;
+use App\Models\PaymentGateway;
+use App\Models\Payment;
+use App\Models\Invoice;
+use App\Models\RechargeCard;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -457,13 +461,20 @@ class AdminController extends Controller
      */
     public function paymentGateways(): View
     {
-        $gateways = collect();
+        $gateways = PaymentGateway::latest()->paginate(20);
+        
+        $totalPayments = Payment::whereNotNull('payment_gateway_id')->count();
+        $completedPayments = Payment::whereNotNull('payment_gateway_id')
+            ->where('status', 'completed')
+            ->count();
         
         $stats = [
-            'active' => 0,
-            'total_transactions' => 0,
-            'success_rate' => 0,
-            'total_amount' => 0,
+            'active' => PaymentGateway::where('is_active', true)->count(),
+            'total_transactions' => $totalPayments,
+            'success_rate' => $totalPayments > 0 ? round(($completedPayments / $totalPayments) * 100, 2) : 0,
+            'total_amount' => Payment::whereNotNull('payment_gateway_id')
+                ->where('status', 'completed')
+                ->sum('amount'),
         ];
 
         return view('panels.admin.payment-gateways.index', compact('gateways', 'stats'));
@@ -482,12 +493,12 @@ class AdminController extends Controller
      */
     public function routers(): View
     {
-        $routers = collect(); // Replace with actual query: NetworkDevice::where('type', 'router')->paginate(20);
+        $routers = MikrotikRouter::with('networkUsers')->paginate(20);
         
         $stats = [
-            'total' => 0,
-            'online' => 0,
-            'offline' => 0,
+            'total' => MikrotikRouter::count(),
+            'online' => MikrotikRouter::where('status', 'online')->count(),
+            'offline' => MikrotikRouter::where('status', 'offline')->count(),
             'warning' => 0,
         ];
 
