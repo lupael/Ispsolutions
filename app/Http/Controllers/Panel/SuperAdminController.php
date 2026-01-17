@@ -138,6 +138,11 @@ class SuperAdminController extends Controller
 
     /**
      * Store a new payment gateway.
+     *
+     * Note: webhook_url validation currently only checks URL format.
+     * Consider adding additional validation to ensure the webhook URL
+     * is either within the application's domain or on an allowlist to
+     * prevent potential SSRF vulnerabilities or misconfiguration.
      */
     public function paymentGatewayStore(Request $request): RedirectResponse
     {

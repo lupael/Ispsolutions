@@ -66,6 +66,10 @@ class DeveloperController extends Controller
 
     /**
      * Suspend or activate a tenancy.
+     *
+     * Note: This method allows any Developer to suspend or activate any tenancy.
+     * Consider adding explicit authorization checks and comprehensive audit logging
+     * for this sensitive operation that could impact all users in a tenancy.
      */
     public function toggleTenancyStatus(Tenant $tenancy): RedirectResponse
     {
