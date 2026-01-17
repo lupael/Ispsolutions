@@ -33,4 +33,34 @@ class MikrotikRouter extends Model
     {
         return $this->hasMany(MikrotikPppoeUser::class, 'router_id');
     }
+
+    public function profiles(): HasMany
+    {
+        return $this->hasMany(MikrotikProfile::class, 'router_id');
+    }
+
+    public function ipPools(): HasMany
+    {
+        return $this->hasMany(MikrotikIpPool::class, 'router_id');
+    }
+
+    public function vpnAccounts(): HasMany
+    {
+        return $this->hasMany(MikrotikVpnAccount::class, 'router_id');
+    }
+
+    public function queues(): HasMany
+    {
+        return $this->hasMany(MikrotikQueue::class, 'router_id');
+    }
+
+    public function configurations(): HasMany
+    {
+        return $this->hasMany(RouterConfiguration::class, 'router_id');
+    }
+
+    public function packageMappings(): HasMany
+    {
+        return $this->hasMany(PackageProfileMapping::class, 'router_id');
+    }
 }
