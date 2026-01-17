@@ -179,6 +179,8 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/network/routers/create', [AdminController::class, 'routersCreate'])->name('network.routers.create');
     Route::get('/network/olt', [AdminController::class, 'oltList'])->name('network.olt');
     Route::get('/network/olt/create', [AdminController::class, 'oltCreate'])->name('network.olt.create');
+    Route::get('/olt/dashboard', [AdminController::class, 'oltDashboard'])->name('olt.dashboard');
+    Route::get('/olt/{id}/monitor', [AdminController::class, 'oltMonitor'])->name('olt.monitor');
     Route::get('/network/devices', [AdminController::class, 'devices'])->name('network.devices');
     Route::get('/network/device-monitors', [AdminController::class, 'deviceMonitors'])->name('network.device-monitors');
     Route::get('/network/devices-map', [AdminController::class, 'devicesMap'])->name('network.devices.map');

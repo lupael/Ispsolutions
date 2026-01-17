@@ -539,6 +539,24 @@ class AdminController extends Controller
     }
 
     /**
+     * Display OLT dashboard.
+     */
+    public function oltDashboard(): View
+    {
+        return view('panels.admin.olt.dashboard');
+    }
+
+    /**
+     * Display OLT monitor view for a specific OLT.
+     */
+    public function oltMonitor(int $id): View
+    {
+        $olt = Olt::findOrFail($id);
+        
+        return view('panels.admin.olt.monitor', compact('olt'));
+    }
+
+    /**
      * Display all network devices.
      */
     public function devices(): View
