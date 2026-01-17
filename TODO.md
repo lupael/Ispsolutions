@@ -113,25 +113,41 @@ We will treat this repo as a fresh start. All tasks below are unchecked and must
 
 ---
 
-## 🗂 Remaining Features (all set to pending)
-(Each item below must be implemented after MVP as needed; they are left unchecked intentionally.)
+## 🗂 Remaining Features (Updated with completed panel work)
 
-- All Panel Controllers and Views (SuperAdmin, Manager, Staff, Reseller, Sub-Reseller, Customer, Card Distributor)
-- Reseller Commission Automation (percenta)
+### ✅ Recently Completed (2026-01-17)
+- ✅ All Panel Controllers (SuperAdmin, Admin, Manager, Staff, Reseller, Sub-Reseller, Customer, Card Distributor, Developer)
+- ✅ All Panel Views (50+ views across 9 roles)
+- ✅ Role-based middleware (CheckRole, CheckPermission)
+- ✅ Routes with proper middleware protection
+- ✅ Dashboard views for all 9 roles
+- ✅ CRUD views for primary entities
+- ✅ Responsive layouts with Tailwind CSS
+- ✅ Dark mode support
+
+### 🚧 In Progress
+- Backend logic implementation for controllers
+- Form validation and CRUD operations
+- Testing infrastructure
+
+### 📋 Remaining Features
+(Each item below must be implemented after panel foundation work)
+
+- Reseller Commission Automation (percentage-based, multi-level)
 - Hotspot User Management
 - Hotspot User self signup using Mobile - OTP
 - Static IP Monthly Billing
 - Cable TV automation
 - Other service types
-- Notifications (Email, Whatsapp & SMS) for Transection
+- Notifications (Email, Whatsapp & SMS) for Transaction
 - Pre-expiration Notifications (Email, Whatsapp & SMS)
 - Auto Unlock on Payment
 - Test Coverage (unit, feature, integration, E2E)
 - VPN Account Management for connecting router without public ip
-- Real-time Network Monitoring Dashboard
-- IPAM
-- MikroTik Router API Integration
-- RADIUS Server Integration
+- Real-time Network Monitoring Dashboard (partially implemented with stats)
+- IPAM (exists, needs integration with panels)
+- MikroTik Router API Integration (exists, needs panel integration)
+- RADIUS Server Integration (exists, needs panel integration)
 - PDF/Excel Export Functionality
 - Accounting Automation
 - VAT
