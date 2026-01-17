@@ -877,6 +877,13 @@ This document provides a comprehensive list of all features available in the ISP
 
 ### Overview
 
+## NOTE Governance & Roles (UPDTE)
+- **Developer**: Supreme authority and source code owner, with unrestricted permissions.  
+- **Tenancy (formerly Super Admin)**: Represents the overarching tenant context.  
+- **Admin (ISP, formerly Group Admin)**: Manages ISP-specific operations within a tenancy.  
+
+---
+
 The ISP Billing System implements a comprehensive **9-tier role-based access control (RBAC)** system with hierarchical relationships, granular permissions, and flexible menu/panel access controls. This system ensures proper security, delegation, and workflow management across the organization.
 
 ---
@@ -884,6 +891,13 @@ The ISP Billing System implements a comprehensive **9-tier role-based access con
 ### System Roles
 
 The system defines **9 distinct roles** with hierarchical authority levels and specific functional responsibilities:
+
+## NOTE Governance & Roles (UPDTE)
+- **Developer**: Supreme authority and source code owner, with unrestricted permissions.  
+- **Tenancy (formerly Super Admin)**: Represents the overarching tenant context.  
+- **Admin (ISP, formerly Group Admin)**: Manages ISP-specific operations within a tenancy.  
+
+---
 
 #### 1. **Super Admin** (Level 1 - Highest Authority)
 - **Description**: Top-level system administrator with unrestricted access
@@ -1016,6 +1030,12 @@ The system defines **9 distinct roles** with hierarchical authority levels and s
 
 ### Hierarchical Relationships
 
+## NOTE Governance & Roles (UPDTE)
+- **Developer**: Supreme authority and source code owner, with unrestricted permissions.  
+- **Tenancy (formerly Super Admin)**: Represents the overarching tenant context.  
+- **Admin (ISP, formerly Group Admin)**: Manages ISP-specific operations within a tenancy.  
+
+---
 The system uses a **4-field hierarchy structure** for relationships:
 
 ```
@@ -1163,6 +1183,12 @@ $this->authorize('assignSpecialPermission', $operator);
 ---
 
 ### Panel Access by Role
+## NOTE Governance & Roles (UPDTE)
+- **Developer**: Supreme authority and source code owner, with unrestricted permissions.  
+- **Tenancy (formerly Super Admin)**: Represents the overarching tenant context.  
+- **Admin (ISP, formerly Group Admin)**: Manages ISP-specific operations within a tenancy.  
+
+---
 
 Each role has access to a specific administrative panel with role-appropriate menus and features:
 
@@ -1445,7 +1471,12 @@ $this->authorize('assignSpecialPermission', $operator);
 ---
 
 ### Relations and Restrictions
+## NOTE Governance & Roles (UPDTE)
+- **Developer**: Supreme authority and source code owner, with unrestricted permissions.  
+- **Tenancy (formerly Super Admin)**: Represents the overarching tenant context.  
+- **Admin (ISP, formerly Group Admin)**: Manages ISP-specific operations within a tenancy.  
 
+---
 #### Hierarchical Relationships
 
 **1. Super Admin → Group Admin**
@@ -1741,3 +1772,6 @@ This ISP Billing System is a comprehensive solution with **400+ distinct feature
 - **Technical Infrastructure**: 40+ features
 
 The system supports multiple user roles (Super Admin, Group Admin, Operator, Sub-operator, Manager, Card Distributor, Sales Manager, Developer, Accountant) with granular permissions, multi-node distributed architecture, and extensive third-party integrations for a complete ISP business management solution.
+
+
+@copilot follow this file and develop feature by taking knowledge from this file
