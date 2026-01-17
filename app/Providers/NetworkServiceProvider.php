@@ -6,9 +6,15 @@ namespace App\Providers;
 
 use App\Contracts\IpamServiceInterface;
 use App\Contracts\MikrotikServiceInterface;
+use App\Contracts\MonitoringServiceInterface;
+use App\Contracts\OltServiceInterface;
+use App\Contracts\PackageSpeedServiceInterface;
 use App\Contracts\RadiusServiceInterface;
 use App\Services\IpamService;
 use App\Services\MikrotikService;
+use App\Services\MonitoringService;
+use App\Services\OltService;
+use App\Services\PackageSpeedService;
 use App\Services\RadiusService;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +33,15 @@ class NetworkServiceProvider extends ServiceProvider
 
         // Bind MikroTik Service (scoped per request to avoid sharing stateful instances)
         $this->app->scoped(MikrotikServiceInterface::class, MikrotikService::class);
+
+        // Bind OLT Service (scoped per request to avoid sharing SSH connections)
+        $this->app->scoped(OltServiceInterface::class, OltService::class);
+
+        // Bind Monitoring Service
+        $this->app->singleton(MonitoringServiceInterface::class, MonitoringService::class);
+
+        // Bind Package Speed Service
+        $this->app->singleton(PackageSpeedServiceInterface::class, PackageSpeedService::class);
     }
 
     /**
