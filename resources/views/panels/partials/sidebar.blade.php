@@ -351,7 +351,7 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         const toggleSidebar = document.getElementById('toggleSidebar');
-        const closeSidebar = document.getElementById('closeSidebar');
+        const closeSidebarBtn = document.getElementById('closeSidebar');
 
         function openSidebar() {
             sidebar.classList.remove('-translate-x-full');
@@ -364,7 +364,7 @@
         }
 
         if (toggleSidebar) toggleSidebar.addEventListener('click', openSidebar);
-        if (closeSidebar) closeSidebar.addEventListener('click', closeSidebar);
+        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
         if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
     });
 </script>
