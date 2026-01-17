@@ -276,7 +276,10 @@ function onuMonitor(oltId) {
         lastUpdated: '',
         init() {
             this.loadData();
-            setInterval(() => this.loadData(), 15000); // Refresh every 15 seconds
+            // Auto-refresh every 15 seconds for real-time monitoring
+            // Note: For production with many users, consider implementing WebSockets
+            // or server-sent events to reduce server load
+            setInterval(() => this.loadData(), 15000);
         },
         async loadData() {
             try {

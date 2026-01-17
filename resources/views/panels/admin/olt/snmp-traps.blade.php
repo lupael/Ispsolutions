@@ -299,7 +299,10 @@ function snmpTraps() {
         },
         init() {
             this.loadTraps();
-            setInterval(() => this.loadTraps(), 30000); // Refresh every 30 seconds
+            // Auto-refresh every 30 seconds for trap notifications
+            // Note: For production environments, consider implementing WebSockets
+            // or server-sent events for real-time trap notifications
+            setInterval(() => this.loadTraps(), 30000);
         },
         async loadTraps() {
             // Mock data - replace with actual API call

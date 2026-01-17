@@ -18,8 +18,8 @@ return new class extends Migration
             $table->decimal('cpu_usage', 5, 2)->nullable();
             $table->decimal('memory_usage', 5, 2)->nullable();
             $table->decimal('temperature', 5, 2)->nullable();
-            $table->bigInteger('bandwidth_rx')->nullable(); // bytes
-            $table->bigInteger('bandwidth_tx')->nullable(); // bytes
+            $table->unsignedBigInteger('bandwidth_rx')->nullable()->comment('Bytes per second'); // bytes
+            $table->unsignedBigInteger('bandwidth_tx')->nullable()->comment('Bytes per second'); // bytes
             $table->integer('total_onus')->default(0);
             $table->integer('online_onus')->default(0);
             $table->integer('offline_onus')->default(0);
