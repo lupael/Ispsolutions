@@ -13,24 +13,32 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for interactive components -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">
     <div class="min-h-screen">
-        <!-- Navigation -->
-        @include('panels.partials.navigation')
+        <!-- Sidebar Navigation -->
+        @include('panels.partials.sidebar')
 
-        <!-- Page Heading -->
-        @if (isset($header))
-            <header class="bg-white dark:bg-gray-800 shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    {{ $header }}
-                </div>
-            </header>
-        @endif
+        <!-- Main Content Area -->
+        <div class="lg:ml-64">
+            <!-- Top Navigation Bar -->
+            @include('panels.partials.navigation')
 
-        <!-- Page Content -->
-        <main class="py-6">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <!-- Page Heading -->
+            @if (isset($header))
+                <header class="bg-white dark:bg-gray-800 shadow">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        {{ $header }}
+                    </div>
+                </header>
+            @endif
+
+            <!-- Page Content -->
+            <main class="py-6">
+                <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Flash Messages -->
                 @if (session('success'))
                     <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -47,6 +55,7 @@
                 @yield('content')
             </div>
         </main>
+        </div>
     </div>
 </body>
 </html>

@@ -24,33 +24,31 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
-                    <input type="text" placeholder="Search by name or email..." class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Roles</option>
-                        <option value="manager">Manager</option>
-                        <option value="staff">Staff</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Search and Filters -->
+    @include('panels.partials.search', [
+        'action' => route('panel.admin.users'),
+        'placeholder' => 'Search by name or email...',
+        'filters' => [
+            [
+                'name' => 'role',
+                'label' => 'Role',
+                'placeholder' => 'All Roles',
+                'options' => [
+                    'manager' => 'Manager',
+                    'staff' => 'Staff',
+                ]
+            ],
+            [
+                'name' => 'status',
+                'label' => 'Status',
+                'placeholder' => 'All Status',
+                'options' => [
+                    'active' => 'Active',
+                    'inactive' => 'Inactive',
+                ]
+            ],
+        ]
+    ])
 
     <!-- Users Table -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">

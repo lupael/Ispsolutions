@@ -24,33 +24,31 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
-                    <input type="text" placeholder="Search packages..." class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Type</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Types</option>
-                        <option value="pppoe">PPPoE</option>
-                        <option value="hotspot">Hotspot</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Search and Filters -->
+    @include('panels.partials.search', [
+        'action' => route('panel.admin.packages'),
+        'placeholder' => 'Search packages...',
+        'filters' => [
+            [
+                'name' => 'service_type',
+                'label' => 'Service Type',
+                'placeholder' => 'All Types',
+                'options' => [
+                    'pppoe' => 'PPPoE',
+                    'hotspot' => 'Hotspot',
+                ]
+            ],
+            [
+                'name' => 'status',
+                'label' => 'Status',
+                'placeholder' => 'All Status',
+                'options' => [
+                    'active' => 'Active',
+                    'inactive' => 'Inactive',
+                ]
+            ],
+        ]
+    ])
 
     <!-- Packages Grid -->
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

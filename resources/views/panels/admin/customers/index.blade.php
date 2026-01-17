@@ -142,43 +142,29 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
-                    <input type="text" placeholder="Search username..." class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Type</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Types</option>
-                        <option value="pppoe">PPPoE</option>
-                        <option value="hotspot">Hotspot</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Package</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Packages</option>
-                        @foreach($packages ?? [] as $package)
-                            <option value="{{ $package->id }}">{{ $package->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="suspended">Suspended</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Search and Filters -->
+    @include('panels.partials.search', [
+        'action' => route('panel.admin.customers'),
+        'placeholder' => 'Search by name, email or phone...',
+        'filters' => [
+            [
+                'name' => 'status',
+                'label' => 'Status',
+                'placeholder' => 'All Status',
+                'options' => [
+                    'active' => 'Active',
+                    'inactive' => 'Inactive',
+                    'suspended' => 'Suspended',
+                ]
+            ],
+            [
+                'name' => 'package',
+                'label' => 'Package',
+                'placeholder' => 'All Packages',
+                'options' => collect($packages ?? [])->pluck('name', 'id')->toArray()
+            ],
+        ]
+    ])
 
     <!-- Customers Table -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
