@@ -82,10 +82,9 @@ jobs:
           docker compose exec -T app composer install --no-interaction --prefer-dist
         fi
         
-        # Create node_modules directory and fix permissions
+        # Create node_modules directory and fix permissions as root
         echo "Ensuring node_modules directory exists with proper permissions..."
-        docker compose exec -T app mkdir -p node_modules
-        docker compose exec -T app chown -R www-data:www-data node_modules
+        docker compose exec -T -u root app sh -c "mkdir -p node_modules && chown -R www-data:www-data node_modules"
         
         # Check if node_modules exists
         if ! docker compose exec -T app test -d node_modules; then

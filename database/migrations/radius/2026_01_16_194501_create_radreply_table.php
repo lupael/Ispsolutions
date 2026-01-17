@@ -10,6 +10,11 @@ return new class extends Migration
 
     public function up(): void
     {
+        // Skip if table already exists (e.g., from main migrations)
+        if (Schema::connection('radius')->hasTable('radreply')) {
+            return;
+        }
+
         Schema::connection('radius')->create('radreply', function (Blueprint $table) {
             $table->id();
             $table->string('username', 64);

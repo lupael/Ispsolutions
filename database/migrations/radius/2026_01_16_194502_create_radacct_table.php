@@ -10,6 +10,11 @@ return new class extends Migration
 
     public function up(): void
     {
+        // Skip if table already exists (e.g., from main migrations)
+        if (Schema::connection('radius')->hasTable('radacct')) {
+            return;
+        }
+
         Schema::connection('radius')->create('radacct', function (Blueprint $table) {
             $table->bigIncrements('radacctid');
             $table->string('acctsessionid', 64)->index();
