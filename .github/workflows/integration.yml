@@ -19,6 +19,16 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, pdo_mysql, bcmath, soap, intl, gd, exif, iconv
+        coverage: none
+
+    - name: Install PHP Dependencies
+      run: composer install --no-interaction --prefer-dist
+
     - name: Copy .env
       run: cp .env.example .env
 
