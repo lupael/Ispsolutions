@@ -30,6 +30,10 @@ class User extends Authenticatable
         'is_active',
         'activated_at',
         'created_by',
+        'operator_level',
+        'disabled_menus',
+        'manager_id',
+        'operator_type',
     ];
 
     /**
@@ -54,6 +58,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'activated_at' => 'datetime',
+            'disabled_menus' => 'array',
         ];
     }
 
@@ -163,5 +168,68 @@ class User extends Authenticatable
     public function subordinates(): HasMany
     {
         return $this->hasMany(User::class, 'supervisor_id');
+    }
+
+    /**
+     * Get the manager of this user.
+     */
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    /**
+     * Get operator permissions for this user.
+     */
+    public function operatorPermissions(): HasMany
+    {
+        return $this->hasMany(\App\Models\OperatorPermission::class);
+    }
+
+    /**
+     * Check if user has a special permission.
+     */
+    public function hasSpecialPermission(string $permission): bool
+    {
+        return $this->operatorPermissions()
+            ->where('permission_key', $permission)
+            ->where('is_enabled', true)
+            ->exists();
+    }
+
+    /**
+     * Check if a menu is disabled for this user.
+     */
+    public function isMenuDisabled(string $menuKey): bool
+    {
+        $disabledMenus = $this->disabled_menus ?? [];
+
+        return in_array($menuKey, $disabledMenus);
+    }
+
+    /**
+     * Get operator type label.
+     */
+    public function getOperatorTypeLabel(): string
+    {
+        return match ($this->operator_type) {
+            'super_admin' => 'Super Admin',
+            'group_admin' => 'Group Admin (ISP)',
+            'operator' => 'Operator',
+            'sub_operator' => 'Sub-Operator',
+            'manager' => 'Manager',
+            'card_distributor' => 'Card Distributor',
+            'developer' => 'Developer',
+            'accountant' => 'Accountant',
+            default => 'User',
+        };
+    }
+
+    /**
+     * Check if user is an operator (staff member).
+     */
+    public function isOperator(): bool
+    {
+        return $this->operator_level < 100;
     }
 }
