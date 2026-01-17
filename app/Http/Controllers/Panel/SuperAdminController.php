@@ -155,12 +155,18 @@ class SuperAdminController extends Controller
             'is_active' => 'sometimes|boolean',
         ]);
 
-        // Encrypt sensitive credentials before storage
-        if (isset($validated['api_key'])) {
-            $validated['api_key'] = encrypt($validated['api_key']);
-        }
-        if (isset($validated['api_secret'])) {
-            $validated['api_secret'] = encrypt($validated['api_secret']);
+        // Encrypt sensitive credentials before storage with error handling
+        try {
+            if (isset($validated['api_key'])) {
+                $validated['api_key'] = encrypt($validated['api_key']);
+            }
+            if (isset($validated['api_secret'])) {
+                $validated['api_secret'] = encrypt($validated['api_secret']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to encrypt credentials. Please try again.']);
         }
 
         // To be implemented with payment gateway model
@@ -203,12 +209,18 @@ class SuperAdminController extends Controller
             'is_active' => 'sometimes|boolean',
         ]);
 
-        // Encrypt sensitive credentials before storage
-        if (isset($validated['api_key'])) {
-            $validated['api_key'] = encrypt($validated['api_key']);
-        }
-        if (isset($validated['api_secret'])) {
-            $validated['api_secret'] = encrypt($validated['api_secret']);
+        // Encrypt sensitive credentials before storage with error handling
+        try {
+            if (isset($validated['api_key'])) {
+                $validated['api_key'] = encrypt($validated['api_key']);
+            }
+            if (isset($validated['api_secret'])) {
+                $validated['api_secret'] = encrypt($validated['api_secret']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to encrypt credentials. Please try again.']);
         }
 
         // To be implemented with SMS gateway model

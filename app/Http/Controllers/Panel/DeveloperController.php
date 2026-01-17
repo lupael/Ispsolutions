@@ -116,10 +116,13 @@ class DeveloperController extends Controller
         $customers = [];
 
         if ($query) {
+            // Escape special LIKE characters to prevent unintended wildcard matching
+            $escapedQuery = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query);
+            
             $customers = User::allTenants()
-                ->where(function($q) use ($query) {
-                    $q->where('email', 'like', "%{$query}%")
-                      ->orWhere('name', 'like', "%{$query}%");
+                ->where(function($q) use ($escapedQuery) {
+                    $q->where('email', 'like', "%{$escapedQuery}%")
+                      ->orWhere('name', 'like', "%{$escapedQuery}%");
                 })
                 ->with(['tenant', 'roles'])
                 ->paginate(20);
