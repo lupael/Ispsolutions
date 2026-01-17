@@ -37,7 +37,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // Demo routes
@@ -106,6 +106,12 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/network-users', [AdminController::class, 'networkUsers'])->name('network-users');
     Route::get('/packages', [AdminController::class, 'packages'])->name('packages');
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+    
+    // Network Device Management
+    Route::get('/mikrotik', [AdminController::class, 'mikrotikRouters'])->name('mikrotik');
+    Route::get('/nas', [AdminController::class, 'nasDevices'])->name('nas');
+    Route::get('/cisco', [AdminController::class, 'ciscoDevices'])->name('cisco');
+    Route::get('/olt', [AdminController::class, 'oltDevices'])->name('olt');
 });
 
 // Manager Panel
@@ -121,6 +127,12 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:st
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
     Route::get('/tickets', [StaffController::class, 'tickets'])->name('tickets');
+    
+    // Network Device Management (permission-based)
+    Route::get('/mikrotik', [StaffController::class, 'mikrotikRouters'])->name('mikrotik');
+    Route::get('/nas', [StaffController::class, 'nasDevices'])->name('nas');
+    Route::get('/cisco', [StaffController::class, 'ciscoDevices'])->name('cisco');
+    Route::get('/olt', [StaffController::class, 'oltDevices'])->name('olt');
 });
 
 // Reseller Panel

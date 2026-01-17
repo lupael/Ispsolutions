@@ -32,6 +32,10 @@ class RoleSeeder extends Seeder
                     'billing.manage',
                     'reports.view',
                     'settings.manage',
+                    'devices.mikrotik.manage',
+                    'devices.nas.manage',
+                    'devices.cisco.manage',
+                    'devices.olt.manage',
                 ],
             ],
             [
