@@ -18,3 +18,9 @@ Schedule::command('mikrotik:health-check')->everyFifteenMinutes();
 Schedule::command('olt:health-check')->everyFifteenMinutes();
 Schedule::command('olt:sync-onus')->hourly();
 Schedule::command('olt:backup')->daily()->at('02:00');
+
+// Schedule monitoring commands
+Schedule::command('monitoring:collect')->everyFiveMinutes();
+Schedule::command('monitoring:aggregate-hourly')->hourly();
+Schedule::command('monitoring:aggregate-daily')->daily()->at('01:00');
+Schedule::command('monitoring:cleanup --days=90')->daily()->at('03:00');

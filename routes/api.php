@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\IpamController;
 use App\Http\Controllers\Api\V1\MikrotikController;
+use App\Http\Controllers\Api\V1\MonitoringController;
 use App\Http\Controllers\Api\V1\NetworkUserController;
 use App\Http\Controllers\Api\V1\RadiusController;
 use Illuminate\Support\Facades\Route;
@@ -95,5 +96,18 @@ Route::prefix('v1')->group(function () {
         Route::put('/{id}', [NetworkUserController::class, 'update'])->name('api.network-users.update');
         Route::delete('/{id}', [NetworkUserController::class, 'destroy'])->name('api.network-users.destroy');
         Route::post('/{id}/sync-radius', [NetworkUserController::class, 'syncToRadius'])->name('api.network-users.sync-radius');
+    });
+
+    // Monitoring Routes
+    Route::prefix('monitoring')->group(function () {
+        // Device Status
+        Route::get('/devices', [MonitoringController::class, 'getAllStatuses'])->name('api.monitoring.devices.index');
+        Route::get('/devices/{type}/{id}/status', [MonitoringController::class, 'getDeviceStatus'])->name('api.monitoring.devices.status');
+        Route::post('/devices/{type}/{id}/monitor', [MonitoringController::class, 'monitorDevice'])->name('api.monitoring.devices.monitor');
+
+        // Bandwidth Usage
+        Route::post('/devices/{type}/{id}/bandwidth', [MonitoringController::class, 'recordBandwidth'])->name('api.monitoring.bandwidth.record');
+        Route::get('/devices/{type}/{id}/bandwidth', [MonitoringController::class, 'getBandwidthUsage'])->name('api.monitoring.bandwidth.usage');
+        Route::get('/devices/{type}/{id}/bandwidth/graph', [MonitoringController::class, 'getBandwidthGraph'])->name('api.monitoring.bandwidth.graph');
     });
 });
