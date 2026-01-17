@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Panel\SuperAdminController;
 use App\Http\Controllers\Panel\AdminController;
 use App\Http\Controllers\Panel\ManagerController;
@@ -11,9 +12,18 @@ use App\Http\Controllers\Panel\CustomerController;
 use App\Http\Controllers\Panel\DeveloperController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect('/demo1');
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
 });
+
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 /*
 |--------------------------------------------------------------------------
