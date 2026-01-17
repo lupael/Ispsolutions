@@ -21,6 +21,7 @@ class DeveloperController extends Controller
             'active_tenancies' => Tenant::where('status', 'active')->count(),
             'total_users' => User::count(),
             'api_calls_today' => 0, // To be implemented
+            'total_endpoints' => 0, // To be implemented
             'system_health' => 'Healthy',
         ];
 
