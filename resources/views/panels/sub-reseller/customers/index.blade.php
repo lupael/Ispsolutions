@@ -99,39 +99,32 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
-                    <input type="text" placeholder="Search customers..." class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Package</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Packages</option>
-                        <option value="basic">Basic</option>
-                        <option value="premium">Premium</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="pending">Pending</option>
-                    </select>
-                </div>
-                <div class="flex items-end">
-                    <button class="w-full px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        Apply Filters
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Search and Filters -->
+    @include('panels.partials.search', [
+        'action' => route('panel.sub-reseller.customers'),
+        'placeholder' => 'Search customers...',
+        'filters' => [
+            [
+                'name' => 'package',
+                'label' => 'Package',
+                'placeholder' => 'All Packages',
+                'options' => [
+                    'basic' => 'Basic',
+                    'premium' => 'Premium',
+                ]
+            ],
+            [
+                'name' => 'status',
+                'label' => 'Status',
+                'placeholder' => 'All Status',
+                'options' => [
+                    'active' => 'Active',
+                    'inactive' => 'Inactive',
+                    'pending' => 'Pending',
+                ]
+            ],
+        ]
+    ])
 
     <!-- Customers Table -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
