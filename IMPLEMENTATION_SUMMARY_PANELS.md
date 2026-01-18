@@ -201,14 +201,16 @@ Admins can disable these menus for specific operators:
 ## 📊 Operator Level Hierarchy
 
 ```
-Developer:        0  (Highest - Technical)
-Super Admin:     10  (System-wide)
+Developer:        0  (Highest - Technical, source code owner)
+Super Admin:     10  (System-wide - can manage own tenants)
 Group Admin:     20  (Tenant Admin - ISP Admin)
 Operator:        30  (Operational with configurable menus)
 Sub-Operator:    40  (Limited operations)
 Manager:         50  (Task-specific)
 Card Distributor: 60 (Card operations)
+Reseller:        65  (Customer management and sales)
 Accountant:      70  (Financial viewing)
+Sub-Reseller:    75  (Subordinate to reseller)
 Staff:           80  (Support)
 Customer:       100  (Lowest - Self-service)
 ```
@@ -230,11 +232,13 @@ Menus automatically filtered based on:
 - Permission requirements
 
 ### Data Isolation
-- Operators see only their own customers
-- Sub-operators see assigned subset
-- Managers see based on permissions
-- Admins see all tenant data
-- Super Admins see all tenants
+- **Developer**: All tenants (supreme authority, source code owner) - Only Developer can create/manage tenants
+- **Super Admin**: Only OWN tenants (NOT all tenants) - Only Super Admin can create/manage Admins
+- **Admin**: All data under own ISP - See their customers + operator-created + sub-operator-created customers - Only Admin can create/manage Operators
+- **Operator**: See only their created customers + sub-operator-created customers - Only Operator can create/manage Sub-operators
+- **Sub-Operator**: See only their created customers
+- **Manager**: View based on assigned permissions
+- **Staff**: View based on assigned permissions
 
 ---
 

@@ -96,7 +96,9 @@ return [
         'sub_operator' => 40,    // Limited operator (subset of operator)
         'manager' => 50,         // Task-specific access
         'card_distributor' => 60, // Card operations only
+        'reseller' => 65,        // Customer management and sales
         'accountant' => 70,      // Financial reporting (read-only)
+        'sub_reseller' => 75,    // Subordinate to reseller
         'staff' => 80,           // Support staff
         'customer' => 100,       // End user (lowest privilege)
     ],

@@ -15,10 +15,10 @@ The system automatically generates appropriate menus based on the logged-in user
 5. **Sub-Operator (Level 40)** - Limited operator (subset of operator)
 6. **Manager (Level 50)** - Task-specific access
 7. **Card Distributor (Level 60)** - Card operations only (separate portal)
-8. **Accountant (Level 70)** - Financial reporting (read-only)
-9. **Staff (Level 80)** - Support staff
-10. **Reseller (Level 60)** - Customer management and sales
-11. **Sub-Reseller (Level 55)** - Subordinate to reseller
+8. **Reseller (Level 65)** - Customer management and sales
+9. **Accountant (Level 70)** - Financial reporting (read-only)
+10. **Sub-Reseller (Level 75)** - Subordinate to reseller
+11. **Staff (Level 80)** - Support staff
 12. **Customer (Level 100)** - Self-service access
 
 ## Using the Menu Service

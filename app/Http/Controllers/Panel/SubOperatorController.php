@@ -53,9 +53,16 @@ class SubOperatorController extends Controller
             ->where('operator_level', 100)
             ->pluck('id');
         
-        $bills = \App\Models\Invoice::whereIn('user_id', $customerIds)
-            ->latest()
-            ->paginate(20);
+        // Check if there are any customers before querying invoices
+        if ($customerIds->isEmpty()) {
+            $bills = \App\Models\Invoice::whereRaw('1 = 0')
+                ->latest()
+                ->paginate(20);
+        } else {
+            $bills = \App\Models\Invoice::whereIn('user_id', $customerIds)
+                ->latest()
+                ->paginate(20);
+        }
         
         return view('panels.sub-operator.bills.index', compact('bills'));
     }

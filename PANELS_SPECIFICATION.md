@@ -712,12 +712,45 @@ function canAccessMenu(array $menuItem): bool {
 ```
 
 ### Data Isolation
-```php
-// Operators only see their own customers
-$customers = Customer::where('created_by', auth()->id())->get();
 
-// Admins see all tenant customers
-$customers = Customer::where('tenant_id', auth()->user()->tenant_id)->get();
+The system implements strict hierarchical data isolation:
+
+```php
+// Developer: All tenants (supreme authority, source code owner)
+// Can create and manage ALL tenants
+$tenants = Tenant::all();
+
+// Super Admin: Only OWN tenants (NOT all tenants)
+// Can create and manage admins for their tenants
+$tenants = Tenant::where('created_by', auth()->id())->get();
+$admins = User::where('tenant_id', auth()->user()->tenant_id)
+    ->where('operator_type', 'group_admin')->get();
+
+// Admin (Group Admin): All data under their own ISP
+// See their customers AND operator-created customers AND sub-operator-created customers
+// Can create and manage operators
+$customers = User::where('tenant_id', auth()->user()->tenant_id)
+    ->where('operator_level', 100)->get();
+$operators = User::where('tenant_id', auth()->user()->tenant_id)
+    ->where('operator_type', 'operator')->get();
+
+// Operator: Only their created customers PLUS sub-operator-created customers
+// Can create and manage sub-operators
+$subOperators = User::where('created_by', auth()->id())
+    ->where('operator_type', 'sub_operator')->get();
+$customers = User::where('created_by', auth()->id())
+    ->orWhereIn('created_by', $subOperators->pluck('id'))
+    ->where('operator_level', 100)->get();
+
+// Sub-Operator: Only their created customers
+$customers = User::where('created_by', auth()->id())
+    ->where('operator_level', 100)->get();
+
+// Manager: View based on assigned permissions
+// Can view operators' or sub-operators' customers (read-only typically)
+
+// Staff: View based on assigned permissions
+// Limited operational access
 ```
 
 ---

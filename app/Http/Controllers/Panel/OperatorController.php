@@ -66,9 +66,16 @@ class OperatorController extends Controller
             ->where('operator_level', 100)
             ->pluck('id');
         
-        $bills = \App\Models\Invoice::whereIn('user_id', $customerIds)
-            ->latest()
-            ->paginate(20);
+        // Check if there are any customers before querying invoices
+        if ($customerIds->isEmpty()) {
+            $bills = \App\Models\Invoice::whereRaw('1 = 0')
+                ->latest()
+                ->paginate(20);
+        } else {
+            $bills = \App\Models\Invoice::whereIn('user_id', $customerIds)
+                ->latest()
+                ->paginate(20);
+        }
         
         return view('panels.operator.bills.index', compact('bills'));
     }
@@ -98,14 +105,8 @@ class OperatorController extends Controller
      */
     public function complaints(): View
     {
-        $user = auth()->user();
-        
-        // Get complaints for operator's customers
-        $customerIds = $user->subordinates()
-            ->where('operator_level', 100)
-            ->pluck('id');
-        
         // TODO: Implement ticket system
+        // When implemented, filter tickets by operator's assigned customers
         $complaints = collect([]);
         
         return view('panels.operator.complaints.index', compact('complaints'));
