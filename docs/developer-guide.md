@@ -18,7 +18,7 @@ Operators have hierarchical levels (lower number = higher privilege):
 
 - **Developer (0)**: Full system access
 - **Super Admin (10)**: Cross-tenant administration
-- **Group Admin (20)**: ISP administrator
+- **Admin (ISP, formerly Group Admin) (20)**: ISP administrator
 - **Operator (30)**: Regular operations staff
 - **Sub-Operator (40)**: Limited operator
 - **Manager (50)**: Customer area manager
