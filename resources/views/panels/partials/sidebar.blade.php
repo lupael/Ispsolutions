@@ -180,6 +180,43 @@
             ['label' => 'Sales', 'route' => 'panel.card-distributor.sales', 'icon' => 'shopping'],
             ['label' => 'Balance', 'route' => 'panel.card-distributor.balance', 'icon' => 'wallet'],
         ];
+    } elseif ($userRole === 'operator') {
+        $menus = [
+            ['label' => 'Dashboard', 'route' => 'panel.operator.dashboard', 'icon' => 'home'],
+            ['label' => 'Sub Operators', 'route' => 'panel.operator.sub-operators.index', 'icon' => 'user-group'],
+            ['label' => 'Customers', 'route' => 'panel.operator.customers.index', 'icon' => 'users'],
+            ['label' => 'Bills', 'route' => 'panel.operator.bills.index', 'icon' => 'receipt'],
+            ['label' => 'Collect Payment', 'route' => 'panel.operator.payments.create', 'icon' => 'currency'],
+            ['label' => 'Recharge Cards', 'route' => 'panel.operator.cards.index', 'icon' => 'card'],
+            ['label' => 'Complaints', 'route' => 'panel.operator.complaints.index', 'icon' => 'ticket'],
+            ['label' => 'Reports', 'route' => 'panel.operator.reports.index', 'icon' => 'chart'],
+            ['label' => 'Send SMS', 'route' => 'panel.operator.sms.index', 'icon' => 'chat'],
+        ];
+    } elseif ($userRole === 'sub-operator') {
+        $menus = [
+            ['label' => 'Dashboard', 'route' => 'panel.sub-operator.dashboard', 'icon' => 'home'],
+            ['label' => 'My Customers', 'route' => 'panel.sub-operator.customers.index', 'icon' => 'users'],
+            ['label' => 'Bills', 'route' => 'panel.sub-operator.bills.index', 'icon' => 'receipt'],
+            ['label' => 'Collect Payment', 'route' => 'panel.sub-operator.payments.create', 'icon' => 'currency'],
+            ['label' => 'Reports', 'route' => 'panel.sub-operator.reports.index', 'icon' => 'chart'],
+        ];
+    } elseif ($userRole === 'accountant') {
+        $menus = [
+            ['label' => 'Dashboard', 'route' => 'panel.accountant.dashboard', 'icon' => 'home'],
+            [
+                'label' => 'Reports',
+                'icon' => 'chart',
+                'children' => [
+                    ['label' => 'Income & Expense', 'route' => 'panel.accountant.reports.income-expense'],
+                    ['label' => 'Payment History', 'route' => 'panel.accountant.reports.payments'],
+                    ['label' => 'Customer Statements', 'route' => 'panel.accountant.reports.statements'],
+                ]
+            ],
+            ['label' => 'Transactions', 'route' => 'panel.accountant.transactions.index', 'icon' => 'currency'],
+            ['label' => 'Expenses', 'route' => 'panel.accountant.expenses.index', 'icon' => 'receipt'],
+            ['label' => 'VAT Collections', 'route' => 'panel.accountant.vat.collections', 'icon' => 'clipboard'],
+            ['label' => 'Payment History', 'route' => 'panel.accountant.payments.history', 'icon' => 'wallet'],
+        ];
     } elseif ($userRole === 'customer') {
         $menus = [
             ['label' => 'Dashboard', 'route' => 'panel.customer.dashboard', 'icon' => 'home'],
