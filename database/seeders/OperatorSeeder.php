@@ -102,10 +102,10 @@ class OperatorSeeder extends Seeder
                 $operatorData
             );
 
-            // Attach role
-            if (! $operator->roles()->where('role_id', $role->id)->exists()) {
-                $operator->roles()->attach($role, ['tenant_id' => $operator->tenant_id]);
-            }
+            // Attach role without creating duplicates
+            $operator->roles()->syncWithoutDetaching([
+                $role->id => ['tenant_id' => $operator->tenant_id],
+            ]);
         }
 
         $this->command->info('Operators seeded successfully!');

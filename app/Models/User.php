@@ -227,6 +227,10 @@ class User extends Authenticatable
 
     /**
      * Check if user is an operator (staff member).
+     * 
+     * According to config/operators_permissions.php, level 100 represents a customer.
+     * This method treats only users with operator_level < 100 as operators,
+     * so level 100 users (customers) are NOT considered operators.
      */
     public function isOperator(): bool
     {

@@ -39,6 +39,10 @@ if (! function_exists('isMenuDisabled')) {
 if (! function_exists('canAccessMenu')) {
     /**
      * Check if user can access a menu item.
+     * 
+     * This function checks if the authenticated user can access a given menu item
+     * based on disabled menus and permissions. Menus without explicit permissions
+     * are accessible to all authenticated users by default.
      */
     function canAccessMenu(array $menuItem): bool
     {
@@ -58,6 +62,7 @@ if (! function_exists('canAccessMenu')) {
             return $user->hasPermission($menuItem['permission']);
         }
 
+        // Menus without explicit permissions are accessible to all authenticated users
         return true;
     }
 }

@@ -47,8 +47,10 @@ class CustomerPolicy
             return true;
         }
 
-        // Check if customer belongs to same zone/area (TODO: implement zone check)
-        return true;
+        // Check if customer belongs to same zone/area
+        // TODO: Implement zone/area check
+        // For now, deny access by default to prevent bypassing zone restrictions
+        return false;
     }
 
     /**
@@ -89,7 +91,9 @@ class CustomerPolicy
             return true;
         }
 
-        return true;
+        // TODO: Implement zone/area-based access control
+        // For now, deny access by default to prevent unauthorized access
+        return false;
     }
 
     /**

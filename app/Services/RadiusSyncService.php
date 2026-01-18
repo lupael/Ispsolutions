@@ -122,25 +122,29 @@ class RadiusSyncService
      * Get active sessions from RADIUS accounting.
      * 
      * TODO: Implement active session retrieval
+     * 
+     * @throws \BadMethodCallException
      */
     public function getActiveSessions(?int $tenantId = null): array
     {
         // TODO: Query radacct table for active sessions
         // WHERE acctstoptime IS NULL
         
-        return [];
+        throw new \BadMethodCallException('RadiusSyncService::getActiveSessions is not implemented yet.');
     }
 
     /**
      * Get user session history.
      * 
      * TODO: Implement session history retrieval
+     * 
+     * @throws \BadMethodCallException
      */
     public function getUserSessionHistory(string $username, int $limit = 50): array
     {
         // TODO: Query radacct table for user's sessions
         
-        return [];
+        throw new \BadMethodCallException('RadiusSyncService::getUserSessionHistory is not implemented yet.');
     }
 
     /**
@@ -163,43 +167,30 @@ class RadiusSyncService
      * Get bandwidth usage for a user.
      * 
      * TODO: Implement bandwidth usage calculation
+     * 
+     * @throws \BadMethodCallException
      */
     public function getUserBandwidthUsage(string $username, \DateTime $from, \DateTime $to): array
     {
         // TODO: Sum acctinputoctets and acctoutputoctets from radacct
         
-        return [
-            'upload' => 0,
-            'download' => 0,
-            'total' => 0,
-        ];
+        throw new \BadMethodCallException('RadiusSyncService::getUserBandwidthUsage is not implemented yet.');
     }
 
     /**
      * Sync all users to RADIUS.
      * 
      * TODO: Implement bulk sync
+     * 
+     * @throws \BadMethodCallException
      */
     public function syncAllUsers(?int $tenantId = null): int
     {
         Log::info("RadiusSyncService: Syncing all users to RADIUS" . ($tenantId ? " for tenant {$tenantId}" : ''));
         
-        $query = User::query();
+        // TODO: Implement bulk user synchronization
         
-        if ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        }
-        
-        $users = $query->get();
-        $synced = 0;
-        
-        foreach ($users as $user) {
-            if ($this->syncUser($user)) {
-                $synced++;
-            }
-        }
-        
-        return $synced;
+        throw new \BadMethodCallException('RadiusSyncService::syncAllUsers is not implemented yet.');
     }
 
     /**

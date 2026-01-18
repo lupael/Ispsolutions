@@ -17,6 +17,8 @@ class RouterManager
      * Apply configuration to a router.
      * 
      * TODO: Implement vendor-specific API integration (MikroTik, Cisco, etc.)
+     * 
+     * @throws \BadMethodCallException
      */
     public function applyConfiguration(int $routerId, array $config): bool
     {
@@ -27,13 +29,15 @@ class RouterManager
         // For Cisco: Use SSH/Telnet or NETCONF
         // For Juniper: Use NETCONF/PyEZ
         
-        return true;
+        throw new \BadMethodCallException('RouterManager::applyConfiguration is not implemented yet.');
     }
 
     /**
      * Backup router configuration.
      * 
      * TODO: Implement configuration backup via vendor API
+     * 
+     * @throws \BadMethodCallException
      */
     public function backupConfiguration(int $routerId): ?string
     {
@@ -42,7 +46,7 @@ class RouterManager
         // TODO: Connect to router and retrieve current configuration
         // Store in database or file system
         
-        return null;
+        throw new \BadMethodCallException('RouterManager::backupConfiguration is not implemented yet.');
     }
 
     /**
@@ -65,17 +69,14 @@ class RouterManager
      * Get router resource usage.
      * 
      * TODO: Implement resource monitoring (CPU, Memory, Bandwidth)
+     * 
+     * @throws \BadMethodCallException
      */
     public function getResourceUsage(int $routerId): array
     {
         // TODO: Query router for resource information
         
-        return [
-            'cpu_usage' => 0,
-            'memory_usage' => 0,
-            'uptime' => 0,
-            'interfaces' => [],
-        ];
+        throw new \BadMethodCallException('RouterManager::getResourceUsage is not implemented yet.');
     }
 
     /**
@@ -98,6 +99,8 @@ class RouterManager
      * Get active sessions from router.
      * 
      * TODO: Implement session retrieval
+     * 
+     * @throws \BadMethodCallException
      */
     public function getActiveSessions(int $routerId): array
     {
@@ -105,7 +108,7 @@ class RouterManager
         
         // TODO: Query router for active PPPoE/Hotspot sessions
         
-        return [];
+        throw new \BadMethodCallException('RouterManager::getActiveSessions is not implemented yet.');
     }
 
     /**
