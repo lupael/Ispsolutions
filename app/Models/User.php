@@ -236,4 +236,185 @@ class User extends Authenticatable
     {
         return $this->operator_level < 100;
     }
+
+    /**
+     * Check if user is a Developer (level 0).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isDeveloper(): bool
+    {
+        return $this->operator_level === 0;
+    }
+
+    /**
+     * Check if user is a Super Admin (level 10).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->operator_level === 10;
+    }
+
+    /**
+     * Check if user is an Admin/Group Admin (level 20).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->operator_level === 20;
+    }
+
+    /**
+     * Check if user is an Operator (level 30).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isOperatorRole(): bool
+    {
+        return $this->operator_level === 30;
+    }
+
+    /**
+     * Check if user is a Sub-Operator (level 40).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isSubOperator(): bool
+    {
+        return $this->operator_level === 40;
+    }
+
+    /**
+     * Check if user is a Manager (level 50).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isManager(): bool
+    {
+        return $this->operator_level === 50;
+    }
+
+    /**
+     * Check if user is an Accountant (level 70).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isAccountant(): bool
+    {
+        return $this->operator_level === 70;
+    }
+
+    /**
+     * Check if user is Staff (level 80).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isStaff(): bool
+    {
+        return $this->operator_level === 80;
+    }
+
+    /**
+     * Check if user is a Customer (level 100).
+     * Uses operator_level as the primary source of truth.
+     */
+    public function isCustomer(): bool
+    {
+        return $this->operator_level === 100;
+    }
+
+    /**
+     * Check if user can manage another user based on operator level hierarchy.
+     * Lower level numbers = higher privilege.
+     * Ensures both users are in the same tenant (except for Developers who can manage across tenants).
+     */
+    public function canManage(User $otherUser): bool
+    {
+        // Developers (level 0) can manage users across all tenants
+        if ($this->operator_level === 0) {
+            return $this->operator_level < $otherUser->operator_level;
+        }
+
+        // For all other roles, ensure same tenant and lower level
+        return $this->tenant_id === $otherUser->tenant_id
+            && $this->operator_level < $otherUser->operator_level;
+    }
+
+    /**
+     * Get users that this user can manage based on hierarchy.
+     * Developers can manage users across all tenants.
+     */
+    public function manageableUsers()
+    {
+        $query = User::where('operator_level', '>', $this->operator_level)
+            ->where('id', '!=', $this->id);
+
+        // Developers (level 0) can manage users across all tenants
+        if ($this->operator_level !== 0) {
+            $query->where('tenant_id', $this->tenant_id);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Get customers created by this user.
+     */
+    public function createdCustomers()
+    {
+        return User::where('created_by', $this->id)
+            ->where('operator_level', 100);
+    }
+
+    /**
+     * Get all accessible customers based on role.
+     * - Developer: All customers across all tenants
+     * - Super Admin: All customers in own tenants
+     * - Admin: All customers in ISP
+     * - Operator: Own customers + sub-operator customers
+     * - Sub-Operator: Only own customers
+     */
+    public function accessibleCustomers()
+    {
+        $query = User::where('operator_level', 100);
+
+        if ($this->isDeveloper()) {
+            // Developer sees all customers across all tenants
+            // Bypass global tenant scope using withoutGlobalScope from BelongsToTenant trait
+            return $query->withoutGlobalScope('tenant');
+        } elseif ($this->isSuperAdmin()) {
+            // Super Admin sees all customers in their own tenants
+            // Using join for better performance with large datasets
+            return $query
+                ->join('tenants', 'users.tenant_id', '=', 'tenants.id')
+                ->where('tenants.created_by', $this->id)
+                ->select('users.*');
+        } elseif ($this->isAdmin()) {
+            // Admin sees all customers in their ISP (same tenant)
+            return $query->where('tenant_id', $this->tenant_id);
+        } elseif ($this->isOperatorRole()) {
+            // Operator sees own customers + sub-operator customers
+            // Using subquery with tenant_id filtering for security
+            return $query->where(function ($q) {
+                $q->where('created_by', $this->id)
+                    ->orWhereIn('created_by', function ($sub) {
+                        $sub->select('id')
+                            ->from('users')
+                            ->where('created_by', $this->id)
+                            ->where('operator_level', 40)
+                            ->where('tenant_id', $this->tenant_id);
+                    });
+            })->where('tenant_id', $this->tenant_id);
+        } elseif ($this->isSubOperator()) {
+            // Sub-operator sees only own customers
+            return $query->where('created_by', $this->id)
+                ->where('tenant_id', $this->tenant_id);
+        } elseif ($this->isManager() || $this->isStaff() || $this->isAccountant()) {
+            // Managers/Staff/Accountant see based on permissions
+            // Default to tenant customers if they have view permission
+            if ($this->hasPermission('customers.view')) {
+                return $query->where('tenant_id', $this->tenant_id);
+            }
+            // No permission = no customers
+            return $query->whereRaw('1 = 0'); // Empty result set
+        }
+
+        // Default: no access
+        return $query->whereRaw('1 = 0'); // Empty result set
+    }
 }

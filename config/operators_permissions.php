@@ -86,20 +86,28 @@ return [
     | Define operator levels for hierarchical access control.
     | Lower numbers = higher privileges.
     |
+    | DATA ISOLATION RULES:
+    | - Developer (0): Supreme authority. ALL tenants (can create/manage tenants)
+    | - Super Admin (10): Only OWN tenants. Represents overarching tenant context (can create/manage admins)
+    | - Admin (20): Admin (Formerly Group Admin) ISP Owner, Own ISP data within a tenancy (can create/manage operators)
+    | - Operator (30): Own + sub-operator customers (can create/manage sub-operators)
+    | - Sub-Operator (40): Only own customers
+    | - Manager/Staff (50-80): View based on permissions
+    |
     */
 
     'levels' => [
-        'developer' => 0,        // Technical infrastructure and API
-        'super_admin' => 10,     // System-wide administrator
-        'group_admin' => 20,     // Tenant administrator (ISP Admin)
-        'operator' => 30,        // Operational staff with configurable menus
-        'sub_operator' => 40,    // Limited operator (subset of operator)
-        'manager' => 50,         // Task-specific access
+        'developer' => 0,        // Supreme authority. All tenants (can create/manage tenants)
+        'super_admin' => 10,     // Only OWN tenants. Tenant context owner (can create/manage admins)
+        'admin' => 20,           // Admin (Formerly Group Admin) ISP Owner, Own ISP data (can create/manage operators)
+        'operator' => 30,        // Own + sub-operator customers (can create/manage sub-operators)
+        'sub_operator' => 40,    // Only own customers
+        'manager' => 50,         // View based on permissions - Task-specific access
         'card_distributor' => 60, // Card operations only
-        'reseller' => 65,        // Customer management and sales
-        'accountant' => 70,      // Financial reporting (read-only)
-        'sub_reseller' => 75,    // Subordinate to reseller
-        'staff' => 80,           // Support staff
+        'reseller' => 61,        // Customer management and sales
+        'sub_reseller' => 65,    // Subordinate to reseller
+        'accountant' => 70,      // View based on permissions - Financial reporting (read-only)
+        'staff' => 80,           // View based on permissions - Support staff
         'customer' => 100,       // End user (lowest privilege)
     ],
 

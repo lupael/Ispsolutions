@@ -523,11 +523,60 @@ See workflow files in `.github/workflows/` for details.
 
 ## Documentation
 
+### Core Documentation
+- [Multi-Tenancy Role System](SUMMARY.md) - **NEW!** Complete role-based access control implementation
+- [Data Isolation Guide](DATA_ISOLATION.md) - Comprehensive role hierarchy and data access rules
+- [Role System Quick Reference](ROLE_SYSTEM_QUICK_REFERENCE.md) - Developer quick reference for roles
+- [Implementation Status](IMPLEMENTATION_STATUS.md) - Full tracking of role system implementation
+
+### Additional Documentation
 - [API Documentation](docs/API.md) - Complete REST API reference with examples
 - [Testing Guide](docs/TESTING.md) - How to run and write tests
 - [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment instructions
 - [Implementation Checklist](docs/TODO_REIMPLEMENT.md) - Detailed development roadmap
-- [Implementation Status](docs/IMPLEMENTATION_STATUS.md) - Current progress report
+
+### Feature Specifications
+- [TODO Features A-Z](TODO_FEATURES_A2Z.md) - Complete feature list and specifications
+- [Panel Specifications](PANELS_SPECIFICATION.md) - Detailed panel-specific documentation
+- [Multi-Tenancy Isolation](MULTI_TENANCY_ISOLATION.md) - Multi-tenancy architecture overview
+
+## Multi-Tenancy Role System
+
+The system now includes a comprehensive 12-role hierarchy with strict data isolation:
+
+| Level | Role | Data Access |
+|-------|------|-------------|
+| 0 | Developer | All tenants (supreme authority) |
+| 10 | Super Admin | Only OWN tenants |
+| 20 | Admin | Own ISP data within tenancy |
+| 30 | Operator | Own + sub-operator customers |
+| 40 | Sub-Operator | Only own customers |
+| 50-80 | Manager/Staff/Accountant | Permission-based |
+| 100 | Customer | Self-service only |
+
+### Quick Start with Roles
+
+```php
+// Check user role
+if (auth()->user()->isDeveloper()) { ... }
+if (auth()->user()->isAdmin()) { ... }
+
+// Get accessible customers (auto-scoped by role)
+$customers = auth()->user()->accessibleCustomers()->paginate(50);
+
+// Check hierarchy
+if (auth()->user()->canManage($otherUser)) { ... }
+```
+
+### Seed Roles
+```bash
+php artisan db:seed --class=RoleSeeder
+```
+
+**Documentation:**
+- [SUMMARY.md](SUMMARY.md) - Executive summary (12.4 KB)
+- [DATA_ISOLATION.md](DATA_ISOLATION.md) - Complete guide (15.5 KB)
+- [ROLE_SYSTEM_QUICK_REFERENCE.md](ROLE_SYSTEM_QUICK_REFERENCE.md) - Quick reference (10.6 KB)
 
 ## License
 
