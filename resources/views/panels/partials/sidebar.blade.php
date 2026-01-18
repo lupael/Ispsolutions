@@ -140,6 +140,9 @@
         $menus = [
             ['label' => 'Dashboard', 'route' => 'panel.manager.dashboard', 'icon' => 'home'],
             ['label' => 'Network Users', 'route' => 'panel.manager.network-users', 'icon' => 'globe'],
+            ['label' => 'Customers', 'route' => 'panel.manager.customers.index', 'icon' => 'users'],
+            ['label' => 'Payments', 'route' => 'panel.manager.payments.index', 'icon' => 'currency'],
+            ['label' => 'Complaints', 'route' => 'panel.manager.complaints.index', 'icon' => 'ticket'],
             ['label' => 'Active Sessions', 'route' => 'panel.manager.sessions', 'icon' => 'activity'],
             ['label' => 'Reports', 'route' => 'panel.manager.reports', 'icon' => 'chart'],
         ];
@@ -176,8 +179,9 @@
     } elseif ($userRole === 'card-distributor') {
         $menus = [
             ['label' => 'Dashboard', 'route' => 'panel.card-distributor.dashboard', 'icon' => 'home'],
-            ['label' => 'Cards Inventory', 'route' => 'panel.card-distributor.cards', 'icon' => 'card'],
-            ['label' => 'Sales', 'route' => 'panel.card-distributor.sales', 'icon' => 'shopping'],
+            ['label' => 'Cards Inventory', 'route' => 'panel.card-distributor.cards.index', 'icon' => 'card'],
+            ['label' => 'Sales', 'route' => 'panel.card-distributor.sales.index', 'icon' => 'shopping'],
+            ['label' => 'Commissions', 'route' => 'panel.card-distributor.commissions.index', 'icon' => 'currency'],
             ['label' => 'Balance', 'route' => 'panel.card-distributor.balance', 'icon' => 'wallet'],
         ];
     } elseif ($userRole === 'operator') {
