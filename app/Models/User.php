@@ -330,14 +330,65 @@ class User extends Authenticatable
             return $this->operator_level < $otherUser->operator_level;
         }
 
+        // Super Admin can only manage users in their own tenants
+        if ($this->operator_level === 10) {
+            // Check if the other user belongs to a tenant created by this Super Admin
+            $tenant = \App\Models\Tenant::find($otherUser->tenant_id);
+            if ($tenant && $tenant->created_by === $this->id) {
+                return $this->operator_level < $otherUser->operator_level;
+            }
+            return false;
+        }
+
         // For all other roles, ensure same tenant and lower level
         return $this->tenant_id === $otherUser->tenant_id
             && $this->operator_level < $otherUser->operator_level;
     }
 
     /**
+     * Check if user can create a user with the specified operator level.
+     * Enforces the role creation hierarchy:
+     * - Developer: Can create Super Admins (level 10)
+     * - Super Admin: Can create Admins (level 20) within their own tenants
+     * - Admin: Can create Operators (level 30) within their ISP
+     * - Operator: Can create Sub-Operators (level 40) and Customers (level 100)
+     * - Sub-Operator: Can only create Customers (level 100)
+     */
+    public function canCreateUserWithLevel(int $targetLevel): bool
+    {
+        // Developer can create Super Admins and below
+        if ($this->isDeveloper()) {
+            return $targetLevel >= 10; // Can create level 10 (Super Admin) and higher
+        }
+
+        // Super Admin can create Admins and below (but not other Super Admins)
+        if ($this->isSuperAdmin()) {
+            return $targetLevel >= 20 && $targetLevel > $this->operator_level;
+        }
+
+        // Admin can create Operators, Sub-Operators, Managers, Staff, and Customers
+        if ($this->isAdmin()) {
+            return $targetLevel >= 30 && $targetLevel > $this->operator_level;
+        }
+
+        // Operator can create Sub-Operators and Customers
+        if ($this->isOperatorRole()) {
+            return in_array($targetLevel, [40, 100]) && $targetLevel > $this->operator_level;
+        }
+
+        // Sub-Operator can only create Customers
+        if ($this->isSubOperator()) {
+            return $targetLevel === 100;
+        }
+
+        // Managers, Staff, Accountant cannot create users
+        return false;
+    }
+
+    /**
      * Get users that this user can manage based on hierarchy.
      * Developers can manage users across all tenants.
+     * Super Admins can manage users in their own tenants only.
      */
     public function manageableUsers()
     {
@@ -345,11 +396,75 @@ class User extends Authenticatable
             ->where('id', '!=', $this->id);
 
         // Developers (level 0) can manage users across all tenants
-        if ($this->operator_level !== 0) {
-            $query->where('tenant_id', $this->tenant_id);
+        if ($this->operator_level === 0) {
+            return $query;
         }
 
+        // Super Admin can only manage users in their own tenants
+        if ($this->operator_level === 10) {
+            $ownTenantIds = \App\Models\Tenant::where('created_by', $this->id)->pluck('id');
+            $query->whereIn('tenant_id', $ownTenantIds);
+            return $query;
+        }
+
+        // For all other roles, ensure same tenant
+        $query->where('tenant_id', $this->tenant_id);
+
         return $query;
+    }
+
+    /**
+     * Check if this user can create a Super Admin.
+     * Only Developers can create Super Admins.
+     */
+    public function canCreateSuperAdmin(): bool
+    {
+        return $this->isDeveloper();
+    }
+
+    /**
+     * Check if this user can create an Admin.
+     * Only Developers and Super Admins can create Admins.
+     */
+    public function canCreateAdmin(): bool
+    {
+        return $this->isDeveloper() || $this->isSuperAdmin();
+    }
+
+    /**
+     * Check if this user can create an Operator.
+     * Developers, Super Admins, and Admins can create Operators.
+     */
+    public function canCreateOperator(): bool
+    {
+        return $this->operator_level <= 20; // Developer, Super Admin, or Admin
+    }
+
+    /**
+     * Check if this user can create a Sub-Operator.
+     * Developers, Super Admins, Admins, and Operators can create Sub-Operators.
+     */
+    public function canCreateSubOperator(): bool
+    {
+        return $this->operator_level <= 30; // Developer, Super Admin, Admin, or Operator
+    }
+
+    /**
+     * Check if this user can create a Customer.
+     * All operator roles can create customers (Developer through Sub-Operator).
+     */
+    public function canCreateCustomer(): bool
+    {
+        return $this->operator_level <= 40; // Developer through Sub-Operator
+    }
+
+    /**
+     * Check if this user has view-only access (Manager, Staff, Accountant).
+     * These roles should not be able to create or manage users, only view based on permissions.
+     */
+    public function hasViewOnlyAccess(): bool
+    {
+        return in_array($this->operator_level, [50, 70, 80]); // Manager, Accountant, Staff
     }
 
     /**

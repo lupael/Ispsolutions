@@ -16,14 +16,14 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Developer',
                 'slug' => 'developer',
-                'description' => 'Supreme authority. All tenants (can create/manage tenants). Source code owner with unrestricted permissions.',
+                'description' => 'Supreme authority across all tenants. Can create and manage Super Admins. Source code owner with unrestricted permissions.',
                 'level' => 0,
                 'permissions' => ['*'], // Wildcard = all permissions
             ],
             [
                 'name' => 'Super Admin',
                 'slug' => 'super-admin',
-                'description' => 'Only OWN tenants. Represents the overarching tenant context (can create/manage admins).',
+                'description' => 'Manages Admins within their own tenants only. Represents the overarching tenant context. Cannot access other tenants.',
                 'level' => 10,
                 'permissions' => [
                     'tenants.manage.own',
@@ -40,7 +40,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'slug' => 'admin',
-                'description' => 'Admin (Formerly Group Admin) ISP Owner, Own ISP data within a tenancy (can create/manage operators).',
+                'description' => 'ISP Owner. Manages Operators within their ISP tenant segment. Full control over own ISP data including customers, packages, and network devices.',
                 'level' => 20,
                 'permissions' => [
                     'operators.create',
@@ -66,7 +66,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Operator',
                 'slug' => 'operator',
-                'description' => 'Own + sub-operator customers (can create/manage sub-operators). Restricted panel based on menu configuration.',
+                'description' => 'Manages Sub-Operators and customer accounts within their segment. Can view own customers and sub-operator customers. Restricted panel based on menu configuration.',
                 'level' => 30,
                 'permissions' => [
                     'sub-operators.create',
@@ -90,10 +90,11 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Sub-Operator',
                 'slug' => 'sub-operator',
-                'description' => 'Only own customers. Further restricted access under an Operator.',
+                'description' => 'Manages only their own customers. Further restricted access under an Operator. Cannot create other sub-operators.',
                 'level' => 40,
                 'permissions' => [
                     'customers.view.own',
+                    'customers.create.own',
                     'customers.update.own',
                     'billing.view.own',
                     'billing.process.own',
@@ -104,7 +105,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Manager',
                 'slug' => 'manager',
-                'description' => 'View based on permissions. Task-specific access with permission-based feature access.',
+                'description' => 'View-only scoped access. Permission-based features with task-specific oversight. Cannot create or manage users.',
                 'level' => 50,
                 'permissions' => [
                     'customers.view',
@@ -120,7 +121,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Staff',
                 'slug' => 'staff',
-                'description' => 'View based on permissions. Support staff with limited operational access.',
+                'description' => 'View-only scoped access. Support staff with limited operational permissions. Cannot create or manage users.',
                 'level' => 80,
                 'permissions' => [
                     'customers.view',
@@ -170,7 +171,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Accountant',
                 'slug' => 'accountant',
-                'description' => 'View based on permissions. Accountant with read-only financial reporting access.',
+                'description' => 'View-only scoped access. Read-only financial reporting and transaction viewing. Cannot create or manage users.',
                 'level' => 70,
                 'permissions' => [
                     'reports.financial.view',

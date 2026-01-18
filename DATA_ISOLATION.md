@@ -36,11 +36,13 @@ Level 100: Customer       (End User)
 #### Data Access:
 - ✅ **ALL tenants** (unrestricted)
 - ✅ Can create and manage tenants
+- ✅ Can create and manage Super Admins
 - ✅ Can access any user, customer, or resource across all tenants
 - ✅ Source code owner with complete system access
 
 #### Responsibilities:
 - Create and manage tenants
+- Create and manage Super Admins
 - Define subscription pricing
 - Access any panel for support
 - View all customer details across tenants
@@ -55,17 +57,19 @@ Level 100: Customer       (End User)
 ---
 
 ### 2. Super Admin (Level 10)
-**Only OWN Tenants - Tenant Context Owner**
+**Only OWN Tenants - Manages Admins Within Their Tenants**
 
 #### Data Access:
 - ✅ **Only OWN tenant(s)** they created/own
-- ✅ Can create and manage Admins within their tenant(s)
+- ✅ Can create and manage Admins within their tenant(s) only
 - ✅ Can view all data within their tenant(s)
 - ❌ **CANNOT** access other tenants' data
 - ❌ **CANNOT** create new tenants (only Developer can)
+- ❌ **CANNOT** create other Super Admins (only Developer can)
 
 #### Responsibilities:
 - Add/remove ISPs (Admins) within their tenant
+- Manage Admins within own tenant(s) only
 - Configure billing for Admins
 - Manage payment gateways for tenant
 - Manage SMS gateways for tenant
@@ -76,7 +80,9 @@ Level 100: Customer       (End User)
 #### Restrictions:
 - Limited to own tenant(s) only
 - Cannot create tenants
+- Cannot create Super Admins
 - Cannot access Developer functions
+- Cannot access users in tenants not created by them
 
 #### Query Scope:
 ```php
@@ -90,14 +96,16 @@ $users = User::whereIn('tenant_id', $ownTenantIds)->get();
 ---
 
 ### 3. Admin (Level 20)
-**ISP Owner - Own ISP Data Within Tenancy**
+**ISP Owner - Manages Operators Within Their ISP Tenant Segment**
 
 #### Data Access:
 - ✅ **All data under their ISP** within their tenant
 - ✅ Can see their own customers
 - ✅ Can see Operator-created customers
 - ✅ Can see Sub-operator-created customers
-- ✅ Can create and manage Operators
+- ✅ Can create and manage Operators within their ISP
+- ✅ Can create and manage Sub-Operators
+- ✅ Can create Managers and Staff
 - ❌ **CANNOT** access other Admins' data
 - ❌ **CANNOT** access other tenants
 
@@ -140,17 +148,20 @@ $operators = User::where('tenant_id', auth()->user()->tenant_id)
 ---
 
 ### 4. Operator (Level 30)
-**Own + Sub-Operator Customers**
+**Manages Sub-Operators and Customer Accounts Within Their Segment**
 
 #### Data Access:
 - ✅ **Own customers** (customers they created)
 - ✅ **Sub-operator customers** (customers created by their sub-operators)
-- ✅ Can create and manage Sub-operators
+- ✅ Can create and manage Sub-operators within their segment
+- ✅ Can create customer accounts
 - ❌ **CANNOT** access other Operators' customers
+- ❌ **CANNOT** create Admins or other Operators
 - ❌ **CANNOT** access Admin or Super Admin functions
 
 #### Responsibilities:
-- Create and manage Sub-operators
+- Create and manage Sub-operators within their segment
+- Create and manage customer accounts
 - Manage assigned customers
 - Process bills and payments
 - Generate invoices
@@ -187,22 +198,25 @@ $customers = User::where(function($query) use ($subOperators) {
 ---
 
 ### 5. Sub-Operator (Level 40)
-**Only Own Customers**
+**Manages Only Their Own Customers**
 
 #### Data Access:
 - ✅ **Only own customers** (customers they created)
+- ✅ Can create customer accounts only
 - ❌ **CANNOT** access Operator's other customers
-- ❌ **CANNOT** create Sub-operators
+- ❌ **CANNOT** create Sub-operators or any other users
 - ❌ **CANNOT** manage packages or network settings
 
 #### Responsibilities:
+- Create customer accounts within their segment only
 - Manage own customer subset
 - Process customer bills and payments
 - Handle customer support for own customers
 - View basic reports for own customers
 
 #### Restrictions:
-- Cannot create any operators
+- Cannot create any operators or sub-operators
+- Can only create customers
 - Cannot manage packages or profiles
 - Limited to assigned customers only
 - Most administrative features disabled
@@ -218,27 +232,38 @@ $customers = User::where('created_by', auth()->id())
 
 ---
 
-### 6. Manager/Staff (Level 50-80)
-**View Based on Permissions**
+### 6. Manager/Staff/Accountant (Level 50, 70, 80)
+**View-Only Scoped Access Based on Permissions**
 
 #### Data Access:
-- ✅ **View operators' or sub-operators' customers** (read-only typically)
-- ✅ Permission-based feature access
-- ❌ **CANNOT** modify operators or sub-operators
+- ✅ **View customers based on permissions** (read-only)
+- ✅ Permission-based feature access scoped to tenant
+- ❌ **CANNOT** create or modify operators, sub-operators, or managers
+- ❌ **CANNOT** create customers
 - ❌ **CANNOT** modify packages or configurations
+- ❌ **CANNOT** exceed their defined view-only authority
 
 #### Manager Responsibilities (Level 50):
 - View customers based on permissions
-- Process payments (if authorized)
+- Process payments (if explicitly authorized)
 - Manage assigned department complaints
 - View performance reports
 - Monitor network sessions
+- View-only access - cannot create users
 
 #### Staff Responsibilities (Level 80):
-- View customer information
+- View customer information based on permissions
 - Respond to complaints
 - View network status
-- Limited billing access
+- Limited billing access (view only)
+- View-only access - cannot create users
+
+#### Accountant Responsibilities (Level 70):
+- View financial reports (read-only)
+- View VAT reports
+- View payment transactions
+- View income and expense reports
+- No user creation or management capabilities
 
 #### Accountant Responsibilities (Level 70):
 - View all financial reports

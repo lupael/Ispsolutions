@@ -10,24 +10,66 @@ This is a quick reference guide for developers working with the multi-tenancy ro
 ## Role Hierarchy
 
 ```
-Level 0:   Developer       (All Tenants - Supreme Authority)
-Level 10:  Super Admin     (Own Tenants Only)
-Level 20:  Admin           (ISP Owner - Own ISP Data)
-Level 30:  Operator        (Own + Sub-Operator Customers)
-Level 40:  Sub-Operator    (Only Own Customers)
-Level 50:  Manager         (Permission-Based)
+Level 0:   Developer       (All Tenants - Supreme Authority - Manages Super Admins)
+Level 10:  Super Admin     (Own Tenants Only - Manages Admins)
+Level 20:  Admin           (ISP Owner - Own ISP Data - Manages Operators)
+Level 30:  Operator        (Manages Sub-Operators + Customers in Segment)
+Level 40:  Sub-Operator    (Manages Only Own Customers)
+Level 50:  Manager         (View-Only Scoped Access)
 Level 60:  Card Distributor/Reseller
 Level 65:  Sub-Reseller
-Level 70:  Accountant      (Read-Only Financial)
-Level 80:  Staff           (Permission-Based Support)
+Level 70:  Accountant      (View-Only Financial)
+Level 80:  Staff           (View-Only Scoped Access)
 Level 100: Customer        (End User)
 ```
 
 **Rule:** Lower level = Higher privilege
 
+**Creation Hierarchy:**
+- **Developer** → Creates/Manages Super Admins
+- **Super Admin** → Creates/Manages Admins (within own tenants only)
+- **Admin** → Creates/Manages Operators, Sub-Operators, Managers, Staff
+- **Operator** → Creates/Manages Sub-Operators and Customers
+- **Sub-Operator** → Creates Customers only
+- **Manager/Staff/Accountant** → Cannot create users (view-only)
+
 ---
 
 ## Quick Checks
+
+### Role Creation Checks
+```php
+// Check if can create specific role types
+if (auth()->user()->canCreateSuperAdmin()) {
+    // Only Developer can do this
+}
+
+if (auth()->user()->canCreateAdmin()) {
+    // Developer or Super Admin can do this
+}
+
+if (auth()->user()->canCreateOperator()) {
+    // Developer, Super Admin, or Admin can do this
+}
+
+if (auth()->user()->canCreateSubOperator()) {
+    // Developer, Super Admin, Admin, or Operator can do this
+}
+
+if (auth()->user()->canCreateCustomer()) {
+    // Developer through Sub-Operator can do this
+}
+
+// Check if user can create a specific operator level
+if (auth()->user()->canCreateUserWithLevel(30)) {
+    // Can create an Operator (level 30)
+}
+
+// Check if user has view-only access (Manager/Staff/Accountant)
+if (auth()->user()->hasViewOnlyAccess()) {
+    // Cannot create or manage users
+}
+```
 
 ### In Controllers
 ```php
@@ -127,12 +169,17 @@ $customers = User::withoutGlobalScope('tenant')
 
 ### Super Admin (Level 10)
 ```php
-// Only own tenants
+// Only own tenants - tenants created by this Super Admin
 $tenants = Tenant::where('created_by', auth()->id())->get();
 
-// All users in own tenants
+// All users in own tenants only
 $tenantIds = $tenants->pluck('id');
 $users = User::whereIn('tenant_id', $tenantIds)->get();
+
+// Can create Admins in own tenants only
+if (auth()->user()->canCreateAdmin()) {
+    // Create Admin in one of the Super Admin's tenants
+}
 ```
 
 ### Admin (Level 20)
@@ -140,6 +187,66 @@ $users = User::whereIn('tenant_id', $tenantIds)->get();
 // All customers in own ISP/tenant
 $customers = User::where('tenant_id', auth()->user()->tenant_id)
     ->where('operator_level', 100)
+    ->get();
+
+// All operators in own ISP
+$operators = User::where('tenant_id', auth()->user()->tenant_id)
+    ->where('operator_level', '<=', 40)
+    ->get();
+
+// Can create Operators, Sub-Operators, Managers, Staff
+if (auth()->user()->canCreateOperator()) {
+    // Create Operator within same tenant
+}
+```
+
+### Operator (Level 30)
+```php
+// Own customers + sub-operator customers
+$subOperatorIds = User::where('created_by', auth()->id())
+    ->where('operator_level', 40)
+    ->pluck('id');
+
+$customers = User::where(function($query) use ($subOperatorIds) {
+    $query->where('created_by', auth()->id())
+          ->orWhereIn('created_by', $subOperatorIds);
+})->where('operator_level', 100)->get();
+
+// Can create Sub-Operators and Customers only
+if (auth()->user()->canCreateSubOperator()) {
+    // Create Sub-Operator
+}
+if (auth()->user()->canCreateCustomer()) {
+    // Create Customer
+}
+```
+
+### Sub-Operator (Level 40)
+```php
+// Only own customers
+$customers = User::where('created_by', auth()->id())
+    ->where('operator_level', 100)
+    ->get();
+
+// Can only create Customers
+if (auth()->user()->canCreateCustomer()) {
+    // Create Customer in own segment
+}
+```
+
+### Manager/Staff/Accountant
+```php
+// View-only - Permission-based access
+if (auth()->user()->hasPermission('customers.view')) {
+    $customers = User::where('tenant_id', auth()->user()->tenant_id)
+        ->where('operator_level', 100)
+        ->get();
+}
+
+// Cannot create any users
+// auth()->user()->hasViewOnlyAccess() returns true
+// auth()->user()->canCreateCustomer() returns false
+```
     ->get();
 
 // All operators in own ISP

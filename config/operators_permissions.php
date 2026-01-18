@@ -86,13 +86,21 @@ return [
     | Define operator levels for hierarchical access control.
     | Lower numbers = higher privileges.
     |
+    | ROLE MANAGEMENT HIERARCHY:
+    | - Developer (0): Supreme authority. ALL tenants. Creates/manages Super Admins.
+    | - Super Admin (10): Only OWN tenants. Creates/manages Admins within their tenants.
+    | - Admin (20): ISP Owner. Own ISP data. Creates/manages Operators, Sub-Operators, Managers, Staff.
+    | - Operator (30): Own + sub-operator customers. Creates/manages Sub-Operators and Customers.
+    | - Sub-Operator (40): Only own customers. Creates Customers only.
+    | - Manager/Staff/Accountant (50-80): View-only scoped access. Cannot create users.
+    |
     | DATA ISOLATION RULES:
-    | - Developer (0): Supreme authority. ALL tenants (can create/manage tenants)
-    | - Super Admin (10): Only OWN tenants. Represents overarching tenant context (can create/manage admins)
-    | - Admin (20): Admin (Formerly Group Admin) ISP Owner, Own ISP data within a tenancy (can create/manage operators)
-    | - Operator (30): Own + sub-operator customers (can create/manage sub-operators)
-    | - Sub-Operator (40): Only own customers
-    | - Manager/Staff (50-80): View based on permissions
+    | - Developer: Supreme authority across ALL tenants
+    | - Super Admin: Only OWN tenants (tenants they created)
+    | - Admin: Own ISP data within a single tenant
+    | - Operator: Own customers + sub-operator customers within segment
+    | - Sub-Operator: Only own customers
+    | - Manager/Staff/Accountant: Permission-based view access
     |
     */
 
