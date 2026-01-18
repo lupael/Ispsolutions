@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\DataController;
 use App\Http\Controllers\Api\V1\IpamController;
 use App\Http\Controllers\Api\V1\MikrotikController;
 use App\Http\Controllers\Api\V1\MonitoringController;
@@ -20,6 +21,17 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// AJAX Data API Routes (for frontend)
+Route::middleware('auth:sanctum')->prefix('data')->group(function () {
+    Route::get('/users', [DataController::class, 'getUsers'])->name('api.data.users');
+    Route::get('/network-users', [DataController::class, 'getNetworkUsers'])->name('api.data.network-users');
+    Route::get('/invoices', [DataController::class, 'getInvoices'])->name('api.data.invoices');
+    Route::get('/payments', [DataController::class, 'getPayments'])->name('api.data.payments');
+    Route::get('/packages', [DataController::class, 'getPackages'])->name('api.data.packages');
+    Route::get('/dashboard-stats', [DataController::class, 'getDashboardStats'])->name('api.data.dashboard-stats');
+    Route::get('/recent-activities', [DataController::class, 'getRecentActivities'])->name('api.data.recent-activities');
+});
 
 Route::prefix('v1')->group(function () {
     // IPAM Routes
