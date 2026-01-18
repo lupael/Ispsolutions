@@ -933,7 +933,7 @@ The system defines **9 distinct roles** with hierarchical authority levels and s
 
 #### 4. **Operator** (Level 4 - Reseller)
 - **Description**: Primary reseller managing their own customer base
-- **Hierarchy**: Reports to Admin (identified by `gid` field where `gid === mgid`)
+- **Hierarchy**: Reports to ISP Admin (identified by `gid` field where `gid === mgid`)
 - **Key Responsibilities**:
   - Manage assigned customers
   - Create and manage Sub-operators
@@ -944,7 +944,7 @@ The system defines **9 distinct roles** with hierarchical authority levels and s
   - Use assigned special permissions (if granted)
   - Manage recharge cards (if enabled)
 - **Panel Access**: Operator panel with restricted menus based on disabled_menus configuration
-- **Permissions**: Base permissions + optional special permissions assigned by Admin
+- **Permissions**: Base permissions + optional special permissions assigned by ISP Admin
 - **Technical Reference**: `operators.role = 'operator'`, `operators.gid = operators.mgid`
 
 #### 5. **Sub-Operator** (Level 5 - Sub-Reseller)
@@ -957,7 +957,7 @@ The system defines **9 distinct roles** with hierarchical authority levels and s
   - Access limited packages and profiles
   - Use assigned special permissions (if granted)
 - **Panel Access**: Restricted panel similar to Operator but with further limitations
-- **Permissions**: Base permissions + optional special permissions assigned by Admin
+- **Permissions**: Base permissions + optional special permissions assigned by ISP Admin
 - **Technical Reference**: `operators.role = 'operator'` where `operators.gid != operators.mgid` (role_alias = 'sub_operator')
 - **Note**: Sub-operator is determined by the relationship between `gid` and `mgid`, not a separate role enum
 
@@ -1575,16 +1575,16 @@ The system uses **Laravel Policy classes** for fine-grained authorization:
 | Method | Purpose | Key Logic |
 |--------|---------|-----------|
 | `view()` | View operator details | User is self, gid, mgid, or sid |
-| `update()` | Edit operator info | User is gid (Admin (ISP, formerly Group Admin)) |
-| `delete()` | Delete operator | User is gid (Admin (ISP, formerly Group Admin)) |
+| `update()` | Edit operator info | User is gid (ISP Admin) |
+| `delete()` | Delete operator | User is gid (ISP Admin) |
 | `editLimit()` | Modify credit limit | User is gid with credit account |
 | `addBalance()` | Add prepaid balance | User is gid with debit account |
 | `assignPackages()` | Assign packages | User is gid, target is operator/sub-operator |
 | `assignProfiles()` | Assign billing profiles | User is gid, target is operator/sub-operator |
 | `assignSpecialPermission()` | Grant special perms | User is gid, target is operator only |
 | `getAccess()` | Access operator panel | User is group_admin or developer |
-| `suspend()` | Suspend operator | User is gid (Admin (ISP, formerly Group Admin)) |
-| `suspendSubscription()` | Suspend subscription | User is sid (Super Admin) |
+| `suspend()` | Suspend operator | User is gid (ISP Admin) |
+| `suspendSubscription()` | Suspend subscription | User is sid (Tenancy) |
 | `entryCashReceived()` | Cash entry | Account provider matches user |
 
 #### CustomerPolicy
@@ -1612,7 +1612,7 @@ Request → Controller → Policy → Database Check → Response
 
 ### Best Practices and Recommendations
 
-#### For Admin (ISP, formerly Group Admin)s
+#### For ISP Admins
 1. **Permission Assignment**: Only grant special permissions when absolutely necessary
 2. **Menu Control**: Disable unused menus to simplify operator interface
 3. **Operator Monitoring**: Regularly review operator access logs
@@ -1621,7 +1621,7 @@ Request → Controller → Policy → Database Check → Response
 
 #### For Operators
 1. **Sub-Operator Creation**: Create sub-operators for regional management
-2. **Permission Requests**: Request special permissions from Admin (ISP, formerly Group Admin) when needed
+2. **Permission Requests**: Request special permissions from ISP Admin when needed
 3. **Customer Organization**: Use zones and custom fields for better organization
 4. **Billing Profiles**: Use appropriate billing profiles for different customer types
 5. **Report Generation**: Regularly generate reports for your customer base
@@ -1657,7 +1657,7 @@ Request → Controller → Policy → Database Check → Response
 | `/app/Http/Controllers/DisabledMenuController.php` | Menu management | - |
 | `/app/Http/Middleware/AccessControlList.php` | IP-based access control | - |
 | `/app/Helpers/Helper.php` | Menu checking helper function | - |
-| `/resources/views/admins/group_admin/sidebar.blade.php` | Admin (ISP, formerly Group Admin) menu structure | - |
+| `/resources/views/admins/group_admin/sidebar.blade.php` | ISP Admin menu structure | - |
 | `/resources/views/admins/operator/sidebar.blade.php` | Operator menu structure | - |
 
 ---
@@ -1666,7 +1666,7 @@ Request → Controller → Policy → Database Check → Response
 
 **Role Summary**:
 - **9 distinct roles** with hierarchical authority
-- **4-tier hierarchy** (Super Admin → Admin (ISP, formerly Group Admin) → Operator → Sub-operator)
+- **4-tier hierarchy** (Tenancy → ISP Admin → Operator → Sub-operator)
 - **16 standard permissions** for base functionality
 - **10 special permissions** for enhanced capabilities
 - **8 controllable menu sections** for customization
@@ -1709,7 +1709,7 @@ This ISP Billing System is a comprehensive solution with **400+ distinct feature
 - **Dashboard & Widgets**: 15+ features
 - **Technical Infrastructure**: 40+ features
 
-The system supports multiple user roles (Super Admin, Admin (ISP, formerly Group Admin), Operator, Sub-operator, Manager, Card Distributor, Sales Manager, Developer, Accountant) with granular permissions, multi-node distributed architecture, and extensive third-party integrations for a complete ISP business management solution.
+The system supports multiple user roles (Developer, Tenancy, ISP Admin, Operator, Sub-operator, Manager, Card Distributor, Sales Manager, Accountant) with granular permissions, multi-node distributed architecture, and extensive third-party integrations for a complete ISP business management solution.
 
 
 @copilot follow this file and develop feature by taking knowledge from this file
