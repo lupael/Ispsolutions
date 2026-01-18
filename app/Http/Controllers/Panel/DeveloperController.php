@@ -203,7 +203,7 @@ class DeveloperController extends Controller
         ]);
 
         $query = $request->input('query');
-        $customers = [];
+        $customers = null;
 
         if ($query) {
             // Escape special LIKE characters to prevent unintended wildcard matching
@@ -216,9 +216,26 @@ class DeveloperController extends Controller
                 })
                 ->with(['tenant', 'roles'])
                 ->paginate(20);
+        } else {
+            // Return empty paginated collection if no query
+            $customers = new \Illuminate\Pagination\LengthAwarePaginator(
+                [],
+                0,
+                20,
+                1,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
         }
 
-        return view('panels.developer.customers.index', compact('customers', 'query'));
+        // Calculate stats for the view
+        $stats = [
+            'total' => User::allTenants()->count(),
+            'active' => User::allTenants()->where('status', 'active')->count(),
+            'online' => 0, // TODO: Implement online user tracking
+            'offline' => 0, // TODO: Implement offline user tracking
+        ];
+
+        return view('panels.developer.customers.index', compact('customers', 'query', 'stats'));
     }
 
     /**
@@ -233,7 +250,15 @@ class DeveloperController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('panels.developer.customers.index', compact('customers', 'query'));
+        // Calculate stats for the view
+        $stats = [
+            'total' => User::allTenants()->count(),
+            'active' => User::allTenants()->where('status', 'active')->count(),
+            'online' => 0, // TODO: Implement online user tracking
+            'offline' => 0, // TODO: Implement offline user tracking
+        ];
+
+        return view('panels.developer.customers.index', compact('customers', 'query', 'stats'));
     }
 
     /**
@@ -252,9 +277,15 @@ class DeveloperController extends Controller
      */
     public function logs(): View
     {
-        // For now, return empty collection for logs
-        // This can be implemented with a proper log model later
-        $logs = collect([]);
+        // TODO: Implement proper log model and viewer
+        // For now, return empty paginated collection to prevent blade errors
+        $logs = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            20,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         $stats = [
             'info' => 0,

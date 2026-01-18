@@ -71,7 +71,14 @@ class CardDistributorController extends Controller
     public function commissions(): View
     {
         // TODO: Implement commission tracking for card distributors
-        $commissions = collect([]);
+        // For now, return empty paginated collection to prevent blade errors
+        $commissions = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            20,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('panels.card-distributor.commissions.index', compact('commissions'));
     }

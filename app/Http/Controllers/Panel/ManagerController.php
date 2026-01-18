@@ -99,7 +99,14 @@ class ManagerController extends Controller
     public function complaints(): View
     {
         // TODO: Implement ticket system filtering by department
-        $complaints = collect([]);
+        // For now, return empty paginated collection to prevent blade errors
+        $complaints = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            20,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('panels.manager.complaints.index', compact('complaints'));
     }

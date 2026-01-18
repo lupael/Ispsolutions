@@ -60,7 +60,7 @@ class AdminController extends Controller
      */
     public function packages(): View
     {
-        $packages = ServicePackage::get();
+        $packages = ServicePackage::paginate(20);
 
         return view('panels.admin.packages.index', compact('packages'));
     }
@@ -179,7 +179,15 @@ class AdminController extends Controller
      */
     public function deletedCustomers(): View
     {
-        $customers = collect();
+        // TODO: Implement soft delete functionality for customers
+        // For now, return empty paginated collection to prevent blade errors
+        $customers = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            20,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('panels.admin.customers.deleted', compact('customers'));
     }
@@ -214,7 +222,15 @@ class AdminController extends Controller
      */
     public function customerImportRequests(): View
     {
-        $importRequests = collect();
+        // TODO: Implement customer import request tracking
+        // For now, return empty paginated collection to prevent blade errors
+        $importRequests = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            20,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('panels.admin.customers.import-requests', compact('importRequests'));
     }

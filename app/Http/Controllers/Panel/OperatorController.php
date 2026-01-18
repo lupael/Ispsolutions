@@ -106,7 +106,14 @@ class OperatorController extends Controller
     {
         // TODO: Implement ticket system
         // When implemented, filter tickets by operator's assigned customers
-        $complaints = collect([]);
+        // For now, return empty paginated collection to prevent blade errors
+        $complaints = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            20,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('panels.operator.complaints.index', compact('complaints'));
     }

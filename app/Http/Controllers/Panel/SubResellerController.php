@@ -43,7 +43,7 @@ class SubResellerController extends Controller
     public function packages(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        $packages = ServicePackage::where('tenant_id', $tenantId)->get();
+        $packages = ServicePackage::where('tenant_id', $tenantId)->paginate(20);
 
         return view('panels.sub-reseller.packages.index', compact('packages'));
     }
@@ -53,6 +53,23 @@ class SubResellerController extends Controller
      */
     public function commission(): View
     {
-        return view('panels.sub-reseller.commission');
+        // TODO: Implement commission tracking for sub-resellers
+        // For now, return empty paginated collection to prevent blade errors
+        $transactions = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            20,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $summary = [
+            'total_earnings' => 0,
+            'this_month' => 0,
+            'pending' => 0,
+            'paid' => 0,
+        ];
+
+        return view('panels.sub-reseller.commission', compact('transactions', 'summary'));
     }
 }
