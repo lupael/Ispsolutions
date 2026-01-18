@@ -125,11 +125,12 @@ class AccountantController extends Controller
     /**
      * Display customer statement for a specific customer.
      */
-    public function customerStatement(int $customerId): View
+    public function customerStatement(\App\Models\User $customer): View
     {
-        $customer = \App\Models\User::where('tenant_id', auth()->user()->tenant_id)
-            ->where('id', $customerId)
-            ->firstOrFail();
+        // Ensure the customer belongs to the same tenant
+        if ($customer->tenant_id !== auth()->user()->tenant_id) {
+            abort(403, 'Unauthorized access to customer data.');
+        }
         
         $invoices = $customer->invoices()->latest()->get();
         $payments = $customer->payments()->latest()->get();

@@ -74,6 +74,32 @@ class RoleSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'Operator',
+                'slug' => 'operator',
+                'description' => 'Operator with restricted panel based on menu configuration',
+                'level' => 30,
+                'permissions' => [
+                    'customers.view',
+                    'customers.create',
+                    'customers.update',
+                    'billing.view',
+                    'billing.process',
+                    'cards.view',
+                    'reports.view',
+                ],
+            ],
+            [
+                'name' => 'Sub-Operator',
+                'slug' => 'sub-operator',
+                'description' => 'Sub-operator with further restricted access',
+                'level' => 40,
+                'permissions' => [
+                    'customers.view',
+                    'billing.view',
+                    'reports.view',
+                ],
+            ],
+            [
                 'name' => 'Reseller',
                 'slug' => 'reseller',
                 'description' => 'Reseller with customer management and commission access',
@@ -122,6 +148,18 @@ class RoleSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'Accountant',
+                'slug' => 'accountant',
+                'description' => 'Accountant with read-only financial reporting access',
+                'level' => 70,
+                'permissions' => [
+                    'reports.financial.view',
+                    'reports.vat.view',
+                    'reports.payments.view',
+                    'transactions.view',
+                ],
+            ],
+            [
                 'name' => 'Customer',
                 'slug' => 'customer',
                 'description' => 'End customer with self-service access',
@@ -143,6 +181,6 @@ class RoleSeeder extends Seeder
             );
         }
 
-        $this->command->info('9 roles seeded successfully!');
+        $this->command->info('12 roles seeded successfully!');
     }
 }
