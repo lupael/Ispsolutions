@@ -78,6 +78,12 @@ class BillingService
                 }
             }
 
+            // Automatically calculate commission if payment is completed
+            if ($payment->status === 'completed') {
+                $commissionService = app(CommissionService::class);
+                $commissionService->calculateMultiLevelCommission($payment);
+            }
+
             return $payment;
         });
     }

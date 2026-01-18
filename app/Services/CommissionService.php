@@ -125,4 +125,82 @@ class CommissionService
 
         return array_filter($commissions);
     }
+
+    /**
+     * Get commission statistics for tenant
+     */
+    public function getTenantCommissionStats(int $tenantId): array
+    {
+        $query = Commission::where('tenant_id', $tenantId);
+
+        return [
+            'total_commissions' => (clone $query)->sum('commission_amount'),
+            'pending_commissions' => (clone $query)->where('status', 'pending')->sum('commission_amount'),
+            'paid_commissions' => (clone $query)->where('status', 'paid')->sum('commission_amount'),
+            'total_count' => (clone $query)->count(),
+            'pending_count' => (clone $query)->where('status', 'pending')->count(),
+            'paid_count' => (clone $query)->where('status', 'paid')->count(),
+        ];
+    }
+
+    /**
+     * Get top earning resellers
+     */
+    public function getTopResellers(int $tenantId, int $limit = 10): array
+    {
+        return Commission::where('tenant_id', $tenantId)
+            ->selectRaw('reseller_id, SUM(commission_amount) as total_earned, COUNT(*) as commission_count')
+            ->groupBy('reseller_id')
+            ->orderByDesc('total_earned')
+            ->limit($limit)
+            ->with('reseller:id,name,email')
+            ->get()
+            ->toArray();
+    }
+
+    /**
+     * Bulk pay commissions for a reseller
+     */
+    public function bulkPayCommissions(User $reseller, array $paymentData = []): int
+    {
+        $commissions = Commission::where('reseller_id', $reseller->id)
+            ->where('status', 'pending')
+            ->get();
+
+        $count = 0;
+        foreach ($commissions as $commission) {
+            $this->payCommission($commission, $paymentData);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Get commission report for date range
+     */
+    public function getCommissionReport(int $tenantId, $startDate, $endDate): array
+    {
+        $query = Commission::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        return [
+            'period' => [
+                'start' => $startDate,
+                'end' => $endDate,
+            ],
+            'total_commissions' => (clone $query)->sum('commission_amount'),
+            'total_count' => (clone $query)->count(),
+            'by_status' => [
+                'pending' => (clone $query)->where('status', 'pending')->sum('commission_amount'),
+                'paid' => (clone $query)->where('status', 'paid')->sum('commission_amount'),
+            ],
+            'by_reseller' => (clone $query)
+                ->selectRaw('reseller_id, SUM(commission_amount) as total, COUNT(*) as count')
+                ->groupBy('reseller_id')
+                ->with('reseller:id,name')
+                ->get()
+                ->toArray(),
+        ];
+    }
 }
