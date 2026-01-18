@@ -15,7 +15,7 @@
     <!-- Payment Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
-            <form method="POST" action="#" class="space-y-6">
+            <form method="POST" action="{{ route('panel.operator.payments.store') }}" class="space-y-6">
                 @csrf
 
                 <!-- Customer Selection -->

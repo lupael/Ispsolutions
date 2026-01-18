@@ -93,7 +93,7 @@
 
     <!-- Search and Filters -->
     @include('panels.partials.search', [
-        'action' => route('panel.manager.complaints'),
+        'action' => route('panel.manager.complaints.index'),
         'placeholder' => 'Search by ticket ID, customer...',
         'filters' => [
             [

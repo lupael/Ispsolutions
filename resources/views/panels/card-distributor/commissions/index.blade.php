@@ -93,7 +93,7 @@
 
     <!-- Search and Filters -->
     @include('panels.partials.search', [
-        'action' => route('panel.card-distributor.commissions'),
+        'action' => route('panel.card-distributor.commissions.index'),
         'placeholder' => 'Search by transaction ID, card...',
         'filters' => [
             [

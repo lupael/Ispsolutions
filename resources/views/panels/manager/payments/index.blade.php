@@ -101,7 +101,7 @@
 
     <!-- Search and Filters -->
     @include('panels.partials.search', [
-        'action' => route('panel.manager.payments'),
+        'action' => route('panel.manager.payments.index'),
         'placeholder' => 'Search by transaction ID, customer...',
         'filters' => [
             [

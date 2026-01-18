@@ -101,7 +101,7 @@
 
     <!-- Search and Filters -->
     @include('panels.partials.search', [
-        'action' => route('panel.manager.customers'),
+        'action' => route('panel.manager.customers.index'),
         'placeholder' => 'Search by name, email or phone...',
         'filters' => [
             [

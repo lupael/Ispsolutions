@@ -93,7 +93,7 @@
 
     <!-- Search and Filters -->
     @include('panels.partials.search', [
-        'action' => route('panel.developer.customers'),
+        'action' => route('panel.developer.customers.index'),
         'placeholder' => 'Search by name, email or phone...',
         'filters' => [
             [
