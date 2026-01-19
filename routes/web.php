@@ -258,25 +258,25 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
 // Sales Manager Panel
 Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware(['auth', 'role:sales-manager'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\SalesManagerController::class, 'dashboard'])->name('dashboard');
-    
+
     // Admin (ISP Client) Management
     Route::get('/admins', [\App\Http\Controllers\Panel\SalesManagerController::class, 'admins'])->name('admins.index');
-    
+
     // Lead Management
     Route::get('/leads/affiliate', [\App\Http\Controllers\Panel\SalesManagerController::class, 'affiliateLeads'])->name('leads.affiliate');
     Route::get('/leads/create', [\App\Http\Controllers\Panel\SalesManagerController::class, 'createLead'])->name('leads.create');
-    
+
     // Sales Tracking
     Route::get('/sales-comments', [\App\Http\Controllers\Panel\SalesManagerController::class, 'salesComments'])->name('sales-comments');
-    
+
     // Subscription Management
     Route::get('/subscriptions/bills', [\App\Http\Controllers\Panel\SalesManagerController::class, 'subscriptionBills'])->name('subscriptions.bills');
     Route::get('/subscriptions/payment/create', [\App\Http\Controllers\Panel\SalesManagerController::class, 'createSubscriptionPayment'])->name('subscriptions.payment.create');
     Route::get('/subscriptions/pending-payments', [\App\Http\Controllers\Panel\SalesManagerController::class, 'pendingSubscriptionPayments'])->name('subscriptions.pending-payments');
-    
+
     // Communication
     Route::get('/notice-broadcast', [\App\Http\Controllers\Panel\SalesManagerController::class, 'noticeBroadcast'])->name('notice-broadcast');
-    
+
     // Security
     Route::get('/change-password', [\App\Http\Controllers\Panel\SalesManagerController::class, 'changePassword'])->name('change-password');
     Route::get('/secure-login', [\App\Http\Controllers\Panel\SalesManagerController::class, 'secureLogin'])->name('secure-login');
@@ -391,17 +391,17 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     // Super Admin Management
     Route::get('/super-admins', [DeveloperController::class, 'superAdmins'])->name('super-admins.index');
     Route::get('/super-admins/create', [DeveloperController::class, 'createSuperAdmin'])->name('super-admins.create');
-    
+
     // Admin (ISP) Management
     Route::get('/admins', [DeveloperController::class, 'allAdmins'])->name('admins.index');
 
     // Subscription Management
     Route::get('/subscriptions', [DeveloperController::class, 'subscriptionPlans'])->name('subscriptions.index');
-    
+
     // Gateway Configuration
     Route::get('/gateways/payment', [DeveloperController::class, 'paymentGateways'])->name('gateways.payment');
     Route::get('/gateways/sms', [DeveloperController::class, 'smsGateways'])->name('gateways.sms');
-    
+
     // VPN Pools
     Route::get('/vpn-pools', [DeveloperController::class, 'vpnPools'])->name('vpn-pools');
 

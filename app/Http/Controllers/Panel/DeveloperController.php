@@ -367,6 +367,7 @@ class DeveloperController extends Controller
     public function createSuperAdmin(): View
     {
         $tenants = Tenant::all();
+
         return view('panels.developer.super-admins.create', compact('tenants'));
     }
 
@@ -377,6 +378,7 @@ class DeveloperController extends Controller
     {
         // TODO: Implement PaymentGateway model
         $gateways = collect([]);
+
         return view('panels.developer.gateways.payment', compact('gateways'));
     }
 
@@ -387,6 +389,7 @@ class DeveloperController extends Controller
     {
         // TODO: Implement SmsGateway model
         $gateways = collect([]);
+
         return view('panels.developer.gateways.sms', compact('gateways'));
     }
 
@@ -397,6 +400,7 @@ class DeveloperController extends Controller
     {
         // TODO: Implement VpnPool model
         $pools = collect([]);
+
         return view('panels.developer.vpn-pools', compact('pools'));
     }
 
@@ -407,6 +411,7 @@ class DeveloperController extends Controller
     {
         // TODO: Implement SubscriptionPlan model
         $plans = collect([]);
+
         return view('panels.developer.subscriptions.index', compact('plans'));
     }
 

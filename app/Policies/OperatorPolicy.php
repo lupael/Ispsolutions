@@ -56,7 +56,7 @@ class OperatorPolicy
         }
 
         // Must have permission and be at Admin level or higher
-        return ($user->hasPermission('create_operators') || $user->operator_level <= 20);
+        return $user->hasPermission('create_operators') || $user->operator_level <= 20;
     }
 
     /**
