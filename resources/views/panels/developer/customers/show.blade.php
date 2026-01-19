@@ -65,11 +65,13 @@
                             <div>
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Roles</dt>
                                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                    @foreach($customer->roles as $role)
+                                    @forelse($customer->roles as $role)
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mr-1">
                                             {{ $role->name }}
                                         </span>
-                                    @endforeach
+                                    @empty
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">No roles assigned</span>
+                                    @endforelse
                                 </dd>
                             </div>
                             <div>

@@ -240,11 +240,6 @@ The seeder uses `null` for unlimited values (max_users, max_routers, max_olts) i
 - Consider refactoring if business logic requires safer comparisons
 
 ---
-- `subscriptions`
-- `sms_gateways`
-- `api_keys`
-
----
 
 ## Testing Checklist
 

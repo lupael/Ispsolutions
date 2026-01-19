@@ -13,22 +13,17 @@ return new class extends Migration
     {
         Schema::create('sms_gateways', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('provider'); // e.g., 'twilio', 'nexmo', 'bulksms', 'custom'
-            $table->string('api_url')->nullable();
-            $table->string('api_key')->nullable();
-            $table->string('api_secret')->nullable();
-            $table->string('sender_id')->nullable(); // Sender name or number
-            $table->json('configuration')->nullable(); // Additional provider-specific settings
+            $table->string('slug'); // twilio, nexmo, msg91, bulksms, custom
             $table->boolean('is_active')->default(false);
             $table->boolean('is_default')->default(false);
-            $table->unsignedInteger('priority')->default(0); // For fallback ordering
-            $table->decimal('cost_per_sms', 8, 4)->nullable(); // Cost tracking
-            $table->unsignedInteger('messages_sent')->default(0); // Counter
-            $table->timestamp('last_used_at')->nullable();
+            $table->text('configuration')->nullable(); // Encrypted JSON field for API keys, secrets, sender_id, etc.
+            $table->decimal('balance', 10, 2)->default(0); // SMS balance
+            $table->decimal('rate_per_sms', 8, 4)->default(0); // Cost per SMS
             $table->timestamps();
             
-            $table->index(['is_active', 'priority']);
+            $table->index(['tenant_id', 'is_active']);
             $table->index('is_default');
         });
     }

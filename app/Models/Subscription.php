@@ -49,14 +49,16 @@ class Subscription extends Model
 
     public function scopeExpired($query)
     {
-        return $query->where('status', 'expired')
-            ->orWhere('end_date', '<', now());
+        return $query->where(function ($q) {
+            $q->where('status', 'expired')
+                ->orWhere('end_date', '<', now());
+        });
     }
 
     public function isActive()
     {
         return $this->status === 'active' && 
-               ($this->end_date === null || $this->end_date->isFuture());
+               ($this->end_date === null || $this->end_date->isToday() || $this->end_date->isFuture());
     }
 
     public function isOnTrial()

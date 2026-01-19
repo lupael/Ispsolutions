@@ -16,14 +16,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('tenant_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name'); // Human-readable name for the key
-            $table->string('key')->unique(); // The actual API key
-            $table->text('permissions')->nullable(); // JSON array of allowed permissions
-            $table->ipAddress('allowed_ip')->nullable(); // IP whitelist (single IP)
-            $table->json('allowed_ips')->nullable(); // Multiple IPs whitelist
+            $table->string('key')->unique(); // The public API key identifier (stored as-is, validated via secret)
+            $table->string('secret'); // Secret associated with the API key (hashed in application)
+            $table->json('permissions')->nullable(); // JSON array of allowed permissions
+            $table->json('ip_whitelist')->nullable(); // IP whitelist (single or multiple IPs)
             $table->boolean('is_active')->default(true);
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('last_used_at')->nullable();
-            $table->unsignedInteger('usage_count')->default(0);
             $table->unsignedInteger('rate_limit')->default(1000); // Requests per hour
             $table->timestamps();
             

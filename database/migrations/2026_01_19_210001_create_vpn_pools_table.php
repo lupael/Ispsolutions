@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('network'); // e.g., 10.10.10.0
-            $table->string('subnet_mask'); // e.g., 255.255.255.0 or /24
+            $table->string('subnet_mask', 15); // e.g., 255.255.255.0 (dotted decimal notation)
             $table->ipAddress('start_ip'); // Start of IP range
             $table->ipAddress('end_ip'); // End of IP range
             $table->ipAddress('gateway')->nullable();
