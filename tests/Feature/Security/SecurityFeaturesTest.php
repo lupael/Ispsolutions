@@ -23,11 +23,21 @@ class SecurityFeaturesTest extends TestCase
 
     public function test_csrf_token_is_required_for_post_requests(): void
     {
-        // Disable CSRF for this specific test to verify it's being checked
-        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        // Create a test route that requires CSRF protection
+        $user = User::factory()->create();
         
-        // Simply verify that CSRF middleware is registered
-        $this->assertTrue(true); // CSRF is enforced via middleware in bootstrap/app.php
+        // Attempt POST request without CSRF token (should be rejected)
+        $response = $this->actingAs($user)->post('/api/test-csrf', [
+            'test' => 'data'
+        ]);
+        
+        // Should receive 419 status (CSRF token mismatch) or be blocked
+        // For now, we'll verify CSRF middleware is in the global middleware stack
+        $middleware = app()->make(\Illuminate\Contracts\Http\Kernel::class)->getMiddleware();
+        $this->assertTrue(
+            collect($middleware)->contains(fn($m) => str_contains($m, 'VerifyCsrfToken')),
+            'CSRF middleware should be registered globally'
+        );
     }
 
     public function test_2fa_can_be_enabled_for_user(): void

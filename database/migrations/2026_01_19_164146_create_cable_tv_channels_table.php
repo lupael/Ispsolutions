@@ -15,13 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->integer('channel_number')->unique();
+            $table->integer('channel_number');
             $table->string('category')->nullable();
             $table->string('logo_url')->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
+            $table->unique(['tenant_id', 'channel_number']);
             $table->index(['tenant_id', 'is_active']);
             $table->index('category');
         });

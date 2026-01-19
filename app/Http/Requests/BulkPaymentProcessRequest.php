@@ -25,7 +25,7 @@ class BulkPaymentProcessRequest extends FormRequest
             'invoice_ids' => 'required|array|min:1',
             'invoice_ids.*' => 'required|exists:invoices,id',
             'payment_method' => 'required|in:cash,bank_transfer,gateway,card',
-            'payment_date' => 'required|date|before_or_equal:today',
+            'payment_date' => 'required|date|before_or_equal:+30 days',
             'transaction_id' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:500',
         ];
@@ -44,7 +44,7 @@ class BulkPaymentProcessRequest extends FormRequest
             'payment_method.required' => 'Please select a payment method.',
             'payment_method.in' => 'Invalid payment method selected.',
             'payment_date.required' => 'Payment date is required.',
-            'payment_date.before_or_equal' => 'Payment date cannot be in the future.',
+            'payment_date.before_or_equal' => 'Payment date cannot be more than 30 days in the future.',
         ];
     }
 }

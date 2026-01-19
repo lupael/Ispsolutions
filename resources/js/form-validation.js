@@ -173,7 +173,12 @@ class FormValidator {
 class BulkSelector {
     constructor(containerSelector) {
         this.container = document.querySelector(containerSelector);
-        if (!this.container) return;
+        if (!this.container) {
+            if (typeof console !== 'undefined' && console.warn) {
+                console.warn(`BulkSelector: Container element '${containerSelector}' not found`);
+            }
+            return;
+        }
 
         this.selectAllCheckbox = this.container.querySelector('[data-bulk-select-all]');
         this.itemCheckboxes = this.container.querySelectorAll('[data-bulk-select-item]');

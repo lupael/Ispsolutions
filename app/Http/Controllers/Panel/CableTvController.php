@@ -227,18 +227,21 @@ class CableTvController extends Controller
      */
     private function generateSubscriberId(): string
     {
-        $prefix = 'CATV-';
-        $lastSubscription = CableTvSubscription::where('subscriber_id', 'like', $prefix . '%')
-            ->orderBy('id', 'desc')
-            ->first();
+        return DB::transaction(function () {
+            $prefix = 'CATV-';
+            $lastSubscription = CableTvSubscription::where('subscriber_id', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->orderBy('id', 'desc')
+                ->first();
 
-        if ($lastSubscription) {
-            $lastNumber = (int) substr($lastSubscription->subscriber_id, strlen($prefix));
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
+            if ($lastSubscription) {
+                $lastNumber = (int) substr($lastSubscription->subscriber_id, strlen($prefix));
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
 
-        return $prefix . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+            return $prefix . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+        });
     }
 }

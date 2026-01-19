@@ -58,10 +58,14 @@ class CableTvBillingService
                 ? now()->addDays($package->validity_days)
                 : $subscription->expiry_date->addDays($package->validity_days);
 
+            // Create invoice first (before modifying subscription)
+            $invoice = $this->generateMonthlyInvoice($subscription);
+
             // Create payment record
             $payment = Payment::create([
                 'tenant_id' => $subscription->tenant_id,
                 'user_id' => $subscription->user_id,
+                'invoice_id' => $invoice->id,
                 'amount' => $paymentData['amount'],
                 'payment_method' => $paymentData['payment_method'] ?? 'cash',
                 'transaction_id' => $paymentData['transaction_id'] ?? null,
@@ -70,18 +74,17 @@ class CableTvBillingService
                 'notes' => "Cable TV renewal - Subscriber: {$subscription->subscriber_id}",
             ]);
 
-            // Update subscription
-            $subscription->update([
-                'expiry_date' => $newExpiryDate,
-                'status' => 'active',
-            ]);
-
-            // Create invoice and mark as paid
-            $invoice = $this->generateMonthlyInvoice($subscription);
+            // Mark invoice as paid
             $invoice->update([
                 'status' => 'paid',
                 'paid_amount' => $payment->amount,
                 'payment_date' => $payment->payment_date,
+            ]);
+
+            // Update subscription last
+            $subscription->update([
+                'expiry_date' => $newExpiryDate,
+                'status' => 'active',
             ]);
 
             return [
@@ -104,10 +107,15 @@ class CableTvBillingService
             ]);
 
             // Log activity
-            activity()
-                ->performedOn($subscription)
-                ->withProperties(['reason' => $reason])
-                ->log('Cable TV subscription suspended');
+            // Log suspension using audit log service
+            if (class_exists(\App\Services\AuditLogService::class)) {
+                app(\App\Services\AuditLogService::class)->log(
+                    'suspend_cable_tv_subscription',
+                    $subscription,
+                    ['status' => 'active'],
+                    ['status' => 'suspended', 'reason' => $reason]
+                );
+            }
 
             return true;
         });
@@ -238,18 +246,21 @@ class CableTvBillingService
     private function generateInvoiceNumber(): string
     {
         $prefix = 'CATV-';
-        $lastInvoice = Invoice::where('invoice_number', 'like', $prefix . '%')
-            ->orderBy('id', 'desc')
-            ->first();
+        return DB::transaction(function () use ($prefix) {
+            $lastInvoice = Invoice::where('invoice_number', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->orderBy('id', 'desc')
+                ->first();
 
-        if ($lastInvoice) {
-            $lastNumber = (int) substr($lastInvoice->invoice_number, strlen($prefix));
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
+            if ($lastInvoice) {
+                $lastNumber = (int) substr($lastInvoice->invoice_number, strlen($prefix));
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
 
-        return $prefix . str_pad($newNumber, 8, '0', STR_PAD_LEFT);
+            return $prefix . str_pad($newNumber, 8, '0', STR_PAD_LEFT);
+        });
     }
 
     /**

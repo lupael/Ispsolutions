@@ -82,6 +82,8 @@ class CableTvSubscription extends Model
 
     public function daysRemaining(): int
     {
-        return max(0, now()->diffInDays($this->expiry_date, false));
+        // diffInDays with false returns negative for past dates
+        // We use max(0, ...) to ensure non-negative return value
+        return max(0, $this->expiry_date->diffInDays(now(), false));
     }
 }
