@@ -293,16 +293,9 @@ class DeveloperController extends Controller
      */
     public function logs(): View
     {
-        // TODO: Implement proper log model and viewer
-        // For now, return empty paginated collection to prevent blade errors
-        $logs = new \Illuminate\Pagination\LengthAwarePaginator(
-            [],
-            0,
-            20,
-            1,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
-
+        // Read Laravel log file
+        $logFile = storage_path('logs/laravel.log');
+        $logs = collect();
         $stats = [
             'info' => 0,
             'warning' => 0,
@@ -310,6 +303,44 @@ class DeveloperController extends Controller
             'debug' => 0,
             'total' => 0,
         ];
+        
+        if (file_exists($logFile)) {
+            $content = file_get_contents($logFile);
+            $lines = explode("\n", $content);
+            
+            // Parse log entries (last 200 lines for performance)
+            $recentLines = array_slice($lines, -200);
+            $parsedLogs = [];
+            
+            foreach ($recentLines as $line) {
+                if (empty(trim($line))) continue;
+                
+                // Parse Laravel log format: [2024-01-19 12:00:00] environment.LEVEL: message
+                if (preg_match('/\[(.*?)\]\s+\w+\.(INFO|WARNING|ERROR|DEBUG):\s+(.*)/', $line, $matches)) {
+                    $level = strtolower($matches[2]);
+                    $parsedLogs[] = [
+                        'timestamp' => $matches[1] ?? now()->toDateTimeString(),
+                        'level' => $level,
+                        'message' => $matches[3] ?? $line,
+                    ];
+                    $stats[$level] = ($stats[$level] ?? 0) + 1;
+                    $stats['total']++;
+                }
+            }
+            
+            $logs = collect(array_reverse($parsedLogs));
+        }
+        
+        // Create paginator
+        $page = request()->get('page', 1);
+        $perPage = 20;
+        $logs = new \Illuminate\Pagination\LengthAwarePaginator(
+            $logs->forPage($page, $perPage),
+            $logs->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('panels.developer.logs', compact('logs', 'stats'));
     }

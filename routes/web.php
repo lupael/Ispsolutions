@@ -255,6 +255,14 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/sms/due-date-notification', [AdminController::class, 'dueDateNotification'])->name('sms.due-date-notification');
     Route::get('/sms/payment-link-broadcast', [AdminController::class, 'paymentLinkBroadcast'])->name('sms.payment-link-broadcast');
 
+    // Logs Management
+    Route::get('/logs/system', [AdminController::class, 'laravelLogs'])->name('logs.system');
+    Route::get('/logs/laravel', [AdminController::class, 'laravelLogs'])->name('logs.laravel');
+    Route::get('/logs/scheduler', [AdminController::class, 'schedulerLogs'])->name('logs.scheduler');
+    Route::get('/logs/router', [AdminController::class, 'routerLogs'])->name('logs.router');
+    Route::get('/logs/radius', [AdminController::class, 'radiusLogs'])->name('logs.radius');
+    Route::get('/logs/activity', [AdminController::class, 'activityLogs'])->name('logs.activity');
+
     // Cable TV Management
     Route::prefix('cable-tv')->name('cable-tv.')->group(function () {
         Route::get('/', [CableTvController::class, 'index'])->name('index');

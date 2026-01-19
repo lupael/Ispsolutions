@@ -133,6 +133,18 @@
                     ['label' => 'Payment Link Broadcast', 'route' => 'panel.admin.sms.payment-link-broadcast'],
                 ]
             ],
+            [
+                'label' => 'Logs',
+                'icon' => 'clipboard',
+                'children' => [
+                    ['label' => 'System Log', 'route' => 'panel.admin.logs.system'],
+                    ['label' => 'Laravel Log', 'route' => 'panel.admin.logs.laravel'],
+                    ['label' => 'Scheduler Log', 'route' => 'panel.admin.logs.scheduler'],
+                    ['label' => 'Router Log', 'route' => 'panel.admin.logs.router'],
+                    ['label' => 'RADIUS Log', 'route' => 'panel.admin.logs.radius'],
+                    ['label' => 'Activity Log', 'route' => 'panel.admin.logs.activity'],
+                ]
+            ],
             ['label' => 'Payment Gateways', 'route' => 'panel.admin.payment-gateways', 'icon' => 'credit-card'],
             ['label' => 'Settings', 'route' => 'panel.admin.settings', 'icon' => 'cog'],
         ];
