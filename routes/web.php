@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Panel\AdminController;
+use App\Http\Controllers\Panel\CableTvController;
 use App\Http\Controllers\Panel\CardDistributorController;
 use App\Http\Controllers\Panel\CustomerController;
 use App\Http\Controllers\Panel\DeveloperController;
@@ -253,6 +254,22 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/sms/events', [AdminController::class, 'smsEvents'])->name('sms.events');
     Route::get('/sms/due-date-notification', [AdminController::class, 'dueDateNotification'])->name('sms.due-date-notification');
     Route::get('/sms/payment-link-broadcast', [AdminController::class, 'paymentLinkBroadcast'])->name('sms.payment-link-broadcast');
+
+    // Cable TV Management
+    Route::prefix('cable-tv')->name('cable-tv.')->group(function () {
+        Route::get('/', [CableTvController::class, 'index'])->name('index');
+        Route::get('/create', [CableTvController::class, 'create'])->name('create');
+        Route::post('/', [CableTvController::class, 'store'])->name('store');
+        Route::get('/{subscription}/edit', [CableTvController::class, 'edit'])->name('edit');
+        Route::put('/{subscription}', [CableTvController::class, 'update'])->name('update');
+        Route::delete('/{subscription}', [CableTvController::class, 'destroy'])->name('destroy');
+        Route::post('/{subscription}/suspend', [CableTvController::class, 'suspend'])->name('suspend');
+        Route::post('/{subscription}/reactivate', [CableTvController::class, 'reactivate'])->name('reactivate');
+        Route::post('/{subscription}/renew', [CableTvController::class, 'renew'])->name('renew');
+        
+        Route::get('/packages', [CableTvController::class, 'packagesIndex'])->name('packages.index');
+        Route::get('/channels', [CableTvController::class, 'channelsIndex'])->name('channels.index');
+    });
 });
 
 // Sales Manager Panel
