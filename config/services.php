@@ -40,4 +40,19 @@ return [
         'default_port' => env('MIKROTIK_DEFAULT_PORT', 8728),
     ],
 
+    'whatsapp' => [
+        'enabled' => env('WHATSAPP_ENABLED', false),
+        'api_url' => env('WHATSAPP_API_URL', 'https://graph.facebook.com/v18.0'),
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'app_secret' => env('WHATSAPP_APP_SECRET'),
+        'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE', '880'),
+    ],
+
+    'telegram' => [
+        'enabled' => env('TELEGRAM_ENABLED', false),
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'webhook_url' => env('TELEGRAM_WEBHOOK_URL'),
+    ],
+
 ];
