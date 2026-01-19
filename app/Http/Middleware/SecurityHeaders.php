@@ -33,9 +33,9 @@ class SecurityHeaders
         // For now, use a more restrictive policy that still allows necessary CDNs
         $response->headers->set('Content-Security-Policy', 
             "default-src 'self'; " .
-            "script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com; " .
+            "script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com static.cloudflareinsights.com; " .
             "style-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; " .
-            "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com; " .
+            "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net; " .
             "img-src 'self' data: https:; " .
             "connect-src 'self'; " .
             "frame-ancestors 'self';"
