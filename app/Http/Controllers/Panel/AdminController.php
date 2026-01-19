@@ -10,6 +10,7 @@ use App\Models\NetworkUser;
 use App\Models\Olt;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
+use App\Models\RadAcct;
 use App\Models\ServicePackage;
 use App\Models\User;
 use Illuminate\View\View;
@@ -21,10 +22,18 @@ class AdminController extends Controller
      */
     public function dashboard(): View
     {
+        // Exclude developer and super-admin from user counts
+        $excludedRoleSlugs = ['developer', 'super-admin'];
+        
         $stats = [
-            'total_users' => User::count(),
+            'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
+                $query->whereIn('slug', $excludedRoleSlugs);
+            })->count(),
             'total_network_users' => NetworkUser::count(),
-            'active_users' => User::where('is_active', true)->count(),
+            'active_users' => User::where('is_active', true)
+                ->whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
+                    $query->whereIn('slug', $excludedRoleSlugs);
+                })->count(),
             'total_packages' => ServicePackage::count(),
             'total_mikrotik' => MikrotikRouter::count(),
             'total_nas' => Nas::count(),
@@ -776,5 +785,254 @@ class AdminController extends Controller
     public function paymentLinkBroadcast(): View
     {
         return view('panels.admin.sms.payment-link-broadcast');
+    }
+
+    /**
+     * Display router logs.
+     */
+    public function routerLogs(): View
+    {
+        // Get router connection logs from audit logs
+        $logs = \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)
+            ->orWhere('event', 'like', '%router%')
+            ->with(['user', 'auditable'])
+            ->latest()
+            ->paginate(50);
+
+        $stats = [
+            'total' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->count(),
+            'today' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereDate('created_at', today())->count(),
+            'this_week' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            'this_month' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereMonth('created_at', now()->month)->count(),
+        ];
+
+        return view('panels.admin.logs.router', compact('logs', 'stats'));
+    }
+
+    /**
+     * Display RADIUS logs.
+     */
+    public function radiusLogs(): View
+    {
+        // Get RADIUS accounting logs
+        $logs = \App\Models\RadAcct::with('user')
+            ->latest('acctstarttime')
+            ->paginate(50);
+
+        $stats = [
+            'total' => \App\Models\RadAcct::count(),
+            'today' => \App\Models\RadAcct::whereDate('acctstarttime', today())->count(),
+            'active_sessions' => \App\Models\RadAcct::whereNull('acctstoptime')->count(),
+            'total_bandwidth' => \App\Models\RadAcct::sum('acctinputoctets') + \App\Models\RadAcct::sum('acctoutputoctets'),
+        ];
+
+        return view('panels.admin.logs.radius', compact('logs', 'stats'));
+    }
+
+    /**
+     * Display scheduler logs.
+     */
+    public function schedulerLogs(): View
+    {
+        // Read scheduler log file if it exists
+        $logFile = storage_path('logs/scheduler.log');
+        $logs = collect();
+        
+        if (file_exists($logFile)) {
+            $content = file_get_contents($logFile);
+            $lines = explode("\n", $content);
+            
+            // Get last 100 scheduler entries
+            $recentLines = array_slice($lines, -100);
+            $parsedLogs = [];
+            
+            foreach ($recentLines as $line) {
+                if (empty(trim($line))) continue;
+                
+                if (preg_match('/\[(.*?)\]\s+(.*)/', $line, $matches)) {
+                    $parsedLogs[] = [
+                        'timestamp' => $matches[1] ?? now()->toDateTimeString(),
+                        'message' => $matches[2] ?? $line,
+                    ];
+                }
+            }
+            
+            $logs = collect(array_reverse($parsedLogs));
+        }
+
+        // Create paginator
+        $page = request()->get('page', 1);
+        $perPage = 20;
+        $logs = new \Illuminate\Pagination\LengthAwarePaginator(
+            $logs->forPage($page, $perPage),
+            $logs->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $stats = [
+            'total' => $logs->total(),
+            'file_size' => file_exists($logFile) ? filesize($logFile) : 0,
+        ];
+
+        return view('panels.admin.logs.scheduler', compact('logs', 'stats'));
+    }
+
+    /**
+     * Display activity logs.
+     */
+    public function activityLogs(): View
+    {
+        $logs = \App\Models\AuditLog::with(['user', 'auditable'])
+            ->latest()
+            ->paginate(50);
+
+        $stats = [
+            'total' => \App\Models\AuditLog::count(),
+            'today' => \App\Models\AuditLog::whereDate('created_at', today())->count(),
+            'this_week' => \App\Models\AuditLog::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            'this_month' => \App\Models\AuditLog::whereMonth('created_at', now()->month)->count(),
+        ];
+
+        return view('panels.admin.logs.activity', compact('logs', 'stats'));
+    }
+
+    /**
+     * Display Laravel application logs.
+     */
+    public function laravelLogs(): View
+    {
+        // Read Laravel log file
+        $logFile = storage_path('logs/laravel.log');
+        $logs = collect();
+        $stats = [
+            'info' => 0,
+            'warning' => 0,
+            'error' => 0,
+            'debug' => 0,
+            'total' => 0,
+        ];
+        
+        if (file_exists($logFile)) {
+            $content = file_get_contents($logFile);
+            $lines = explode("\n", $content);
+            
+            // Parse log entries (last 200 lines for performance)
+            $recentLines = array_slice($lines, -200);
+            $parsedLogs = [];
+            
+            foreach ($recentLines as $line) {
+                if (empty(trim($line))) continue;
+                
+                if (preg_match('/\[(.*?)\]\s+\w+\.(INFO|WARNING|ERROR|DEBUG):\s+(.*)/', $line, $matches)) {
+                    $level = strtolower($matches[2]);
+                    $parsedLogs[] = [
+                        'timestamp' => $matches[1] ?? now()->toDateTimeString(),
+                        'level' => $level,
+                        'message' => $matches[3] ?? $line,
+                    ];
+                    $stats[$level] = ($stats[$level] ?? 0) + 1;
+                    $stats['total']++;
+                }
+            }
+            
+            $logs = collect(array_reverse($parsedLogs));
+        }
+        
+        // Create paginator
+        $page = request()->get('page', 1);
+        $perPage = 20;
+        $logs = new \Illuminate\Pagination\LengthAwarePaginator(
+            $logs->forPage($page, $perPage),
+            $logs->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return view('panels.admin.logs.laravel', compact('logs', 'stats'));
+    }
+
+    /**
+     * Display PPP connection/disconnection logs.
+     */
+    public function pppLogs(): View
+    {
+        $user = auth()->user();
+        $userRole = $user->roles->first()?->slug ?? '';
+        
+        // Base query for PPP sessions from RADIUS accounting
+        $query = \App\Models\RadAcct::where('username', 'LIKE', '%ppp%')
+            ->orWhere('nasporttype', 'PPP');
+        
+        // Filter by ownership for non-admin roles
+        if (!in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+            // For operators and staff, show only their assigned customers
+            if ($userRole === 'operator' || $userRole === 'staff') {
+                $customerIds = $user->customers()->pluck('id')->toArray();
+                $query->whereHas('user', function ($q) use ($customerIds) {
+                    $q->whereIn('id', $customerIds);
+                });
+            }
+            // For customers, show only their own logs
+            elseif ($userRole === 'customer') {
+                $query->where('username', $user->username);
+            }
+        }
+        
+        $logs = $query->latest('acctstarttime')->paginate(50);
+
+        $stats = [
+            'total' => $query->count(),
+            'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
+            'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
+            'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
+        ];
+
+        return view('panels.admin.logs.ppp', compact('logs', 'stats'));
+    }
+
+    /**
+     * Display Hotspot connection/disconnection logs.
+     */
+    public function hotspotLogs(): View
+    {
+        $user = auth()->user();
+        $userRole = $user->roles->first()?->slug ?? '';
+        
+        // Base query for Hotspot sessions from RADIUS accounting
+        $query = \App\Models\RadAcct::where('username', 'NOT LIKE', '%ppp%')
+            ->where(function ($q) {
+                $q->where('nasporttype', 'Wireless-802.11')
+                  ->orWhere('nasporttype', 'Ethernet')
+                  ->orWhereNull('nasporttype');
+            });
+        
+        // Filter by ownership for non-admin roles
+        if (!in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+            // For operators and staff, show only their assigned customers
+            if ($userRole === 'operator' || $userRole === 'staff') {
+                $customerIds = $user->customers()->pluck('id')->toArray();
+                $query->whereHas('user', function ($q) use ($customerIds) {
+                    $q->whereIn('id', $customerIds);
+                });
+            }
+            // For customers, show only their own logs
+            elseif ($userRole === 'customer') {
+                $query->where('username', $user->username);
+            }
+        }
+        
+        $logs = $query->latest('acctstarttime')->paginate(50);
+
+        $stats = [
+            'total' => $query->count(),
+            'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
+            'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
+            'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
+        ];
+
+        return view('panels.admin.logs.hotspot', compact('logs', 'stats'));
     }
 }

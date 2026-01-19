@@ -49,9 +49,13 @@
                     <label for="service_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Service Type *</label>
                     <select name="service_type" id="service_type" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">Select Service Type</option>
-                        <option value="pppoe">PPPoE</option>
-                        <option value="hotspot">Hotspot</option>
+                        <option value="pppoe">PPPoE (Point-to-Point Protocol over Ethernet)</option>
+                        <option value="hotspot">Hotspot (WiFi Access)</option>
+                        <option value="cable-tv">Cable TV Subscription</option>
+                        <option value="static-ip">Static IP (Dedicated IP Address)</option>
+                        <option value="other">Other Services</option>
                     </select>
+                    <p class="mt-1 text-sm text-gray-500">Choose the type of service for this customer</p>
                 </div>
 
                 <!-- Package -->

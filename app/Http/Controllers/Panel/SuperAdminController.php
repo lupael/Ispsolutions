@@ -18,11 +18,19 @@ class SuperAdminController extends Controller
      */
     public function dashboard(): View
     {
+        // Exclude developer from user counts (super-admin can see other super-admins)
+        $excludedRoleSlugs = ['developer'];
+        
         $stats = [
-            'total_users' => User::count(),
+            'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
+                $query->whereIn('slug', $excludedRoleSlugs);
+            })->count(),
             'total_network_users' => NetworkUser::count(),
-            'active_users' => User::where('is_active', true)->count(),
-            'total_roles' => Role::count(),
+            'active_users' => User::where('is_active', true)
+                ->whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
+                    $query->whereIn('slug', $excludedRoleSlugs);
+                })->count(),
+            'total_roles' => Role::whereNotIn('slug', $excludedRoleSlugs)->count(),
         ];
 
         return view('panels.super-admin.dashboard', compact('stats'));

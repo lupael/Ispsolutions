@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('panels.layouts.app')
 
 @section('title', 'Add SMS Gateway')
 

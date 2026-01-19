@@ -77,27 +77,19 @@
                             <input type="password" name="password_confirmation" id="password_confirmation" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
 
-                        <div>
-                            <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role <span class="text-red-500">*</span></label>
-                            <select name="role" id="role" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                @php $currentRole = $operator->roles->first()->slug ?? ''; @endphp
-                                <option value="">Select Role</option>
-                                <option value="manager" {{ $currentRole === 'manager' ? 'selected' : '' }}>Manager</option>
-                                <option value="staff" {{ $currentRole === 'staff' ? 'selected' : '' }}>Staff</option>
-                                <option value="reseller" {{ $currentRole === 'reseller' ? 'selected' : '' }}>Reseller</option>
-                                <option value="sub-reseller" {{ $currentRole === 'sub-reseller' ? 'selected' : '' }}>Sub-Reseller</option>
-                            </select>
-                        </div>
+                        <!-- Role is automatically assigned, no need to show -->
+                        @php $currentRole = $operator->roles->first()->slug ?? 'operator'; @endphp
+                        <input type="hidden" name="role" value="{{ $currentRole }}">
 
                         <div>
-                            <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
-                            <select name="department" id="department" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                @php $currentDept = $operator->department ?? ''; @endphp
-                                <option value="">Select Department</option>
-                                <option value="operations" {{ $currentDept === 'operations' ? 'selected' : '' }}>Operations</option>
-                                <option value="support" {{ $currentDept === 'support' ? 'selected' : '' }}>Support</option>
-                                <option value="sales" {{ $currentDept === 'sales' ? 'selected' : '' }}>Sales</option>
-                                <option value="technical" {{ $currentDept === 'technical' ? 'selected' : '' }}>Technical</option>
+                            <label for="operator_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Operator Type</label>
+                            <select name="operator_type" id="operator_type" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                @php $currentType = $operator->operator_type ?? ''; @endphp
+                                <option value="">Select Type</option>
+                                <option value="field" {{ $currentType === 'field' ? 'selected' : '' }}>Field Operator</option>
+                                <option value="support" {{ $currentType === 'support' ? 'selected' : '' }}>Support Operator</option>
+                                <option value="billing" {{ $currentType === 'billing' ? 'selected' : '' }}>Billing Operator</option>
+                                <option value="technical" {{ $currentType === 'technical' ? 'selected' : '' }}>Technical Operator</option>
                             </select>
                         </div>
                     </div>

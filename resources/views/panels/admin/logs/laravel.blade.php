@@ -154,10 +154,10 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Time Range</label>
                     <select class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Last Hour</option>
-                        <option value="">Last 6 Hours</option>
-                        <option value="">Last 24 Hours</option>
-                        <option value="">Last 7 Days</option>
+                        <option value="1">Last Hour</option>
+                        <option value="6">Last 6 Hours</option>
+                        <option value="24">Last 24 Hours</option>
+                        <option value="168">Last 7 Days</option>
                     </select>
                 </div>
             </div>

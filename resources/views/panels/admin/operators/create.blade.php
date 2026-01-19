@@ -69,25 +69,17 @@
                             <input type="password" name="password_confirmation" id="password_confirmation" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
 
-                        <div>
-                            <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role <span class="text-red-500">*</span></label>
-                            <select name="role" id="role" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">Select Role</option>
-                                <option value="manager">Manager</option>
-                                <option value="staff">Staff</option>
-                                <option value="reseller">Reseller</option>
-                                <option value="sub-reseller">Sub-Reseller</option>
-                            </select>
-                        </div>
+                        <!-- Role is automatically assigned as 'operator', no need to show -->
+                        <input type="hidden" name="role" value="operator">
 
                         <div>
-                            <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
-                            <select name="department" id="department" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">Select Department</option>
-                                <option value="operations">Operations</option>
-                                <option value="support">Support</option>
-                                <option value="sales">Sales</option>
-                                <option value="technical">Technical</option>
+                            <label for="operator_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Operator Type <span class="text-red-500">*</span></label>
+                            <select name="operator_type" id="operator_type" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Select Type</option>
+                                <option value="field">Field Operator</option>
+                                <option value="support">Support Operator</option>
+                                <option value="billing">Billing Operator</option>
+                                <option value="technical">Technical Operator</option>
                             </select>
                         </div>
                     </div>

@@ -255,6 +255,45 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/sms/due-date-notification', [AdminController::class, 'dueDateNotification'])->name('sms.due-date-notification');
     Route::get('/sms/payment-link-broadcast', [AdminController::class, 'paymentLinkBroadcast'])->name('sms.payment-link-broadcast');
 
+    // Logs Management with role-based access control
+    // System/Activity Log - Developer, Super Admin, Admin
+    Route::get('/logs/system', [AdminController::class, 'activityLogs'])
+        ->name('logs.system')
+        ->middleware('role:developer,super-admin,admin');
+    
+    // Laravel Log - Developer only
+    Route::get('/logs/laravel', [AdminController::class, 'laravelLogs'])
+        ->name('logs.laravel')
+        ->middleware('role:developer');
+    
+    // Scheduler Log - Developer, Super Admin
+    Route::get('/logs/scheduler', [AdminController::class, 'schedulerLogs'])
+        ->name('logs.scheduler')
+        ->middleware('role:developer,super-admin');
+    
+    // Router Log - Developer, Super Admin, Admin
+    Route::get('/logs/router', [AdminController::class, 'routerLogs'])
+        ->name('logs.router')
+        ->middleware('role:developer,super-admin,admin');
+    
+    // PPP Log - All (filtered by router/customer ownership)
+    Route::get('/logs/ppp', [AdminController::class, 'pppLogs'])
+        ->name('logs.ppp');
+    
+    // Hotspot Log - All (filtered by router/customer ownership)
+    Route::get('/logs/hotspot', [AdminController::class, 'hotspotLogs'])
+        ->name('logs.hotspot');
+    
+    // RADIUS Log - Developer only
+    Route::get('/logs/radius', [AdminController::class, 'radiusLogs'])
+        ->name('logs.radius')
+        ->middleware('role:developer');
+    
+    // Activity Log - Developer, Super Admin, Admin
+    Route::get('/logs/activity', [AdminController::class, 'activityLogs'])
+        ->name('logs.activity')
+        ->middleware('role:developer,super-admin,admin');
+
     // Cable TV Management
     Route::prefix('cable-tv')->name('cable-tv.')->group(function () {
         Route::get('/', [CableTvController::class, 'index'])->name('index');
