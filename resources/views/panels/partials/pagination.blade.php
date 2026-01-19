@@ -4,10 +4,10 @@
     Usage:
     @include('panels.partials.pagination', ['items' => $customers])
     
-    This component handles:
-    - Non-paginated collections (arrays/collections without pagination methods)
-    - Empty datasets
-    - Proper pagination display
+    This component:
+    - Safely ignores non-paginated collections (arrays/objects without pagination methods)
+    - Handles empty paginated datasets
+    - Renders proper pagination controls when pagination is available
 --}}
 
 @php
