@@ -202,61 +202,80 @@ class AnalyticsController extends Controller
      */
     public function exportAnalytics(Request $request)
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
-            : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
-            : now();
-
-        $tenantId = auth()->user()->tenant_id;
-        $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
-
-        $filename = 'analytics_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.csv';
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        $callback = function () use ($analytics) {
-            $file = fopen('php://output', 'w');
+        try {
+            $startDate = $request->filled('start_date') 
+                ? Carbon::parse($request->start_date) 
+                : now()->subDays(30);
             
-            // Revenue Analytics
-            fputcsv($file, ['REVENUE ANALYTICS']);
-            fputcsv($file, ['Metric', 'Value']);
-            fputcsv($file, ['Total Revenue', $analytics['revenue_analytics']['total_revenue']]);
-            fputcsv($file, ['Average Daily Revenue', $analytics['revenue_analytics']['average_daily_revenue']]);
-            fputcsv($file, ['Growth Rate (%)', $analytics['revenue_analytics']['growth_rate']]);
-            fputcsv($file, []);
+            $endDate = $request->filled('end_date') 
+                ? Carbon::parse($request->end_date) 
+                : now();
 
-            // Customer Analytics
-            fputcsv($file, ['CUSTOMER ANALYTICS']);
-            fputcsv($file, ['Metric', 'Value']);
-            fputcsv($file, ['Total Customers', $analytics['customer_analytics']['total_customers']]);
-            fputcsv($file, ['Active Customers', $analytics['customer_analytics']['active_customers']]);
-            fputcsv($file, ['New Customers', $analytics['customer_analytics']['new_customers']]);
-            fputcsv($file, ['Churn Rate (%)', $analytics['customer_analytics']['churn_rate']]);
-            fputcsv($file, ['ARPU', $analytics['customer_analytics']['average_revenue_per_user']]);
-            fputcsv($file, ['CLV', $analytics['customer_analytics']['customer_lifetime_value']]);
-            fputcsv($file, []);
+            $tenantId = auth()->user()->tenant_id;
+            $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
 
-            // Service Analytics
-            fputcsv($file, ['SERVICE ANALYTICS']);
-            fputcsv($file, ['Package Name', 'Customer Count', 'Monthly Revenue', 'Market Share (%)']);
-            foreach ($analytics['service_analytics']['package_distribution'] as $package) {
-                fputcsv($file, [
-                    $package['package_name'],
-                    $package['customer_count'],
-                    $package['monthly_revenue'],
-                    $package['market_share'],
-                ]);
-            }
+            $filename = 'analytics_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ];
 
-            fclose($file);
-        };
+            $callback = function () use ($analytics) {
+                try {
+                    $file = fopen('php://output', 'w');
+                    
+                    if ($file === false) {
+                        throw new \RuntimeException('Failed to open output stream');
+                    }
+                    
+                    // Revenue Analytics
+                    fputcsv($file, ['REVENUE ANALYTICS']);
+                    fputcsv($file, ['Metric', 'Value']);
+                    fputcsv($file, ['Total Revenue', $analytics['revenue_analytics']['total_revenue']]);
+                    fputcsv($file, ['Average Daily Revenue', $analytics['revenue_analytics']['average_daily_revenue']]);
+                    fputcsv($file, ['Growth Rate (%)', $analytics['revenue_analytics']['growth_rate']]);
+                    fputcsv($file, []);
 
-        return response()->stream($callback, 200, $headers);
+                    // Customer Analytics
+                    fputcsv($file, ['CUSTOMER ANALYTICS']);
+                    fputcsv($file, ['Metric', 'Value']);
+                    fputcsv($file, ['Total Customers', $analytics['customer_analytics']['total_customers']]);
+                    fputcsv($file, ['Active Customers', $analytics['customer_analytics']['active_customers']]);
+                    fputcsv($file, ['New Customers', $analytics['customer_analytics']['new_customers']]);
+                    fputcsv($file, ['Churn Rate (%)', $analytics['customer_analytics']['churn_rate']]);
+                    fputcsv($file, ['ARPU', $analytics['customer_analytics']['average_revenue_per_user']]);
+                    fputcsv($file, ['CLV', $analytics['customer_analytics']['customer_lifetime_value']]);
+                    fputcsv($file, []);
+
+                    // Service Analytics
+                    fputcsv($file, ['SERVICE ANALYTICS']);
+                    fputcsv($file, ['Package Name', 'Customer Count', 'Monthly Revenue', 'Market Share (%)']);
+                    foreach ($analytics['service_analytics']['package_distribution'] as $package) {
+                        fputcsv($file, [
+                            $package['package_name'],
+                            $package['customer_count'],
+                            $package['monthly_revenue'],
+                            $package['market_share'],
+                        ]);
+                    }
+
+                    fclose($file);
+                } catch (\Exception $e) {
+                    Log::error('Analytics export failed during streaming', [
+                        'error' => $e->getMessage(),
+                    ]);
+                    echo "Error generating export: " . $e->getMessage();
+                }
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            Log::error('Analytics export failed', [
+                'error' => $e->getMessage(),
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to generate export: ' . $e->getMessage());
+        }
     }
 }

@@ -147,10 +147,15 @@ class WhatsAppService
      */
     public function sendInvoiceNotification(string $to, array $invoiceData): array
     {
-        $message = "Invoice #{$invoiceData['invoice_number']}\n\n"
-            . "Amount: \${$invoiceData['amount']}\n"
-            . "Due Date: {$invoiceData['due_date']}\n"
-            . "Status: {$invoiceData['status']}\n\n"
+        $invoiceNumber = $invoiceData['invoice_number'] ?? 'N/A';
+        $amount = $invoiceData['amount'] ?? '0.00';
+        $dueDate = $invoiceData['due_date'] ?? 'N/A';
+        $status = $invoiceData['status'] ?? 'Pending';
+
+        $message = "Invoice #{$invoiceNumber}\n\n"
+            . "Amount: \${$amount}\n"
+            . "Due Date: {$dueDate}\n"
+            . "Status: {$status}\n\n"
             . "Please pay your invoice on time to avoid service interruption.";
 
         return $this->sendTextMessage($to, $message);
@@ -161,10 +166,14 @@ class WhatsAppService
      */
     public function sendPaymentConfirmation(string $to, array $paymentData): array
     {
+        $amount = $paymentData['amount'] ?? '0.00';
+        $date = $paymentData['date'] ?? date('Y-m-d');
+        $receiptNumber = $paymentData['receipt_number'] ?? 'N/A';
+
         $message = "Payment Received ✓\n\n"
-            . "Amount: \${$paymentData['amount']}\n"
-            . "Date: {$paymentData['date']}\n"
-            . "Receipt: {$paymentData['receipt_number']}\n\n"
+            . "Amount: \${$amount}\n"
+            . "Date: {$date}\n"
+            . "Receipt: {$receiptNumber}\n\n"
             . "Thank you for your payment!";
 
         return $this->sendTextMessage($to, $message);
@@ -175,10 +184,14 @@ class WhatsAppService
      */
     public function sendExpirationWarning(string $to, array $serviceData): array
     {
+        $daysRemaining = $serviceData['days_remaining'] ?? 0;
+        $packageName = $serviceData['package_name'] ?? 'N/A';
+        $expiryDate = $serviceData['expiry_date'] ?? 'N/A';
+
         $message = "⚠️ Service Expiration Warning\n\n"
-            . "Your service will expire in {$serviceData['days_remaining']} days.\n"
-            . "Package: {$serviceData['package_name']}\n"
-            . "Expiry Date: {$serviceData['expiry_date']}\n\n"
+            . "Your service will expire in {$daysRemaining} days.\n"
+            . "Package: {$packageName}\n"
+            . "Expiry Date: {$expiryDate}\n\n"
             . "Please renew to avoid service interruption.";
 
         return $this->sendTextMessage($to, $message);
@@ -212,6 +225,18 @@ class WhatsAppService
             // Remove leading zero if present
             $phone = ltrim($phone, '0');
             $phone = $defaultCountryCode . $phone;
+        }
+
+        // Basic validation: ensure non-empty and reasonable E.164-like length
+        // E.164 numbers are up to 15 digits; require a minimal length to avoid obviously invalid numbers
+        $length = strlen($phone);
+        if ($length === 0 || $length < 8 || $length > 15) {
+            Log::warning('WhatsAppService: formatted phone number is invalid', [
+                'original' => func_get_arg(0),
+                'formatted' => $phone,
+                'length' => $length,
+            ]);
+            return '';
         }
 
         return $phone;

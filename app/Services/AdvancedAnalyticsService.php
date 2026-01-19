@@ -72,11 +72,14 @@ class AdvancedAnalyticsService
             ? (($totalRevenue - $previousPeriod) / $previousPeriod) * 100 
             : 0;
 
+        $daysCount = $startDate->diffInDays($endDate);
+        $averageDailyRevenue = $daysCount > 0 ? round($totalRevenue / $daysCount, 2) : 0;
+
         return [
             'total_revenue' => round($totalRevenue, 2),
             'daily_revenue' => $dailyRevenue,
             'revenue_by_method' => $revenueByMethod,
-            'average_daily_revenue' => round($totalRevenue / $startDate->diffInDays($endDate), 2),
+            'average_daily_revenue' => $averageDailyRevenue,
             'growth_rate' => round($growthRate, 2),
             'previous_period_revenue' => round($previousPeriod, 2),
         ];
@@ -113,8 +116,9 @@ class AdvancedAnalyticsService
             ? $this->getRevenueAnalytics($startDate, $endDate, $tenantId)['total_revenue'] / $activeCustomers 
             : 0;
 
-        // Customer lifetime value (simplified)
-        $avgCustomerLifeMonths = 12; // This should be calculated from actual data
+        // Customer lifetime value (simplified / estimated)
+        // Allow configuration so this can be tuned or replaced with a data-driven calculation
+        $avgCustomerLifeMonths = config('analytics.avg_customer_life_months', 12);
         $clv = $arpu * $avgCustomerLifeMonths;
 
         return [
@@ -240,14 +244,14 @@ class AdvancedAnalyticsService
 
         $collectionRate = $totalInvoices > 0 ? ($collectedAmount / $totalInvoices) * 100 : 0;
 
-        // Network uptime (from monitoring)
-        $uptimePercentage = 99.5; // This should come from monitoring service
+        // Network uptime (from monitoring) - null indicates not yet implemented
+        $uptimePercentage = null;
 
-        // Average resolution time (support tickets if implemented)
-        $avgResolutionTime = 0; // Hours
+        // Average resolution time (support tickets if implemented) - null indicates not yet implemented
+        $avgResolutionTime = null;
 
-        // Customer satisfaction score (if you have surveys)
-        $satisfactionScore = 0; // Out of 10
+        // Customer satisfaction score (if you have surveys) - null indicates not yet implemented
+        $satisfactionScore = null;
 
         return [
             'payment_collection_rate' => round($collectionRate, 2),

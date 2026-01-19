@@ -20,15 +20,15 @@ return new class extends Migration
             $table->enum('type', ['invoice', 'payment', 'expense', 'adjustment']);
             $table->string('source_type')->nullable();
             $table->unsignedBigInteger('source_id')->nullable();
-            $table->foreignId('debit_account_id')->constrained('accounts');
-            $table->foreignId('credit_account_id')->constrained('accounts');
+            $table->foreignId('debit_account_id')->constrained('accounts')->onDelete('restrict');
+            $table->foreignId('credit_account_id')->constrained('accounts')->onDelete('restrict');
             $table->decimal('amount', 15, 2);
             $table->text('notes')->nullable();
-            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
             $table->timestamp('reconciled_at')->nullable();
-            $table->foreignId('reconciled_by')->nullable()->constrained('users');
+            $table->foreignId('reconciled_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('reversed_at')->nullable();
-            $table->foreignId('reversed_by')->nullable()->constrained('users');
+            $table->foreignId('reversed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
 
             $table->unique(['tenant_id', 'reference_number']);

@@ -91,11 +91,16 @@ class TelegramBotService
      */
     public function sendInvoiceNotification(string $chatId, array $invoiceData): array
     {
+        $invoiceNumber = $invoiceData['invoice_number'] ?? 'N/A';
+        $amount = $invoiceData['amount'] ?? '0.00';
+        $dueDate = $invoiceData['due_date'] ?? 'N/A';
+        $status = $invoiceData['status'] ?? 'Pending';
+
         $text = "<b>📄 New Invoice</b>\n\n"
-            . "Invoice #: <code>{$invoiceData['invoice_number']}</code>\n"
-            . "Amount: <b>\${$invoiceData['amount']}</b>\n"
-            . "Due Date: {$invoiceData['due_date']}\n"
-            . "Status: {$invoiceData['status']}\n\n"
+            . "Invoice #: <code>{$invoiceNumber}</code>\n"
+            . "Amount: <b>\${$amount}</b>\n"
+            . "Due Date: {$dueDate}\n"
+            . "Status: {$status}\n\n"
             . "Please pay your invoice on time to avoid service interruption.";
 
         $buttons = [[
@@ -117,11 +122,16 @@ class TelegramBotService
      */
     public function sendPaymentConfirmation(string $chatId, array $paymentData): array
     {
+        $amount = $paymentData['amount'] ?? '0.00';
+        $date = $paymentData['date'] ?? date('Y-m-d');
+        $receiptNumber = $paymentData['receipt_number'] ?? 'N/A';
+        $method = $paymentData['method'] ?? 'N/A';
+
         $text = "<b>✅ Payment Received</b>\n\n"
-            . "Amount: <b>\${$paymentData['amount']}</b>\n"
-            . "Date: {$paymentData['date']}\n"
-            . "Receipt: <code>{$paymentData['receipt_number']}</code>\n"
-            . "Method: {$paymentData['method']}\n\n"
+            . "Amount: <b>\${$amount}</b>\n"
+            . "Date: {$date}\n"
+            . "Receipt: <code>{$receiptNumber}</code>\n"
+            . "Method: {$method}\n\n"
             . "Thank you for your payment!";
 
         $buttons = [[

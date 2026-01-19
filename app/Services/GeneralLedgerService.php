@@ -239,15 +239,25 @@ class GeneralLedgerService
      */
     public function reverseEntry(GeneralLedgerEntry $entry, string $reason): GeneralLedgerEntry
     {
-        return $this->createJournalEntry([
-            'date' => now(),
-            'description' => "Reversal of {$entry->reference_number}: {$reason}",
-            'type' => 'adjustment',
-            'debit_account_id' => $entry->credit_account_id,
-            'credit_account_id' => $entry->debit_account_id,
-            'amount' => $entry->amount,
-            'notes' => "Reversal of entry #{$entry->id}",
-        ]);
+        return DB::transaction(function () use ($entry, $reason) {
+            $reversalEntry = $this->createJournalEntry([
+                'date' => now(),
+                'description' => "Reversal of {$entry->reference_number}: {$reason}",
+                'type' => 'adjustment',
+                'debit_account_id' => $entry->credit_account_id,
+                'credit_account_id' => $entry->debit_account_id,
+                'amount' => $entry->amount,
+                'notes' => "Reversal of entry #{$entry->id}",
+            ]);
+
+            // Mark the original entry as reversed
+            $entry->update([
+                'reversed_at' => now(),
+                'reversed_by' => auth()->id(),
+            ]);
+
+            return $reversalEntry;
+        });
     }
 
     /**
@@ -273,7 +283,7 @@ class GeneralLedgerService
 
             // Close revenue accounts
             foreach ($revenueAccounts as $account) {
-                if ($account->balance != 0) {
+                if (abs($account->balance) > 0.01) {
                     $this->createJournalEntry([
                         'date' => $periodEnd,
                         'description' => "Closing {$account->name}",
@@ -287,7 +297,7 @@ class GeneralLedgerService
 
             // Close expense accounts
             foreach ($expenseAccounts as $account) {
-                if ($account->balance != 0) {
+                if (abs($account->balance) > 0.01) {
                     $this->createJournalEntry([
                         'date' => $periodEnd,
                         'description' => "Closing {$account->name}",

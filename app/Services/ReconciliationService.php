@@ -16,70 +16,72 @@ class ReconciliationService
      */
     public function reconcileBankAccount(int $accountId, Carbon $statementDate, float $statementBalance, array $clearedTransactions = []): array
     {
-        $account = Account::findOrFail($accountId);
+        return DB::transaction(function () use ($accountId, $statementDate, $statementBalance, $clearedTransactions) {
+            $account = Account::findOrFail($accountId);
 
-        // Get all unreconciled entries up to statement date
-        $entries = GeneralLedgerEntry::where('tenant_id', auth()->user()->tenant_id)
-            ->where(function ($query) use ($accountId) {
-                $query->where('debit_account_id', $accountId)
-                    ->orWhere('credit_account_id', $accountId);
-            })
-            ->where('date', '<=', $statementDate)
-            ->whereNull('reconciled_at')
-            ->get();
+            // Get all unreconciled entries up to statement date
+            $entries = GeneralLedgerEntry::where('tenant_id', auth()->user()->tenant_id)
+                ->where(function ($query) use ($accountId) {
+                    $query->where('debit_account_id', $accountId)
+                        ->orWhere('credit_account_id', $accountId);
+                })
+                ->where('date', '<=', $statementDate)
+                ->whereNull('reconciled_at')
+                ->get();
 
-        // Calculate book balance
-        $bookBalance = $account->balance;
+            // Calculate book balance
+            $bookBalance = $account->balance;
 
-        // Mark cleared transactions
-        $clearedAmount = 0;
-        foreach ($clearedTransactions as $entryId) {
-            $entry = $entries->firstWhere('id', $entryId);
-            if ($entry) {
-                $entry->update([
-                    'reconciled_at' => now(),
-                    'reconciled_by' => auth()->id(),
-                ]);
+            // Mark cleared transactions
+            $clearedAmount = 0;
+            foreach ($clearedTransactions as $entryId) {
+                $entry = $entries->firstWhere('id', $entryId);
+                if ($entry) {
+                    $entry->update([
+                        'reconciled_at' => now(),
+                        'reconciled_by' => auth()->id(),
+                    ]);
 
-                $isDebit = $entry->debit_account_id === $accountId;
-                $clearedAmount += $isDebit ? $entry->amount : -$entry->amount;
+                    $isDebit = $entry->debit_account_id === $accountId;
+                    $clearedAmount += $isDebit ? $entry->amount : -$entry->amount;
+                }
             }
-        }
 
-        // Calculate outstanding items
-        $outstandingDeposits = $entries->filter(function ($entry) use ($accountId, $clearedTransactions) {
-            return $entry->debit_account_id === $accountId && !in_array($entry->id, $clearedTransactions);
-        })->sum('amount');
+            // Calculate outstanding items
+            $outstandingDeposits = $entries->filter(function ($entry) use ($accountId, $clearedTransactions) {
+                return $entry->debit_account_id === $accountId && !in_array($entry->id, $clearedTransactions);
+            })->sum('amount');
 
-        $outstandingWithdrawals = $entries->filter(function ($entry) use ($accountId, $clearedTransactions) {
-            return $entry->credit_account_id === $accountId && !in_array($entry->id, $clearedTransactions);
-        })->sum('amount');
+            $outstandingWithdrawals = $entries->filter(function ($entry) use ($accountId, $clearedTransactions) {
+                return $entry->credit_account_id === $accountId && !in_array($entry->id, $clearedTransactions);
+            })->sum('amount');
 
-        // Calculate reconciliation
-        $adjustedBookBalance = $bookBalance - $outstandingDeposits + $outstandingWithdrawals;
-        $difference = $statementBalance - $adjustedBookBalance;
+            // Calculate reconciliation
+            $adjustedBookBalance = $bookBalance - $outstandingDeposits + $outstandingWithdrawals;
+            $difference = $statementBalance - $adjustedBookBalance;
 
-        $isReconciled = abs($difference) < 0.01;
+            $isReconciled = abs($difference) < 0.01;
 
-        Log::info('Bank reconciliation completed', [
-            'account_id' => $accountId,
-            'statement_date' => $statementDate->format('Y-m-d'),
-            'is_reconciled' => $isReconciled,
-            'difference' => $difference,
-        ]);
+            Log::info('Bank reconciliation completed', [
+                'account_id' => $accountId,
+                'statement_date' => $statementDate->format('Y-m-d'),
+                'is_reconciled' => $isReconciled,
+                'difference' => $difference,
+            ]);
 
-        return [
-            'account' => $account,
-            'statement_date' => $statementDate->format('Y-m-d'),
-            'statement_balance' => $statementBalance,
-            'book_balance' => $bookBalance,
-            'outstanding_deposits' => $outstandingDeposits,
-            'outstanding_withdrawals' => $outstandingWithdrawals,
-            'adjusted_book_balance' => $adjustedBookBalance,
-            'difference' => $difference,
-            'is_reconciled' => $isReconciled,
-            'cleared_count' => count($clearedTransactions),
-        ];
+            return [
+                'account' => $account,
+                'statement_date' => $statementDate->format('Y-m-d'),
+                'statement_balance' => $statementBalance,
+                'book_balance' => $bookBalance,
+                'outstanding_deposits' => $outstandingDeposits,
+                'outstanding_withdrawals' => $outstandingWithdrawals,
+                'adjusted_book_balance' => $adjustedBookBalance,
+                'difference' => $difference,
+                'is_reconciled' => $isReconciled,
+                'cleared_count' => count($clearedTransactions),
+            ];
+        });
     }
 
     /**

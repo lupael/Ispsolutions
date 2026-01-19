@@ -40,8 +40,8 @@ class VpnController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                    ->orWhere('remote_address', 'like', "%{$search}%");
+                $q->where('username', 'like', '%' . $search . '%')
+                    ->orWhere('remote_address', 'like', '%' . $search . '%');
             });
         }
 
@@ -133,62 +133,81 @@ class VpnController extends Controller
      */
     public function exportReport(Request $request)
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
-            : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
-            : now();
-
-        $report = $this->vpnService->generateUsageReport($startDate, $endDate);
-
-        // Return CSV download
-        $filename = 'vpn_usage_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.csv';
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        $callback = function () use ($report) {
-            $file = fopen('php://output', 'w');
+        try {
+            $startDate = $request->filled('start_date') 
+                ? Carbon::parse($request->start_date) 
+                : now()->subDays(30);
             
-            // Headers
-            fputcsv($file, [
-                'Username',
-                'Protocol',
-                'Pool',
-                'User',
-                'Status',
-                'Sessions',
-                'Upload (GB)',
-                'Download (GB)',
-                'Total Traffic (GB)',
-                'Duration (Hours)',
-                'Last Connection',
+            $endDate = $request->filled('end_date') 
+                ? Carbon::parse($request->end_date) 
+                : now();
+
+            $report = $this->vpnService->generateUsageReport($startDate, $endDate);
+
+            // Return CSV download
+            $filename = 'vpn_usage_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ];
+
+            $callback = function () use ($report) {
+                try {
+                    $file = fopen('php://output', 'w');
+                    
+                    if ($file === false) {
+                        throw new \RuntimeException('Failed to open output stream');
+                    }
+                    
+                    // Headers
+                    fputcsv($file, [
+                        'Username',
+                        'Protocol',
+                        'Pool',
+                        'User',
+                        'Status',
+                        'Sessions',
+                        'Upload (GB)',
+                        'Download (GB)',
+                        'Total Traffic (GB)',
+                        'Duration (Hours)',
+                        'Last Connection',
+                    ]);
+
+                    // Data
+                    foreach ($report['accounts'] as $account) {
+                        fputcsv($file, [
+                            $account['username'],
+                            $account['protocol'],
+                            $account['pool_name'],
+                            $account['user_name'],
+                            $account['is_active'] ? 'Active' : 'Disabled',
+                            $account['sessions'],
+                            $account['upload_gb'],
+                            $account['download_gb'],
+                            $account['total_traffic_gb'],
+                            $account['duration_hours'],
+                            $account['last_connection'] ?? 'N/A',
+                        ]);
+                    }
+
+                    fclose($file);
+                } catch (\Exception $e) {
+                    Log::error('VPN export failed during streaming', [
+                        'error' => $e->getMessage(),
+                    ]);
+                    echo "Error generating export: " . $e->getMessage();
+                }
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            Log::error('VPN export failed', [
+                'error' => $e->getMessage(),
             ]);
-
-            // Data
-            foreach ($report['accounts'] as $account) {
-                fputcsv($file, [
-                    $account['username'],
-                    $account['protocol'],
-                    $account['pool_name'],
-                    $account['user_name'],
-                    $account['is_active'] ? 'Active' : 'Disabled',
-                    $account['sessions'],
-                    $account['upload_gb'],
-                    $account['download_gb'],
-                    $account['total_traffic_gb'],
-                    $account['duration_hours'],
-                    $account['last_connection'] ?? 'N/A',
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+            
+            return redirect()->back()->with('error', 'Failed to generate export: ' . $e->getMessage());
+        }
     }
 }

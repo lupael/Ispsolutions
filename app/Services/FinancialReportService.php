@@ -225,6 +225,8 @@ class FinancialReportService
             ->join('network_users', 'invoices.user_id', '=', 'network_users.id')
             ->join('service_packages', 'network_users.package_id', '=', 'service_packages.id')
             ->where('invoices.tenant_id', $tenantId)
+            ->where('network_users.tenant_id', $tenantId)
+            ->where('service_packages.tenant_id', $tenantId)
             ->whereBetween('invoices.invoice_date', [$startDate, $endDate])
             ->where('invoices.status', 'paid')
             ->select(

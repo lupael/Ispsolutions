@@ -28,9 +28,9 @@ class WebhookController extends Controller
             $token = $request->input('hub_verify_token');
             $challenge = $request->input('hub_challenge');
 
-            if ($mode === 'subscribe' && $token === config('services.whatsapp.verify_token')) {
+            if ($mode === 'subscribe' && $token === env('WHATSAPP_VERIFY_TOKEN')) {
                 Log::info('WhatsApp webhook verified');
-                return response()->json($challenge, 200);
+                return response($challenge, 200);
             }
 
             return response()->json(['error' => 'Invalid verification token'], 403);
