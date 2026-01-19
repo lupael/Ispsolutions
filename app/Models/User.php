@@ -34,6 +34,9 @@ class User extends Authenticatable
         'disabled_menus',
         'manager_id',
         'operator_type',
+        'two_factor_enabled',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -44,6 +47,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -59,6 +64,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'activated_at' => 'datetime',
             'disabled_menus' => 'array',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 

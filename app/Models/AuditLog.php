@@ -35,6 +35,11 @@ class AuditLog extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
     public function auditable()
     {
         return $this->morphTo();

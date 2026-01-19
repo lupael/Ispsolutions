@@ -15,6 +15,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'tenant' => \App\Http\Middleware\ResolveTenant::class,
+            '2fa' => \App\Http\Middleware\TwoFactorAuthentication::class,
+            'rate_limit' => \App\Http\Middleware\RateLimitMiddleware::class,
+        ]);
+
+        // Add global middleware
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
+        // Add CSRF verification middleware
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
+            'api/webhooks/*',
+            'payment/webhook/*',
+            'payment/callback/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

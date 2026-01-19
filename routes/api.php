@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // AJAX Data API Routes (for frontend)
-Route::middleware('auth:sanctum')->prefix('data')->group(function () {
+Route::middleware(['auth:sanctum', 'rate_limit:api'])->prefix('data')->group(function () {
     Route::get('/users', [DataController::class, 'getUsers'])->name('api.data.users');
     Route::get('/network-users', [DataController::class, 'getNetworkUsers'])->name('api.data.network-users');
     Route::get('/invoices', [DataController::class, 'getInvoices'])->name('api.data.invoices');
@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->prefix('data')->group(function () {
 });
 
 // Chart API Routes (for ApexCharts)
-Route::middleware('auth:sanctum')->prefix('charts')->group(function () {
+Route::middleware(['auth:sanctum', 'rate_limit:api'])->prefix('charts')->group(function () {
     Route::get('/revenue', [\App\Http\Controllers\Api\ChartController::class, 'getRevenueChart'])->name('api.charts.revenue');
     Route::get('/invoice-status', [\App\Http\Controllers\Api\ChartController::class, 'getInvoiceStatusChart'])->name('api.charts.invoice-status');
     Route::get('/user-growth', [\App\Http\Controllers\Api\ChartController::class, 'getUserGrowthChart'])->name('api.charts.user-growth');
@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->prefix('charts')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Api\ChartController::class, 'getDashboardCharts'])->name('api.charts.dashboard');
 });
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
     // IPAM Routes
     Route::prefix('ipam')->group(function () {
         // IP Pools

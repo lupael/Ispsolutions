@@ -1,6 +1,7 @@
 <title>Metronic - Tailwind CSS</title>
 <meta charset="utf-8" />
 <meta content="follow, index" name="robots" />
+<meta name="csrf-token" content="{{ csrf_token() }}" />
 <link href="{{ url(request()->path()) }}" rel="canonical" />
 <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
 <meta content="" name="description" />
