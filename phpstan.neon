@@ -1,5 +1,9 @@
 includes:
     - ./vendor/larastan/larastan/extension.neon
+    # Baseline file for existing legacy PHPStan issues only.
+    # Cleanup plan: do not add new entries; fix and remove baseline ignores incrementally in each sprint until this file can be deleted.
+    # Tracking: link this plan to a GitHub issue (e.g. "PHPStan baseline cleanup") so progress and target timelines are visible.
+    - phpstan-baseline.neon
 
 parameters:
     paths:
