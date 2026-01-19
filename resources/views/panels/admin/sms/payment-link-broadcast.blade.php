@@ -300,7 +300,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     const scheduleRadios = document.querySelectorAll('input[name="schedule"]');
     const scheduleDatetime = document.getElementById('schedule_datetime');

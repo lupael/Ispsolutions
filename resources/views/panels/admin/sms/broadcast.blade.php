@@ -250,7 +250,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 function insertVariable(variable) {
     const textarea = document.getElementById('broadcastMessage');
     const cursorPos = textarea.selectionStart;

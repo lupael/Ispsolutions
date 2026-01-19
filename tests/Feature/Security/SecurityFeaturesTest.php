@@ -19,6 +19,37 @@ class SecurityFeaturesTest extends TestCase
         $response->assertHeader('X-Frame-Options');
         $response->assertHeader('X-Content-Type-Options');
         $response->assertHeader('X-XSS-Protection');
+        $response->assertHeader('Content-Security-Policy');
+    }
+
+    public function test_csp_header_contains_required_domains(): void
+    {
+        $response = $this->get('/');
+
+        $cspHeader = $response->headers->get('Content-Security-Policy');
+        
+        // Verify script-src includes required domains
+        $this->assertStringContainsString('cdn.jsdelivr.net', $cspHeader);
+        $this->assertStringContainsString('cdn.tailwindcss.com', $cspHeader);
+        $this->assertStringContainsString('static.cloudflareinsights.com', $cspHeader);
+        
+        // Verify style-src includes required domains
+        $this->assertStringContainsString('fonts.googleapis.com', $cspHeader);
+        $this->assertStringContainsString('fonts.bunny.net', $cspHeader);
+        
+        // Verify font-src includes required domains
+        $this->assertStringContainsString('fonts.gstatic.com', $cspHeader);
+        
+        // Verify nonce is present
+        $this->assertStringContainsString("'nonce-", $cspHeader);
+    }
+
+    public function test_csp_nonce_helper_works(): void
+    {
+        $response = $this->get('/');
+        
+        // Make a request to ensure middleware sets the nonce
+        $this->assertNotEmpty(request()->attributes->get('csp_nonce'));
     }
 
     public function test_csrf_token_is_required_for_post_requests(): void

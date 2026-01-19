@@ -10,9 +10,6 @@
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    <!-- Alpine.js for interactive components -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">

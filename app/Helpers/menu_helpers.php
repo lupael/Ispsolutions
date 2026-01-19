@@ -122,3 +122,13 @@ if (! function_exists('getCurrentTenantId')) {
         return $tenancyService->getCurrentTenantId();
     }
 }
+
+if (! function_exists('csp_nonce')) {
+    /**
+     * Get the CSP nonce for inline scripts and styles.
+     */
+    function csp_nonce(): string
+    {
+        return request()->attributes->get('csp_nonce', '');
+    }
+}

@@ -28,13 +28,15 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
         // Content Security Policy
-        // Allow unsafe-eval for Alpine.js and unsafe-inline for inline styles
-        // This is required for Alpine.js to work properly with x-data and similar directives
+        // Generate a nonce for inline scripts and styles
+        $nonce = base64_encode(random_bytes(16));
+        $request->attributes->set('csp_nonce', $nonce);
+        
         $response->headers->set('Content-Security-Policy', 
             "default-src 'self'; " .
-            "script-src 'self' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com static.cloudflareinsights.com; " .
-            "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; " .
-            "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net; " .
+            "script-src 'self' 'nonce-{$nonce}' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com static.cloudflareinsights.com; " .
+            "style-src 'self' 'nonce-{$nonce}' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com fonts.bunny.net; " .
+            "font-src 'self' fonts.gstatic.com fonts.bunny.net cdnjs.cloudflare.com cdn.jsdelivr.net; " .
             "img-src 'self' data: https:; " .
             "connect-src 'self'; " .
             "frame-ancestors 'self';"

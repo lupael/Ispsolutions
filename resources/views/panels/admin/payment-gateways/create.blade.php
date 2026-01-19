@@ -263,7 +263,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     if (input.type === 'password') {

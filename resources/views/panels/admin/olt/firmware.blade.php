@@ -228,7 +228,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 function firmwareUpdates() {
     return {
         updates: [],
@@ -327,7 +327,7 @@ function firmwareUpdates() {
 }
 </script>
 
-<style>
+<style nonce="{{ csp_nonce() }}">
 [x-cloak] { display: none !important; }
 </style>
 @endsection

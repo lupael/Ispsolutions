@@ -210,7 +210,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 function configTemplates() {
     return {
         templates: [],
@@ -292,7 +292,7 @@ function configTemplates() {
 }
 </script>
 
-<style>
+<style nonce="{{ csp_nonce() }}">
 [x-cloak] { display: none !important; }
 </style>
 @endsection
