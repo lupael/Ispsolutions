@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\CiscoDevice;
+use App\Models\DeviceMonitor;
 use App\Models\IpAllocation;
+use App\Models\IpPool;
+use App\Models\MikrotikProfile;
 use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Models\NetworkUser;
@@ -14,6 +17,7 @@ use App\Models\PaymentGateway;
 use App\Models\RadAcct;
 use App\Models\ServicePackage;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -634,15 +638,15 @@ class AdminController extends Controller
     {
         // Combine all device types for unified view
         $routers = MikrotikRouter::select('id', 'name', 'host', 'status', 'created_at')
-            ->addSelect(\DB::raw("'router' as device_type"))
+            ->addSelect(DB::raw("'router' as device_type"))
             ->get();
         
         $olts = Olt::select('id', 'name', 'ip_address as host', 'status', 'created_at')
-            ->addSelect(\DB::raw("'olt' as device_type"))
+            ->addSelect(DB::raw("'olt' as device_type"))
             ->get();
         
         $ciscoDevices = CiscoDevice::select('id', 'name', 'ip_address as host', 'status', 'created_at')
-            ->addSelect(\DB::raw("'cisco' as device_type"))
+            ->addSelect(DB::raw("'cisco' as device_type"))
             ->get();
 
         // Merge all devices
@@ -665,15 +669,15 @@ class AdminController extends Controller
     public function deviceMonitors(): View
     {
         // Get actual device monitoring data using polymorphic relationships
-        $deviceMonitors = \App\Models\DeviceMonitor::with('monitorable')
+        $deviceMonitors = DeviceMonitor::with('monitorable')
             ->latest()
             ->limit(50)
             ->get();
 
         // Calculate health statistics based on device monitoring data
-        $onlineCount = \App\Models\DeviceMonitor::online()->count();
-        $offlineCount = \App\Models\DeviceMonitor::offline()->count();
-        $degradedCount = \App\Models\DeviceMonitor::degraded()->count();
+        $onlineCount = DeviceMonitor::online()->count();
+        $offlineCount = DeviceMonitor::offline()->count();
+        $degradedCount = DeviceMonitor::degraded()->count();
         
         // Total devices from all types
         $totalDevices = MikrotikRouter::count() + Olt::count() + CiscoDevice::count();
@@ -712,12 +716,12 @@ class AdminController extends Controller
      */
     public function ipv4Pools(): View
     {
-        $pools = \App\Models\IpPool::with('subnets')->latest()->paginate(20);
+        $pools = IpPool::with('subnets')->latest()->paginate(20);
 
         $stats = [
-            'total' => \App\Models\IpPool::count(),
+            'total' => IpPool::count(),
             'available' => 0, // Calculate based on allocations
-            'allocated' => \App\Models\IpAllocation::count(),
+            'allocated' => IpAllocation::count(),
             'pools' => $pools->total(),
         ];
 
@@ -730,11 +734,11 @@ class AdminController extends Controller
     public function ipv6Pools(): View
     {
         // IPv6 pools can be distinguished by start_ip format or add ip_version column
-        $pools = \App\Models\IpPool::latest()->paginate(20);
+        $pools = IpPool::latest()->paginate(20);
 
         $stats = [
             'pools' => $pools->total(),
-            'allocated' => \App\Models\IpAllocation::count(),
+            'allocated' => IpAllocation::count(),
             'available' => 0, // Calculate based on subnet capacity
         ];
 
@@ -746,12 +750,12 @@ class AdminController extends Controller
      */
     public function pppoeProfiles(): View
     {
-        $profiles = \App\Models\MikrotikProfile::with('router')->latest()->paginate(20);
+        $profiles = MikrotikProfile::with('router')->latest()->paginate(20);
 
         $stats = [
-            'total' => \App\Models\MikrotikProfile::count(),
-            'active' => \App\Models\MikrotikProfile::count(), // Could add status field
-            'users' => \App\Models\NetworkUser::count(),
+            'total' => MikrotikProfile::count(),
+            'active' => MikrotikProfile::count(), // Could add status field
+            'users' => NetworkUser::count(),
         ];
 
         return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats'));
