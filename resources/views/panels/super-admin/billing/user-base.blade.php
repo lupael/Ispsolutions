@@ -1,4 +1,4 @@
-@extends('panels.layouts.super-admin')
+@extends('panels.layouts.app')
 
 @section('title', 'User-Based Billing')
 

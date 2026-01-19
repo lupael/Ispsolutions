@@ -1,4 +1,4 @@
-@extends('panels.layouts.developer')
+@extends('panels.layouts.app')
 
 @section('title', 'API Keys Management')
 
@@ -64,7 +64,7 @@
                                     <tr>
                                         <td>{{ $apiKey->id }}</td>
                                         <td>{{ $apiKey->name }}</td>
-                                        <td><code>{{ substr($apiKey->key, 0, 16) }}...</code></td>
+                                        <td><code>{{ str_repeat('•', 8) . substr($apiKey->key, -4) }}</code></td>
                                         <td>{{ $apiKey->user ? $apiKey->user->name : 'N/A' }}</td>
                                         <td>
                                             <span class="badge badge-{{ $apiKey->is_active && !$apiKey->isExpired() ? 'success' : 'danger' }}">

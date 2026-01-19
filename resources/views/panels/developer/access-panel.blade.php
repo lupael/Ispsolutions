@@ -1,4 +1,4 @@
-@extends('panels.layouts.developer')
+@extends('panels.layouts.app')
 
 @section('title', 'Access Panel')
 

@@ -105,7 +105,7 @@ class Tenant extends Model
      */
     public function subscription()
     {
-        return $this->hasOne(Subscription::class)->latest();
+        return $this->hasOne(Subscription::class)->latestOfMany();
     }
 
     /**
