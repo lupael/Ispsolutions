@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\NetworkUser;
+use App\Models\PaymentGateway;
 use App\Models\Role;
+use App\Models\SmsGateway;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -148,8 +150,9 @@ class SuperAdminController extends Controller
      */
     public function paymentGatewayIndex(): View
     {
-        // TODO: Implement PaymentGateway model
-        return view('panels.super-admin.payment-gateway.index');
+        $gateways = PaymentGateway::latest()->paginate(20);
+        
+        return view('panels.super-admin.payment-gateway.index', compact('gateways'));
     }
 
     /**
@@ -172,29 +175,14 @@ class SuperAdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'provider' => 'required|string|max:255',
-            'api_key' => 'required|string|max:255',
-            'api_secret' => 'nullable|string|max:255',
-            'webhook_url' => 'nullable|url',
+            'slug' => 'required|string|max:255|unique:payment_gateways,slug',
             'is_active' => 'sometimes|boolean',
+            'test_mode' => 'sometimes|boolean',
+            'configuration' => 'nullable|array',
         ]);
 
-        // Encrypt sensitive credentials before storage with error handling
-        try {
-            if (isset($validated['api_key'])) {
-                $validated['api_key'] = encrypt($validated['api_key']);
-            }
-            if (isset($validated['api_secret'])) {
-                $validated['api_secret'] = encrypt($validated['api_secret']);
-            }
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['error' => 'Failed to encrypt credentials. Please try again.']);
-        }
-
-        // To be implemented with payment gateway model
-        // PaymentGateway::create($validated);
+        // The configuration field is automatically encrypted by the model cast
+        PaymentGateway::create($validated);
 
         return redirect()->route('panel.super-admin.payment-gateway.index')
             ->with('success', 'Payment gateway added successfully.');
@@ -205,8 +193,9 @@ class SuperAdminController extends Controller
      */
     public function smsGatewayIndex(): View
     {
-        // TODO: Implement SmsGateway model
-        return view('panels.super-admin.sms-gateway.index');
+        $gateways = SmsGateway::latest()->paginate(20);
+        
+        return view('panels.super-admin.sms-gateway.index', compact('gateways'));
     }
 
     /**
@@ -224,29 +213,16 @@ class SuperAdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'provider' => 'required|string|max:255',
-            'api_key' => 'required|string|max:255',
-            'api_secret' => 'nullable|string|max:255',
-            'sender_id' => 'required|string|max:20',
+            'slug' => 'required|string|max:255|unique:sms_gateways,slug',
             'is_active' => 'sometimes|boolean',
+            'is_default' => 'sometimes|boolean',
+            'configuration' => 'nullable|array',
+            'balance' => 'nullable|numeric|min:0',
+            'rate_per_sms' => 'nullable|numeric|min:0',
         ]);
 
-        // Encrypt sensitive credentials before storage with error handling
-        try {
-            if (isset($validated['api_key'])) {
-                $validated['api_key'] = encrypt($validated['api_key']);
-            }
-            if (isset($validated['api_secret'])) {
-                $validated['api_secret'] = encrypt($validated['api_secret']);
-            }
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['error' => 'Failed to encrypt credentials. Please try again.']);
-        }
-
-        // To be implemented with SMS gateway model
-        // SmsGateway::create($validated);
+        // The configuration field is automatically encrypted by the model cast
+        SmsGateway::create($validated);
 
         return redirect()->route('panel.super-admin.sms-gateway.index')
             ->with('success', 'SMS gateway added successfully.');
