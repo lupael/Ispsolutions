@@ -118,14 +118,11 @@ class SuperAdminController extends Controller
 
     /**
      * Display payment gateways listing.
-     *
-     * Currently not implemented.
      */
-    public function paymentGatewayIndex()
+    public function paymentGatewayIndex(): View
     {
-        // To be implemented with payment gateway model and corresponding view.
-        // Currently not implemented to avoid referencing a non-existent view.
-        throw new \RuntimeException('Payment gateways listing is not yet implemented.');
+        // TODO: Implement PaymentGateway model
+        return view('panels.super-admin.payment-gateway.index');
     }
 
     /**
@@ -178,13 +175,11 @@ class SuperAdminController extends Controller
 
     /**
      * Display SMS gateways listing.
-     *
-     * Currently not implemented.
      */
-    public function smsGatewayIndex()
+    public function smsGatewayIndex(): View
     {
-        // SMS gateway listing view is not yet implemented.
-        abort(501, 'SMS gateway listing view is not yet implemented.');
+        // TODO: Implement SmsGateway model
+        return view('panels.super-admin.sms-gateway.index');
     }
 
     /**

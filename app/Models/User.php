@@ -341,6 +341,7 @@ class User extends Authenticatable
                     return $this->operator_level < $otherUser->operator_level;
                 }
             }
+
             return false;
         }
 
@@ -412,6 +413,7 @@ class User extends Authenticatable
                     ->from('tenants')
                     ->where('created_by', $this->id);
             });
+
             return $query;
         }
 
