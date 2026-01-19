@@ -348,4 +348,79 @@ class DeveloperController extends Controller
     {
         return view('panels.developer.debug');
     }
+
+    /**
+     * Display Super Admin management.
+     */
+    public function superAdmins(): View
+    {
+        $superAdmins = User::whereHas('roles', function ($q) {
+            $q->where('slug', 'super-admin');
+        })->with('tenant')->latest()->paginate(20);
+
+        return view('panels.developer.super-admins.index', compact('superAdmins'));
+    }
+
+    /**
+     * Show form to create Super Admin.
+     */
+    public function createSuperAdmin(): View
+    {
+        $tenants = Tenant::all();
+        return view('panels.developer.super-admins.create', compact('tenants'));
+    }
+
+    /**
+     * Display payment gateways configuration.
+     */
+    public function paymentGateways(): View
+    {
+        // TODO: Implement PaymentGateway model
+        $gateways = collect([]);
+        return view('panels.developer.gateways.payment', compact('gateways'));
+    }
+
+    /**
+     * Display SMS gateways configuration.
+     */
+    public function smsGateways(): View
+    {
+        // TODO: Implement SmsGateway model
+        $gateways = collect([]);
+        return view('panels.developer.gateways.sms', compact('gateways'));
+    }
+
+    /**
+     * Display VPN pools configuration.
+     */
+    public function vpnPools(): View
+    {
+        // TODO: Implement VpnPool model
+        $pools = collect([]);
+        return view('panels.developer.vpn-pools', compact('pools'));
+    }
+
+    /**
+     * Display subscription plans management.
+     */
+    public function subscriptionPlans(): View
+    {
+        // TODO: Implement SubscriptionPlan model
+        $plans = collect([]);
+        return view('panels.developer.subscriptions.index', compact('plans'));
+    }
+
+    /**
+     * Display all ISPs/Admins across tenants.
+     */
+    public function allAdmins(): View
+    {
+        $admins = User::allTenants()
+            ->where('operator_level', 20)
+            ->with('tenant')
+            ->latest()
+            ->paginate(20);
+
+        return view('panels.developer.admins.index', compact('admins'));
+    }
 }

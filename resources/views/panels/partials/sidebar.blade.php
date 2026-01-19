@@ -232,11 +232,97 @@
     } elseif ($userRole === 'developer') {
         $menus = [
             ['label' => 'Dashboard', 'route' => 'panel.developer.dashboard', 'icon' => 'home'],
-            ['label' => 'Tenancies', 'route' => 'panel.developer.tenancies.index', 'icon' => 'database'],
-            ['label' => 'API Documentation', 'route' => 'panel.developer.api-docs', 'icon' => 'code'],
-            ['label' => 'System Logs', 'route' => 'panel.developer.logs', 'icon' => 'clipboard'],
+            [
+                'label' => 'Tenancy Management',
+                'icon' => 'database',
+                'children' => [
+                    ['label' => 'All Tenancies', 'route' => 'panel.developer.tenancies.index'],
+                    ['label' => 'Create Tenancy', 'route' => 'panel.developer.tenancies.create'],
+                ]
+            ],
+            [
+                'label' => 'User Management',
+                'icon' => 'users',
+                'children' => [
+                    ['label' => 'Super Admins', 'route' => 'panel.developer.super-admins.index'],
+                    ['label' => 'Create Super Admin', 'route' => 'panel.developer.super-admins.create'],
+                    ['label' => 'All Admins', 'route' => 'panel.developer.admins.index'],
+                    ['label' => 'All Customers', 'route' => 'panel.developer.customers.index'],
+                ]
+            ],
+            [
+                'label' => 'Subscription Plans',
+                'icon' => 'currency',
+                'children' => [
+                    ['label' => 'Manage Plans', 'route' => 'panel.developer.subscriptions.index'],
+                ]
+            ],
+            [
+                'label' => 'Gateway Config',
+                'icon' => 'credit-card',
+                'children' => [
+                    ['label' => 'Payment Gateways', 'route' => 'panel.developer.gateways.payment'],
+                    ['label' => 'SMS Gateways', 'route' => 'panel.developer.gateways.sms'],
+                ]
+            ],
+            ['label' => 'VPN Pools', 'route' => 'panel.developer.vpn-pools', 'icon' => 'network'],
+            [
+                'label' => 'System Logs',
+                'icon' => 'clipboard',
+                'children' => [
+                    ['label' => 'Application Logs', 'route' => 'panel.developer.logs'],
+                    ['label' => 'Audit Logs', 'route' => 'panel.developer.audit-logs'],
+                    ['label' => 'Error Logs', 'route' => 'panel.developer.error-logs'],
+                ]
+            ],
+            [
+                'label' => 'API Management',
+                'icon' => 'code',
+                'children' => [
+                    ['label' => 'API Documentation', 'route' => 'panel.developer.api-docs'],
+                    ['label' => 'API Keys', 'route' => 'panel.developer.api-keys'],
+                ]
+            ],
             ['label' => 'Debug Tools', 'route' => 'panel.developer.debug', 'icon' => 'bug'],
             ['label' => 'Settings', 'route' => 'panel.developer.settings', 'icon' => 'cog'],
+        ];
+    } elseif ($userRole === 'sales-manager') {
+        $menus = [
+            ['label' => 'Dashboard', 'route' => 'panel.sales-manager.dashboard', 'icon' => 'home'],
+            [
+                'label' => 'ISP Clients',
+                'icon' => 'building',
+                'children' => [
+                    ['label' => 'All Clients', 'route' => 'panel.sales-manager.admins.index'],
+                ]
+            ],
+            [
+                'label' => 'Lead Management',
+                'icon' => 'users',
+                'children' => [
+                    ['label' => 'Affiliate Leads', 'route' => 'panel.sales-manager.leads.affiliate'],
+                    ['label' => 'Create Lead', 'route' => 'panel.sales-manager.leads.create'],
+                ]
+            ],
+            ['label' => 'Sales Comments', 'route' => 'panel.sales-manager.sales-comments', 'icon' => 'chat'],
+            [
+                'label' => 'Subscriptions',
+                'icon' => 'currency',
+                'children' => [
+                    ['label' => 'Subscription Bills', 'route' => 'panel.sales-manager.subscriptions.bills'],
+                    ['label' => 'Record Payment', 'route' => 'panel.sales-manager.subscriptions.payment.create'],
+                    ['label' => 'Pending Payments', 'route' => 'panel.sales-manager.subscriptions.pending-payments'],
+                ]
+            ],
+            ['label' => 'Notice Broadcast', 'route' => 'panel.sales-manager.notice-broadcast', 'icon' => 'clipboard'],
+            [
+                'label' => 'Security',
+                'icon' => 'shield',
+                'children' => [
+                    ['label' => 'Change Password', 'route' => 'panel.sales-manager.change-password'],
+                    ['label' => 'Secure Login', 'route' => 'panel.sales-manager.secure-login'],
+                ]
+            ],
         ];
     }
     
