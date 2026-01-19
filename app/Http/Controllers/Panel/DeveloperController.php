@@ -269,6 +269,18 @@ class DeveloperController extends Controller
     }
 
     /**
+     * Show customer details across all tenancies.
+     */
+    public function showCustomer(int $id): View
+    {
+        $customer = User::allTenants()
+            ->with(['tenant', 'roles'])
+            ->findOrFail($id);
+
+        return view('panels.developer.customers.show', compact('customer'));
+    }
+
+    /**
      * Display audit logs.
      */
     public function auditLogs(): View

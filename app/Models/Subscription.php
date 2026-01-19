@@ -14,20 +14,22 @@ class Subscription extends Model
     protected $fillable = [
         'tenant_id',
         'plan_id',
-        'status', // active, suspended, cancelled, expired
-        'started_at',
-        'expires_at',
-        'cancelled_at',
+        'status', // trial, active, suspended, expired, cancelled
+        'start_date',
+        'end_date',
         'trial_ends_at',
-        'auto_renew',
+        'amount',
+        'currency',
+        'notes',
+        'cancelled_at',
     ];
 
     protected $casts = [
-        'started_at' => 'datetime',
-        'expires_at' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'trial_ends_at' => 'date',
         'cancelled_at' => 'datetime',
-        'trial_ends_at' => 'datetime',
-        'auto_renew' => 'boolean',
+        'amount' => 'decimal:2',
     ];
 
     public function tenant()
@@ -48,17 +50,17 @@ class Subscription extends Model
     public function scopeExpired($query)
     {
         return $query->where('status', 'expired')
-            ->orWhere('expires_at', '<', now());
+            ->orWhere('end_date', '<', now());
     }
 
     public function isActive()
     {
         return $this->status === 'active' && 
-               ($this->expires_at === null || $this->expires_at->isFuture());
+               ($this->end_date === null || $this->end_date->isFuture());
     }
 
     public function isOnTrial()
     {
-        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+        return $this->status === 'trial' && $this->trial_ends_at && $this->trial_ends_at->isFuture();
     }
 }

@@ -465,6 +465,7 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     Route::get('/access-panel', [DeveloperController::class, 'accessPanel'])->name('access-panel');
     Route::get('/customers/search', [DeveloperController::class, 'searchCustomers'])->name('customers.search');
     Route::get('/customers', [DeveloperController::class, 'allCustomers'])->name('customers.index');
+    Route::get('/customers/{id}', [DeveloperController::class, 'showCustomer'])->name('customers.show');
 
     // Audit & Logs
     Route::get('/audit-logs', [DeveloperController::class, 'auditLogs'])->name('audit-logs');
