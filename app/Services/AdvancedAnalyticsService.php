@@ -397,9 +397,7 @@ class AdvancedAnalyticsService
             // Calculate actual months of data available (at least 1, at most 3)
             $monthsOfData = max(1, min(3, $firstPaymentCarbon->diffInMonths($endDate) + 1));
 
-            $avgMonthlyRevenue = $monthsOfData > 0
-                ? $last3MonthsRevenue / $monthsOfData
-                : 0;
+            $avgMonthlyRevenue = $last3MonthsRevenue / $monthsOfData;
         }
         
         // Calculate growth rate from available historical data
@@ -446,9 +444,6 @@ class AdvancedAnalyticsService
         $churnChangeRate = $previousMonthChurn > 0
             ? (($lastMonthChurn - $previousMonthChurn) / $previousMonthChurn)
             : -0.05; // Default 5% reduction if no historical data
-        
-        // Invert churn change (reduction is good)
-        $churnChangeRate = -abs($churnChangeRate);
         
         return [
             'predicted_revenue' => round($avgMonthlyRevenue * (1 + $growthRate), 2),

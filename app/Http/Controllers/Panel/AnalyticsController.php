@@ -232,20 +232,20 @@ class AnalyticsController extends Controller
     public function exportAnalytics(Request $request)
     {
         try {
-            try {
-                $startDate = $request->filled('start_date') 
-                    ? Carbon::parse($request->start_date) 
-                    : now()->subDays(30);
-                
-                $endDate = $request->filled('end_date') 
-                    ? Carbon::parse($request->end_date) 
-                    : now();
-            } catch (\Exception $e) {
-                // If date parsing fails, use defaults
-                $startDate = now()->subDays(30);
-                $endDate = now();
-            }
+            $startDate = $request->filled('start_date') 
+                ? Carbon::parse($request->start_date) 
+                : now()->subDays(30);
+            
+            $endDate = $request->filled('end_date') 
+                ? Carbon::parse($request->end_date) 
+                : now();
+        } catch (\Exception $e) {
+            // If date parsing fails, use defaults
+            $startDate = now()->subDays(30);
+            $endDate = now();
+        }
 
+        try {
             $tenantId = auth()->user()->tenant_id;
             $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
 
