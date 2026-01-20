@@ -426,7 +426,13 @@
     function exportAnalytics() {
         const startDate = document.getElementById('start_date').value;
         const endDate = document.getElementById('end_date').value;
-        window.location.href = `{{ route('panel.admin.analytics.export') }}?start_date=${startDate}&end_date=${endDate}`;
+        
+        // Use URLSearchParams for proper encoding
+        const params = new URLSearchParams();
+        params.append('start_date', startDate);
+        params.append('end_date', endDate);
+        
+        window.location.href = `{{ route('panel.admin.analytics.export') }}?${params.toString()}`;
     }
 </script>
 @endpush

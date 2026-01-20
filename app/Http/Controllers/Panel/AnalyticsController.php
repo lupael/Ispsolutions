@@ -18,13 +18,24 @@ class AnalyticsController extends Controller
     /**
      * Display advanced analytics dashboard
      */
-    public function dashboard(): View
+    public function dashboard(Request $request): View
     {
         $tenantId = auth()->user()->tenant_id;
         
-        // Default to last 30 days
-        $startDate = now()->subDays(30);
-        $endDate = now();
+        // Parse and validate dates with fallback to defaults
+        try {
+            $startDate = $request->filled('start_date') 
+                ? Carbon::parse($request->start_date) 
+                : now()->subDays(30);
+            
+            $endDate = $request->filled('end_date') 
+                ? Carbon::parse($request->end_date) 
+                : now();
+        } catch (\Exception $e) {
+            // If date parsing fails, use defaults
+            $startDate = now()->subDays(30);
+            $endDate = now();
+        }
 
         $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
         $behaviorAnalytics = $this->analyticsService->getCustomerBehaviorAnalytics($tenantId);
@@ -145,13 +156,19 @@ class AnalyticsController extends Controller
      */
     public function revenueReport(Request $request): View
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
-            : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
-            : now();
+        try {
+            $startDate = $request->filled('start_date') 
+                ? Carbon::parse($request->start_date) 
+                : now()->subDays(30);
+            
+            $endDate = $request->filled('end_date') 
+                ? Carbon::parse($request->end_date) 
+                : now();
+        } catch (\Exception $e) {
+            // If date parsing fails, use defaults
+            $startDate = now()->subDays(30);
+            $endDate = now();
+        }
 
         $tenantId = auth()->user()->tenant_id;
         $analytics = $this->analyticsService->getRevenueAnalytics($startDate, $endDate, $tenantId);
@@ -164,13 +181,19 @@ class AnalyticsController extends Controller
      */
     public function customerReport(Request $request): View
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
-            : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
-            : now();
+        try {
+            $startDate = $request->filled('start_date') 
+                ? Carbon::parse($request->start_date) 
+                : now()->subDays(30);
+            
+            $endDate = $request->filled('end_date') 
+                ? Carbon::parse($request->end_date) 
+                : now();
+        } catch (\Exception $e) {
+            // If date parsing fails, use defaults
+            $startDate = now()->subDays(30);
+            $endDate = now();
+        }
 
         $tenantId = auth()->user()->tenant_id;
         $analytics = $this->analyticsService->getCustomerAnalytics($startDate, $endDate, $tenantId);
@@ -183,13 +206,19 @@ class AnalyticsController extends Controller
      */
     public function serviceReport(Request $request): View
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
-            : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
-            : now();
+        try {
+            $startDate = $request->filled('start_date') 
+                ? Carbon::parse($request->start_date) 
+                : now()->subDays(30);
+            
+            $endDate = $request->filled('end_date') 
+                ? Carbon::parse($request->end_date) 
+                : now();
+        } catch (\Exception $e) {
+            // If date parsing fails, use defaults
+            $startDate = now()->subDays(30);
+            $endDate = now();
+        }
 
         $tenantId = auth()->user()->tenant_id;
         $analytics = $this->analyticsService->getServiceAnalytics($startDate, $endDate, $tenantId);
@@ -203,13 +232,19 @@ class AnalyticsController extends Controller
     public function exportAnalytics(Request $request)
     {
         try {
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
-                : now()->subDays(30);
-            
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
-                : now();
+            try {
+                $startDate = $request->filled('start_date') 
+                    ? Carbon::parse($request->start_date) 
+                    : now()->subDays(30);
+                
+                $endDate = $request->filled('end_date') 
+                    ? Carbon::parse($request->end_date) 
+                    : now();
+            } catch (\Exception $e) {
+                // If date parsing fails, use defaults
+                $startDate = now()->subDays(30);
+                $endDate = now();
+            }
 
             $tenantId = auth()->user()->tenant_id;
             $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
