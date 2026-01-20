@@ -181,8 +181,33 @@ class SuperAdminController extends Controller
             'configuration' => 'nullable|array',
         ]);
 
+        // Validate that configuration contains required keys if provided
+        if (isset($validated['configuration']) && is_array($validated['configuration'])) {
+            $requiredConfigKeys = ['provider', 'api_key'];
+            $missingConfigKeys = array_diff($requiredConfigKeys, array_keys($validated['configuration']));
+
+            if (!empty($missingConfigKeys)) {
+                return back()
+                    ->withErrors([
+                        'configuration' => 'The configuration must include the following keys: ' . implode(', ', $requiredConfigKeys) . '.',
+                    ])
+                    ->withInput();
+            }
+        }
+
         // The configuration field is automatically encrypted by the model cast
-        PaymentGateway::create($validated);
+        try {
+            PaymentGateway::create($validated);
+        } catch (\Throwable $e) {
+            // Log the underlying error and provide a user-friendly message
+            report($e);
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'configuration' => 'The payment gateway could not be created due to an internal error. Please check the application configuration or contact support if the problem persists.',
+                ]);
+        }
 
         return redirect()->route('panel.super-admin.payment-gateway.index')
             ->with('success', 'Payment gateway added successfully.');
@@ -221,8 +246,33 @@ class SuperAdminController extends Controller
             'rate_per_sms' => 'nullable|numeric|min:0',
         ]);
 
+        // Validate that configuration contains required keys if provided
+        if (isset($validated['configuration']) && is_array($validated['configuration'])) {
+            $requiredConfigKeys = ['provider', 'api_key', 'sender_id'];
+            $missingConfigKeys = array_diff($requiredConfigKeys, array_keys($validated['configuration']));
+
+            if (!empty($missingConfigKeys)) {
+                return back()
+                    ->withErrors([
+                        'configuration' => 'The configuration must include the following keys: ' . implode(', ', $requiredConfigKeys) . '.',
+                    ])
+                    ->withInput();
+            }
+        }
+
         // The configuration field is automatically encrypted by the model cast
-        SmsGateway::create($validated);
+        try {
+            SmsGateway::create($validated);
+        } catch (\Throwable $e) {
+            // Log the underlying error and provide a user-friendly message
+            report($e);
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'configuration' => 'The SMS gateway could not be created due to an internal error. Please check the application configuration or contact support if the problem persists.',
+                ]);
+        }
 
         return redirect()->route('panel.super-admin.sms-gateway.index')
             ->with('success', 'SMS gateway added successfully.');

@@ -636,21 +636,22 @@ class AdminController extends Controller
      */
     public function devices(): View
     {
-        // Combine all device types for unified view
-        $routers = MikrotikRouter::select('id', 'name', 'host', 'status', 'created_at')
-            ->addSelect(DB::raw("'router' as device_type"))
-            ->get();
-        
-        $olts = Olt::select('id', 'name', 'ip_address as host', 'status', 'created_at')
-            ->addSelect(DB::raw("'olt' as device_type"))
-            ->get();
-        
-        $ciscoDevices = CiscoDevice::select('id', 'name', 'ip_address as host', 'status', 'created_at')
-            ->addSelect(DB::raw("'cisco' as device_type"))
-            ->get();
+        // Combine all device types for unified view using a UNION query
+        $routerQuery = MikrotikRouter::select('id', 'name', 'host', 'status', 'created_at')
+            ->addSelect(DB::raw("'router' as device_type"));
 
-        // Merge all devices
-        $devices = $routers->concat($olts)->concat($ciscoDevices)->sortByDesc('created_at');
+        $oltQuery = Olt::select('id', 'name', DB::raw('ip_address as host'), 'status', 'created_at')
+            ->addSelect(DB::raw("'olt' as device_type"));
+
+        $ciscoQuery = CiscoDevice::select('id', 'name', DB::raw('ip_address as host'), 'status', 'created_at')
+            ->addSelect(DB::raw("'cisco' as device_type"));
+
+        // Execute a single query using UNION ALL and order results in the database
+        $devices = $routerQuery
+            ->unionAll($oltQuery)
+            ->unionAll($ciscoQuery)
+            ->orderByDesc('created_at')
+            ->get();
 
         $stats = [
             'total' => $devices->count(),
@@ -685,10 +686,10 @@ class AdminController extends Controller
         $monitors = [
             'healthy' => $onlineCount,
             'warning' => $degradedCount,
-            'critical' => 0, // Implement based on monitoring thresholds
+            'critical' => 0, // Placeholder for future threshold-based critical detection
             'offline' => $offlineCount,
             'devices' => $deviceMonitors,
-            'alerts' => collect(), // Implement alert system
+            'alerts' => collect(), // Placeholder for future alert system implementation
         ];
 
         return view('panels.admin.network.device-monitors', compact('monitors'));
@@ -720,7 +721,7 @@ class AdminController extends Controller
 
         $stats = [
             'total' => IpPool::count(),
-            'available' => 0, // Calculate based on allocations
+            'available' => 0, // Placeholder for calculating available IPs based on pool capacity minus allocations
             'allocated' => IpAllocation::count(),
             'pools' => $pools->total(),
         ];
@@ -733,13 +734,13 @@ class AdminController extends Controller
      */
     public function ipv6Pools(): View
     {
-        // IPv6 pools can be distinguished by start_ip format or add ip_version column
-        $pools = IpPool::latest()->paginate(20);
+        // Filter IPv6 pools by checking for colon in start_ip (IPv6 format)
+        $pools = IpPool::where('start_ip', 'LIKE', '%:%')->latest()->paginate(20);
 
         $stats = [
             'pools' => $pools->total(),
             'allocated' => IpAllocation::count(),
-            'available' => 0, // Calculate based on subnet capacity
+            'available' => 0, // Placeholder for calculating available IPs based on subnet capacity
         ];
 
         return view('panels.admin.network.ipv6-pools', compact('pools', 'stats'));
@@ -754,7 +755,7 @@ class AdminController extends Controller
 
         $stats = [
             'total' => MikrotikProfile::count(),
-            'active' => MikrotikProfile::count(), // Could add status field
+            'active' => MikrotikProfile::count(), // Currently counts all profiles; adjust if a status field is introduced
             'users' => NetworkUser::count(),
         ];
 
