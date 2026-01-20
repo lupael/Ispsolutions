@@ -1,8 +1,9 @@
 # ISP Solution - API Documentation
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Base URL:** `/api`  
-**Authentication:** Laravel Sanctum (Token-based)
+**Authentication:** Laravel Sanctum (Token-based)  
+**Last Updated:** 2026-01-20
 
 ---
 
@@ -494,4 +495,4 @@ For API support and questions:
 
 ---
 
-**Last Updated:** 2026-01-18
+**Last Updated:** 2026-01-20

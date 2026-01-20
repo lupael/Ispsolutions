@@ -1,9 +1,10 @@
 # API Documentation
 
-**Version:** 2.0  
+**Version:** 2.1  
 **Base URL:** `/api`  
 **Format:** JSON  
-**Authentication:** Laravel Sanctum (Token-based)
+**Authentication:** Laravel Sanctum (Token-based)  
+**Last Updated:** 2026-01-20
 
 ## Table of Contents
 
@@ -849,6 +850,343 @@ GET /api/v1/mikrotik/profiles?router_id=1
 }
 ```
 
+#### Create PPPoE Profile
+
+```http
+POST /api/v1/mikrotik/profiles
+```
+
+**Request Body:**
+```json
+{
+  "router_id": 1,
+  "name": "profile-10m",
+  "local_address": "10.0.0.1",
+  "remote_address": "pool1",
+  "rate_limit": "10M/10M"
+}
+```
+
+#### Import Profiles from Router
+
+```http
+POST /api/v1/mikrotik/routers/{routerId}/import-profiles
+```
+
+**Description:** Import existing profiles from MikroTik router into the system.
+
+### IP Pools
+
+#### List IP Pools
+
+```http
+GET /api/v1/mikrotik/ip-pools?router_id=1
+```
+
+**Response:**
+```json
+{
+  "router_id": 1,
+  "pools": [
+    {
+      "name": "pool1",
+      "ranges": "10.0.0.2-10.0.0.254"
+    }
+  ]
+}
+```
+
+#### Create IP Pool
+
+```http
+POST /api/v1/mikrotik/ip-pools
+```
+
+**Request Body:**
+```json
+{
+  "router_id": 1,
+  "name": "pool2",
+  "ranges": "10.0.1.2-10.0.1.254"
+}
+```
+
+#### Import IP Pools from Router
+
+```http
+POST /api/v1/mikrotik/routers/{routerId}/import-pools
+```
+
+### Secrets Management
+
+#### Import PPP Secrets
+
+```http
+POST /api/v1/mikrotik/routers/{routerId}/import-secrets
+```
+
+**Description:** Import PPP secrets from MikroTik router into the system.
+
+**Response:**
+```json
+{
+  "message": "Secrets imported successfully",
+  "imported_count": 42
+}
+```
+
+### Router Configuration
+
+#### Configure Router
+
+```http
+POST /api/v1/mikrotik/routers/{routerId}/configure
+```
+
+**Request Body:**
+```json
+{
+  "configuration_type": "initial_setup",
+  "settings": {
+    "enable_api": true,
+    "create_default_pool": true,
+    "create_default_profile": true
+  }
+}
+```
+
+#### List Router Configurations
+
+```http
+GET /api/v1/mikrotik/routers/{routerId}/configurations
+```
+
+**Response:**
+```json
+{
+  "configurations": [
+    {
+      "id": 1,
+      "type": "initial_setup",
+      "applied_at": "2026-01-20T10:00:00.000000Z",
+      "status": "active"
+    }
+  ]
+}
+```
+
+### VPN Management
+
+#### List VPN Accounts
+
+```http
+GET /api/v1/mikrotik/vpn-accounts
+```
+
+**Query Parameters:**
+- `router_id` (optional): Filter by router
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "username": "vpn_user",
+      "service": "l2tp",
+      "router_id": 1,
+      "status": "active"
+    }
+  ]
+}
+```
+
+#### Create VPN Account
+
+```http
+POST /api/v1/mikrotik/vpn-accounts
+```
+
+**Request Body:**
+```json
+{
+  "router_id": 1,
+  "username": "vpn_user",
+  "password": "secure123",
+  "service": "l2tp",
+  "local_address": "10.10.0.1",
+  "remote_address": "10.10.0.2"
+}
+```
+
+#### Get VPN Status
+
+```http
+GET /api/v1/mikrotik/routers/{routerId}/vpn-status
+```
+
+**Response:**
+```json
+{
+  "router_id": 1,
+  "vpn_enabled": true,
+  "active_connections": 5,
+  "connections": [...]
+}
+```
+
+### Queue Management
+
+#### List Queues
+
+```http
+GET /api/v1/mikrotik/queues?router_id=1
+```
+
+**Response:**
+```json
+{
+  "router_id": 1,
+  "queues": [
+    {
+      "id": "*1",
+      "name": "queue1",
+      "target": "10.0.0.5/32",
+      "max_limit": "10M/10M",
+      "bytes": 1048576
+    }
+  ]
+}
+```
+
+#### Create Queue
+
+```http
+POST /api/v1/mikrotik/queues
+```
+
+**Request Body:**
+```json
+{
+  "router_id": 1,
+  "name": "queue1",
+  "target": "10.0.0.5/32",
+  "max_limit": "10M/10M",
+  "priority": 8
+}
+```
+
+### Firewall Management
+
+#### List Firewall Rules
+
+```http
+GET /api/v1/mikrotik/routers/{routerId}/firewall-rules
+```
+
+**Query Parameters:**
+- `chain` (optional): Filter by chain (input, forward, output)
+
+**Response:**
+```json
+{
+  "rules": [
+    {
+      "id": "*1",
+      "chain": "forward",
+      "action": "accept",
+      "src_address": "192.168.0.0/24",
+      "dst_address": "0.0.0.0/0"
+    }
+  ]
+}
+```
+
+#### Add Firewall Rule
+
+```http
+POST /api/v1/mikrotik/firewall-rules
+```
+
+**Request Body:**
+```json
+{
+  "router_id": 1,
+  "chain": "forward",
+  "action": "drop",
+  "src_address": "192.168.100.0/24",
+  "comment": "Block specific subnet"
+}
+```
+
+### Package Speed Mapping
+
+#### Create Package Mapping
+
+```http
+POST /api/v1/mikrotik/package-mappings
+```
+
+**Description:** Map application packages to MikroTik profiles for automatic speed assignment.
+
+**Request Body:**
+```json
+{
+  "package_id": 1,
+  "router_id": 1,
+  "profile_name": "profile-10m"
+}
+```
+
+#### List Package Mappings
+
+```http
+GET /api/v1/mikrotik/package-mappings
+```
+
+**Query Parameters:**
+- `router_id` (optional): Filter by router
+- `package_id` (optional): Filter by package
+
+**Response:**
+```json
+{
+  "mappings": [
+    {
+      "id": 1,
+      "package_id": 1,
+      "package_name": "10Mbps Plan",
+      "router_id": 1,
+      "profile_name": "profile-10m"
+    }
+  ]
+}
+```
+
+#### Apply Speed to User
+
+```http
+POST /api/v1/mikrotik/users/{userId}/apply-speed
+```
+
+**Description:** Apply speed limit to a user based on their package mapping.
+
+**Request Body:**
+```json
+{
+  "router_id": 1
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Speed applied successfully",
+  "profile": "profile-10m",
+  "user": "customer001"
+}
+```
+
 ---
 
 ## Network Users Endpoints
@@ -964,8 +1302,13 @@ POST /api/v1/network-users/{id}/sync-radius
 
 ## OLT API
 
-### List OLTs
-**Endpoint:** `GET /api/v1/olt/devices`
+### OLT Management
+
+#### List All OLTs
+
+```http
+GET /api/v1/olt
+```
 
 **Description:** List all OLT devices with status
 
@@ -987,12 +1330,185 @@ POST /api/v1/network-users/{id}/sync-radius
 }
 ```
 
----
+#### Get OLT Details
 
-### Get ONU Status
-**Endpoint:** `GET /api/v1/olt/devices/{id}/onus`
+```http
+GET /api/v1/olt/{id}
+```
 
-**Description:** Get status of all ONUs on an OLT
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "OLT-Main",
+  "ip_address": "192.168.1.100",
+  "port": 161,
+  "vendor": "Huawei",
+  "model": "MA5608T",
+  "status": "active",
+  "location": "Data Center A",
+  "total_onus": 24,
+  "online_onus": 22
+}
+```
+
+#### Test OLT Connection
+
+```http
+POST /api/v1/olt/{id}/test-connection
+```
+
+**Description:** Test SNMP connectivity to OLT
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Connection successful",
+  "response_time": 45
+}
+```
+
+#### Sync ONUs
+
+```http
+POST /api/v1/olt/{id}/sync-onus
+```
+
+**Description:** Synchronize ONU list from OLT device
+
+**Response:**
+```json
+{
+  "message": "ONUs synchronized successfully",
+  "synced_count": 24,
+  "new_count": 2,
+  "updated_count": 22
+}
+```
+
+#### Get OLT Statistics
+
+```http
+GET /api/v1/olt/{id}/statistics
+```
+
+**Response:**
+```json
+{
+  "olt_id": 1,
+  "total_ports": 16,
+  "used_ports": 12,
+  "total_onus": 24,
+  "online_onus": 22,
+  "offline_onus": 2,
+  "total_bandwidth_usage": 1048576000,
+  "uptime": 864000
+}
+```
+
+#### Create OLT Backup
+
+```http
+POST /api/v1/olt/{id}/backup
+```
+
+**Description:** Create configuration backup of OLT
+
+**Request Body:**
+```json
+{
+  "description": "Weekly backup",
+  "include_config": true
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Backup created successfully",
+  "backup_id": 42,
+  "created_at": "2026-01-20T10:00:00.000000Z"
+}
+```
+
+#### List OLT Backups
+
+```http
+GET /api/v1/olt/{id}/backups
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": 42,
+      "olt_id": 1,
+      "description": "Weekly backup",
+      "size": 2048576,
+      "created_at": "2026-01-20T10:00:00.000000Z"
+    }
+  ]
+}
+```
+
+#### Get Port Utilization
+
+```http
+GET /api/v1/olt/{id}/port-utilization
+```
+
+**Response:**
+```json
+{
+  "olt_id": 1,
+  "ports": [
+    {
+      "port_number": 1,
+      "onu_count": 8,
+      "max_onus": 32,
+      "utilization": 25.0,
+      "status": "active"
+    }
+  ]
+}
+```
+
+#### Get Bandwidth Usage
+
+```http
+GET /api/v1/olt/{id}/bandwidth-usage
+```
+
+**Query Parameters:**
+- `from` (datetime, optional): Start time
+- `to` (datetime, optional): End time
+
+**Response:**
+```json
+{
+  "olt_id": 1,
+  "period": {
+    "from": "2026-01-20T00:00:00.000000Z",
+    "to": "2026-01-20T23:59:59.000000Z"
+  },
+  "total_rx": 10485760000,
+  "total_tx": 5242880000,
+  "average_rx_rate": 104857600,
+  "average_tx_rate": 52428800,
+  "peak_rx_rate": 209715200,
+  "peak_tx_rate": 104857600
+}
+```
+
+#### Monitor ONUs
+
+```http
+GET /api/v1/olt/{id}/monitor-onus
+```
+
+**Description:** Get real-time monitoring data for all ONUs
 
 **Response:**
 ```json
@@ -1004,8 +1520,163 @@ POST /api/v1/network-users/{id}/sync-radius
       "serial_number": "HWTC12345678",
       "status": "online",
       "rx_power": -18.5,
+      "tx_power": 2.5,
       "distance": 450,
-      "description": "Customer ABC"
+      "temperature": 35.0,
+      "uptime": 432000
+    }
+  ]
+}
+```
+
+### ONU Operations
+
+#### Get ONU Details
+
+```http
+GET /api/v1/olt/onu/{onuId}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "olt_id": 1,
+  "serial_number": "HWTC12345678",
+  "mac_address": "00:11:22:33:44:55",
+  "status": "online",
+  "rx_power": -18.5,
+  "tx_power": 2.5,
+  "distance": 450,
+  "vlan": 100,
+  "profile": "profile_100M",
+  "description": "Customer ABC",
+  "last_online": "2026-01-20T10:00:00.000000Z"
+}
+```
+
+#### Refresh ONU Status
+
+```http
+POST /api/v1/olt/onu/{onuId}/refresh
+```
+
+**Description:** Force refresh of ONU status from OLT
+
+**Response:**
+```json
+{
+  "message": "ONU status refreshed",
+  "onu": {
+    "id": 1,
+    "status": "online",
+    "rx_power": -18.5
+  }
+}
+```
+
+#### Authorize ONU
+
+```http
+POST /api/v1/olt/onu/{onuId}/authorize
+```
+
+**Description:** Authorize ONU for service
+
+**Request Body:**
+```json
+{
+  "profile": "profile_100M",
+  "vlan": 100,
+  "description": "Customer ABC"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "ONU authorized successfully",
+  "onu_id": 1
+}
+```
+
+#### Unauthorize ONU
+
+```http
+POST /api/v1/olt/onu/{onuId}/unauthorize
+```
+
+**Description:** Unauthorize ONU and block service
+
+**Response:**
+```json
+{
+  "message": "ONU unauthorized successfully"
+}
+```
+
+#### Reboot ONU
+
+```http
+POST /api/v1/olt/onu/{onuId}/reboot
+```
+
+**Description:** Remotely reboot ONU device
+
+**Response:**
+```json
+{
+  "message": "Reboot command sent successfully",
+  "estimated_downtime": 60
+}
+```
+
+#### Bulk ONU Operations
+
+```http
+POST /api/v1/olt/onu/bulk-operations
+```
+
+**Description:** Perform bulk operations on multiple ONUs
+
+**Request Body:**
+```json
+{
+  "operation": "reboot",
+  "onu_ids": [1, 2, 3, 4]
+}
+```
+
+**Supported Operations:**
+- `reboot` - Reboot ONUs
+- `authorize` - Authorize ONUs
+- `unauthorize` - Unauthorize ONUs
+- `refresh` - Refresh status
+
+**Response:**
+```json
+{
+  "message": "Bulk operation completed",
+  "total": 4,
+  "success": 3,
+  "failed": 1,
+  "results": [
+    {
+      "onu_id": 1,
+      "status": "success"
+    },
+    {
+      "onu_id": 2,
+      "status": "success"
+    },
+    {
+      "onu_id": 3,
+      "status": "success"
+    },
+    {
+      "onu_id": 4,
+      "status": "failed",
+      "error": "ONU not found"
     }
   ]
 }
@@ -1013,49 +1684,116 @@ POST /api/v1/network-users/{id}/sync-radius
 
 ---
 
-### Provision ONU
-**Endpoint:** `POST /api/v1/olt/devices/{id}/onus`
-
-**Description:** Provision a new ONU on an OLT
-
-**Request Body:**
-```json
-{
-  "serial_number": "HWTC12345678",
-  "description": "Customer ABC",
-  "profile": "profile_100M",
-  "vlan": 100
-}
-```
-
----
-
 ## Monitoring API
 
-### Get Device Status
-**Endpoint:** `GET /api/v1/monitoring/devices/{id}/status`
+### Device Status
 
-**Description:** Get real-time status of a network device
+#### Get All Device Statuses
+
+```http
+GET /api/v1/monitoring/devices
+```
+
+**Description:** Get status of all monitored devices
 
 **Response:**
 ```json
 {
+  "devices": [
+    {
+      "type": "router",
+      "id": 1,
+      "name": "Router-01",
+      "status": "online",
+      "last_checked": "2026-01-20T10:00:00.000000Z"
+    },
+    {
+      "type": "olt",
+      "id": 1,
+      "name": "OLT-Main",
+      "status": "online",
+      "last_checked": "2026-01-20T10:00:00.000000Z"
+    }
+  ]
+}
+```
+
+#### Get Device Status
+
+```http
+GET /api/v1/monitoring/devices/{type}/{id}/status
+```
+
+**Path Parameters:**
+- `type`: Device type (router, olt, switch)
+- `id`: Device ID
+
+**Response:**
+```json
+{
+  "device_type": "router",
   "device_id": 1,
   "status": "online",
   "uptime": 864000,
   "cpu_usage": 35.5,
   "memory_usage": 62.3,
   "temperature": 45.0,
-  "last_checked": "2026-01-18T10:00:00.000000Z"
+  "last_checked": "2026-01-20T10:00:00.000000Z"
 }
 ```
 
----
+#### Monitor Device
 
-### Get Bandwidth Usage
-**Endpoint:** `GET /api/v1/monitoring/devices/{id}/bandwidth`
+```http
+POST /api/v1/monitoring/devices/{type}/{id}/monitor
+```
 
-**Description:** Get bandwidth usage statistics
+**Description:** Start or update monitoring for a device
+
+**Request Body:**
+```json
+{
+  "interval": 300,
+  "alert_threshold": {
+    "cpu": 80,
+    "memory": 85,
+    "temperature": 60
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Monitoring configured successfully",
+  "next_check": "2026-01-20T10:05:00.000000Z"
+}
+```
+
+### Bandwidth Monitoring
+
+#### Record Bandwidth
+
+```http
+POST /api/v1/monitoring/devices/{type}/{id}/bandwidth
+```
+
+**Description:** Record bandwidth usage data point
+
+**Request Body:**
+```json
+{
+  "rx_bytes": 1048576,
+  "tx_bytes": 524288,
+  "timestamp": "2026-01-20T10:00:00.000000Z"
+}
+```
+
+#### Get Bandwidth Usage
+
+```http
+GET /api/v1/monitoring/devices/{type}/{id}/bandwidth
+```
 
 **Query Parameters:**
 - `from` (datetime): Start time
@@ -1065,17 +1803,42 @@ POST /api/v1/network-users/{id}/sync-radius
 **Response:**
 ```json
 {
+  "device_type": "router",
   "device_id": 1,
   "interval": "hour",
   "data": [
     {
-      "timestamp": "2026-01-18T10:00:00Z",
+      "timestamp": "2026-01-20T10:00:00Z",
       "rx_bytes": 1048576000,
       "tx_bytes": 524288000,
       "rx_rate": 10485760,
       "tx_rate": 5242880
     }
   ]
+}
+```
+
+#### Get Bandwidth Graph
+
+```http
+GET /api/v1/monitoring/devices/{type}/{id}/bandwidth/graph
+```
+
+**Query Parameters:**
+- `from` (datetime): Start time
+- `to` (datetime): End time
+- `interval` (string): Graph interval (5min, hour, day)
+
+**Response:**
+```json
+{
+  "device_type": "router",
+  "device_id": 1,
+  "graph_data": {
+    "labels": ["10:00", "11:00", "12:00"],
+    "rx_data": [10485760, 12582912, 11534336],
+    "tx_data": [5242880, 6291456, 5767168]
+  }
 }
 ```
 

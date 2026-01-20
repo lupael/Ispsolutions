@@ -161,7 +161,7 @@ See [DEPRECATED.md](../DEPRECATED.md) for a list of files that have been consoli
 
 ---
 
-**Last Updated**: 2026-01-18  
-**Version**: 1.0.0
+**Last Updated**: 2026-01-20  
+**Version**: 1.1.0
 
 For questions or documentation improvements, please open an issue or submit a pull request.
