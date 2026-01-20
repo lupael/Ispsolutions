@@ -1,9 +1,9 @@
 /**
  * Analytics Module
  * Handles chart initialization and data fetching for analytics dashboards
+ * 
+ * Note: ApexCharts is loaded via CDN in the view templates
  */
-
-import ApexCharts from 'apexcharts';
 
 class AnalyticsManager {
     constructor() {
@@ -15,6 +15,12 @@ class AnalyticsManager {
      * Initialize revenue trend chart
      */
     initRevenueChart(elementId, data, options = {}) {
+        // Check if ApexCharts is available
+        if (typeof ApexCharts === 'undefined') {
+            console.error('ApexCharts library not loaded');
+            return null;
+        }
+        
         const defaultOptions = {
             series: [{
                 name: 'Revenue',
@@ -72,6 +78,12 @@ class AnalyticsManager {
      * Initialize customer growth chart
      */
     initCustomerChart(elementId, data, options = {}) {
+        // Check if ApexCharts is available
+        if (typeof ApexCharts === 'undefined') {
+            console.error('ApexCharts library not loaded');
+            return null;
+        }
+        
         const defaultOptions = {
             series: [{
                 name: 'Total Customers',
@@ -128,6 +140,12 @@ class AnalyticsManager {
      * Initialize donut/pie chart
      */
     initDonutChart(elementId, data, labels, options = {}) {
+        // Check if ApexCharts is available
+        if (typeof ApexCharts === 'undefined') {
+            console.error('ApexCharts library not loaded');
+            return null;
+        }
+        
         const defaultOptions = {
             series: data,
             chart: {
@@ -156,6 +174,12 @@ class AnalyticsManager {
      * Initialize pie chart
      */
     initPieChart(elementId, data, labels, options = {}) {
+        // Check if ApexCharts is available
+        if (typeof ApexCharts === 'undefined') {
+            console.error('ApexCharts library not loaded');
+            return null;
+        }
+        
         const defaultOptions = {
             series: data,
             chart: {
