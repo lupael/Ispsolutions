@@ -26,6 +26,11 @@ class HotspotController extends Controller
     public function index(Request $request): View
     {
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            abort(403, 'User must be assigned to a tenant to access hotspot management.');
+        }
+        
         $search = $request->get('search');
         $status = $request->get('status');
 
@@ -58,7 +63,13 @@ class HotspotController extends Controller
         ]);
 
         try {
-            $validated['tenant_id'] = auth()->user()->tenant_id;
+            $tenantId = auth()->user()->tenant_id;
+            
+            if ($tenantId === null) {
+                return back()->withErrors(['error' => 'User must be assigned to a tenant.'])->withInput();
+            }
+            
+            $validated['tenant_id'] = $tenantId;
 
             $hotspotUser = $this->hotspotService->createHotspotUser($validated);
 

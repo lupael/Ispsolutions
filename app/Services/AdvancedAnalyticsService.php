@@ -21,6 +21,10 @@ class AdvancedAnalyticsService
         $endDate = $endDate ?? now();
         $tenantId = auth()->user()->tenant_id;
 
+        if ($tenantId === null) {
+            throw new \InvalidArgumentException('User must be assigned to a tenant to access analytics.');
+        }
+
         return [
             'revenue_analytics' => $this->getRevenueAnalytics($startDate, $endDate, $tenantId),
             'customer_analytics' => $this->getCustomerAnalytics($startDate, $endDate, $tenantId),

@@ -13,10 +13,10 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Comprehensive business intelligence and insights</p>
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="refreshAnalytics()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <button id="refreshAnalyticsBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                         Refresh Data
                     </button>
-                    <button onclick="exportAnalytics()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <button id="exportAnalyticsBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                         Export Report
                     </button>
                 </div>
@@ -226,7 +226,7 @@
 @endpush
 
 @push('scripts')
-<script>
+<script nonce="{{ csp_nonce() }}">
     // Initialize analytics data from server
     const analyticsData = @json($analytics);
     
@@ -416,13 +416,13 @@
         window.location.href = `{{ route('panel.admin.analytics.dashboard') }}?start_date=${startDate}&end_date=${endDate}`;
     });
 
-    // Refresh analytics
-    function refreshAnalytics() {
+    // Refresh analytics - attach to button
+    document.getElementById('refreshAnalyticsBtn').addEventListener('click', function() {
         location.reload();
-    }
+    });
 
-    // Export analytics
-    function exportAnalytics() {
+    // Export analytics - attach to button
+    document.getElementById('exportAnalyticsBtn').addEventListener('click', function() {
         const startDate = document.getElementById('start_date').value;
         const endDate = document.getElementById('end_date').value;
         
@@ -432,7 +432,7 @@
         params.append('end_date', endDate);
         
         window.location.href = `{{ route('panel.admin.analytics.export') }}?${params.toString()}`;
-    }
+    });
 </script>
 @endpush
 @endsection

@@ -22,6 +22,10 @@ class AnalyticsController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
         
+        if ($tenantId === null) {
+            abort(403, 'User must be assigned to a tenant to access analytics.');
+        }
+        
         // Parse and validate dates with fallback to defaults
         try {
             $startDate = $request->filled('start_date') 
@@ -64,6 +68,11 @@ class AnalyticsController extends Controller
             : now();
 
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
+        }
+        
         $analytics = $this->analyticsService->getRevenueAnalytics($startDate, $endDate, $tenantId);
 
         return response()->json($analytics);
@@ -83,6 +92,11 @@ class AnalyticsController extends Controller
             : now();
 
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
+        }
+        
         $analytics = $this->analyticsService->getCustomerAnalytics($startDate, $endDate, $tenantId);
 
         return response()->json($analytics);
@@ -102,6 +116,11 @@ class AnalyticsController extends Controller
             : now();
 
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
+        }
+        
         $analytics = $this->analyticsService->getServiceAnalytics($startDate, $endDate, $tenantId);
 
         return response()->json($analytics);
@@ -113,6 +132,11 @@ class AnalyticsController extends Controller
     public function growthMetrics(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
+        }
+        
         $metrics = $this->analyticsService->getGrowthMetrics($tenantId);
 
         return response()->json($metrics);
@@ -124,6 +148,11 @@ class AnalyticsController extends Controller
     public function performanceIndicators(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
+        }
+        
         $indicators = $this->analyticsService->getPerformanceIndicators($tenantId);
 
         return response()->json($indicators);
@@ -135,6 +164,11 @@ class AnalyticsController extends Controller
     public function behaviorAnalytics(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
+        }
+        
         $analytics = $this->analyticsService->getCustomerBehaviorAnalytics($tenantId);
 
         return response()->json($analytics);
@@ -146,6 +180,11 @@ class AnalyticsController extends Controller
     public function predictiveAnalytics(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
+        }
+        
         $analytics = $this->analyticsService->getPredictiveAnalytics($tenantId);
 
         return response()->json($analytics);
@@ -171,6 +210,11 @@ class AnalyticsController extends Controller
         }
 
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            abort(403, 'User must be assigned to a tenant to access analytics.');
+        }
+        
         $analytics = $this->analyticsService->getRevenueAnalytics($startDate, $endDate, $tenantId);
 
         return view('panels.admin.analytics.revenue-report', compact('analytics', 'startDate', 'endDate'));
@@ -196,6 +240,11 @@ class AnalyticsController extends Controller
         }
 
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            abort(403, 'User must be assigned to a tenant to access analytics.');
+        }
+        
         $analytics = $this->analyticsService->getCustomerAnalytics($startDate, $endDate, $tenantId);
 
         return view('panels.admin.analytics.customer-report', compact('analytics', 'startDate', 'endDate'));
@@ -221,6 +270,11 @@ class AnalyticsController extends Controller
         }
 
         $tenantId = auth()->user()->tenant_id;
+        
+        if ($tenantId === null) {
+            abort(403, 'User must be assigned to a tenant to access analytics.');
+        }
+        
         $analytics = $this->analyticsService->getServiceAnalytics($startDate, $endDate, $tenantId);
 
         return view('panels.admin.analytics.service-report', compact('analytics', 'startDate', 'endDate'));
@@ -247,6 +301,11 @@ class AnalyticsController extends Controller
 
         try {
             $tenantId = auth()->user()->tenant_id;
+            
+            if ($tenantId === null) {
+                return redirect()->back()->with('error', 'User must be assigned to a tenant to access analytics.');
+            }
+            
             $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
 
             $filename = 'analytics_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.csv';

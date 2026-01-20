@@ -152,7 +152,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ csp_nonce() }}">
     const analyticsData = @json($analytics);
     
     // Customer Status Distribution Chart
