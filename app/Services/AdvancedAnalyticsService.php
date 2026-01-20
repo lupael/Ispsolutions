@@ -293,19 +293,9 @@ class AdvancedAnalyticsService
     public function getPredictiveAnalytics(int $tenantId): array
     {
         // Revenue forecast (simple moving average)
-        $revenueForecast = $this->forecastRevenue($tenantId);
+        $forecast = $this->forecastRevenue($tenantId);
 
-        // Churn prediction
-        $churnRisk = $this->identifyChurnRisk($tenantId);
-
-        // Growth opportunities
-        $opportunities = $this->identifyGrowthOpportunities($tenantId);
-
-        return [
-            'revenue_forecast' => $revenueForecast,
-            'churn_risk_customers' => $churnRisk,
-            'growth_opportunities' => $opportunities,
-        ];
+        return $forecast;
     }
 
     // Helper methods
@@ -378,10 +368,23 @@ class AdvancedAnalyticsService
 
     private function forecastRevenue(int $tenantId): array
     {
-        // Simple forecast based on historical data
+        // Simple forecast based on last 3 months average
+        $last3MonthsRevenue = Payment::where('tenant_id', $tenantId)
+            ->whereBetween('payment_date', [now()->subMonths(3), now()])
+            ->where('status', 'completed')
+            ->sum('amount');
+        
+        $avgMonthlyRevenue = $last3MonthsRevenue / 3;
+        
         return [
-            'next_month' => 0,
-            'next_quarter' => 0,
+            'predicted_revenue' => round($avgMonthlyRevenue * 1.05, 2), // 5% growth assumption
+            'predicted_new_customers' => round(NetworkUser::where('tenant_id', $tenantId)
+                ->whereBetween('created_at', [now()->subMonth(), now()])
+                ->count() * 1.1), // 10% growth assumption
+            'predicted_churn' => round(NetworkUser::where('tenant_id', $tenantId)
+                ->where('is_active', false)
+                ->whereBetween('updated_at', [now()->subMonth(), now()])
+                ->count() * 0.95), // 5% reduction assumption
         ];
     }
 
