@@ -237,6 +237,9 @@ class SubscriptionBillingService
     {
         return DB::transaction(function () use ($subscription, $newPlan) {
             $proratedAmount = $this->calculateProration($subscription, $newPlan);
+            
+            // Store old plan info before update
+            $oldPlanName = $subscription->plan->name;
 
             // Update subscription
             $subscription->update([
@@ -259,13 +262,13 @@ class SubscriptionBillingService
                     'currency' => $subscription->currency ?? 'USD',
                     'status' => SubscriptionBill::STATUS_PENDING,
                     'due_date' => now()->addDays(7),
-                    'notes' => 'Prorated upgrade from ' . $subscription->plan->name . ' to ' . $newPlan->name,
+                    'notes' => "Prorated upgrade from {$oldPlanName} to {$newPlan->name}",
                 ]);
             }
 
             Log::info('Subscription upgraded', [
                 'subscription_id' => $subscription->id,
-                'old_plan' => $subscription->plan->name,
+                'old_plan' => $oldPlanName,
                 'new_plan' => $newPlan->name,
                 'prorated_amount' => $proratedAmount,
             ]);

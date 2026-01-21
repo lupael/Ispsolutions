@@ -19,26 +19,20 @@ class VpnService
             $pool = VpnPool::active()
                 ->where('tenant_id', $data['tenant_id'])
                 ->where('protocol', $data['protocol'] ?? 'pptp')
-                ->whereRaw('total_ips > used_ips')
+                ->where('total_ips', '>', DB::raw('used_ips'))
                 ->first();
 
             if (!$pool) {
                 throw new \Exception('No available VPN pool found');
             }
 
-            // Allocate IP from pool
-            $localIp = $this->allocateIpFromPool($pool);
-
-            // Create VPN account
+            // Create VPN account using actual model fields
             $vpnAccount = MikrotikVpnAccount::create([
-                'tenant_id' => $data['tenant_id'],
-                'user_id' => $data['user_id'] ?? null,
-                'pool_id' => $pool->id,
+                'router_id' => $data['router_id'],
                 'username' => $data['username'],
                 'password' => $data['password'],
-                'local_address' => $localIp,
-                'remote_address' => $data['remote_address'] ?? null,
-                'is_active' => $data['is_active'] ?? true,
+                'profile' => $data['profile'] ?? 'default',
+                'enabled' => $data['enabled'] ?? true,
             ]);
 
             // Update pool usage
@@ -47,7 +41,6 @@ class VpnService
             Log::info('VPN account created', [
                 'username' => $vpnAccount->username,
                 'pool_id' => $pool->id,
-                'local_ip' => $localIp,
             ]);
 
             return $vpnAccount;
@@ -91,19 +84,11 @@ class VpnService
     public function releaseVpnAccount(MikrotikVpnAccount $vpnAccount): bool
     {
         return DB::transaction(function () use ($vpnAccount) {
-            $pool = $vpnAccount->pool;
-
             // Deactivate account
-            $vpnAccount->update(['is_active' => false]);
-
-            // Update pool usage
-            if ($pool) {
-                $pool->decrement('used_ips');
-            }
+            $vpnAccount->update(['enabled' => false]);
 
             Log::info('VPN account released', [
                 'username' => $vpnAccount->username,
-                'pool_id' => $pool?->id,
             ]);
 
             return true;
@@ -138,10 +123,8 @@ class VpnService
             'used_ips' => $pool->used_ips,
             'available_ips' => $pool->available_ips,
             'usage_percentage' => $pool->usage_percentage,
-            'active_accounts' => MikrotikVpnAccount::where('pool_id', $poolId)
-                ->where('is_active', true)
-                ->count(),
-            'total_accounts' => MikrotikVpnAccount::where('pool_id', $poolId)->count(),
+            'active_accounts' => MikrotikVpnAccount::where('enabled', true)->count(),
+            'total_accounts' => MikrotikVpnAccount::count(),
         ];
     }
 
@@ -150,9 +133,8 @@ class VpnService
      */
     public function getActiveConnections(int $tenantId): \Illuminate\Database\Eloquent\Collection
     {
-        return MikrotikVpnAccount::where('tenant_id', $tenantId)
-            ->where('is_active', true)
-            ->with(['user', 'pool'])
+        return MikrotikVpnAccount::where('enabled', true)
+            ->with(['router'])
             ->get();
     }
 

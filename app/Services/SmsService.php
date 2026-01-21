@@ -23,8 +23,14 @@ class SmsService
         ?int $userId = null,
         ?array $gatewayResponse = null
     ): SmsLog {
+        $tenantId = auth()->user()->tenant_id ?? null;
+        
+        if ($tenantId === null) {
+            throw new \Exception('Cannot log SMS: No tenant context available');
+        }
+
         return SmsLog::create([
-            'tenant_id' => auth()->user()->tenant_id ?? 1,
+            'tenant_id' => $tenantId,
             'sms_gateway_id' => $smsGatewayId,
             'user_id' => $userId,
             'phone_number' => $phoneNumber,

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug');
             $table->text('message');
             $table->json('variables')->nullable();
             $table->boolean('is_active')->default(true);
@@ -23,6 +23,7 @@ return new class extends Migration
 
             $table->index('slug');
             $table->index(['tenant_id', 'is_active']);
+            $table->unique(['tenant_id', 'slug']);
         });
     }
 
