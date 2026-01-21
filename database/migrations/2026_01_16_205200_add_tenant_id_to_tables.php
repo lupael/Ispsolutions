@@ -20,7 +20,6 @@ return new class extends Migration
         // Add tenant_id to network-related tables
         $tables = [
             'service_packages',
-            'packages',
             'ip_pools',
             'ip_subnets',
             'ip_allocations',
@@ -50,7 +49,6 @@ return new class extends Migration
 
         $tables = [
             'service_packages',
-            'packages',
             'ip_pools',
             'ip_subnets',
             'ip_allocations',
