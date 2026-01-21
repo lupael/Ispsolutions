@@ -8,9 +8,7 @@ use App\Http\Controllers\Panel\CardDistributorController;
 use App\Http\Controllers\Panel\CustomerController;
 use App\Http\Controllers\Panel\DeveloperController;
 use App\Http\Controllers\Panel\ManagerController;
-use App\Http\Controllers\Panel\ResellerController;
 use App\Http\Controllers\Panel\StaffController;
-use App\Http\Controllers\Panel\SubResellerController;
 use App\Http\Controllers\Panel\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -418,22 +416,6 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:st
     Route::get('/nas', [StaffController::class, 'nasDevices'])->name('nas');
     Route::get('/cisco', [StaffController::class, 'ciscoDevices'])->name('cisco');
     Route::get('/olt', [StaffController::class, 'oltDevices'])->name('olt');
-});
-
-// Reseller Panel
-Route::prefix('panel/reseller')->name('panel.reseller.')->middleware(['auth', 'role:reseller'])->group(function () {
-    Route::get('/dashboard', [ResellerController::class, 'dashboard'])->name('dashboard');
-    Route::get('/customers', [ResellerController::class, 'customers'])->name('customers');
-    Route::get('/packages', [ResellerController::class, 'packages'])->name('packages');
-    Route::get('/commission', [ResellerController::class, 'commission'])->name('commission');
-});
-
-// Sub-Reseller Panel
-Route::prefix('panel/sub-reseller')->name('panel.sub-reseller.')->middleware(['auth', 'role:sub-reseller'])->group(function () {
-    Route::get('/dashboard', [SubResellerController::class, 'dashboard'])->name('dashboard');
-    Route::get('/customers', [SubResellerController::class, 'customers'])->name('customers');
-    Route::get('/packages', [SubResellerController::class, 'packages'])->name('packages');
-    Route::get('/commission', [SubResellerController::class, 'commission'])->name('commission');
 });
 
 // Card Distributor Panel

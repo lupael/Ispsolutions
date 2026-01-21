@@ -66,7 +66,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Operator',
                 'slug' => 'operator',
-                'description' => 'Manages Sub-Operators and customer accounts within their segment. Can view own customers and sub-operator customers. Restricted panel based on menu configuration.',
+                'description' => 'Manages Sub-Operators and customer accounts within their segment. Can view own customers and sub-operator customers. Restricted panel based on menu configuration. Note: Operator replaces the deprecated "Reseller" role. Admins can customize the display label (e.g., "Partner", "Agent") via settings.',
                 'level' => 30,
                 'permissions' => [
                     'sub-operators.create',
@@ -85,12 +85,14 @@ class RoleSeeder extends Seeder
                     'complaints.manage',
                     'reports.view.own',
                     'sms.send.own',
+                    'commission.view',
+                    'packages.view',
                 ],
             ],
             [
                 'name' => 'Sub-Operator',
                 'slug' => 'sub-operator',
-                'description' => 'Manages only their own customers. Further restricted access under an Operator. Cannot create other sub-operators.',
+                'description' => 'Manages only their own customers. Further restricted access under an Operator. Cannot create other sub-operators. Note: Sub-Operator replaces the deprecated "Sub-Reseller" role. Admins can customize the display label via settings.',
                 'level' => 40,
                 'permissions' => [
                     'customers.view.own',
@@ -100,6 +102,8 @@ class RoleSeeder extends Seeder
                     'billing.process.own',
                     'payments.receive.own',
                     'reports.view.own',
+                    'commission.view',
+                    'packages.view',
                 ],
             ],
             [
@@ -129,31 +133,6 @@ class RoleSeeder extends Seeder
                     'billing.view',
                     'tickets.manage',
                     'complaints.respond',
-                ],
-            ],
-            [
-                'name' => 'Reseller',
-                'slug' => 'reseller',
-                'description' => 'Reseller with customer management and commission access',
-                'level' => 60,
-                'permissions' => [
-                    'customers.manage',
-                    'packages.view',
-                    'billing.view',
-                    'reports.view',
-                    'commission.view',
-                ],
-            ],
-            [
-                'name' => 'Sub-Reseller',
-                'slug' => 'sub-reseller',
-                'description' => 'Sub-reseller under a main reseller',
-                'level' => 65,
-                'permissions' => [
-                    'customers.manage',
-                    'packages.view',
-                    'billing.view',
-                    'commission.view',
                 ],
             ],
             [

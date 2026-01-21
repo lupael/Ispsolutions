@@ -18,8 +18,8 @@ class MenuService
      *   2. Super Admin
      *   3. Admin
      *   4. Manager
-     *   5. Reseller
-     *   6. Sub-Reseller
+     *   5. Operator
+     *   6. Sub-Operator
      *   7. Staff
      *   8. Card Distributor
      *   9. Customer
@@ -50,13 +50,13 @@ class MenuService
         elseif ($user->hasRole('manager')) {
             $menu = $this->getManagerMenu();
         }
-        // Reseller menu
-        elseif ($user->hasRole('reseller')) {
-            $menu = $this->getResellerMenu();
+        // Operator menu
+        elseif ($user->hasRole('operator')) {
+            $menu = $this->getOperatorMenu();
         }
-        // Sub-Reseller menu
-        elseif ($user->hasRole('sub-reseller')) {
-            $menu = $this->getSubResellerMenu();
+        // Sub-Operator menu
+        elseif ($user->hasRole('sub-operator')) {
+            $menu = $this->getSubOperatorMenu();
         }
         // Staff menu
         elseif ($user->hasRole('staff')) {
@@ -288,59 +288,61 @@ class MenuService
     }
 
     /**
-     * Get Reseller menu items.
+     * Get Operator menu items.
+     * Note: Operator replaces the deprecated "Reseller" role.
      */
-    protected function getResellerMenu(): array
+    protected function getOperatorMenu(): array
     {
         return [
             [
                 'title' => 'Dashboard',
                 'icon' => 'ki-home-3',
-                'route' => 'panel.reseller.dashboard',
+                'route' => 'panel.operator.dashboard',
             ],
             [
                 'title' => 'Customers',
                 'icon' => 'ki-profile-user',
-                'route' => 'panel.reseller.customers',
+                'route' => 'panel.operator.customers',
             ],
             [
                 'title' => 'Packages',
                 'icon' => 'ki-package',
-                'route' => 'panel.reseller.packages',
+                'route' => 'panel.operator.packages',
             ],
             [
                 'title' => 'Commission',
                 'icon' => 'ki-bill',
-                'route' => 'panel.reseller.commission',
+                'route' => 'panel.operator.commission',
             ],
         ];
     }
 
     /**
-     * Get Sub-Reseller menu items.
+     * Get Sub-Operator menu items.
+     * Note: Sub-Operator replaces the deprecated "Sub-Reseller" role.
      */
-    protected function getSubResellerMenu(): array
+    protected function getSubOperatorMenu(): array
     {
         return [
             [
                 'title' => 'Dashboard',
                 'icon' => 'ki-home-3',
-                'route' => 'panel.sub-reseller.dashboard',
+                'route' => 'panel.sub-operator.dashboard',
             ],
             [
                 'title' => 'Customers',
                 'icon' => 'ki-profile-user',
-                'route' => 'panel.sub-reseller.customers',
+                'route' => 'panel.sub-operator.customers',
             ],
             [
                 'title' => 'Packages',
                 'icon' => 'ki-package',
-                'route' => 'panel.sub-reseller.packages',
+                'route' => 'panel.sub-operator.packages',
             ],
             [
                 'title' => 'Commission',
                 'icon' => 'ki-bill',
-                'route' => 'panel.sub-reseller.commission',
+                'route' => 'panel.sub-operator.commission',
             ],
         ];
     }
