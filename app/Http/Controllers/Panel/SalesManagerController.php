@@ -135,7 +135,7 @@ class SalesManagerController extends Controller
     public function createSubscriptionPayment(): View
     {
         $user = auth()->user();
-        
+
         // Get customers with their invoices accessible to this sales manager
         $customers = User::where('tenant_id', $user->tenant_id)
             ->where('operator_level', 100) // Customer role level
@@ -146,7 +146,7 @@ class SalesManagerController extends Controller
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
-        
+
         return view('panels.sales-manager.subscriptions.payment-create', compact('customers'));
     }
 
@@ -173,14 +173,14 @@ class SalesManagerController extends Controller
     public function noticeBroadcast(): View
     {
         $user = auth()->user();
-        
+
         // Get customers accessible to this sales manager (scoped by tenant)
         $customers = User::where('tenant_id', $user->tenant_id)
             ->where('operator_level', 100) // Customer role level
             ->select('id', 'name', 'email', 'is_active')
             ->orderBy('name')
             ->get();
-        
+
         return view('panels.sales-manager.notice-broadcast', compact('customers'));
     }
 
