@@ -20,6 +20,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register policies
+        Gate::policy(\App\Models\MikrotikRouter::class, \App\Policies\NetworkDevicePolicy::class);
+        Gate::policy(\App\Models\Nas::class, \App\Policies\NetworkDevicePolicy::class);
+        Gate::policy(\App\Models\Olt::class, \App\Policies\NetworkDevicePolicy::class);
+        Gate::policy(\App\Models\IpPool::class, \App\Policies\NetworkDevicePolicy::class);
+        Gate::policy(\App\Models\MikrotikIpPool::class, \App\Policies\NetworkDevicePolicy::class);
+        Gate::policy(\App\Models\Package::class, \App\Policies\PackagePolicy::class);
+        Gate::policy(\App\Models\ServicePackage::class, \App\Policies\PackagePolicy::class);
+
         // Define authorization gates for new features
         Gate::define('view-audit-logs', function ($user) {
             // Only allow admins, super admins, developers, and operators to view audit logs
@@ -34,6 +43,33 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-analytics', function ($user) {
             // Only allow operators and higher to view analytics
             return $user->operator_level <= 40; // Developer, Super Admin, Admin, Operator, Sub-operator
+        });
+
+        // Define gates for network device management
+        Gate::define('manage-network-devices', function ($user) {
+            // Only Admin can manage network devices by default
+            // Staff/Manager can manage if they have explicit permission
+            return $user->isAdmin() 
+                || $user->isDeveloper() 
+                || $user->isSuperAdmin()
+                || $user->hasSpecialPermission('network.manage');
+        });
+
+        Gate::define('manage-packages', function ($user) {
+            // Only Admin can manage packages by default
+            // Staff/Manager can manage if they have explicit permission
+            return $user->isAdmin() 
+                || $user->isDeveloper() 
+                || $user->isSuperAdmin()
+                || $user->hasSpecialPermission('packages.manage');
+        });
+
+        Gate::define('set-suboperator-pricing', function ($user) {
+            // Operators can set prices for their Sub-Operators
+            return $user->isOperatorRole() 
+                || $user->isAdmin() 
+                || $user->isDeveloper() 
+                || $user->isSuperAdmin();
         });
     }
 }
