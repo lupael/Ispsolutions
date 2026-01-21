@@ -139,6 +139,12 @@ class DeveloperController extends Controller
 
     /**
      * Store a new tenancy.
+     * 
+     * Automatically provisions a Super Admin account for the tenancy.
+     * According to role hierarchy:
+     * - Tenancy and Super Admin are effectively the same entity
+     * - Creating a Super Admin without a tenancy is impossible
+     * - Only Developers can create tenancies and Super Admins
      */
     public function storeTenancy(Request $request): RedirectResponse
     {
@@ -148,12 +154,47 @@ class DeveloperController extends Controller
             'subdomain' => 'nullable|string|max:255|unique:tenants,subdomain',
             'database' => 'nullable|string|max:255',
             'status' => 'required|in:active,inactive,suspended',
+            // Super Admin account fields
+            'super_admin_name' => 'required|string|max:255',
+            'super_admin_email' => 'required|email|unique:users,email',
+            'super_admin_password' => 'required|string|min:8|confirmed',
         ]);
 
-        $tenant = Tenant::create($validated);
+        \DB::transaction(function () use ($validated, &$tenant, &$superAdmin) {
+            // Create the tenancy
+            $tenant = Tenant::create([
+                'name' => $validated['name'],
+                'domain' => $validated['domain'] ?? null,
+                'subdomain' => $validated['subdomain'] ?? null,
+                'database' => $validated['database'] ?? null,
+                'status' => $validated['status'],
+                'created_by' => auth()->id(), // Developer who created it
+            ]);
+
+            // Automatically provision Super Admin account
+            $superAdmin = User::create([
+                'name' => $validated['super_admin_name'],
+                'email' => $validated['super_admin_email'],
+                'password' => bcrypt($validated['super_admin_password']),
+                'tenant_id' => $tenant->id,
+                'operator_level' => 10, // Super Admin level
+                'is_active' => true,
+                'activated_at' => now(),
+                'created_by' => auth()->id(),
+            ]);
+
+            // Assign Super Admin role
+            $superAdminRole = \App\Models\Role::where('slug', 'super-admin')->first();
+            if ($superAdminRole) {
+                $superAdmin->roles()->attach($superAdminRole->id, ['tenant_id' => $tenant->id]);
+            }
+
+            // Update tenant to reference the Super Admin
+            $tenant->update(['created_by' => $superAdmin->id]);
+        });
 
         return redirect()->route('panel.developer.tenancies.index')
-            ->with('success', 'Tenancy created successfully.');
+            ->with('success', 'Tenancy and Super Admin account created successfully.');
     }
 
     /**
