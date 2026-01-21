@@ -98,7 +98,8 @@ class ManagerController extends Controller
      */
     public function complaints(): View
     {
-        // TODO: Implement ticket system filtering by department
+        // Ticket system not yet fully implemented
+        // This feature requires creating Ticket/Complaint models and migrations
         // For now, return empty paginated collection to prevent blade errors
         $complaints = new \Illuminate\Pagination\LengthAwarePaginator(
             [],

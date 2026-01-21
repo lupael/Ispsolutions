@@ -14,12 +14,25 @@ class OperatorController extends Controller
     {
         $user = auth()->user();
 
+        // Get customer IDs for this operator
+        $customerIds = $user->subordinates()->where('operator_level', 100)->pluck('id');
+
         // Get operator metrics
         $stats = [
-            'total_customers' => $user->subordinates()->where('operator_level', 100)->count(),
+            'total_customers' => $customerIds->count(),
             'active_customers' => $user->subordinates()->where('operator_level', 100)->where('is_active', true)->count(),
-            'pending_payments' => 0, // TODO: Calculate from invoices
-            'monthly_collection' => 0, // TODO: Calculate from payments
+            'pending_payments' => $customerIds->isNotEmpty() 
+                ? \App\Models\Invoice::whereIn('user_id', $customerIds)
+                    ->where('status', '!=', 'paid')
+                    ->sum('total_amount')
+                : 0,
+            'monthly_collection' => $customerIds->isNotEmpty()
+                ? \App\Models\Payment::whereIn('user_id', $customerIds)
+                    ->where('status', 'completed')
+                    ->whereMonth('paid_at', now()->month)
+                    ->whereYear('paid_at', now()->year)
+                    ->sum('amount')
+                : 0,
         ];
 
         return view('panels.operator.dashboard', compact('stats'));
@@ -125,11 +138,25 @@ class OperatorController extends Controller
     {
         $user = auth()->user();
 
+        // Get customer IDs for this operator
+        $customerIds = $user->subordinates()->where('operator_level', 100)->pluck('id');
+
         // Generate operator reports
         $reports = [
-            'total_customers' => $user->subordinates()->where('operator_level', 100)->count(),
-            'collections_today' => 0, // TODO: Calculate
-            'collections_month' => 0, // TODO: Calculate
+            'total_customers' => $customerIds->count(),
+            'collections_today' => $customerIds->isNotEmpty()
+                ? \App\Models\Payment::whereIn('user_id', $customerIds)
+                    ->where('status', 'completed')
+                    ->whereDate('paid_at', now()->toDateString())
+                    ->sum('amount')
+                : 0,
+            'collections_month' => $customerIds->isNotEmpty()
+                ? \App\Models\Payment::whereIn('user_id', $customerIds)
+                    ->where('status', 'completed')
+                    ->whereMonth('paid_at', now()->month)
+                    ->whereYear('paid_at', now()->year)
+                    ->sum('amount')
+                : 0,
         ];
 
         return view('panels.operator.reports.index', compact('reports'));

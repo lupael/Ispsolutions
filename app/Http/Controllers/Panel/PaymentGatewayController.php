@@ -156,15 +156,32 @@ class PaymentGatewayController extends Controller
 
         return $this->handleCrudOperation(
             function () use ($gateway) {
-                // TODO: Implement actual gateway connection test
-                // This would call the gateway's API to verify credentials
+                // Basic validation of gateway configuration
+                $config = $gateway->configuration ?? [];
+                
+                // Check if required fields are present based on gateway type
+                $requiredFields = match($gateway->type) {
+                    'stripe' => ['api_key', 'api_secret'],
+                    'bkash' => ['app_key', 'app_secret', 'username', 'password'],
+                    'nagad' => ['merchant_id', 'merchant_key'],
+                    'sslcommerz' => ['store_id', 'store_password'],
+                    default => ['api_key'],
+                };
 
+                foreach ($requiredFields as $field) {
+                    if (empty($config[$field])) {
+                        throw new \Exception("Missing required field: {$field}");
+                    }
+                }
+
+                // Note: Actual API connection testing would require gateway-specific implementations
+                // This is a basic configuration validation
                 return [
                     'status' => 'success',
-                    'message' => 'Gateway connection test successful',
+                    'message' => 'Gateway configuration validated successfully',
                 ];
             },
-            'Gateway connection test successful',
+            'Gateway configuration validated successfully',
             'PaymentGatewayController@test'
         );
     }

@@ -230,11 +230,16 @@ class DeveloperController extends Controller
             ->selectRaw("SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active")
             ->first();
 
+        $onlineCount = \App\Models\NetworkUserSession::where('status', 'active')
+            ->whereNull('end_time')
+            ->distinct('user_id')
+            ->count('user_id');
+
         $stats = [
             'total' => (int) ($statsData->total ?? 0),
             'active' => (int) ($statsData->active ?? 0),
-            'online' => 0, // TODO: Implement online user tracking
-            'offline' => 0, // TODO: Implement offline user tracking
+            'online' => $onlineCount,
+            'offline' => max(0, (int) ($statsData->active ?? 0) - $onlineCount),
         ];
 
         return view('panels.developer.customers.index', compact('customers', 'query', 'stats'));
@@ -258,11 +263,16 @@ class DeveloperController extends Controller
             ->selectRaw("SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active")
             ->first();
 
+        $onlineCount = \App\Models\NetworkUserSession::where('status', 'active')
+            ->whereNull('end_time')
+            ->distinct('user_id')
+            ->count('user_id');
+
         $stats = [
             'total' => (int) ($statsData->total ?? 0),
             'active' => (int) ($statsData->active ?? 0),
-            'online' => 0, // TODO: Implement online user tracking
-            'offline' => 0, // TODO: Implement offline user tracking
+            'online' => $onlineCount,
+            'offline' => max(0, (int) ($statsData->active ?? 0) - $onlineCount),
         ];
 
         return view('panels.developer.customers.index', compact('customers', 'query', 'stats'));

@@ -199,7 +199,8 @@ class AdminController extends Controller
      */
     public function deletedCustomers(): View
     {
-        // TODO: Implement soft delete functionality for customers
+        // Soft delete functionality not yet implemented for customers
+        // This feature requires adding SoftDeletes trait to User model
         // For now, return empty paginated collection to prevent blade errors
         $customers = new \Illuminate\Pagination\LengthAwarePaginator(
             [],
@@ -242,7 +243,8 @@ class AdminController extends Controller
      */
     public function customerImportRequests(): View
     {
-        // TODO: Implement customer import request tracking
+        // Customer import request tracking not yet implemented
+        // This feature requires creating an ImportRequest model and migration
         // For now, return empty paginated collection to prevent blade errors
         $importRequests = new \Illuminate\Pagination\LengthAwarePaginator(
             [],

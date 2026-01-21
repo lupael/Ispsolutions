@@ -53,23 +53,29 @@ class SubResellerController extends Controller
      */
     public function commission(): View
     {
-        // TODO: Implement commission tracking for sub-resellers
-        // For now, return empty paginated collection to prevent blade errors
-        $transactions = new \Illuminate\Pagination\LengthAwarePaginator(
-            [],
-            0,
-            20,
-            1,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+        $user = auth()->user();
+
+        // Get commission transactions for this sub-reseller
+        $transactions = \App\Models\Commission::where('reseller_id', $user->id)
+            ->with(['payment', 'invoice'])
+            ->latest()
+            ->paginate(20);
 
         $summary = [
-            'total_earnings' => 0,
-            'this_month' => 0,
-            'pending' => 0,
-            'paid' => 0,
+            'total_earnings' => \App\Models\Commission::where('reseller_id', $user->id)
+                ->sum('commission_amount'),
+            'this_month' => \App\Models\Commission::where('reseller_id', $user->id)
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('commission_amount'),
+            'pending' => \App\Models\Commission::where('reseller_id', $user->id)
+                ->where('status', 'pending')
+                ->sum('commission_amount'),
+            'paid' => \App\Models\Commission::where('reseller_id', $user->id)
+                ->where('status', 'paid')
+                ->sum('commission_amount'),
         ];
 
-        return view('panels.sub-reseller.commission', compact('transactions', 'summary'));
+        return view('panels.sub-reseller.commission.index', compact('transactions', 'summary'));
     }
 }
