@@ -70,10 +70,10 @@ class DemoSeeder extends Seeder
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->info('Developer:    developer@ispbills.com / password');
         $this->command->info('Super Admin:  superadmin@ispbills.com / password');
-        $this->command->info('Admin:        admin@demo-isp.local / password');
-        $this->command->info('Operator:     operator@demo-isp.local / password');
-        $this->command->info('Sub-Operator: suboperator@demo-isp.local / password');
-        $this->command->info('Customer:     customer@demo-isp.local / password');
+        $this->command->info('Admin:        admin@ispbills.com / password');
+        $this->command->info('Operator:     operator@ispbills.com / password');
+        $this->command->info('Sub-Operator: suboperator@ispbills.com / password');
+        $this->command->info('Customer:     customer@ispbills.com / password');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 
@@ -173,7 +173,7 @@ class DemoSeeder extends Seeder
         $adminRole = Role::where('slug', 'admin')->first();
 
         $admin = User::firstOrCreate(
-            ['email' => 'admin@demo-isp.local'],
+            ['email' => 'admin@ispbills.com'],
             [
                 'name' => 'Demo Admin (ISP Owner)',
                 'password' => Hash::make('password'),
@@ -208,7 +208,7 @@ class DemoSeeder extends Seeder
         $operatorRole = Role::where('slug', 'operator')->first();
 
         $operator = User::firstOrCreate(
-            ['email' => 'operator@demo-isp.local'],
+            ['email' => 'operator@ispbills.com'],
             [
                 'name' => 'Demo Operator',
                 'password' => Hash::make('password'),
@@ -240,7 +240,7 @@ class DemoSeeder extends Seeder
         $subOperatorRole = Role::where('slug', 'sub-operator')->first();
 
         $subOperator = User::firstOrCreate(
-            ['email' => 'suboperator@demo-isp.local'],
+            ['email' => 'suboperator@ispbills.com'],
             [
                 'name' => 'Demo Sub-Operator',
                 'password' => Hash::make('password'),
@@ -321,7 +321,7 @@ class DemoSeeder extends Seeder
         $customerRole = Role::where('slug', 'customer')->first();
 
         $customer = User::firstOrCreate(
-            ['email' => 'customer@demo-isp.local'],
+            ['email' => 'customer@ispbills.com'],
             [
                 'name' => 'Demo Customer',
                 'password' => Hash::make('password'),
@@ -360,7 +360,6 @@ class DemoSeeder extends Seeder
                 'username' => 'admin',
                 'password' => 'demo-password',
                 'status' => 'active',
-                'tenant_id' => $tenant->id,
             ]
         );
         $this->command->info("✓ Demo MikroTik router created: {$mikrotik->name}");
@@ -413,14 +412,20 @@ class DemoSeeder extends Seeder
                 'max_onts' => 128,
                 'description' => 'Demo OLT for testing',
                 'status' => 'active',
-                'tenant_id' => $tenant->id,
             ]
         );
+        
+        // Set tenant_id separately as it's not in the fillable array
+        if ($olt->tenant_id !== $tenant->id) {
+            $olt->tenant_id = $tenant->id;
+            $olt->save();
+        }
+        
         $this->command->info("✓ Demo OLT created: {$olt->name}");
 
         // Create demo IP pool
         $ipPool = IpPool::firstOrCreate(
-            ['name' => 'demo-pool', 'tenant_id' => $tenant->id],
+            ['name' => 'demo-pool'],
             [
                 'description' => 'Demo IP pool for testing',
                 'start_ip' => '10.10.0.1',
@@ -429,9 +434,15 @@ class DemoSeeder extends Seeder
                 'dns_servers' => '8.8.8.8,8.8.4.4',
                 'vlan_id' => 100,
                 'status' => 'active',
-                'tenant_id' => $tenant->id,
             ]
         );
+        
+        // Set tenant_id separately as it's not in the fillable array
+        if ($ipPool->tenant_id !== $tenant->id) {
+            $ipPool->tenant_id = $tenant->id;
+            $ipPool->save();
+        }
+        
         $this->command->info("✓ Demo IP pool created: {$ipPool->name}");
     }
 }
