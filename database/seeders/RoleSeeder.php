@@ -66,7 +66,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Operator',
                 'slug' => 'operator',
-                'description' => 'Manages Sub-Operators and customer accounts within their segment. Can view own customers and sub-operator customers. Restricted panel based on menu configuration. Note: Operator replaces the deprecated "Reseller" role. Admins can customize the display label (e.g., "Partner", "Agent") via settings.',
+                'description' => 'Manages Sub-Operators and customer accounts within their segment. Can view own customers and sub-operator customers. Restricted panel based on menu configuration.',
                 'level' => 30,
                 'permissions' => [
                     'sub-operators.create',
@@ -89,10 +89,11 @@ class RoleSeeder extends Seeder
                     'packages.view',
                 ],
             ],
+            // Note: Operator replaces the deprecated "Reseller" role. Admins can customize the display label.
             [
                 'name' => 'Sub-Operator',
                 'slug' => 'sub-operator',
-                'description' => 'Manages only their own customers. Further restricted access under an Operator. Cannot create other sub-operators. Note: Sub-Operator replaces the deprecated "Sub-Reseller" role. Admins can customize the display label via settings.',
+                'description' => 'Manages only their own customers. Further restricted access under an Operator. Cannot create other sub-operators.',
                 'level' => 40,
                 'permissions' => [
                     'customers.view.own',
@@ -106,6 +107,7 @@ class RoleSeeder extends Seeder
                     'packages.view',
                 ],
             ],
+            // Note: Sub-Operator replaces the deprecated "Sub-Reseller" role. Admins can customize the display label.
             [
                 'name' => 'Manager',
                 'slug' => 'manager',
