@@ -78,6 +78,12 @@ class SuperAdminController extends Controller
 
     /**
      * Store a new ISP/Admin.
+     * 
+     * Automatically provisions an Admin account for the ISP.
+     * According to role hierarchy:
+     * - Each ISP represents a tenant segment managed by an Admin
+     * - When a Super Admin creates a new ISP, an Admin account must be automatically provisioned
+     * - Each Admin represents multiple Operators
      */
     public function ispStore(Request $request): RedirectResponse
     {
@@ -87,12 +93,48 @@ class SuperAdminController extends Controller
             'subdomain' => 'nullable|string|max:255|unique:tenants,subdomain',
             'database' => 'nullable|string|max:255',
             'status' => 'required|in:active,inactive',
+            // Admin account fields
+            'admin_name' => 'required|string|max:255',
+            'admin_email' => 'required|email|unique:users,email',
+            'admin_password' => 'required|string|min:8|confirmed',
         ]);
 
-        $tenant = Tenant::create($validated);
+        $result = \DB::transaction(function () use ($validated) {
+            $superAdmin = auth()->user();
+            
+            // Create the ISP tenant (using current Super Admin as creator)
+            $tenant = Tenant::create([
+                'name' => $validated['name'],
+                'domain' => $validated['domain'] ?? null,
+                'subdomain' => $validated['subdomain'] ?? null,
+                'database' => $validated['database'] ?? null,
+                'status' => $validated['status'],
+                'created_by' => $superAdmin->id, // Super Admin who created it
+            ]);
+
+            // Automatically provision Admin account
+            $admin = User::create([
+                'name' => $validated['admin_name'],
+                'email' => $validated['admin_email'],
+                'password' => bcrypt($validated['admin_password']),
+                'tenant_id' => $tenant->id,
+                'operator_level' => 20, // Admin level
+                'is_active' => true,
+                'activated_at' => now(),
+                'created_by' => $superAdmin->id,
+            ]);
+
+            // Assign Admin role
+            $adminRole = \App\Models\Role::where('slug', 'admin')->first();
+            if ($adminRole) {
+                $admin->roles()->attach($adminRole->id, ['tenant_id' => $tenant->id]);
+            }
+
+            return ['tenant' => $tenant, 'admin' => $admin];
+        });
 
         return redirect()->route('panel.super-admin.isp.index')
-            ->with('success', 'ISP/Admin created successfully.');
+            ->with('success', 'ISP and Admin account created successfully.');
     }
 
     /**

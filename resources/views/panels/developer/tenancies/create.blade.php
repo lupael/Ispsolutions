@@ -81,6 +81,47 @@
                             @enderror
                         </div>
 
+                        <hr class="my-4">
+                        <h5 class="mb-3">Super Admin Account</h5>
+                        <p class="text-muted-foreground mb-3">A Super Admin account will be automatically created for this tenancy.</p>
+
+                        <div class="mb-3">
+                            <label for="super_admin_name" class="form-label">Super Admin Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @error('super_admin_name') is-invalid @enderror" 
+                                   id="super_admin_name" name="super_admin_name" value="{{ old('super_admin_name') }}" required>
+                            @error('super_admin_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="super_admin_email" class="form-label">Super Admin Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control @error('super_admin_email') is-invalid @enderror" 
+                                   id="super_admin_email" name="super_admin_email" value="{{ old('super_admin_email') }}" required>
+                            @error('super_admin_email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="super_admin_password" class="form-label">Super Admin Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control @error('super_admin_password') is-invalid @enderror" 
+                                   id="super_admin_password" name="super_admin_password" required>
+                            @error('super_admin_password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted-foreground">Minimum 8 characters</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="super_admin_password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control @error('super_admin_password_confirmation') is-invalid @enderror" 
+                                   id="super_admin_password_confirmation" name="super_admin_password_confirmation" required>
+                            @error('super_admin_password_confirmation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{{ route('panel.developer.tenancies.index') }}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">

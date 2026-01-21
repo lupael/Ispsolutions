@@ -132,39 +132,6 @@ class PaginationFixesTest extends TestCase
     }
 
     /**
-     * Test that SubResellerController commission returns paginator and summary.
-     */
-    public function test_sub_reseller_commission_returns_paginator_and_summary(): void
-    {
-        $user = User::factory()->create();
-        $user->assignRole('sub-reseller');
-
-        $response = $this->actingAs($user)->get(route('panel.sub-reseller.commission'));
-
-        $response->assertStatus(200);
-        $response->assertViewHas('transactions', function ($transactions) {
-            return $transactions instanceof LengthAwarePaginator;
-        });
-        $response->assertViewHas('summary');
-    }
-
-    /**
-     * Test that SubResellerController packages returns paginator.
-     */
-    public function test_sub_reseller_packages_returns_paginator(): void
-    {
-        $user = User::factory()->create();
-        $user->assignRole('sub-reseller');
-
-        $response = $this->actingAs($user)->get(route('panel.sub-reseller.packages'));
-
-        $response->assertStatus(200);
-        $response->assertViewHas('packages', function ($packages) {
-            return $packages instanceof LengthAwarePaginator;
-        });
-    }
-
-    /**
      * Test that ManagerController complaints returns paginator.
      */
     public function test_manager_complaints_returns_paginator(): void

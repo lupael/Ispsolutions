@@ -85,8 +85,11 @@ class RoleSeeder extends Seeder
                     'complaints.manage',
                     'reports.view.own',
                     'sms.send.own',
+                    'commission.view',
+                    'packages.view',
                 ],
             ],
+            // Note: Operator replaces the deprecated "Reseller" role. Admins can customize the display label.
             [
                 'name' => 'Sub-Operator',
                 'slug' => 'sub-operator',
@@ -100,8 +103,11 @@ class RoleSeeder extends Seeder
                     'billing.process.own',
                     'payments.receive.own',
                     'reports.view.own',
+                    'commission.view',
+                    'packages.view',
                 ],
             ],
+            // Note: Sub-Operator replaces the deprecated "Sub-Reseller" role. Admins can customize the display label.
             [
                 'name' => 'Manager',
                 'slug' => 'manager',
@@ -129,31 +135,6 @@ class RoleSeeder extends Seeder
                     'billing.view',
                     'tickets.manage',
                     'complaints.respond',
-                ],
-            ],
-            [
-                'name' => 'Reseller',
-                'slug' => 'reseller',
-                'description' => 'Reseller with customer management and commission access',
-                'level' => 60,
-                'permissions' => [
-                    'customers.manage',
-                    'packages.view',
-                    'billing.view',
-                    'reports.view',
-                    'commission.view',
-                ],
-            ],
-            [
-                'name' => 'Sub-Reseller',
-                'slug' => 'sub-reseller',
-                'description' => 'Sub-reseller under a main reseller',
-                'level' => 65,
-                'permissions' => [
-                    'customers.manage',
-                    'packages.view',
-                    'billing.view',
-                    'commission.view',
                 ],
             ],
             [

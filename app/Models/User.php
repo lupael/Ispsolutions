@@ -11,6 +11,44 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * User Model
+ * 
+ * ROLE HIERARCHY AND TENANCY RULES:
+ * 
+ * 1. Tenancy Definition:
+ *    - A tenancy is represented by a single Super Admin account
+ *    - Tenancy and Super Admin are effectively the same entity
+ *    - Each tenancy contains multiple ISPs, represented by Admin accounts
+ * 
+ * 2. Role Consolidation:
+ *    - Operator (level 30): Replaces deprecated "Reseller" role
+ *    - Sub-Operator (level 40): Replaces deprecated "Sub-Reseller" role
+ *    - Admins can rename these roles via custom labels (e.g., "Partner", "Agent")
+ * 
+ * 3. Tenancy Creation Rules:
+ *    - Only Developer can create tenancies
+ *    - When a Developer creates a tenancy, a Super Admin is automatically provisioned
+ *    - Creating a Super Admin without a tenancy is impossible
+ *    - When a Super Admin creates an ISP, an Admin is automatically provisioned
+ * 
+ * 4. Role Hierarchy:
+ *    - Developer (level 0): Supreme authority across all tenants
+ *    - Super Admin (level 10): Manages Admins within their own tenants only
+ *    - Admin (level 20): ISP Owner, manages Operators, Sub-Operators, Managers, Staff
+ *    - Operator (level 30): Manages Sub-Operators and customers
+ *    - Sub-Operator (level 40): Manages only their own customers
+ *    - Manager (level 50): View-only scoped access
+ *    - Accountant (level 70): Financial view-only access
+ *    - Staff (level 80): Support staff with limited permissions
+ *    - Customer (level 100): End customer with self-service access
+ * 
+ * 5. Permission Rules:
+ *    - Only Admin can add/manage NAS, OLT, Router, PPP profiles, Pools, Packages, Package Prices
+ *    - If Admin provides explicit permission, Staff/Manager can view/edit/manage resources
+ *    - Operators can set prices for their Sub-Operators only
+ *    - Operators cannot manage or override pricing set by Admin
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -229,6 +267,28 @@ class User extends Authenticatable
             'accountant' => 'Accountant',
             default => 'User',
         };
+    }
+
+    /**
+     * Get the display label for the user's primary role.
+     * Uses custom label if set by Admin, otherwise returns default role name.
+     * 
+     * @return string
+     */
+    public function getRoleDisplayLabel(): string
+    {
+        $role = $this->roles->first();
+        
+        if (! $role) {
+            return 'No Role';
+        }
+
+        // For Operator and Sub-Operator, check for custom labels
+        if (in_array($role->slug, ['operator', 'sub-operator']) && $this->tenant_id) {
+            return $role->getDisplayLabel($this->tenant_id);
+        }
+
+        return $role->name;
     }
 
     /**
