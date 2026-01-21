@@ -71,25 +71,16 @@ class RouterManager
     }
 
     /**
-     * Test router connectivity.
+     * Test router connectivity by router ID.
      */
-    public function testConnection(string $host, int $port = 8728, string $username = '', string $password = ''): bool
+    public function testConnection(int $routerId): bool
     {
-        Log::info("RouterManager: Testing connection to {$host}:{$port}");
+        Log::info("RouterManager: Testing connection to router {$routerId}");
 
         try {
-            // Try to find router by host
-            $router = MikrotikRouter::where('ip_address', $host)->first();
-            
-            if ($router) {
-                return $this->mikrotikService->connectRouter($router->id);
-            }
-
-            // If router not found in database, log warning
-            Log::warning("Router not found in database", ['host' => $host]);
-            return false;
+            return $this->mikrotikService->connectRouter($routerId);
         } catch (\Exception $e) {
-            Log::error("Connection test failed", ['host' => $host, 'error' => $e->getMessage()]);
+            Log::error("Connection test failed", ['router_id' => $routerId, 'error' => $e->getMessage()]);
             return false;
         }
     }
@@ -120,22 +111,14 @@ class RouterManager
     /**
      * Reboot router.
      *
-     * @throws \Exception
+     * @throws \BadMethodCallException Always, as this method is not implemented for safety
      */
     public function reboot(int $routerId): bool
     {
-        Log::warning("RouterManager: Rebooting router {$routerId}");
-
-        $router = MikrotikRouter::find($routerId);
-        
-        if (!$router) {
-            throw new \Exception("Router not found: {$routerId}");
-        }
-
-        // This is a dangerous operation and should be used with caution
-        // For now, just log and return false
-        Log::warning("Router reboot requested but not implemented for safety", ['router_id' => $routerId]);
-        return false;
+        throw new \BadMethodCallException(
+            'Router reboot is intentionally not implemented for safety reasons. ' .
+            'Please reboot routers manually through their admin interfaces.'
+        );
     }
 
     /**
@@ -168,25 +151,51 @@ class RouterManager
     }
 
     /**
-     * Sync user accounts to router.
+     * Create PPPoE users on router (batch operation).
+     * 
+     * Note: This only creates new users. For true sync (including updates/deletions),
+     * use createPPPoEUser(), updatePPPoEUser(), or deletePPPoEUser() separately.
+     * 
+     * @return array{success: int, failed: int, errors: array<string>}
      */
-    public function syncUsers(int $routerId, array $users): bool
+    public function syncUsers(int $routerId, array $users): array
     {
-        Log::info('RouterManager: Syncing ' . count($users) . " users to router {$routerId}");
+        Log::info('RouterManager: Creating ' . count($users) . " PPPoE users on router {$routerId}");
 
         if (!$this->mikrotikService->connectRouter($routerId)) {
-            return false;
+            return [
+                'success' => 0,
+                'failed' => count($users),
+                'errors' => ['Failed to connect to router'],
+            ];
         }
 
-        $success = true;
+        $successCount = 0;
+        $failedCount = 0;
+        $errors = [];
+
         foreach ($users as $user) {
-            if (!$this->mikrotikService->createPppoeUser($user)) {
-                $success = false;
-                Log::error("Failed to sync user", ['user' => $user['username'] ?? 'unknown']);
+            $username = $user['username'] ?? 'unknown';
+            if ($this->mikrotikService->createPppoeUser($user)) {
+                $successCount++;
+            } else {
+                $failedCount++;
+                $errors[] = "Failed to create user: {$username}";
+                Log::error("Failed to create PPPoE user", ['user' => $username, 'router_id' => $routerId]);
             }
         }
 
-        return $success;
+        Log::info("PPPoE user creation complete", [
+            'router_id' => $routerId,
+            'success' => $successCount,
+            'failed' => $failedCount,
+        ]);
+
+        return [
+            'success' => $successCount,
+            'failed' => $failedCount,
+            'errors' => $errors,
+        ];
     }
 
     /**

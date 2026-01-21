@@ -10,6 +10,14 @@ class PaymentGateway extends Model
 {
     use BelongsToTenant, HasFactory;
 
+    // Gateway type constants
+    public const TYPE_STRIPE = 'stripe';
+    public const TYPE_BKASH = 'bkash';
+    public const TYPE_NAGAD = 'nagad';
+    public const TYPE_SSLCOMMERZ = 'sslcommerz';
+    public const TYPE_PAYPAL = 'paypal';
+    public const TYPE_RAZORPAY = 'razorpay';
+
     protected $fillable = [
         'tenant_id',
         'name',
