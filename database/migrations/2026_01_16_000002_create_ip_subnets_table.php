@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('prefix_length');
             $table->string('gateway', 45)->nullable();
             $table->integer('vlan_id')->nullable();
+            $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
 

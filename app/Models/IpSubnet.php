@@ -16,6 +16,7 @@ class IpSubnet extends Model
         'prefix_length',
         'gateway',
         'vlan_id',
+        'description',
         'status',
     ];
 
