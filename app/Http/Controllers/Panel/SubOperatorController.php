@@ -133,4 +133,38 @@ class SubOperatorController extends Controller
 
         return view('panels.sub-operator.reports.index', compact('reports'));
     }
+
+    /**
+     * Display packages list.
+     */
+    public function packages(): View
+    {
+        $packages = \App\Models\ServicePackage::where('tenant_id', auth()->user()->tenant_id)
+            ->latest()
+            ->paginate(20);
+
+        return view('panels.sub-operator.packages.index', compact('packages'));
+    }
+
+    /**
+     * Display commission information.
+     */
+    public function commission(): View
+    {
+        $user = auth()->user();
+
+        // Get commission transactions for this sub-operator
+        $transactions = \App\Models\Commission::where('reseller_id', $user->id)
+            ->latest()
+            ->paginate(20);
+
+        // Get commission summary
+        $summary = [
+            'total_earned' => \App\Models\Commission::where('reseller_id', $user->id)->sum('commission_amount'),
+            'pending' => \App\Models\Commission::where('reseller_id', $user->id)->where('status', 'pending')->sum('commission_amount'),
+            'paid' => \App\Models\Commission::where('reseller_id', $user->id)->where('status', 'paid')->sum('commission_amount'),
+        ];
+
+        return view('panels.sub-operator.commission.index', compact('transactions', 'summary'));
+    }
 }

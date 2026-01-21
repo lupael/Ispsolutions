@@ -160,7 +160,7 @@ class DeveloperController extends Controller
             'super_admin_password' => 'required|string|min:8|confirmed',
         ]);
 
-        \DB::transaction(function () use ($validated, &$tenant, &$superAdmin) {
+        \DB::transaction(function () use ($validated) {
             // Automatically provision Super Admin account first
             // Note: We create Super Admin first, then assign as tenant creator
             $superAdmin = User::create([

@@ -380,6 +380,8 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 'r
     Route::get('/reports', [\App\Http\Controllers\Panel\OperatorController::class, 'reports'])->name('reports.index');
     Route::get('/sms', [\App\Http\Controllers\Panel\OperatorController::class, 'sms'])->name('sms.index');
     Route::post('/sms/send', [\App\Http\Controllers\Panel\OperatorController::class, 'sendSms'])->name('sms.send');
+    Route::get('/packages', [\App\Http\Controllers\Panel\OperatorController::class, 'packages'])->name('packages');
+    Route::get('/commission', [\App\Http\Controllers\Panel\OperatorController::class, 'commission'])->name('commission');
 });
 
 // Sub-Operator Panel
@@ -390,6 +392,8 @@ Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['a
     Route::get('/payments/create', [\App\Http\Controllers\Panel\SubOperatorController::class, 'createPayment'])->name('payments.create');
     Route::post('/payments', [\App\Http\Controllers\Panel\SubOperatorController::class, 'storePayment'])->name('payments.store');
     Route::get('/reports', [\App\Http\Controllers\Panel\SubOperatorController::class, 'reports'])->name('reports.index');
+    Route::get('/packages', [\App\Http\Controllers\Panel\SubOperatorController::class, 'packages'])->name('packages');
+    Route::get('/commission', [\App\Http\Controllers\Panel\SubOperatorController::class, 'commission'])->name('commission');
 });
 
 // Accountant Panel

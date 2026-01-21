@@ -79,6 +79,47 @@
                             @enderror
                         </div>
 
+                        <hr class="my-4">
+                        <h5 class="mb-3">Admin Account</h5>
+                        <p class="text-muted-foreground mb-3">An Admin account will be automatically created for this ISP.</p>
+
+                        <div class="mb-3">
+                            <label for="admin_name" class="form-label">Admin Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @error('admin_name') is-invalid @enderror" 
+                                   id="admin_name" name="admin_name" value="{{ old('admin_name') }}" required>
+                            @error('admin_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="admin_email" class="form-label">Admin Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control @error('admin_email') is-invalid @enderror" 
+                                   id="admin_email" name="admin_email" value="{{ old('admin_email') }}" required>
+                            @error('admin_email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="admin_password" class="form-label">Admin Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control @error('admin_password') is-invalid @enderror" 
+                                   id="admin_password" name="admin_password" required>
+                            @error('admin_password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted-foreground">Minimum 8 characters</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="admin_password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control @error('admin_password_confirmation') is-invalid @enderror" 
+                                   id="admin_password_confirmation" name="admin_password_confirmation" required>
+                            @error('admin_password_confirmation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{{ route('panel.super-admin.isp.index') }}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">

@@ -166,4 +166,38 @@ class OperatorController extends Controller
     {
         return view('panels.operator.sms.index');
     }
+
+    /**
+     * Display packages list.
+     */
+    public function packages(): View
+    {
+        $packages = \App\Models\ServicePackage::where('tenant_id', auth()->user()->tenant_id)
+            ->latest()
+            ->paginate(20);
+
+        return view('panels.operator.packages.index', compact('packages'));
+    }
+
+    /**
+     * Display commission information.
+     */
+    public function commission(): View
+    {
+        $user = auth()->user();
+
+        // Get commission transactions for this operator
+        $transactions = \App\Models\Commission::where('reseller_id', $user->id)
+            ->latest()
+            ->paginate(20);
+
+        // Get commission summary
+        $summary = [
+            'total_earned' => \App\Models\Commission::where('reseller_id', $user->id)->sum('commission_amount'),
+            'pending' => \App\Models\Commission::where('reseller_id', $user->id)->where('status', 'pending')->sum('commission_amount'),
+            'paid' => \App\Models\Commission::where('reseller_id', $user->id)->where('status', 'paid')->sum('commission_amount'),
+        ];
+
+        return view('panels.operator.commission.index', compact('transactions', 'summary'));
+    }
 }
