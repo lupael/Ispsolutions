@@ -134,7 +134,20 @@ class SalesManagerController extends Controller
      */
     public function createSubscriptionPayment(): View
     {
-        return view('panels.sales-manager.subscriptions.payment-create');
+        $user = auth()->user();
+        
+        // Get customers with their invoices accessible to this sales manager
+        $customers = User::where('tenant_id', $user->tenant_id)
+            ->where('operator_level', 100) // Customer role level
+            ->with(['invoices' => function ($query) {
+                $query->where('status', '!=', 'paid')
+                    ->orderBy('due_date', 'desc');
+            }])
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+        
+        return view('panels.sales-manager.subscriptions.payment-create', compact('customers'));
     }
 
     /**
@@ -159,7 +172,16 @@ class SalesManagerController extends Controller
      */
     public function noticeBroadcast(): View
     {
-        return view('panels.sales-manager.notice-broadcast');
+        $user = auth()->user();
+        
+        // Get customers accessible to this sales manager (scoped by tenant)
+        $customers = User::where('tenant_id', $user->tenant_id)
+            ->where('operator_level', 100) // Customer role level
+            ->select('id', 'name', 'email', 'is_active')
+            ->orderBy('name')
+            ->get();
+        
+        return view('panels.sales-manager.notice-broadcast', compact('customers'));
     }
 
     /**

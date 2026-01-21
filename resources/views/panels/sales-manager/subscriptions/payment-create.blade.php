@@ -16,9 +16,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="client_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Client *</label>
-                    <select name="client_id" id="client_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <select name="client_id" id="client_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" onchange="updateInvoices(this.value)">
                         <option value="">Choose a client...</option>
-                        <!-- TODO: Populate from database -->
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}" data-invoices="{{ $customer->invoices->toJson() }}">
+                                {{ $customer->name }} ({{ $customer->email }})
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -26,7 +30,6 @@
                     <label for="invoice_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice *</label>
                     <select name="invoice_id" id="invoice_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">Select invoice...</option>
-                        <!-- TODO: Populate from database -->
                     </select>
                 </div>
 
@@ -73,4 +76,41 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function updateInvoices(clientId) {
+    const clientSelect = document.getElementById('client_id');
+    const invoiceSelect = document.getElementById('invoice_id');
+    const amountInput = document.getElementById('amount');
+    
+    // Clear existing options
+    invoiceSelect.innerHTML = '<option value="">Select invoice...</option>';
+    amountInput.value = '';
+    
+    if (!clientId) return;
+    
+    // Get selected option
+    const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+    const invoices = JSON.parse(selectedOption.dataset.invoices || '[]');
+    
+    // Populate invoices
+    invoices.forEach(invoice => {
+        const option = document.createElement('option');
+        option.value = invoice.id;
+        option.textContent = `Invoice #${invoice.id} - $${invoice.total_amount} (Due: ${invoice.due_date})`;
+        option.dataset.amount = invoice.total_amount;
+        invoiceSelect.appendChild(option);
+    });
+    
+    // Auto-populate amount when invoice is selected
+    invoiceSelect.addEventListener('change', function() {
+        const selectedInvoice = this.options[this.selectedIndex];
+        if (selectedInvoice.dataset.amount) {
+            amountInput.value = selectedInvoice.dataset.amount;
+        }
+    });
+}
+</script>
+@endpush
 @endsection

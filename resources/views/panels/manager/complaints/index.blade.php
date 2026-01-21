@@ -203,8 +203,8 @@
                                     {{ $complaint->created_at->format('M d, Y') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    {{-- TODO: Implement complaint details view --}}
-                                    <span class="text-gray-400 dark:text-gray-500 cursor-not-allowed">View</span>
+                                    {{-- Complaint details view will be available when complaint system is fully implemented --}}
+                                    <span class="text-gray-400 dark:text-gray-500 cursor-not-allowed" title="Feature coming soon">View</span>
                                 </td>
                             </tr>
                         @empty

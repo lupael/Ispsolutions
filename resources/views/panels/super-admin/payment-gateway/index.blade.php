@@ -15,9 +15,6 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {{-- TODO: Implement PaymentGateway model and fetch data --}}
-        @php $gateways = [] @endphp
-        
         @forelse($gateways as $gateway)
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex justify-between items-start mb-4">
