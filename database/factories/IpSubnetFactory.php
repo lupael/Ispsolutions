@@ -23,6 +23,7 @@ class IpSubnetFactory extends Factory
             'prefix_length' => 24,
             'gateway' => "192.168.{$thirdOctet}.1",
             'vlan_id' => fake()->optional()->numberBetween(1, 4094),
+            'description' => fake()->optional()->sentence(),
             'status' => 'active',
         ];
     }
