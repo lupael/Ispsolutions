@@ -89,7 +89,8 @@ return new class extends Migration
         // Tenants table indexes
         Schema::table('tenants', function (Blueprint $table) {
             $table->index('domain', 'idx_tenants_domain');
-            $table->index('is_active', 'idx_tenants_active');
+            // is_active column does not exist in tenants table - removed
+            $table->index('status', 'idx_tenants_status');
         });
     }
 
@@ -175,7 +176,8 @@ return new class extends Migration
         // Tenants table indexes
         Schema::table('tenants', function (Blueprint $table) {
             $table->dropIndex('idx_tenants_domain');
-            $table->dropIndex('idx_tenants_active');
+            // is_active index was not created - removed
+            $table->dropIndex('idx_tenants_status');
         });
     }
 };
