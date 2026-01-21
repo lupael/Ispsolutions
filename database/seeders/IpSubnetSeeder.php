@@ -21,7 +21,7 @@ class IpSubnetSeeder extends Seeder
                     'gateway' => '203.0.113.1',
                     'vlan_id' => 100,
                     'description' => 'Public subnet for customer connections',
-                    'is_active' => true,
+                    'status' => 'active',
                 ]
             );
         }
@@ -34,7 +34,7 @@ class IpSubnetSeeder extends Seeder
                     'gateway' => '192.168.100.1',
                     'vlan_id' => 200,
                     'description' => 'Private subnet for internal network',
-                    'is_active' => true,
+                    'status' => 'active',
                 ]
             );
 
@@ -45,7 +45,7 @@ class IpSubnetSeeder extends Seeder
                     'gateway' => '192.168.101.1',
                     'vlan_id' => 201,
                     'description' => 'Private subnet for management',
-                    'is_active' => true,
+                    'status' => 'active',
                 ]
             );
         }

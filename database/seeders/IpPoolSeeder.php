@@ -14,13 +14,13 @@ class IpPoolSeeder extends Seeder
                 'name' => 'Public Pool 1',
                 'description' => 'Main public IP address pool',
                 'pool_type' => 'public',
-                'is_active' => true,
+                'status' => 'active',
             ],
             [
                 'name' => 'Private Pool 1',
                 'description' => 'Private network addresses for internal use',
                 'pool_type' => 'private',
-                'is_active' => true,
+                'status' => 'active',
             ],
         ];
 

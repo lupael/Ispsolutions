@@ -18,7 +18,7 @@ class IpPoolFactory extends Factory
             'name' => fake()->unique()->words(2, true) . ' Pool',
             'description' => fake()->sentence(),
             'pool_type' => fake()->randomElement(['public', 'private']),
-            'is_active' => true,
+            'status' => 'active',
         ];
     }
 

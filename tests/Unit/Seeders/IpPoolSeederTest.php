@@ -27,14 +27,14 @@ class IpPoolSeederTest extends TestCase
         $this->assertNotNull($publicPool);
         $this->assertEquals('Main public IP address pool', $publicPool->description);
         $this->assertEquals('public', $publicPool->pool_type);
-        $this->assertTrue($publicPool->is_active);
+        $this->assertEquals('active', $publicPool->status);
 
         // Assert private pool exists with correct attributes
         $privatePool = IpPool::where('name', 'Private Pool 1')->first();
         $this->assertNotNull($privatePool);
         $this->assertEquals('Private network addresses for internal use', $privatePool->description);
         $this->assertEquals('private', $privatePool->pool_type);
-        $this->assertTrue($privatePool->is_active);
+        $this->assertEquals('active', $privatePool->status);
     }
 
     public function test_ip_pool_seeder_does_not_duplicate_pools(): void
