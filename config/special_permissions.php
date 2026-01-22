@@ -7,7 +7,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Special permissions that can be granted to specific operators
-    | These are typically assigned by Group Admin to customize operator access
+    | These are typically assigned by Admin to customize operator access
     |
     */
 
@@ -77,9 +77,9 @@ return [
         'default' => false,
     ],
 
-    'manage_resellers' => [
-        'label' => 'Manage Resellers',
-        'description' => 'Can create and manage reseller accounts',
+    'manage_operators' => [
+        'label' => 'Manage Operators',
+        'description' => 'Can create and manage operator accounts',
         'default' => false,
     ],
 ];

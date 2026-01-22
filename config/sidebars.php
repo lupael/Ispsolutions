@@ -67,7 +67,7 @@ return [
         ],
     ],
 
-    'group_admin' => [
+    'admin' => [
         [
             'key' => 'dashboard',
             'label' => 'Dashboard',
@@ -75,8 +75,8 @@ return [
             'route' => 'panel.admin.dashboard',
         ],
         [
-            'key' => 'resellers_managers',
-            'label' => 'Resellers & Managers',
+            'key' => 'operators_managers',
+            'label' => 'Operators & Managers',
             'icon' => 'bi-people-fill',
             'children' => [
                 ['label' => 'Operators', 'route' => 'panel.admin.operators.index'],
@@ -493,60 +493,6 @@ return [
             'label' => 'Support Tickets',
             'icon' => 'bi-headset',
             'route' => 'panel.customer.tickets',
-        ],
-    ],
-
-    'reseller' => [
-        [
-            'key' => 'dashboard',
-            'label' => 'Dashboard',
-            'icon' => 'bi-speedometer2',
-            'route' => 'panel.reseller.dashboard',
-        ],
-        [
-            'key' => 'customers',
-            'label' => 'Customers',
-            'icon' => 'bi-people',
-            'route' => 'panel.reseller.customers',
-        ],
-        [
-            'key' => 'packages',
-            'label' => 'Packages',
-            'icon' => 'bi-box',
-            'route' => 'panel.reseller.packages',
-        ],
-        [
-            'key' => 'commission',
-            'label' => 'Commission',
-            'icon' => 'bi-currency-dollar',
-            'route' => 'panel.reseller.commission',
-        ],
-    ],
-
-    'sub_reseller' => [
-        [
-            'key' => 'dashboard',
-            'label' => 'Dashboard',
-            'icon' => 'bi-speedometer2',
-            'route' => 'panel.sub-reseller.dashboard',
-        ],
-        [
-            'key' => 'customers',
-            'label' => 'Customers',
-            'icon' => 'bi-people',
-            'route' => 'panel.sub-reseller.customers',
-        ],
-        [
-            'key' => 'packages',
-            'label' => 'Packages',
-            'icon' => 'bi-box',
-            'route' => 'panel.sub-reseller.packages',
-        ],
-        [
-            'key' => 'commission',
-            'label' => 'Commission',
-            'icon' => 'bi-currency-dollar',
-            'route' => 'panel.sub-reseller.commission',
         ],
     ],
 

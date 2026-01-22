@@ -12,7 +12,7 @@ class StoreCustomerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasAnyRole(['superadmin', 'admin', 'manager', 'staff', 'reseller', 'sub-reseller']);
+        return $this->user()->hasAnyRole(['superadmin', 'admin', 'manager', 'staff', 'operator', 'sub-operator']);
     }
 
     /**

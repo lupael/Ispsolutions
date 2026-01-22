@@ -179,7 +179,7 @@ class DemoSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 20,
-                'operator_type' => 'group_admin',
+                'operator_type' => 'admin',
                 'is_active' => true,
                 'activated_at' => now(),
                 'created_by' => $createdBy->id,

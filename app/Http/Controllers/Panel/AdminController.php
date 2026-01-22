@@ -383,17 +383,17 @@ class AdminController extends Controller
     {
         $operators = User::with('roles')
             ->whereHas('roles', function ($query) {
-                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
+                $query->whereIn('slug', ['manager', 'staff', 'operator', 'sub-operator']);
             })
             ->latest()
             ->paginate(20);
 
         $stats = [
             'total' => User::whereHas('roles', function ($query) {
-                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
+                $query->whereIn('slug', ['manager', 'staff', 'operator', 'sub-operator']);
             })->count(),
             'active' => User::whereHas('roles', function ($query) {
-                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
+                $query->whereIn('slug', ['manager', 'staff', 'operator', 'sub-operator']);
             })->where('is_active', true)->count(),
             'managers' => User::whereHas('roles', function ($query) {
                 $query->where('slug', 'manager');
