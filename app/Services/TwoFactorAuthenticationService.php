@@ -13,7 +13,7 @@ class TwoFactorAuthenticationService
 
     public function __construct()
     {
-        $this->google2fa = new Google2FA();
+        $this->google2fa = new Google2FA;
     }
 
     /**
@@ -22,7 +22,7 @@ class TwoFactorAuthenticationService
     public function enable2FA(User $user): array
     {
         $secret = $this->google2fa->generateSecretKey();
-        
+
         $user->update([
             'two_factor_secret' => encrypt($secret),
             'two_factor_enabled' => false, // Only enable after verification
@@ -57,12 +57,12 @@ class TwoFactorAuthenticationService
      */
     public function verify2FACode(User $user, string $code): bool
     {
-        if (!$user->two_factor_secret) {
+        if (! $user->two_factor_secret) {
             return false;
         }
 
         $secret = decrypt($user->two_factor_secret);
-        
+
         return $this->google2fa->verifyKey($secret, $code);
     }
 
@@ -73,6 +73,7 @@ class TwoFactorAuthenticationService
     {
         if ($this->verify2FACode($user, $code)) {
             $user->update(['two_factor_enabled' => true]);
+
             return true;
         }
 
@@ -100,7 +101,7 @@ class TwoFactorAuthenticationService
      */
     public function verifyRecoveryCode(User $user, string $code): bool
     {
-        if (!$user->two_factor_recovery_codes) {
+        if (! $user->two_factor_recovery_codes) {
             return false;
         }
 
@@ -108,11 +109,11 @@ class TwoFactorAuthenticationService
 
         if ($recoveryCodes->contains($code)) {
             // Remove used code
-            $remainingCodes = $recoveryCodes->reject(fn($c) => $c === $code);
-            
+            $remainingCodes = $recoveryCodes->reject(fn ($c) => $c === $code);
+
             $user->update([
-                'two_factor_recovery_codes' => $remainingCodes->isEmpty() 
-                    ? null 
+                'two_factor_recovery_codes' => $remainingCodes->isEmpty()
+                    ? null
                     : encrypt($remainingCodes->toJson()),
             ]);
 
@@ -135,7 +136,7 @@ class TwoFactorAuthenticationService
      */
     public function getRemainingRecoveryCodesCount(User $user): int
     {
-        if (!$user->two_factor_recovery_codes) {
+        if (! $user->two_factor_recovery_codes) {
             return 0;
         }
 

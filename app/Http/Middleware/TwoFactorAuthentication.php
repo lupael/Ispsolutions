@@ -24,7 +24,7 @@ class TwoFactorAuthentication
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return $next($request);
         }
 
@@ -34,7 +34,7 @@ class TwoFactorAuthentication
         }
 
         // Check if user has 2FA enabled and hasn't verified in this session
-        if ($this->twoFactorService->isEnabled($user) && !$request->session()->get('2fa_verified')) {
+        if ($this->twoFactorService->isEnabled($user) && ! $request->session()->get('2fa_verified')) {
             return redirect()->route('2fa.verify');
         }
 

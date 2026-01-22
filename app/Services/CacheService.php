@@ -44,6 +44,7 @@ class CacheService
         try {
             if (config('cache-config.enable_tagging')) {
                 Cache::tags("tenant:{$tenantId}")->flush();
+
                 return true;
             }
 
@@ -356,6 +357,7 @@ class CacheService
     private function getCurrentTenantId(): int
     {
         $user = auth()->user();
+
         return $user ? $user->tenant_id : 0;
     }
 
@@ -365,6 +367,7 @@ class CacheService
     private function getTenantCacheKey(int $tenantId, string $key): string
     {
         $prefix = config('cache-config.prefixes.tenant');
+
         return "{$prefix}:{$tenantId}:{$key}";
     }
 
@@ -374,6 +377,7 @@ class CacheService
     private function getStatsCacheKey(int $tenantId, string $key): string
     {
         $prefix = config('cache-config.prefixes.stats');
+
         return "{$prefix}:{$tenantId}:{$key}";
     }
 
@@ -383,6 +387,7 @@ class CacheService
     private function getDashboardCacheKey(int $tenantId): string
     {
         $prefix = config('cache-config.prefixes.dashboard');
+
         return "{$prefix}:{$tenantId}:stats";
     }
 
@@ -392,6 +397,7 @@ class CacheService
     private function getPackagesCacheKey(int $tenantId): string
     {
         $prefix = config('cache-config.prefixes.package');
+
         return "{$prefix}:{$tenantId}:list";
     }
 
@@ -401,6 +407,7 @@ class CacheService
     private function getGatewaysCacheKey(int $tenantId): string
     {
         $prefix = config('cache-config.prefixes.gateway');
+
         return "{$prefix}:{$tenantId}:list";
     }
 
@@ -410,6 +417,7 @@ class CacheService
     private function getPermissionsCacheKey(int $userId): string
     {
         $prefix = config('cache-config.prefixes.permission');
+
         return "{$prefix}:{$userId}:list";
     }
 
@@ -419,6 +427,7 @@ class CacheService
     private function getDeviceStatusCacheKey(int $tenantId, int $deviceId): string
     {
         $prefix = config('cache-config.prefixes.device');
+
         return "{$prefix}:{$tenantId}:{$deviceId}:status";
     }
 
@@ -433,6 +442,7 @@ class CacheService
             if ($store instanceof \Illuminate\Cache\RedisStore) {
                 /** @var \Illuminate\Redis\Connections\Connection $connection */
                 $connection = $store->connection();
+
                 return $connection->keys($pattern) ?? [];
             }
 

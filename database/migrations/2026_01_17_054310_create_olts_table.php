@@ -16,16 +16,18 @@ return new class extends Migration
             $table->foreignId('tenant_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name', 100);
             $table->string('ip_address', 45);
-            $table->string('vendor', 50)->default('huawei');
-            $table->string('model', 100)->nullable();
-            $table->string('telnet_username', 100)->nullable();
-            $table->string('telnet_password')->nullable();
+            $table->integer('port')->default(23);
+            $table->string('management_protocol', 20)->default('telnet');
+            $table->string('username', 100)->nullable();
+            $table->text('password')->nullable();
             $table->string('snmp_community', 100)->nullable();
-            $table->integer('telnet_port')->default(23);
-            $table->integer('snmp_port')->default(161);
-            $table->integer('max_onts')->default(0);
-            $table->text('description')->nullable();
-            $table->enum('status', ['active', 'inactive', 'error'])->default('active');
+            $table->string('snmp_version', 10)->nullable();
+            $table->string('model', 100)->nullable();
+            $table->string('location')->nullable();
+            $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
+            $table->string('health_status', 20)->default('unknown');
+            $table->timestamp('last_backup_at')->nullable();
+            $table->timestamp('last_health_check_at')->nullable();
             $table->timestamps();
 
             $table->index('tenant_id');

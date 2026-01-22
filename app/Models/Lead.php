@@ -52,22 +52,34 @@ class Lead extends Model
      * Lead status constants
      */
     public const STATUS_NEW = 'new';
+
     public const STATUS_CONTACTED = 'contacted';
+
     public const STATUS_QUALIFIED = 'qualified';
+
     public const STATUS_PROPOSAL = 'proposal';
+
     public const STATUS_NEGOTIATION = 'negotiation';
+
     public const STATUS_WON = 'won';
+
     public const STATUS_LOST = 'lost';
 
     /**
      * Lead source constants
      */
     public const SOURCE_WEBSITE = 'website';
+
     public const SOURCE_REFERRAL = 'referral';
+
     public const SOURCE_PHONE = 'phone';
+
     public const SOURCE_EMAIL = 'email';
+
     public const SOURCE_SOCIAL_MEDIA = 'social_media';
+
     public const SOURCE_AFFILIATE = 'affiliate';
+
     public const SOURCE_OTHER = 'other';
 
     /**

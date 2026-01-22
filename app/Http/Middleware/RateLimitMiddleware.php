@@ -23,7 +23,7 @@ class RateLimitMiddleware
     {
         $config = config("rate-limiting.{$limitType}", config('rate-limiting.global'));
 
-        if (!$config['enabled']) {
+        if (! $config['enabled']) {
             return $next($request);
         }
 
@@ -50,7 +50,7 @@ class RateLimitMiddleware
         $user = $request->user();
         $identifier = $user ? $user->id : $request->ip();
 
-        return sprintf('rate_limit:%s:%s:%s', 
+        return sprintf('rate_limit:%s:%s:%s',
             $limitType,
             $identifier,
             $request->path()

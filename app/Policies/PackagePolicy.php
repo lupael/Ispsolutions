@@ -6,9 +6,9 @@ use App\Models\User;
 
 /**
  * PackagePolicy
- * 
+ *
  * Controls access to service packages and pricing.
- * 
+ *
  * Permission Rules:
  * - Only Admin (level 20) can add/manage Packages
  * - Only Admin can add/manage Package Prices
@@ -56,7 +56,7 @@ class PackagePolicy
 
     /**
      * Determine if the user can create packages.
-     * 
+     *
      * Only Admin can create packages.
      * Staff/Manager can create if they have explicit permission.
      */
@@ -82,7 +82,7 @@ class PackagePolicy
 
     /**
      * Determine if the user can update packages.
-     * 
+     *
      * Only Admin can update packages.
      * Staff/Manager can update if they have explicit permission.
      */
@@ -93,7 +93,7 @@ class PackagePolicy
 
     /**
      * Determine if the user can delete packages.
-     * 
+     *
      * Only Admin can delete packages.
      * Staff/Manager can delete if they have explicit permission.
      */
@@ -104,7 +104,7 @@ class PackagePolicy
 
     /**
      * Determine if the user can manage package prices.
-     * 
+     *
      * Only Admin can manage base pricing.
      * Staff/Manager can manage if they have explicit permission.
      */
@@ -130,7 +130,7 @@ class PackagePolicy
 
     /**
      * Determine if the user can set custom prices for their sub-operators.
-     * 
+     *
      * Operators can set prices for their Sub-Operators only.
      * They cannot manage or override the base pricing set by Admin.
      */

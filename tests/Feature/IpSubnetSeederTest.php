@@ -22,10 +22,10 @@ class IpSubnetSeederTest extends TestCase
 
         // Verify pools were created
         $this->assertDatabaseCount('ip_pools', 2);
-        
+
         $publicPool = IpPool::where('pool_type', 'public')->first();
         $privatePool = IpPool::where('pool_type', 'private')->first();
-        
+
         $this->assertNotNull($publicPool);
         $this->assertNotNull($privatePool);
 

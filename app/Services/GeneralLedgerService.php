@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\GeneralLedgerEntry;
 use App\Models\Account;
+use App\Models\GeneralLedgerEntry;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Carbon\Carbon;
@@ -55,7 +55,7 @@ class GeneralLedgerService
         $accountsReceivable = Account::where('code', '1200')->first();
         $revenue = Account::where('code', '4000')->first();
 
-        if (!$accountsReceivable || !$revenue) {
+        if (! $accountsReceivable || ! $revenue) {
             throw new \Exception('Required accounts not found. Please ensure chart of accounts is set up correctly.');
         }
 
@@ -79,7 +79,7 @@ class GeneralLedgerService
         $cash = Account::where('code', '1000')->first();
         $accountsReceivable = Account::where('code', '1200')->first();
 
-        if (!$cash || !$accountsReceivable) {
+        if (! $cash || ! $accountsReceivable) {
             throw new \Exception('Required accounts not found. Please ensure chart of accounts is set up correctly.');
         }
 
@@ -130,7 +130,7 @@ class GeneralLedgerService
     /**
      * Get trial balance
      */
-    public function getTrialBalance(Carbon $date = null): array
+    public function getTrialBalance(?Carbon $date = null): array
     {
         $date = $date ?? now();
 
@@ -179,7 +179,7 @@ class GeneralLedgerService
     /**
      * Get account ledger
      */
-    public function getAccountLedger(int $accountId, Carbon $startDate = null, Carbon $endDate = null): array
+    public function getAccountLedger(int $accountId, ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         $startDate = $startDate ?? now()->startOfMonth();
         $endDate = $endDate ?? now()->endOfMonth();
@@ -207,7 +207,7 @@ class GeneralLedgerService
                 'reference' => $entry->reference_number,
                 'description' => $entry->description,
                 'debit' => $isDebit ? $entry->amount : 0,
-                'credit' => !$isDebit ? $entry->amount : 0,
+                'credit' => ! $isDebit ? $entry->amount : 0,
                 'balance' => $balance,
             ];
         }

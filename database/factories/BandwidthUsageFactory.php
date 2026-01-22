@@ -36,7 +36,7 @@ class BandwidthUsageFactory extends Factory
         ];
     }
 
-    public function raw(): static
+    public function rawPeriod(): static
     {
         return $this->state(fn (array $attributes) => [
             'period_type' => 'raw',

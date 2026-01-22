@@ -52,7 +52,7 @@ class LeadService
     public function assignLead(Lead $lead, int $userId): Lead
     {
         $user = User::findOrFail($userId);
-        
+
         $lead->update(['assigned_to' => $userId]);
 
         $this->logActivity(

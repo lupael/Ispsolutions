@@ -1,6 +1,24 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$customer_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/CableTv/ProcessExpiredSubscriptions.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subscriber_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/CableTv/ProcessExpiredSubscriptions.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:daysRemaining\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/CableTv/ProcessExpiredSubscriptions.php
+
+		-
 			message: '#^Parameter \#2 \$package of method App\\Services\\BillingService\:\:generateDailyInvoice\(\) expects App\\Models\\ServicePackage, Illuminate\\Database\\Eloquent\\Model given\.$#'
 			identifier: argument.type
 			count: 1
@@ -11,6 +29,78 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Console/Commands/GenerateMonthlyInvoices.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Console/Commands/SendLeadFollowUpReminders.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$next_follow_up_date\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Console/Commands/SendLeadFollowUpReminders.php
+
+		-
+			message: '#^Constructor of class App\\Exports\\BillingReportExport has an unused parameter \$endDate\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: app/Exports/BillingReportExport.php
+
+		-
+			message: '#^Constructor of class App\\Exports\\BillingReportExport has an unused parameter \$startDate\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: app/Exports/BillingReportExport.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Exports/BillingReportExport.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>email" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Exports/CustomersExport.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>mobile_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Exports/CustomersExport.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Exports/CustomersExport.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Closure and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Exports/GenericExport.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Exports/GenericExport.php
+
+		-
+			message: '#^Constructor of class App\\Exports\\PaymentReportExport has an unused parameter \$endDate\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: app/Exports/PaymentReportExport.php
+
+		-
+			message: '#^Constructor of class App\\Exports\\PaymentReportExport has an unused parameter \$startDate\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: app/Exports/PaymentReportExport.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Payment\:\:\$total\.$#'
@@ -127,16 +217,22 @@ parameters:
 			path: app/Http/Controllers/Api/V1/OltController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Api/V1/OltController.php
-
-		-
 			message: '#^Strict comparison using \!\=\= between int and null will always evaluate to true\.$#'
 			identifier: notIdentical.alwaysTrue
 			count: 2
 			path: app/Http/Controllers/Api/V1/OltController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/Api/WebhookController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Api\\WebhookController\:\:whatsapp\(\) should return Illuminate\\Http\\JsonResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Api/WebhookController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\HotspotUser\:\:\$plain_otp\.$#'
@@ -153,7 +249,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method App\\Http\\Controllers\\HotspotController\:\:authorize\(\)\.$#'
 			identifier: method.notFound
-			count: 7
+			count: 6
 			path: app/Http/Controllers/HotspotController.php
 
 		-
@@ -163,10 +259,172 @@ parameters:
 			path: app/Http/Controllers/HotspotController.php
 
 		-
+			message: '#^Access to an undefined property App\\Models\\HotspotUser\:\:\$plain_password\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/HotspotSelfSignupController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/HotspotSelfSignupController.php
+
+		-
+			message: '#^Relation ''account'' is not found in App\\Models\\GeneralLedgerEntry model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Panel/AccountantController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$username\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\User\:\:customers\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Panel\\AdminController\:\:customerStatementPdf\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Panel\\AdminController\:\:monthlyReportPdf\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, string, ''DEBUG''\|''ERROR''\|''INFO''\|''WARNING'', string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, string, string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Offset 2 on array\{non\-falsy\-string, string, string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Offset 3 on array\{non\-falsy\-string, string, ''DEBUG''\|''ERROR''\|''INFO''\|''WARNING'', string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Relation ''auditable'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Relation ''networkUser'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
 			message: '#^Relation ''networkUsers'' is not found in App\\Models\\MikrotikRouter model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
 			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\RadAcct model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Panel/AdminController.php
+
+		-
+			message: '#^Call to static method error\(\) on an unknown class App\\Http\\Controllers\\Panel\\Log\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Http/Controllers/Panel/AnalyticsController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Panel/AnalyticsDashboardController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NetworkUser\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\NetworkUser\>\:\:\$tenant_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Panel/BulkOperationsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NetworkUser\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\NetworkUser\>\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Panel/BulkOperationsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$price_monthly\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Panel/BulkOperationsController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Controllers\\Panel\\BulkOperationsController\:\:authorize\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: app/Http/Controllers/Panel/BulkOperationsController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Panel/BulkOperationsController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Panel/CableTvController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Panel\\CustomerController\:\:accountStatementPdf\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Panel/CustomerController.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -181,6 +439,138 @@ parameters:
 			path: app/Http/Controllers/Panel/CustomerController.php
 
 		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, string, ''DEBUG''\|''ERROR''\|''INFO''\|''WARNING'', string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Panel/DeveloperController.php
+
+		-
+			message: '#^Offset 3 on array\{non\-falsy\-string, string, ''DEBUG''\|''ERROR''\|''INFO''\|''WARNING'', string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Panel/DeveloperController.php
+
+		-
+			message: '#^Relation ''auditable'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/DeveloperController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\ApiKey model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/DeveloperController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/DeveloperController.php
+
+		-
+			message: '#^Relation ''vpnAccounts'' is not found in App\\Models\\VpnPool model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/DeveloperController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Panel/OperatorController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\PaymentGateway\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Panel/PaymentGatewayController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Controllers\\Panel\\PaymentGatewayController\:\:authorize\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: app/Http/Controllers/Panel/PaymentGatewayController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 4
+			path: app/Http/Controllers/Panel/PaymentGatewayController.php
+
+		-
+			message: '#^Relation ''plan'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/SalesManagerController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/SalesManagerController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Panel/SubOperatorController.php
+
+		-
+			message: '#^Relation ''auditable'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/SuperAdminController.php
+
+		-
+			message: '#^Relation ''plan'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/SuperAdminController.php
+
+		-
+			message: '#^Relation ''subscription'' is not found in App\\Models\\Tenant model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/SuperAdminController.php
+
+		-
+			message: '#^Relation ''tenant'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/SuperAdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/SuperAdminController.php
+
+		-
+			message: '#^Call to static method error\(\) on an unknown class App\\Http\\Controllers\\Panel\\Log\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Http/Controllers/Panel/VpnController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Http/Controllers/Panel/VpnController.php
+
+		-
+			message: '#^Relation ''pool'' is not found in App\\Models\\MikrotikVpnAccount model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/VpnController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MikrotikVpnAccount model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Panel/VpnController.php
+
+		-
 			message: '#^Call to an undefined method App\\Http\\Controllers\\PaymentController\:\:authorize\(\)\.$#'
 			identifier: method.notFound
 			count: 3
@@ -193,16 +583,28 @@ parameters:
 			path: app/Http/Controllers/PaymentController.php
 
 		-
-			message: '#^Call to static method where\(\) on an unknown class App\\Http\\Controllers\\PaymentGateway\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Controllers/PaymentController.php
-
-		-
 			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Jobs/ProcessPaymentJob.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Jobs/ProcessPaymentJob.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''pending'' and ''completed'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Jobs/ProcessPaymentJob.php
 
 		-
 			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\BandwidthUsage\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
@@ -235,6 +637,12 @@ parameters:
 			path: app/Models/OltConfigurationTemplate.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Onu.php
+
+		-
 			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Onu\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
 			identifier: property.phpDocType
 			count: 1
@@ -247,6 +655,96 @@ parameters:
 			path: app/Models/Onu.php
 
 		-
+			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Models/SubscriptionBill.php
+
+		-
+			message: '#^Parameter \#1 \$num of function number_format expects float, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Models/SubscriptionPlan.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getDisplayLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Policies\\CustomerPolicy\:\:isSameZoneOrArea\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Policies/CustomerPolicy.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NetworkUser\:\:\$customer_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AdvancedAnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NetworkUser\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/AdvancedAnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NetworkUser\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AdvancedAnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NetworkUser\:\:\$total_monthly_revenue\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AdvancedAnalyticsService.php
+
+		-
+			message: '#^Method App\\Services\\AdvancedAnalyticsService\:\:identifyChurnRisk\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/AdvancedAnalyticsService.php
+
+		-
+			message: '#^Method App\\Services\\AdvancedAnalyticsService\:\:identifyGrowthOpportunities\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/AdvancedAnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tenant_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AuditLogService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\AuditLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/AuditLogService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>tenant_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/AuditLogService.php
+
+		-
 			message: '#^Parameter \#1 \$string of function str_pad expects string, int\<1, max\> given\.$#'
 			identifier: argument.type
 			count: 2
@@ -257,6 +755,60 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Services/BillingService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NetworkUser\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\NetworkUser\>\:\:\$expiry_date\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/BulkOperationsService.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\BillingService\:\:generateInvoice\(\) expects App\\Models\\User, App\\Models\\NetworkUser\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\NetworkUser\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/BulkOperationsService.php
+
+		-
+			message: '#^Parameter \#2 \$package of method App\\Services\\BillingService\:\:generateInvoice\(\) expects App\\Models\\ServicePackage, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/BulkOperationsService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Payment\:\:\$payment_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/CableTvBillingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$monthly_price\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/CableTvBillingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/CableTvBillingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$validity_days\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/CableTvBillingService.php
+
+		-
+			message: '#^Function activity not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: app/Services/CableTvBillingService.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/CableTvBillingService.php
 
 		-
 			message: '#^Parameter \#1 \$string of function str_pad expects string, int\<0, 9999\> given\.$#'
@@ -275,6 +827,42 @@ parameters:
 			identifier: property.notFound
 			count: 2
 			path: app/Services/CommissionService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Invoice\:\:\$invoice_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/FinancialReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Invoice\:\:\$paid_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/FinancialReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Invoice\:\:\$invoice_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/GeneralLedgerService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Payment\:\:\$payment_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/GeneralLedgerService.php
+
+		-
+			message: '#^Parameter \#1 \$num of function abs expects float\|int, string given\.$#'
+			identifier: argument.type
+			count: 5
+			path: app/Services/GeneralLedgerService.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/GeneralLedgerService.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\HotspotUser\:\:\$plain_otp\.$#'
@@ -331,9 +919,111 @@ parameters:
 			path: app/Services/PackageSpeedService.php
 
 		-
+			message: '#^Access to an undefined property App\\Models\\Invoice\:\:\$network_user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/PaymentGatewayService.php
+
+		-
+			message: '#^Binary operation "\-" between int\<1, max\> and string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: app/Services/PaymentGatewayService.php
+
+		-
+			message: '#^Parameter \#1 \$num of function number_format expects float, string given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/PaymentGatewayService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\NetworkUser\:\:invoices\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/PdfExportService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\NetworkUser\:\:payments\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/PdfExportService.php
+
+		-
+			message: '#^Method App\\Services\\PdfService\:\:downloadInvoicePdf\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/PdfService.php
+
+		-
+			message: '#^Method App\\Services\\PdfService\:\:downloadPaymentReceiptPdf\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/PdfService.php
+
+		-
+			message: '#^Method App\\Services\\PdfService\:\:downloadSubscriptionBillPdf\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/PdfService.php
+
+		-
+			message: '#^Method App\\Services\\PdfService\:\:streamInvoicePdf\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/PdfService.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/PdfService.php
+
+		-
+			message: '#^Relation ''creditAccount'' is not found in App\\Models\\GeneralLedgerEntry model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/ReconciliationService.php
+
+		-
+			message: '#^Relation ''debitAccount'' is not found in App\\Models\\GeneralLedgerEntry model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/ReconciliationService.php
+
+		-
+			message: '#^Method App\\Services\\MikrotikService\:\:deletePppoeUser\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Services/RouterManager.php
+
+		-
+			message: '#^Method App\\Services\\MikrotikService\:\:updatePppoeUser\(\) invoked with 1 parameter, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Services/RouterManager.php
+
+		-
+			message: '#^Parameter \#1 \$username of method App\\Services\\MikrotikService\:\:deletePppoeUser\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/RouterManager.php
+
+		-
+			message: '#^Parameter \#1 \$username of method App\\Services\\MikrotikService\:\:updatePppoeUser\(\) expects string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/RouterManager.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$phone\.$#'
 			identifier: property.notFound
 			count: 4
+			path: app/Services/SmsService.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
 			path: app/Services/SmsService.php
 
 		-
@@ -359,6 +1049,132 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Services/StaticIpBillingService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$plan\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/SubscriptionBillingService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$tenant\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SubscriptionBillingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/SubscriptionBillingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/SubscriptionBillingService.php
+
+		-
+			message: '#^Method App\\Services\\SubscriptionBillingService\:\:calculateProration\(\) should return float but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/SubscriptionBillingService.php
+
+		-
+			message: '#^Parameter \#2 \$daysUntilExpiry of class App\\Mail\\SubscriptionRenewalReminder constructor expects int, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/SubscriptionBillingService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MikrotikRouter\:\:\$host\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MikrotikVpnAccount\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MikrotikVpnAccount\:\:\$pool\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MikrotikVpnAccount\:\:\$protocol\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MikrotikVpnAccount\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Relation ''pool'' is not found in App\\Models\\MikrotikVpnAccount model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MikrotikVpnAccount model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/VpnManagementService.php
+
+		-
+			message: '#^Trait App\\Traits\\HasAuditLog is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: app/Traits/HasAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: tests/Feature/AccountLockingTest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/AccountLockingTest.php
+
+		-
+			message: '#^Parameter \#1 \$invoice of method App\\Services\\BillingService\:\:processPayment\(\) expects App\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Feature/AccountLockingTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\NetworkUser\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: tests/Feature/AnalyticsDashboardTest.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
@@ -397,6 +1213,12 @@ parameters:
 			path: tests/Feature/CommissionServiceTest.php
 
 		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: tests/Feature/CustomerRegistrationTest.php
+
+		-
 			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with App\\Models\\Invoice will always evaluate to true\.$#'
 			identifier: method.alreadyNarrowedType
 			count: 1
@@ -411,7 +1233,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method App\\Models\\User\:\:assignRole\(\)\.$#'
 			identifier: method.notFound
-			count: 12
+			count: 10
 			path: tests/Feature/PaginationFixesTest.php
 
 		-
@@ -427,16 +1249,220 @@ parameters:
 			path: tests/Feature/PaginationFixesTest.php
 
 		-
-			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
-			identifier: method.alreadyNarrowedType
-			count: 2
-			path: tests/Feature/PaymentGatewayTest.php
-
-		-
 			message: '#^Property Tests\\Feature\\PaymentGatewayTest\:\:\$invoice \(App\\Models\\Invoice\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: tests/Feature/PaymentGatewayTest.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 3
+			path: tests/Feature/PaymentGatewayTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/Feature/Validation/FormRequestValidationTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Invoice\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 2
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:getOverdueInvoices\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:getPreExpirationInvoices\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:sendBulkOverdueNotifications\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:sendBulkPreExpirationNotifications\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\NetworkUser\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 6
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Package\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with bool will always evaluate to false\.$#'
+			identifier: method.impossibleType
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with App\\Models\\Payment will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 3
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Class App\\Services\\NotificationService constructor invoked with 0 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Class App\\Services\\PaymentGatewayService constructor invoked with 0 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Method App\\Services\\BillingService\:\:generateDailyInvoice\(\) invoked with 1 parameter, 2\-3 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Method App\\Services\\BillingService\:\:generateMonthlyInvoice\(\) invoked with 1 parameter, 2\-3 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Method App\\Services\\BillingService\:\:processPayment\(\) invoked with 3 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 3
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Parameter \#1 \$invoice of method App\\Services\\BillingService\:\:processPayment\(\) expects App\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Parameter \#1 \$invoice of method App\\Services\\PaymentGatewayService\:\:initiatePayment\(\) expects App\\Models\\Invoice, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Parameter \#2 \$paymentData of method App\\Services\\BillingService\:\:processPayment\(\) expects array, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Parameter \#2 \$paymentData of method App\\Services\\BillingService\:\:processPayment\(\) expects array, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Parameter \#3 \$additionalData of method App\\Services\\PaymentGatewayService\:\:initiatePayment\(\) expects array, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Integration/BillingFlowIntegrationTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HotspotUser\:\:\$expired_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HotspotUser\:\:\$mobile\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\HotspotService\:\:getExpiredUsers\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\HotspotService\:\:reactivateHotspotUser\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\HotspotService\:\:suspendHotspotUser\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\SmsService\:\:sendOtp\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Package\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with int will always evaluate to false\.$#'
+			identifier: method.impossibleType
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Method App\\Services\\HotspotService\:\:deactivateExpiredUsers\(\) invoked with 0 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Method App\\Services\\HotspotService\:\:generateOTP\(\) invoked with 0 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
+
+		-
+			message: '#^Parameter \#1 \$hotspotUser of method App\\Services\\HotspotService\:\:renewSubscription\(\) expects App\\Models\\HotspotUser, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Integration/HotspotFlowIntegrationTest.php
 
 		-
 			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
@@ -487,10 +1513,154 @@ parameters:
 			path: tests/Unit/Models/OnuTest.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: tests/Unit/Services/CommissionServiceTest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$paid_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Unit/Services/CommissionServiceTest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Unit/Services/CommissionServiceTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 2
+			path: tests/Unit/Services/CommissionServiceTest.php
+
+		-
+			message: '#^Parameter \#1 \$commission of method App\\Services\\CommissionService\:\:payCommission\(\) expects App\\Models\\Commission, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Services/CommissionServiceTest.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method App\\Services\\CommissionService\:\:calculateCommission\(\) expects App\\Models\\Payment, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Services/CommissionServiceTest.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method App\\Services\\CommissionService\:\:calculateMultiLevelCommission\(\) expects App\\Models\\Payment, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Services/CommissionServiceTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HotspotUser\:\:\$expired_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HotspotUser\:\:\$mobile\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\HotspotService\:\:getExpiredUsers\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\HotspotService\:\:reactivateHotspotUser\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\HotspotService\:\:suspendHotspotUser\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Package\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsString\(\) with App\\Models\\HotspotUser will always evaluate to false\.$#'
+			identifier: method.impossibleType
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Call to protected method generateUsername\(\) of class App\\Services\\HotspotService\.$#'
+			identifier: method.protected
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Method App\\Services\\HotspotService\:\:generateOTP\(\) invoked with 0 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
+			message: '#^Parameter \#1 \$hotspotUser of method App\\Services\\HotspotService\:\:renewSubscription\(\) expects App\\Models\\HotspotUser, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Services/HotspotServiceTest.php
+
+		-
 			message: '#^Call to an undefined method App\\Contracts\\MikrotikServiceInterface\:\:method\(\)\.$#'
 			identifier: method.notFound
 			count: 2
 			path: tests/Unit/Services/MonitoringServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:getOverdueInvoices\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/NotificationServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:getPreExpirationInvoices\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/NotificationServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:sendBulkPreExpirationNotifications\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/NotificationServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:sendInvoiceGeneratedNotification\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/NotificationServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\NotificationService\:\:sendPaymentReceivedNotification\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/NotificationServiceTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\NetworkUser\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 5
+			path: tests/Unit/Services/NotificationServiceTest.php
+
+		-
+			message: '#^Class App\\Services\\NotificationService constructor invoked with 0 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Unit/Services/NotificationServiceTest.php
 
 		-
 			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
@@ -515,3 +1685,117 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: tests/Unit/Services/OltServiceTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\NetworkUser\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 5
+			path: tests/Unit/Services/PaymentGatewayServiceTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 6
+			path: tests/Unit/Services/PaymentGatewayServiceTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with bool will always evaluate to false\.$#'
+			identifier: method.impossibleType
+			count: 1
+			path: tests/Unit/Services/PaymentGatewayServiceTest.php
+
+		-
+			message: '#^Class App\\Services\\PaymentGatewayService constructor invoked with 0 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Unit/Services/PaymentGatewayServiceTest.php
+
+		-
+			message: '#^Method App\\Services\\PaymentGatewayService\:\:verifyPayment\(\) invoked with 2 parameters, 3 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Unit/Services/PaymentGatewayServiceTest.php
+
+		-
+			message: '#^Parameter \#1 \$invoice of method App\\Services\\PaymentGatewayService\:\:initiatePayment\(\) expects App\\Models\\Invoice, string given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/Unit/Services/PaymentGatewayServiceTest.php
+
+		-
+			message: '#^Parameter \#3 \$additionalData of method App\\Services\\PaymentGatewayService\:\:initiatePayment\(\) expects array, int given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/Unit/Services/PaymentGatewayServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\SmsService\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: tests/Unit/Services/SmsServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\SmsService\:\:sendExpirationReminder\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/SmsServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\SmsService\:\:sendInvoiceNotification\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/SmsServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\SmsService\:\:sendOtp\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/SmsServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\SmsService\:\:sendOverdueNotification\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/SmsServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\SmsService\:\:sendPaymentConfirmation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/SmsServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\StaticIpBillingService\:\:calculateMonthlyRevenue\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/StaticIpBillingServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\StaticIpBillingService\:\:generateMonthlyInvoices\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/Unit/Services/StaticIpBillingServiceTest.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\StaticIpBillingService\:\:getStaticIpCount\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Unit/Services/StaticIpBillingServiceTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\IpAllocation\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: tests/Unit/Services/StaticIpBillingServiceTest.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\NetworkUser\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: tests/Unit/Services/StaticIpBillingServiceTest.php
+
+		-
+			message: '#^Class App\\Services\\StaticIpBillingService constructor invoked with 0 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/Unit/Services/StaticIpBillingServiceTest.php

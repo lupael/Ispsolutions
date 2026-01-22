@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Log;
 class PerformanceMonitoringService
 {
     private static int $queryCount = 0;
+
     private static array $slowQueries = [];
+
     private static float $startTime;
 
     /**

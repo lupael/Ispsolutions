@@ -16,7 +16,7 @@ class IpPoolSeederTest extends TestCase
     public function test_ip_pool_seeder_creates_pools_successfully(): void
     {
         // Run the seeder
-        $seeder = new IpPoolSeeder();
+        $seeder = new IpPoolSeeder;
         $seeder->run();
 
         // Assert that the pools were created
@@ -40,7 +40,7 @@ class IpPoolSeederTest extends TestCase
     public function test_ip_pool_seeder_does_not_duplicate_pools(): void
     {
         // Run the seeder twice
-        $seeder = new IpPoolSeeder();
+        $seeder = new IpPoolSeeder;
         $seeder->run();
         $seeder->run();
 

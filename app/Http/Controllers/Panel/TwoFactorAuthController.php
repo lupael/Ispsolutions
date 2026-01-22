@@ -57,7 +57,7 @@ class TwoFactorAuthController extends Controller
         if ($this->twoFactorService->verifyAndEnable($user, $request->code)) {
             // Generate recovery codes
             $recoveryCodes = $this->twoFactorService->generateRecoveryCodes($user);
-            
+
             return redirect()
                 ->route('2fa.recovery-codes')
                 ->with('recovery_codes', $recoveryCodes)
@@ -73,7 +73,7 @@ class TwoFactorAuthController extends Controller
     public function recoveryCodes(): View
     {
         $recoveryCodes = session('recovery_codes', []);
-        
+
         return view('panels.shared.2fa.recovery-codes', compact('recoveryCodes'));
     }
 
@@ -83,13 +83,13 @@ class TwoFactorAuthController extends Controller
     public function regenerateRecoveryCodes(): RedirectResponse
     {
         $user = auth()->user();
-        
-        if (!$this->twoFactorService->isEnabled($user)) {
+
+        if (! $this->twoFactorService->isEnabled($user)) {
             return back()->withErrors(['error' => '2FA is not enabled.']);
         }
 
         $recoveryCodes = $this->twoFactorService->generateRecoveryCodes($user);
-        
+
         return redirect()
             ->route('2fa.recovery-codes')
             ->with('recovery_codes', $recoveryCodes)

@@ -65,9 +65,8 @@ class Role extends Model
     /**
      * Get the display label for this role in a specific tenant.
      * Returns custom label if set, otherwise returns the default role name.
-     * 
+     *
      * @param int|null $tenantId Tenant ID (if null, uses current tenant from auth)
-     * @return string
      */
     public function getDisplayLabel(?int $tenantId = null): string
     {

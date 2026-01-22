@@ -80,4 +80,3 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
         return 'Customers';
     }
 }
-

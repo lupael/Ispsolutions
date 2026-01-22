@@ -22,7 +22,7 @@ class SuperAdminController extends Controller
     {
         // Exclude developer from user counts (super-admin can see other super-admins)
         $excludedRoleSlugs = ['developer'];
-        
+
         $stats = [
             'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                 $query->whereIn('slug', $excludedRoleSlugs);
@@ -78,7 +78,7 @@ class SuperAdminController extends Controller
 
     /**
      * Store a new ISP/Admin.
-     * 
+     *
      * Automatically provisions an Admin account for the ISP.
      * According to role hierarchy:
      * - Each ISP represents a tenant segment managed by an Admin
@@ -101,7 +101,7 @@ class SuperAdminController extends Controller
 
         $result = \DB::transaction(function () use ($validated) {
             $superAdmin = auth()->user();
-            
+
             // Create the ISP tenant (using current Super Admin as creator)
             $tenant = Tenant::create([
                 'name' => $validated['name'],
@@ -193,7 +193,7 @@ class SuperAdminController extends Controller
     public function paymentGatewayIndex(): View
     {
         $gateways = PaymentGateway::latest()->paginate(20);
-        
+
         return view('panels.super-admin.payment-gateway.index', compact('gateways'));
     }
 
@@ -231,7 +231,7 @@ class SuperAdminController extends Controller
         try {
             // Check if gateway already exists, update or create
             $gateway = PaymentGateway::where('slug', $validated['slug'])->first();
-            
+
             if ($gateway) {
                 $gateway->update($validated);
                 $message = 'Payment gateway updated successfully.';
@@ -252,7 +252,7 @@ class SuperAdminController extends Controller
 
         return back()->with('success', $message);
     }
-    
+
     /**
      * Show payment gateway settings page
      */
@@ -265,7 +265,7 @@ class SuperAdminController extends Controller
             'sslcommerz' => PaymentGateway::where('slug', 'sslcommerz')->first(),
             'stripe' => PaymentGateway::where('slug', 'stripe')->first(),
         ];
-        
+
         return view('panels.super-admin.payment-gateway.settings', compact('gateways'));
     }
 
@@ -275,7 +275,7 @@ class SuperAdminController extends Controller
     public function smsGatewayIndex(): View
     {
         $gateways = SmsGateway::latest()->paginate(20);
-        
+
         return view('panels.super-admin.sms-gateway.index', compact('gateways'));
     }
 
@@ -307,7 +307,7 @@ class SuperAdminController extends Controller
             $requiredConfigKeys = ['provider', 'api_key', 'sender_id'];
             $missingConfigKeys = array_diff($requiredConfigKeys, array_keys($validated['configuration']));
 
-            if (!empty($missingConfigKeys)) {
+            if (! empty($missingConfigKeys)) {
                 return back()
                     ->withErrors([
                         'configuration' => 'The configuration must include the following keys: ' . implode(', ', $requiredConfigKeys) . '.',

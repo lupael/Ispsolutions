@@ -37,9 +37,13 @@ class SalesComment extends Model
      * Comment type constants
      */
     public const TYPE_NOTE = 'note';
+
     public const TYPE_CALL = 'call';
+
     public const TYPE_MEETING = 'meeting';
+
     public const TYPE_EMAIL = 'email';
+
     public const TYPE_FOLLOW_UP = 'follow_up';
 
     /**

@@ -9,14 +9,14 @@ use Illuminate\Support\Carbon;
 
 /**
  * RoleLabelSetting Model
- * 
+ *
  * Allows Admins to customize role display labels (e.g., rename "Operator" to "Partner")
  * without changing the underlying role logic or permissions.
- * 
+ *
  * Role Hierarchy Context:
  * - Operator (level 30): Previously called "Reseller" - customizable label
  * - Sub-Operator (level 40): Previously called "Sub-Reseller" - customizable label
- * 
+ *
  * @property int $id
  * @property int $tenant_id
  * @property string $role_slug Role slug (e.g., 'operator', 'sub-operator')

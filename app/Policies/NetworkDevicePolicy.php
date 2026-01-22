@@ -6,9 +6,9 @@ use App\Models\User;
 
 /**
  * NetworkDevicePolicy
- * 
+ *
  * Controls access to network devices (NAS, OLT, Router, Pools, etc.)
- * 
+ *
  * Permission Rules:
  * - Only Admin (level 20) can add/manage NAS, OLT, and Router
  * - Only Admin can add/manage PPP profiles
@@ -21,7 +21,7 @@ class NetworkDevicePolicy
 {
     /**
      * Determine if the user can view any network devices.
-     * 
+     *
      * Admin can always view.
      * Staff/Manager can view if they have explicit permission.
      */
@@ -55,7 +55,7 @@ class NetworkDevicePolicy
 
     /**
      * Determine if the user can create network devices (NAS, OLT, Router).
-     * 
+     *
      * Only Admin can create.
      * Staff/Manager can create only if they have explicit permission.
      */
@@ -81,7 +81,7 @@ class NetworkDevicePolicy
 
     /**
      * Determine if the user can update network devices.
-     * 
+     *
      * Only Admin can update.
      * Staff/Manager can update only if they have explicit permission.
      */
@@ -92,7 +92,7 @@ class NetworkDevicePolicy
 
     /**
      * Determine if the user can delete network devices.
-     * 
+     *
      * Only Admin can delete.
      * Staff/Manager can delete only if they have explicit permission.
      */
@@ -103,7 +103,7 @@ class NetworkDevicePolicy
 
     /**
      * Determine if the user can manage PPP profiles.
-     * 
+     *
      * Only Admin can manage PPP profiles.
      * Staff/Manager can manage if they have explicit permission.
      */
@@ -129,7 +129,7 @@ class NetworkDevicePolicy
 
     /**
      * Determine if the user can manage IP Pools.
-     * 
+     *
      * Only Admin can manage pools.
      * Staff/Manager can manage if they have explicit permission.
      */

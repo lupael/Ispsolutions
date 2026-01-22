@@ -16,12 +16,14 @@ return new class extends Migration
             $table->string('password');
             $table->enum('service_type', ['pppoe', 'hotspot', 'static'])->default('pppoe');
             $table->foreignId('package_id')->nullable()->constrained('packages')->onDelete('set null');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->timestamps();
 
             $table->index('username');
             $table->index('service_type');
             $table->index('status');
+            $table->index('user_id');
         });
     }
 

@@ -22,12 +22,12 @@ class AnalyticsDashboardController extends Controller
      */
     public function index(Request $request): View
     {
-        $startDate = $request->input('start_date') 
-            ? Carbon::parse($request->input('start_date')) 
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))
             : now()->subDays(30);
-        
-        $endDate = $request->input('end_date') 
-            ? Carbon::parse($request->input('end_date')) 
+
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))
             : now();
 
         $tenantId = auth()->user()->tenant_id;
@@ -52,12 +52,12 @@ class AnalyticsDashboardController extends Controller
      */
     public function revenue(Request $request): View
     {
-        $startDate = $request->input('start_date') 
-            ? Carbon::parse($request->input('start_date')) 
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))
             : now()->subDays(30);
-        
-        $endDate = $request->input('end_date') 
-            ? Carbon::parse($request->input('end_date')) 
+
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))
             : now();
 
         $tenantId = auth()->user()->tenant_id;
@@ -71,12 +71,12 @@ class AnalyticsDashboardController extends Controller
      */
     public function customers(Request $request): View
     {
-        $startDate = $request->input('start_date') 
-            ? Carbon::parse($request->input('start_date')) 
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))
             : now()->subDays(30);
-        
-        $endDate = $request->input('end_date') 
-            ? Carbon::parse($request->input('end_date')) 
+
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))
             : now();
 
         $tenantId = auth()->user()->tenant_id;

@@ -40,7 +40,7 @@ class Subscription extends Model
     /**
      * Note: Subscriptions belong to tenants, not individual users.
      * Attempting to access a user relationship is a logical error.
-     * 
+     *
      * @throws \LogicException
      */
     public function user()
@@ -68,7 +68,7 @@ class Subscription extends Model
 
     public function isActive()
     {
-        return $this->status === 'active' && 
+        return $this->status === 'active' &&
                ($this->end_date === null || $this->end_date->isToday() || $this->end_date->isFuture());
     }
 

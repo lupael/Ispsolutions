@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Account;
-use App\Models\Payment;
 use App\Models\GeneralLedgerEntry;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,11 +49,11 @@ class ReconciliationService
 
             // Calculate outstanding items
             $outstandingDeposits = $entries->filter(function ($entry) use ($accountId, $clearedTransactions) {
-                return $entry->debit_account_id === $accountId && !in_array($entry->id, $clearedTransactions);
+                return $entry->debit_account_id === $accountId && ! in_array($entry->id, $clearedTransactions);
             })->sum('amount');
 
             $outstandingWithdrawals = $entries->filter(function ($entry) use ($accountId, $clearedTransactions) {
-                return $entry->credit_account_id === $accountId && !in_array($entry->id, $clearedTransactions);
+                return $entry->credit_account_id === $accountId && ! in_array($entry->id, $clearedTransactions);
             })->sum('amount');
 
             // Calculate reconciliation
@@ -87,7 +87,7 @@ class ReconciliationService
     /**
      * Get unreconciled transactions
      */
-    public function getUnreconciledTransactions(int $accountId, Carbon $upToDate = null): array
+    public function getUnreconciledTransactions(int $accountId, ?Carbon $upToDate = null): array
     {
         $upToDate = $upToDate ?? now();
 
@@ -142,7 +142,7 @@ class ReconciliationService
 
         foreach ($unpaidInvoices as $invoice) {
             $remaining = $invoice->total_amount - $invoice->paid_amount;
-            
+
             // Try to find matching payment
             $matchingPayment = $unmatchedPayments->first(function ($payment) use ($remaining) {
                 return abs($payment->amount - $remaining) < 0.01;

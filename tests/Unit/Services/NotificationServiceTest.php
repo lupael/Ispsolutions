@@ -2,30 +2,31 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Services\NotificationService;
 use App\Models\Invoice;
 use App\Models\NetworkUser;
 use App\Models\Tenant;
+use App\Services\NotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
+use Tests\TestCase;
 
 class NotificationServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected NotificationService $notificationService;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->notificationService = new NotificationService();
-        
+        $this->notificationService = new NotificationService;
+
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();
-        
+
         // Fake mail and queue
         Mail::fake();
         Queue::fake();

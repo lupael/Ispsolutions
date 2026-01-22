@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class NetworkUser extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'username',
         'password',
@@ -77,7 +79,7 @@ class NetworkUser extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%");
         });
     }
 }

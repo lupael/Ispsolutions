@@ -2,23 +2,21 @@
 
 namespace App\Services;
 
-use App\Models\Invoice;
-use App\Models\NetworkUser;
+use App\Exports\BillingReportExport;
+use App\Exports\CustomersExport;
+use App\Exports\ExpenseReportExport;
+use App\Exports\IncomeExpenseReportExport;
+use App\Exports\InvoicesExport;
+use App\Exports\PayableExport;
+use App\Exports\PaymentReportExport;
+use App\Exports\PaymentsExport;
+use App\Exports\ReceivableExport;
+use App\Exports\SalesReportExport;
+use App\Exports\TransactionsExport;
+use App\Exports\VatCollectionsExport;
 use App\Models\Payment;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\InvoicesExport;
-use App\Exports\PaymentsExport;
-use App\Exports\CustomersExport;
-use App\Exports\BillingReportExport;
-use App\Exports\PaymentReportExport;
-use App\Exports\TransactionsExport;
-use App\Exports\VatCollectionsExport;
-use App\Exports\ExpenseReportExport;
-use App\Exports\IncomeExpenseReportExport;
-use App\Exports\ReceivableExport;
-use App\Exports\PayableExport;
-use App\Exports\SalesReportExport;
 
 class ExcelExportService
 {

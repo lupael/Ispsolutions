@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 class BillingReportExport implements WithMultipleSheets
 {
     protected Collection $invoices;
+
     protected array $summary;
 
     public function __construct(Collection $invoices, $startDate = null, $endDate = null)

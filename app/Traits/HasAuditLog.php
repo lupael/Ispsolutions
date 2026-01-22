@@ -19,8 +19,8 @@ trait HasAuditLog
         static::updated(function (Model $model) {
             $oldValues = array_diff_assoc($model->getRawOriginal(), $model->getAttributes());
             $newValues = array_intersect_key($model->getAttributes(), $oldValues);
-            
-            if (!empty($oldValues)) {
+
+            if (! empty($oldValues)) {
                 app(AuditLogService::class)->logUpdated($model, $oldValues, $newValues);
             }
         });

@@ -193,7 +193,7 @@ class ChartController extends Controller
     {
         $user = auth()->user();
         $requestedOperatorId = $request->get('reseller_id'); // TODO: Rename parameter to operator_id
-        
+
         // Authorization: Only allow viewing own commissions unless user is Admin or higher
         if ($requestedOperatorId && $requestedOperatorId != $user->id) {
             // Check if user has permission to view others' commissions (Admin level 20 or higher)
@@ -201,9 +201,9 @@ class ChartController extends Controller
                 return response()->json(['error' => 'Unauthorized to view other operators commissions'], 403);
             }
             // For Admin and above, verify same tenant (except Developer)
-            if (!$user->isDeveloper()) {
+            if (! $user->isDeveloper()) {
                 $targetOperator = \App\Models\User::find($requestedOperatorId);
-                if (!$targetOperator || $targetOperator->tenant_id !== $user->tenant_id) {
+                if (! $targetOperator || $targetOperator->tenant_id !== $user->tenant_id) {
                     return response()->json(['error' => 'Unauthorized to view this operator data'], 403);
                 }
             }
@@ -211,7 +211,7 @@ class ChartController extends Controller
         } else {
             $operatorId = $user->id;
         }
-        
+
         $months = $request->get('months', 12);
 
         $data = [];

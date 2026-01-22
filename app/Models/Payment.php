@@ -85,7 +85,7 @@ class Payment extends Model
         return $query->with([
             'user:id,name,email',
             'invoice:id,invoice_number,total_amount,status',
-            'gateway:id,name,type'
+            'gateway:id,name,type',
         ]);
     }
 

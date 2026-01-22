@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamp('cancelled_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index(['tenant_id', 'status']);
             $table->index(['plan_id', 'status']);
             $table->index('end_date');

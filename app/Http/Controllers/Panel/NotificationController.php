@@ -48,12 +48,12 @@ class NotificationController extends Controller
         // Store preferences in user's settings (could be a separate preferences table or user meta)
         // For now, store as JSON in a potential user settings field or create preferences table
         $user = auth()->user();
-        
+
         // You could store this in a dedicated preferences table or user settings column
         // Example: $user->update(['notification_preferences' => $validated]);
         // For now, we'll use session/cache as a demonstration
         cache()->put("notification_preferences_{$user->id}", $validated, now()->addYear());
-        
+
         return redirect()
             ->route('notifications.preferences')
             ->with('success', 'Notification preferences updated successfully!');

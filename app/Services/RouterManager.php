@@ -28,8 +28,8 @@ class RouterManager
 
         // Determine router vendor and dispatch to appropriate service
         $router = MikrotikRouter::find($routerId);
-        
-        if (!$router) {
+
+        if (! $router) {
             throw new \Exception("Router not found: {$routerId}");
         }
 
@@ -39,6 +39,7 @@ class RouterManager
             // Apply configuration through MikroTik service
             // This is a placeholder - actual configuration application depends on what's in $config
             Log::info("Configuration would be applied to MikroTik router {$routerId}");
+
             return true;
         }
 
@@ -55,8 +56,8 @@ class RouterManager
         Log::info("RouterManager: Backing up configuration for router {$routerId}");
 
         $router = MikrotikRouter::find($routerId);
-        
-        if (!$router) {
+
+        if (! $router) {
             throw new \Exception("Router not found: {$routerId}");
         }
 
@@ -80,7 +81,8 @@ class RouterManager
         try {
             return $this->mikrotikService->connectRouter($routerId);
         } catch (\Exception $e) {
-            Log::error("Connection test failed", ['router_id' => $routerId, 'error' => $e->getMessage()]);
+            Log::error('Connection test failed', ['router_id' => $routerId, 'error' => $e->getMessage()]);
+
             return false;
         }
     }
@@ -91,8 +93,8 @@ class RouterManager
     public function getResourceUsage(int $routerId): array
     {
         $router = MikrotikRouter::find($routerId);
-        
-        if (!$router) {
+
+        if (! $router) {
             return [];
         }
 
@@ -152,17 +154,17 @@ class RouterManager
 
     /**
      * Create PPPoE users on router (batch operation).
-     * 
+     *
      * Note: This only creates new users. For true sync (including updates/deletions),
      * use createPPPoEUser(), updatePPPoEUser(), or deletePPPoEUser() separately.
-     * 
+     *
      * @return array{success: int, failed: int, errors: array<string>}
      */
     public function syncUsers(int $routerId, array $users): array
     {
         Log::info('RouterManager: Creating ' . count($users) . " PPPoE users on router {$routerId}");
 
-        if (!$this->mikrotikService->connectRouter($routerId)) {
+        if (! $this->mikrotikService->connectRouter($routerId)) {
             return [
                 'success' => 0,
                 'failed' => count($users),
@@ -181,11 +183,11 @@ class RouterManager
             } else {
                 $failedCount++;
                 $errors[] = "Failed to create user: {$username}";
-                Log::error("Failed to create PPPoE user", ['user' => $username, 'router_id' => $routerId]);
+                Log::error('Failed to create PPPoE user', ['user' => $username, 'router_id' => $routerId]);
             }
         }
 
-        Log::info("PPPoE user creation complete", [
+        Log::info('PPPoE user creation complete', [
             'router_id' => $routerId,
             'success' => $successCount,
             'failed' => $failedCount,
@@ -206,6 +208,7 @@ class RouterManager
         Log::info("RouterManager: Creating PPPoE user on router {$routerId}", $userData);
 
         $userData['router_id'] = $routerId;
+
         return $this->mikrotikService->createPppoeUser($userData);
     }
 
@@ -218,6 +221,7 @@ class RouterManager
 
         $userData['router_id'] = $routerId;
         $userData['username'] = $username;
+
         return $this->mikrotikService->updatePppoeUser($userData);
     }
 

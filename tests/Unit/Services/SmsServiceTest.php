@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
 use App\Services\SmsService;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 class SmsServiceTest extends TestCase
 {
@@ -14,8 +14,8 @@ class SmsServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->smsService = new SmsService();
-        
+        $this->smsService = new SmsService;
+
         // Fake HTTP requests
         Http::fake();
     }

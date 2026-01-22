@@ -2,25 +2,26 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Services\HotspotService;
 use App\Models\HotspotUser;
 use App\Models\Package;
 use App\Models\Tenant;
+use App\Services\HotspotService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class HotspotServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected HotspotService $hotspotService;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->hotspotService = new HotspotService();
-        
+        $this->hotspotService = new HotspotService;
+
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();
     }
@@ -28,7 +29,7 @@ class HotspotServiceTest extends TestCase
     public function test_can_generate_username()
     {
         $username = $this->hotspotService->generateUsername('01712345678');
-        
+
         $this->assertStringStartsWith('hs_', $username);
         $this->assertStringContainsString('01712345678', $username);
     }
@@ -36,7 +37,7 @@ class HotspotServiceTest extends TestCase
     public function test_can_generate_otp()
     {
         $otp = $this->hotspotService->generateOtp();
-        
+
         $this->assertIsString($otp);
         $this->assertEquals(6, strlen($otp));
         $this->assertMatchesRegularExpression('/^\d{6}$/', $otp);

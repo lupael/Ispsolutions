@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Traits\BelongsToTenant;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class GeneralLedgerEntry extends Model
 {

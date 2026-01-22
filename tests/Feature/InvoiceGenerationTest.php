@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\GenerateMonthlyInvoices;
 use App\Models\Invoice;
 use App\Models\Role;
 use App\Models\ServicePackage;
@@ -11,7 +10,6 @@ use App\Models\User;
 use App\Services\BillingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class InvoiceGenerationTest extends TestCase
@@ -19,8 +17,11 @@ class InvoiceGenerationTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+
     protected User $customer;
+
     protected ServicePackage $package;
+
     protected BillingService $billingService;
 
     protected function setUp(): void
@@ -30,9 +31,9 @@ class InvoiceGenerationTest extends TestCase
         Mail::fake();
 
         $this->tenant = Tenant::factory()->create();
-        
+
         $customerRole = Role::factory()->create(['name' => 'customer', 'level' => 10]);
-        
+
         $this->customer = User::factory()->create([
             'tenant_id' => $this->tenant->id,
             'email' => 'customer@test.com',
@@ -72,7 +73,7 @@ class InvoiceGenerationTest extends TestCase
         $invoice = $this->billingService->generateInvoice($this->customer, $this->package);
 
         $expectedTax = 1200.00 * 0.10;
-        
+
         $this->assertEquals(1200.00, $invoice->amount);
         $this->assertEquals($expectedTax, $invoice->tax_amount);
         $this->assertEquals(1200.00 + $expectedTax, $invoice->total_amount);
@@ -172,7 +173,7 @@ class InvoiceGenerationTest extends TestCase
             $invoices[] = $this->billingService->generateInvoice($this->customer, $this->package);
         }
 
-        $invoiceNumbers = array_map(fn($inv) => $inv->invoice_number, $invoices);
+        $invoiceNumbers = array_map(fn ($inv) => $inv->invoice_number, $invoices);
         $uniqueNumbers = array_unique($invoiceNumbers);
 
         $this->assertCount(5, $uniqueNumbers);

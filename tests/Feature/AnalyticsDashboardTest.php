@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Role;
-use App\Models\Tenant;
 use App\Models\NetworkUser;
 use App\Models\Payment;
+use App\Models\Role;
 use App\Models\ServicePackage;
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,6 +16,7 @@ class AnalyticsDashboardTest extends TestCase
     use RefreshDatabase;
 
     private User $adminUser;
+
     private Tenant $tenant;
 
     protected function setUp(): void
@@ -82,20 +83,20 @@ class AnalyticsDashboardTest extends TestCase
             ->get(route('panel.admin.analytics.dashboard'));
 
         $response->assertStatus(200);
-        
+
         // Check that analytics data is present with proper structure
         $analytics = $response->viewData('analytics');
         $this->assertArrayHasKey('revenue_analytics', $analytics);
         $this->assertArrayHasKey('customer_analytics', $analytics);
         $this->assertArrayHasKey('service_analytics', $analytics);
-        
+
         // Verify revenue analytics structure
         $this->assertArrayHasKey('total_revenue', $analytics['revenue_analytics']);
         $this->assertArrayHasKey('average_daily_revenue', $analytics['revenue_analytics']);
         $this->assertArrayHasKey('growth_rate', $analytics['revenue_analytics']);
         $this->assertArrayHasKey('daily_revenue', $analytics['revenue_analytics']);
         $this->assertArrayHasKey('revenue_by_method', $analytics['revenue_analytics']);
-        
+
         // Verify customer analytics structure
         $this->assertArrayHasKey('total_customers', $analytics['customer_analytics']);
         $this->assertArrayHasKey('active_customers', $analytics['customer_analytics']);
@@ -103,11 +104,11 @@ class AnalyticsDashboardTest extends TestCase
         $this->assertArrayHasKey('churn_rate', $analytics['customer_analytics']);
         $this->assertArrayHasKey('average_revenue_per_user', $analytics['customer_analytics']);
         $this->assertArrayHasKey('customer_lifetime_value', $analytics['customer_analytics']);
-        
+
         // Verify service analytics structure
         $this->assertArrayHasKey('package_distribution', $analytics['service_analytics']);
         $this->assertArrayHasKey('total_packages', $analytics['service_analytics']);
-        
+
         // Verify data values are reasonable
         $this->assertGreaterThanOrEqual(0, $analytics['revenue_analytics']['total_revenue']);
         $this->assertEquals(5, $analytics['customer_analytics']['total_customers']);

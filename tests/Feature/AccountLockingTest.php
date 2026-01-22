@@ -18,8 +18,11 @@ class AccountLockingTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+
     protected User $customer;
+
     protected ServicePackage $package;
+
     protected BillingService $billingService;
 
     protected function setUp(): void
@@ -29,9 +32,9 @@ class AccountLockingTest extends TestCase
         Mail::fake();
 
         $this->tenant = Tenant::factory()->create();
-        
+
         $customerRole = Role::factory()->create(['name' => 'customer', 'level' => 10]);
-        
+
         $this->customer = User::factory()->create([
             'tenant_id' => $this->tenant->id,
             'is_active' => true,
@@ -149,7 +152,7 @@ class AccountLockingTest extends TestCase
         ]);
 
         $this->customer->refresh();
-        
+
         $this->assertFalse($this->customer->is_active);
     }
 
@@ -173,7 +176,7 @@ class AccountLockingTest extends TestCase
 
         $invoice->refresh();
         $this->assertEquals('pending', $invoice->status);
-        
+
         // Account should remain inactive until full payment
         $this->customer->refresh();
         $this->assertFalse($this->customer->is_active);

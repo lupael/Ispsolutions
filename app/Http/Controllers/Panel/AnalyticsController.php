@@ -5,15 +5,13 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Services\AdvancedAnalyticsService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class AnalyticsController extends Controller
 {
-    public function __construct(private AdvancedAnalyticsService $analyticsService)
-    {
-    }
+    public function __construct(private AdvancedAnalyticsService $analyticsService) {}
 
     /**
      * Display advanced analytics dashboard
@@ -21,19 +19,19 @@ class AnalyticsController extends Controller
     public function dashboard(Request $request): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             abort(403, 'User must be assigned to a tenant to access analytics.');
         }
-        
+
         // Parse and validate dates with fallback to defaults
         try {
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)
                 : now()->subDays(30);
-            
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
+
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)
                 : now();
         } catch (\Exception $e) {
             // If date parsing fails, use defaults
@@ -59,20 +57,20 @@ class AnalyticsController extends Controller
      */
     public function revenueAnalytics(Request $request): JsonResponse
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)
             : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)
             : now();
 
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
         }
-        
+
         $analytics = $this->analyticsService->getRevenueAnalytics($startDate, $endDate, $tenantId);
 
         return response()->json($analytics);
@@ -83,20 +81,20 @@ class AnalyticsController extends Controller
      */
     public function customerAnalytics(Request $request): JsonResponse
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)
             : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)
             : now();
 
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
         }
-        
+
         $analytics = $this->analyticsService->getCustomerAnalytics($startDate, $endDate, $tenantId);
 
         return response()->json($analytics);
@@ -107,20 +105,20 @@ class AnalyticsController extends Controller
      */
     public function serviceAnalytics(Request $request): JsonResponse
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)
             : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)
             : now();
 
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
         }
-        
+
         $analytics = $this->analyticsService->getServiceAnalytics($startDate, $endDate, $tenantId);
 
         return response()->json($analytics);
@@ -132,11 +130,11 @@ class AnalyticsController extends Controller
     public function growthMetrics(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
         }
-        
+
         $metrics = $this->analyticsService->getGrowthMetrics($tenantId);
 
         return response()->json($metrics);
@@ -148,11 +146,11 @@ class AnalyticsController extends Controller
     public function performanceIndicators(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
         }
-        
+
         $indicators = $this->analyticsService->getPerformanceIndicators($tenantId);
 
         return response()->json($indicators);
@@ -164,11 +162,11 @@ class AnalyticsController extends Controller
     public function behaviorAnalytics(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
         }
-        
+
         $analytics = $this->analyticsService->getCustomerBehaviorAnalytics($tenantId);
 
         return response()->json($analytics);
@@ -180,11 +178,11 @@ class AnalyticsController extends Controller
     public function predictiveAnalytics(): JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             return response()->json(['error' => 'User must be assigned to a tenant to access analytics.'], 403);
         }
-        
+
         $analytics = $this->analyticsService->getPredictiveAnalytics($tenantId);
 
         return response()->json($analytics);
@@ -196,12 +194,12 @@ class AnalyticsController extends Controller
     public function revenueReport(Request $request): View
     {
         try {
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)
                 : now()->subDays(30);
-            
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
+
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)
                 : now();
         } catch (\Exception $e) {
             // If date parsing fails, use defaults
@@ -210,11 +208,11 @@ class AnalyticsController extends Controller
         }
 
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             abort(403, 'User must be assigned to a tenant to access analytics.');
         }
-        
+
         $analytics = $this->analyticsService->getRevenueAnalytics($startDate, $endDate, $tenantId);
 
         return view('panels.admin.analytics.revenue-report', compact('analytics', 'startDate', 'endDate'));
@@ -226,12 +224,12 @@ class AnalyticsController extends Controller
     public function customerReport(Request $request): View
     {
         try {
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)
                 : now()->subDays(30);
-            
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
+
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)
                 : now();
         } catch (\Exception $e) {
             // If date parsing fails, use defaults
@@ -240,11 +238,11 @@ class AnalyticsController extends Controller
         }
 
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             abort(403, 'User must be assigned to a tenant to access analytics.');
         }
-        
+
         $analytics = $this->analyticsService->getCustomerAnalytics($startDate, $endDate, $tenantId);
 
         return view('panels.admin.analytics.customer-report', compact('analytics', 'startDate', 'endDate'));
@@ -256,12 +254,12 @@ class AnalyticsController extends Controller
     public function serviceReport(Request $request): View
     {
         try {
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)
                 : now()->subDays(30);
-            
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
+
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)
                 : now();
         } catch (\Exception $e) {
             // If date parsing fails, use defaults
@@ -270,11 +268,11 @@ class AnalyticsController extends Controller
         }
 
         $tenantId = auth()->user()->tenant_id;
-        
+
         if ($tenantId === null) {
             abort(403, 'User must be assigned to a tenant to access analytics.');
         }
-        
+
         $analytics = $this->analyticsService->getServiceAnalytics($startDate, $endDate, $tenantId);
 
         return view('panels.admin.analytics.service-report', compact('analytics', 'startDate', 'endDate'));
@@ -286,12 +284,12 @@ class AnalyticsController extends Controller
     public function exportAnalytics(Request $request)
     {
         try {
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)
                 : now()->subDays(30);
-            
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
+
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)
                 : now();
         } catch (\Exception $e) {
             // If date parsing fails, use defaults
@@ -301,15 +299,15 @@ class AnalyticsController extends Controller
 
         try {
             $tenantId = auth()->user()->tenant_id;
-            
+
             if ($tenantId === null) {
                 return redirect()->back()->with('error', 'User must be assigned to a tenant to access analytics.');
             }
-            
+
             $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
 
             $filename = 'analytics_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.csv';
-            
+
             $headers = [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -318,11 +316,11 @@ class AnalyticsController extends Controller
             $callback = function () use ($analytics) {
                 try {
                     $file = fopen('php://output', 'w');
-                    
+
                     if ($file === false) {
                         throw new \RuntimeException('Failed to open output stream');
                     }
-                    
+
                     // Revenue Analytics
                     fputcsv($file, ['REVENUE ANALYTICS']);
                     fputcsv($file, ['Metric', 'Value']);
@@ -359,7 +357,7 @@ class AnalyticsController extends Controller
                     Log::error('Analytics export failed during streaming', [
                         'error' => $e->getMessage(),
                     ]);
-                    echo "Error generating export: " . $e->getMessage();
+                    echo 'Error generating export: ' . $e->getMessage();
                 }
             };
 
@@ -368,7 +366,7 @@ class AnalyticsController extends Controller
             Log::error('Analytics export failed', [
                 'error' => $e->getMessage(),
             ]);
-            
+
             return redirect()->back()->with('error', 'Failed to generate export: ' . $e->getMessage());
         }
     }

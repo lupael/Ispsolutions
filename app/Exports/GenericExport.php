@@ -13,8 +13,11 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class GenericExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected Collection $data;
+
     protected array $headers;
+
     protected string $sheetTitle;
+
     protected \Closure $mapCallback;
 
     /**
@@ -23,7 +26,7 @@ class GenericExport implements FromCollection, WithHeadings, WithMapping, WithSt
      * @param string $sheetTitle The name of the sheet
      * @param \Closure $mapCallback Optional callback to map each row
      */
-    public function __construct(Collection $data, array $headers, string $sheetTitle = 'Export', \Closure $mapCallback = null)
+    public function __construct(Collection $data, array $headers, string $sheetTitle = 'Export', ?\Closure $mapCallback = null)
     {
         $this->data = $data;
         $this->headers = $headers;

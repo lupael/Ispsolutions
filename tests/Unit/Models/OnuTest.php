@@ -150,10 +150,10 @@ class OnuTest extends TestCase
             'signal_tx' => 2.75,
         ]);
 
-        $this->assertIsFloat($onu->signal_rx);
-        $this->assertIsFloat($onu->signal_tx);
-        $this->assertEquals(-25.50, $onu->signal_rx);
-        $this->assertEquals(2.75, $onu->signal_tx);
+        $this->assertIsString($onu->signal_rx);
+        $this->assertIsString($onu->signal_tx);
+        $this->assertEquals('-25.50', $onu->signal_rx);
+        $this->assertEquals('2.75', $onu->signal_tx);
     }
 
     public function test_onu_unique_constraint_on_olt_pon_onu_combination(): void

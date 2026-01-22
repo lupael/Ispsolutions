@@ -12,9 +12,9 @@ class CommissionService
     /**
      * Calculate and create commission for a payment
      * Note: Uses "operator" and "sub-operator" roles (formerly "reseller" and "sub-reseller")
-     * 
+     *
      * IMPORTANT: The database column 'reseller_id' is retained for backward compatibility.
-     * TODO (v2.0): Create a migration to rename 'reseller_id' to 'operator_id' and add an 
+     * TODO (v2.0): Create a migration to rename 'reseller_id' to 'operator_id' and add an
      * accessor method for backward compatibility with existing integrations and reports.
      */
     public function calculateCommission(Payment $payment): ?Commission

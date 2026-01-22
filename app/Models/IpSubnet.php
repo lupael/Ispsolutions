@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class IpSubnet extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'pool_id',
         'network',

@@ -13,6 +13,7 @@ class GenerateBillingReportJob implements ShouldQueue
     use InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 2;
+
     public int $timeout = 300;
 
     /**
@@ -37,7 +38,7 @@ class GenerateBillingReportJob implements ShouldQueue
             ]);
 
             $financialReportService = app(\App\Services\FinancialReportService::class);
-            
+
             $reportData = match ($this->reportType) {
                 'monthly_revenue' => $financialReportService->generateRevenueByServiceReport(
                     $this->parameters['start_date'] ?? now()->startOfMonth(),

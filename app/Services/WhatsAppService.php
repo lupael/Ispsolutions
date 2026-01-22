@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppService
 {
     private string $apiUrl;
+
     private string $accessToken;
+
     private string $phoneNumberId;
+
     private bool $enabled;
 
     public function __construct()
@@ -25,8 +28,9 @@ class WhatsAppService
      */
     public function sendTextMessage(string $to, string $message): array
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             Log::info('WhatsApp service is disabled');
+
             return ['success' => false, 'error' => 'WhatsApp service is disabled'];
         }
 
@@ -81,16 +85,16 @@ class WhatsAppService
      */
     public function sendTemplateMessage(string $to, string $templateName, array $parameters = []): array
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return ['success' => false, 'error' => 'WhatsApp service is disabled'];
         }
 
         try {
             $components = [];
-            if (!empty($parameters)) {
+            if (! empty($parameters)) {
                 $components[] = [
                     'type' => 'body',
-                    'parameters' => collect($parameters)->map(fn($param) => [
+                    'parameters' => collect($parameters)->map(fn ($param) => [
                         'type' => 'text',
                         'text' => $param,
                     ])->toArray(),
@@ -156,7 +160,7 @@ class WhatsAppService
             . "Amount: \${$amount}\n"
             . "Due Date: {$dueDate}\n"
             . "Status: {$status}\n\n"
-            . "Please pay your invoice on time to avoid service interruption.";
+            . 'Please pay your invoice on time to avoid service interruption.';
 
         return $this->sendTextMessage($to, $message);
     }
@@ -174,7 +178,7 @@ class WhatsAppService
             . "Amount: \${$amount}\n"
             . "Date: {$date}\n"
             . "Receipt: {$receiptNumber}\n\n"
-            . "Thank you for your payment!";
+            . 'Thank you for your payment!';
 
         return $this->sendTextMessage($to, $message);
     }
@@ -192,7 +196,7 @@ class WhatsAppService
             . "Your service will expire in {$daysRemaining} days.\n"
             . "Package: {$packageName}\n"
             . "Expiry Date: {$expiryDate}\n\n"
-            . "Please renew to avoid service interruption.";
+            . 'Please renew to avoid service interruption.';
 
         return $this->sendTextMessage($to, $message);
     }
@@ -204,7 +208,7 @@ class WhatsAppService
     {
         $message = "🔒 Account Locked\n\n"
             . "Your account has been locked due to: {$reason}\n\n"
-            . "Please contact support or make payment to unlock your account.";
+            . 'Please contact support or make payment to unlock your account.';
 
         return $this->sendTextMessage($to, $message);
     }
@@ -221,7 +225,7 @@ class WhatsAppService
         $defaultCountryCode = config('services.whatsapp.default_country_code', '880');
 
         // Add country code if not present
-        if (!str_starts_with($phone, $defaultCountryCode) && !str_starts_with($phone, '+' . $defaultCountryCode)) {
+        if (! str_starts_with($phone, $defaultCountryCode) && ! str_starts_with($phone, '+' . $defaultCountryCode)) {
             // Remove leading zero if present
             $phone = ltrim($phone, '0');
             $phone = $defaultCountryCode . $phone;
@@ -236,6 +240,7 @@ class WhatsAppService
                 'formatted' => $phone,
                 'length' => $length,
             ]);
+
             return '';
         }
 
@@ -258,6 +263,6 @@ class WhatsAppService
      */
     public function isEnabled(): bool
     {
-        return $this->enabled && !empty($this->accessToken) && !empty($this->phoneNumberId);
+        return $this->enabled && ! empty($this->accessToken) && ! empty($this->phoneNumberId);
     }
 }

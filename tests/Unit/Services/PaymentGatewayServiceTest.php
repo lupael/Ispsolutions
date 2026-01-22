@@ -2,30 +2,30 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Services\PaymentGatewayService;
 use App\Models\Invoice;
 use App\Models\NetworkUser;
 use App\Models\Tenant;
-use App\Models\Payment;
+use App\Services\PaymentGatewayService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 class PaymentGatewayServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected PaymentGatewayService $paymentGatewayService;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->paymentGatewayService = new PaymentGatewayService();
-        
+        $this->paymentGatewayService = new PaymentGatewayService;
+
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();
-        
+
         // Fake HTTP requests
         Http::fake();
     }

@@ -14,6 +14,7 @@ class SyncMikrotikSessionJob implements ShouldQueue
     use InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 90;
 
     /**
@@ -39,7 +40,7 @@ class SyncMikrotikSessionJob implements ShouldQueue
             ]);
 
             $mikrotikService = app(\App\Services\MikrotikService::class);
-            
+
             // Get active sessions from the router
             $sessions = $mikrotikService->getActiveSessions($router->id);
 

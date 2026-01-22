@@ -3,19 +3,23 @@
 namespace App\Services;
 
 use App\Models\Otp;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class OtpService
 {
     protected SmsService $smsService;
 
     const OTP_LENGTH = 6;
+
     const OTP_EXPIRY_MINUTES = 5;
+
     const MAX_ATTEMPTS = 3;
+
     const RESEND_COOLDOWN_SECONDS = 60;
+
     const MAX_REQUESTS_PER_HOUR = 3;
 
     public function __construct(SmsService $smsService)
@@ -31,6 +35,7 @@ class OtpService
         // Use crypto_rand for better randomness
         $bytes = random_bytes(3);
         $number = hexdec(bin2hex($bytes)) % 1000000;
+
         return str_pad((string) $number, self::OTP_LENGTH, '0', STR_PAD_LEFT);
     }
 
@@ -40,18 +45,18 @@ class OtpService
     public function storeOtp(string $mobileNumber, ?string $ipAddress = null, ?int $tenantId = null): array
     {
         // Check rate limiting
-        if (!$this->checkRateLimit($mobileNumber)) {
+        if (! $this->checkRateLimit($mobileNumber)) {
             throw new \Exception('Too many OTP requests. Please try again after 1 hour.');
         }
 
         // Check resend cooldown
-        if (!$this->checkResendCooldown($mobileNumber)) {
+        if (! $this->checkResendCooldown($mobileNumber)) {
             throw new \Exception('Please wait ' . self::RESEND_COOLDOWN_SECONDS . ' seconds before requesting a new OTP.');
         }
 
         // Generate OTP
         $otpCode = $this->generateOtp();
-        
+
         // Invalidate any existing OTPs for this number
         Otp::where('mobile_number', $mobileNumber)
             ->whereNull('verified_at')
@@ -99,7 +104,7 @@ class OtpService
             ->latest()
             ->first();
 
-        if (!$otp) {
+        if (! $otp) {
             Log::warning('OTP verification failed: No valid OTP found', [
                 'mobile_number' => $mobileNumber,
                 'ip_address' => $ipAddress,
@@ -120,7 +125,7 @@ class OtpService
         $otp->increment('attempts');
 
         // Verify OTP
-        if (!Hash::check($otpCode, $otp->otp)) {
+        if (! Hash::check($otpCode, $otp->otp)) {
             $remainingAttempts = self::MAX_ATTEMPTS - $otp->attempts;
             Log::warning('OTP verification failed: Invalid code', [
                 'mobile_number' => $mobileNumber,
@@ -175,7 +180,8 @@ class OtpService
     protected function checkResendCooldown(string $mobileNumber): bool
     {
         $cacheKey = "otp_resend_cooldown:{$mobileNumber}";
-        return !Cache::has($cacheKey);
+
+        return ! Cache::has($cacheKey);
     }
 
     /**

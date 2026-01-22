@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BulkActionRequest;
 use App\Http\Requests\BulkDeleteRequest;
 use App\Http\Traits\HandlesFormValidation;
-use App\Models\NetworkUser;
 use App\Models\Invoice;
+use App\Models\NetworkUser;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +43,7 @@ class BulkOperationsController extends Controller
         $action = $validated['action'];
         $ids = $validated['ids'];
 
-        return match($action) {
+        return match ($action) {
             'activate' => $this->bulkActivateUsers($ids),
             'deactivate' => $this->bulkDeactivateUsers($ids),
             'suspend' => $this->bulkSuspendUsers($ids),
@@ -134,9 +134,10 @@ class BulkOperationsController extends Controller
                 foreach ($ids as $id) {
                     try {
                         $user = NetworkUser::with('package')->findOrFail($id);
-                        
-                        if (!$user->package) {
+
+                        if (! $user->package) {
                             $failedCount++;
+
                             continue;
                         }
 
@@ -147,6 +148,7 @@ class BulkOperationsController extends Controller
 
                         if ($existingInvoice) {
                             $failedCount++;
+
                             continue;
                         }
 
@@ -176,12 +178,13 @@ class BulkOperationsController extends Controller
             if ($failedCount === 0) {
                 return back()->with('success', "{$successCount} invoices generated successfully.");
             } elseif ($successCount === 0) {
-                return back()->with('error', "Failed to generate any invoices. Check logs for details.");
+                return back()->with('error', 'Failed to generate any invoices. Check logs for details.');
             } else {
                 return back()->with('warning', "Partial success: {$successCount} invoices generated, {$failedCount} failed.");
             }
         } catch (\Exception $e) {
             Log::error('Bulk invoice generation failed: ' . $e->getMessage());
+
             return back()->with('error', 'Failed to generate invoices. Please try again.');
         }
     }

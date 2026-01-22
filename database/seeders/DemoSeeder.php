@@ -308,7 +308,7 @@ class DemoSeeder extends Seeder
             $createdPackages[] = $package;
         }
 
-        $this->command->info("✓ Demo packages created: " . count($createdPackages));
+        $this->command->info('✓ Demo packages created: ' . count($createdPackages));
 
         return $createdPackages;
     }
@@ -376,7 +376,7 @@ class DemoSeeder extends Seeder
                 'idle_timeout' => 0,
             ]
         );
-        $this->command->info("✓ Demo PPP profile created");
+        $this->command->info('✓ Demo PPP profile created');
 
         // Create demo NAS
         $nas = Nas::firstOrCreate(
@@ -414,13 +414,13 @@ class DemoSeeder extends Seeder
                 'status' => 'active',
             ]
         );
-        
+
         // Set tenant_id separately as it's not in the fillable array
         if ($olt->tenant_id !== $tenant->id) {
             $olt->tenant_id = $tenant->id;
             $olt->save();
         }
-        
+
         $this->command->info("✓ Demo OLT created: {$olt->name}");
 
         // Create demo IP pool
@@ -436,13 +436,13 @@ class DemoSeeder extends Seeder
                 'status' => 'active',
             ]
         );
-        
+
         // Set tenant_id separately as it's not in the fillable array
         if ($ipPool->tenant_id !== $tenant->id) {
             $ipPool->tenant_id = $tenant->id;
             $ipPool->save();
         }
-        
+
         $this->command->info("✓ Demo IP pool created: {$ipPool->name}");
     }
 }

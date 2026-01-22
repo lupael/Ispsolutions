@@ -7,15 +7,13 @@ use App\Models\MikrotikVpnAccount;
 use App\Models\VpnPool;
 use App\Services\VpnManagementService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class VpnController extends Controller
 {
-    public function __construct(private VpnManagementService $vpnService)
-    {
-    }
+    public function __construct(private VpnManagementService $vpnService) {}
 
     /**
      * Display VPN dashboard
@@ -67,12 +65,12 @@ class VpnController extends Controller
      */
     public function reports(Request $request): View
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)
             : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)
             : now();
 
         $usageReport = $this->vpnService->generateUsageReport($startDate, $endDate);
@@ -86,12 +84,12 @@ class VpnController extends Controller
      */
     public function getUsageStats(Request $request): JsonResponse
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)
             : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)
             : now();
 
         $stats = $this->vpnService->getUsageStats($startDate, $endDate);
@@ -115,12 +113,12 @@ class VpnController extends Controller
      */
     public function connectionHistory(Request $request, int $accountId): JsonResponse
     {
-        $startDate = $request->filled('start_date') 
-            ? Carbon::parse($request->start_date) 
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)
             : now()->subDays(30);
-        
-        $endDate = $request->filled('end_date') 
-            ? Carbon::parse($request->end_date) 
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)
             : now();
 
         $history = $this->vpnService->getConnectionHistory($accountId, $startDate, $endDate);
@@ -134,19 +132,19 @@ class VpnController extends Controller
     public function exportReport(Request $request)
     {
         try {
-            $startDate = $request->filled('start_date') 
-                ? Carbon::parse($request->start_date) 
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)
                 : now()->subDays(30);
-            
-            $endDate = $request->filled('end_date') 
-                ? Carbon::parse($request->end_date) 
+
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)
                 : now();
 
             $report = $this->vpnService->generateUsageReport($startDate, $endDate);
 
             // Return CSV download
             $filename = 'vpn_usage_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.csv';
-            
+
             $headers = [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -155,11 +153,11 @@ class VpnController extends Controller
             $callback = function () use ($report) {
                 try {
                     $file = fopen('php://output', 'w');
-                    
+
                     if ($file === false) {
                         throw new \RuntimeException('Failed to open output stream');
                     }
-                    
+
                     // Headers
                     fputcsv($file, [
                         'Username',
@@ -197,7 +195,7 @@ class VpnController extends Controller
                     Log::error('VPN export failed during streaming', [
                         'error' => $e->getMessage(),
                     ]);
-                    echo "Error generating export: " . $e->getMessage();
+                    echo 'Error generating export: ' . $e->getMessage();
                 }
             };
 
@@ -206,7 +204,7 @@ class VpnController extends Controller
             Log::error('VPN export failed', [
                 'error' => $e->getMessage(),
             ]);
-            
+
             return redirect()->back()->with('error', 'Failed to generate export: ' . $e->getMessage());
         }
     }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUserSession;
 use App\Models\PaymentGateway;
 use App\Models\Tenant;
 use App\Models\User;
@@ -139,7 +138,7 @@ class DeveloperController extends Controller
 
     /**
      * Store a new tenancy.
-     * 
+     *
      * Automatically provisions a Super Admin account for the tenancy.
      * According to role hierarchy:
      * - Tenancy and Super Admin are effectively the same entity
@@ -233,7 +232,7 @@ class DeveloperController extends Controller
     {
         // Get all tenancies for panel access selection
         $tenancies = Tenant::with('users')->where('status', 'active')->get();
-        
+
         return view('panels.developer.access-panel', compact('tenancies'));
     }
 
@@ -270,7 +269,7 @@ class DeveloperController extends Controller
         // Calculate stats for the view with a single aggregated query
         $statsData = User::allTenants()
             ->selectRaw('COUNT(*) as total')
-            ->selectRaw("SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active")
+            ->selectRaw('SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
             ->first();
 
         $onlineCount = \App\Models\NetworkUserSession::where('status', 'active')
@@ -303,7 +302,7 @@ class DeveloperController extends Controller
         // Calculate stats for the view with a single aggregated query
         $statsData = User::allTenants()
             ->selectRaw('COUNT(*) as total')
-            ->selectRaw("SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active")
+            ->selectRaw('SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
             ->first();
 
         $onlineCount = \App\Models\NetworkUserSession::where('status', 'active')
@@ -368,18 +367,20 @@ class DeveloperController extends Controller
             'debug' => 0,
             'total' => 0,
         ];
-        
+
         if (file_exists($logFile)) {
             $content = file_get_contents($logFile);
             $lines = explode("\n", $content);
-            
+
             // Parse log entries (last 200 lines for performance)
             $recentLines = array_slice($lines, -200);
             $parsedLogs = [];
-            
+
             foreach ($recentLines as $line) {
-                if (empty(trim($line))) continue;
-                
+                if (empty(trim($line))) {
+                    continue;
+                }
+
                 // Parse Laravel log format: [2024-01-19 12:00:00] environment.LEVEL: message
                 if (preg_match('/\[(.*?)\]\s+\w+\.(INFO|WARNING|ERROR|DEBUG):\s+(.*)/', $line, $matches)) {
                     $level = strtolower($matches[2]);
@@ -392,10 +393,10 @@ class DeveloperController extends Controller
                     $stats['total']++;
                 }
             }
-            
+
             $logs = collect(array_reverse($parsedLogs));
         }
-        
+
         // Create paginator
         $page = request()->get('page', 1);
         $perPage = 20;
@@ -418,16 +419,16 @@ class DeveloperController extends Controller
         // Read Laravel log file
         $logFile = storage_path('logs/laravel.log');
         $logs = collect();
-        
+
         if (file_exists($logFile)) {
             $content = file_get_contents($logFile);
             $lines = explode("\n", $content);
-            
+
             // Get last 100 error entries
-            $errorLines = array_filter($lines, function($line) {
+            $errorLines = array_filter($lines, function ($line) {
                 return str_contains($line, '[error]') || str_contains($line, 'ERROR') || str_contains($line, 'Exception');
             });
-            
+
             $logs = collect(array_slice($errorLines, -100))->reverse();
         }
 

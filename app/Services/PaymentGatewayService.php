@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaymentGatewayService
 {
@@ -82,19 +82,19 @@ class PaymentGatewayService
     protected function initiateBkashPayment(Invoice $invoice, array $config, bool $testMode): array
     {
         try {
-            $baseUrl = $testMode 
-                ? 'https://tokenized.sandbox.bkash.com' 
+            $baseUrl = $testMode
+                ? 'https://tokenized.sandbox.bkash.com'
                 : 'https://tokenized.pay.bkash.com';
-            
+
             $appKey = $config['app_key'] ?? '';
             $appSecret = $config['app_secret'] ?? '';
             $username = $config['username'] ?? '';
             $password = $config['password'] ?? '';
-            
+
             if (empty($appKey) || empty($appSecret) || empty($username) || empty($password)) {
                 throw new \Exception('bKash credentials not configured');
             }
-            
+
             // Step 1: Grant Token with proper headers
             $tokenResponse = Http::timeout(30)
                 ->withHeaders([
@@ -108,7 +108,7 @@ class PaymentGatewayService
                     'app_secret' => $appSecret,
                 ]);
 
-            if (!$tokenResponse->successful()) {
+            if (! $tokenResponse->successful()) {
                 $errorMsg = $tokenResponse->json('errorMessage') ?? 'Failed to get bKash token';
                 Log::error('bKash token grant failed', [
                     'response' => $tokenResponse->json(),
@@ -118,7 +118,7 @@ class PaymentGatewayService
             }
 
             $token = $tokenResponse->json('id_token');
-            
+
             if (empty($token)) {
                 throw new \Exception('bKash token is empty');
             }
@@ -127,7 +127,7 @@ class PaymentGatewayService
             $maxRetries = 2;
             $retryCount = 0;
             $paymentResponse = null;
-            
+
             while ($retryCount <= $maxRetries) {
                 $paymentResponse = Http::timeout(30)
                     ->withHeaders([
@@ -145,18 +145,18 @@ class PaymentGatewayService
                         'intent' => 'sale',
                         'merchantInvoiceNumber' => $invoice->invoice_number,
                     ]);
-                
+
                 if ($paymentResponse->successful()) {
                     break;
                 }
-                
+
                 $retryCount++;
                 if ($retryCount <= $maxRetries) {
                     sleep(1);
                 }
             }
 
-            if (!$paymentResponse || !$paymentResponse->successful()) {
+            if (! $paymentResponse || ! $paymentResponse->successful()) {
                 $errorMsg = $paymentResponse ? ($paymentResponse->json('errorMessage') ?? 'Failed to create bKash payment') : 'No response from bKash';
                 Log::error('bKash payment creation failed', [
                     'response' => $paymentResponse ? $paymentResponse->json() : null,
@@ -197,19 +197,19 @@ class PaymentGatewayService
     protected function initiateNagadPayment(Invoice $invoice, array $config, bool $testMode): array
     {
         try {
-            $baseUrl = $testMode 
-                ? 'https://sandbox.mynagad.com:8094' 
+            $baseUrl = $testMode
+                ? 'https://sandbox.mynagad.com:8094'
                 : 'https://api.mynagad.com';
-            
+
             $merchantId = $config['merchant_id'] ?? '';
             $merchantNumber = $config['merchant_number'] ?? '';
             $merchantPrivateKey = $config['merchant_private_key'] ?? '';
             $nagadPublicKey = $config['nagad_public_key'] ?? '';
-            
+
             if (empty($merchantId) || empty($merchantPrivateKey) || empty($nagadPublicKey)) {
                 throw new \Exception('Nagad credentials not configured');
             }
-            
+
             $timestamp = now()->timestamp;
             $orderId = $invoice->invoice_number . '_' . $timestamp;
             $amount = number_format($invoice->total_amount, 2, '.', '');
@@ -238,7 +238,7 @@ class PaymentGatewayService
                 ])
                 ->post("{$baseUrl}/api/dfs/check-out/initialize/{$merchantId}/{$orderId}", $postData);
 
-            if (!$initResponse->successful()) {
+            if (! $initResponse->successful()) {
                 $errorMsg = $initResponse->json('message') ?? 'Failed to initialize Nagad payment';
                 Log::error('Nagad initialization failed', [
                     'response' => $initResponse->json(),
@@ -250,7 +250,7 @@ class PaymentGatewayService
             $initData = $initResponse->json();
             $paymentReferenceId = $initData['paymentReferenceId'] ?? null;
             $challenge = $initData['challenge'] ?? null;
-            
+
             if (empty($paymentReferenceId)) {
                 throw new \Exception('Payment reference ID not received from Nagad');
             }
@@ -280,7 +280,7 @@ class PaymentGatewayService
                 ])
                 ->post("{$baseUrl}/api/dfs/check-out/complete/{$paymentReferenceId}", $completePostData);
 
-            if (!$completeResponse->successful()) {
+            if (! $completeResponse->successful()) {
                 $errorMsg = $completeResponse->json('message') ?? 'Failed to complete Nagad payment';
                 Log::error('Nagad completion failed', [
                     'response' => $completeResponse->json(),
@@ -328,17 +328,17 @@ class PaymentGatewayService
     protected function encryptNagadData(array $data, string $publicKey): string
     {
         $dataString = json_encode($data);
-        
+
         // Format public key properly
-        if (!str_contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
-            $publicKey = "-----BEGIN PUBLIC KEY-----\n" . chunk_split($publicKey, 64, "\n") . "-----END PUBLIC KEY-----";
+        if (! str_contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
+            $publicKey = "-----BEGIN PUBLIC KEY-----\n" . chunk_split($publicKey, 64, "\n") . '-----END PUBLIC KEY-----';
         }
-        
+
         $encrypted = '';
-        if (!openssl_public_encrypt($dataString, $encrypted, $publicKey, OPENSSL_PKCS1_PADDING)) {
+        if (! openssl_public_encrypt($dataString, $encrypted, $publicKey, OPENSSL_PKCS1_PADDING)) {
             throw new \Exception('Nagad encryption failed: ' . openssl_error_string());
         }
-        
+
         return base64_encode($encrypted);
     }
 
@@ -348,32 +348,32 @@ class PaymentGatewayService
     protected function generateNagadSignature(array $data, string $privateKey): string
     {
         $dataString = json_encode($data);
-        
+
         // Format private key properly
-        if (!str_contains($privateKey, '-----BEGIN PRIVATE KEY-----') && !str_contains($privateKey, '-----BEGIN RSA PRIVATE KEY-----')) {
-            $privateKey = "-----BEGIN PRIVATE KEY-----\n" . chunk_split($privateKey, 64, "\n") . "-----END PRIVATE KEY-----";
+        if (! str_contains($privateKey, '-----BEGIN PRIVATE KEY-----') && ! str_contains($privateKey, '-----BEGIN RSA PRIVATE KEY-----')) {
+            $privateKey = "-----BEGIN PRIVATE KEY-----\n" . chunk_split($privateKey, 64, "\n") . '-----END PRIVATE KEY-----';
         }
-        
+
         $signature = '';
-        if (!openssl_sign($dataString, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
+        if (! openssl_sign($dataString, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
             throw new \Exception('Nagad signature generation failed: ' . openssl_error_string());
         }
-        
+
         return base64_encode($signature);
     }
-    
+
     /**
      * Verify Nagad signature with public key
      */
     protected function verifyNagadSignature(string $data, string $signature, string $publicKey): bool
     {
         // Format public key properly
-        if (!str_contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
-            $publicKey = "-----BEGIN PUBLIC KEY-----\n" . chunk_split($publicKey, 64, "\n") . "-----END PUBLIC KEY-----";
+        if (! str_contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
+            $publicKey = "-----BEGIN PUBLIC KEY-----\n" . chunk_split($publicKey, 64, "\n") . '-----END PUBLIC KEY-----';
         }
-        
+
         $result = openssl_verify($data, base64_decode($signature), $publicKey, OPENSSL_ALGO_SHA256);
-        
+
         return $result === 1;
     }
 
@@ -384,19 +384,19 @@ class PaymentGatewayService
     protected function initiateSSLCommerzPayment(Invoice $invoice, array $config, bool $testMode): array
     {
         try {
-            $baseUrl = $testMode 
-                ? 'https://sandbox.sslcommerz.com' 
+            $baseUrl = $testMode
+                ? 'https://sandbox.sslcommerz.com'
                 : 'https://securepay.sslcommerz.com';
-            
+
             $storeId = $config['store_id'] ?? '';
             $storePassword = $config['store_password'] ?? '';
-            
+
             if (empty($storeId) || empty($storePassword)) {
                 throw new \Exception('SSLCommerz credentials not configured');
             }
-            
+
             $tranId = 'SSL_' . time() . '_' . $invoice->invoice_number;
-            
+
             $postData = [
                 'store_id' => $storeId,
                 'store_passwd' => $storePassword,
@@ -407,7 +407,7 @@ class PaymentGatewayService
                 'fail_url' => route('webhooks.payment', ['gateway' => 'sslcommerz', 'status' => 'failed']),
                 'cancel_url' => route('webhooks.payment', ['gateway' => 'sslcommerz', 'status' => 'cancelled']),
                 'ipn_url' => route('webhooks.payment', ['gateway' => 'sslcommerz']),
-                
+
                 // Customer information
                 'cus_name' => $invoice->networkUser->name ?? 'Customer',
                 'cus_email' => $invoice->networkUser->email ?? 'customer@example.com',
@@ -419,16 +419,16 @@ class PaymentGatewayService
                 'cus_country' => 'Bangladesh',
                 'cus_phone' => $invoice->networkUser->mobile ?? 'N/A',
                 'cus_fax' => '',
-                
+
                 // Product information
                 'product_name' => 'Internet Service - Invoice ' . $invoice->invoice_number,
                 'product_category' => 'ISP Service',
                 'product_profile' => 'general',
-                
+
                 // Shipment information (required by SSLCommerz)
                 'shipping_method' => 'NO',
                 'num_of_item' => 1,
-                
+
                 // Optional parameters - store custom data
                 'value_a' => $invoice->invoice_number,
                 'value_b' => (string) $invoice->network_user_id,
@@ -440,7 +440,7 @@ class PaymentGatewayService
                 ->asForm()
                 ->post("{$baseUrl}/gwprocess/v4/api.php", $postData);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('SSLCommerz API request failed', [
                     'status' => $response->status(),
                     'body' => $response->body(),
@@ -450,7 +450,7 @@ class PaymentGatewayService
 
             $responseData = $response->json();
 
-            if (!isset($responseData['status']) || $responseData['status'] !== 'SUCCESS') {
+            if (! isset($responseData['status']) || $responseData['status'] !== 'SUCCESS') {
                 $errorMsg = $responseData['failedreason'] ?? $responseData['message'] ?? 'SSLCommerz initialization failed';
                 Log::error('SSLCommerz initialization failed', [
                     'response' => $responseData,
@@ -489,14 +489,14 @@ class PaymentGatewayService
     protected function initiateStripePayment(Invoice $invoice, array $config, bool $testMode): array
     {
         try {
-            $apiKey = $testMode 
-                ? ($config['test_secret_key'] ?? '') 
+            $apiKey = $testMode
+                ? ($config['test_secret_key'] ?? '')
                 : ($config['secret_key'] ?? '');
-            
+
             if (empty($apiKey)) {
                 throw new \Exception('Stripe API key not configured');
             }
-            
+
             $currency = strtolower($config['currency'] ?? 'usd');
             $amountInCents = (int) ($invoice->total_amount * 100);
 
@@ -528,7 +528,7 @@ class PaymentGatewayService
                     'metadata[tenant_id]' => $invoice->tenant_id,
                 ]);
 
-            if (!$sessionResponse->successful()) {
+            if (! $sessionResponse->successful()) {
                 $error = $sessionResponse->json('error');
                 $errorMsg = $error['message'] ?? 'Failed to create Stripe checkout session';
                 Log::error('Stripe checkout session creation failed', [
@@ -571,8 +571,9 @@ class PaymentGatewayService
     {
         try {
             // Verify webhook signature
-            if (!$this->verifyBkashWebhookSignature($payload)) {
+            if (! $this->verifyBkashWebhookSignature($payload)) {
                 Log::warning('bKash webhook signature verification failed', $payload);
+
                 return false;
             }
 
@@ -580,32 +581,35 @@ class PaymentGatewayService
             if (isset($payload['paymentID']) && isset($payload['status'])) {
                 $status = strtolower($payload['status']);
                 $invoiceNumber = $payload['merchantInvoiceNumber'] ?? null;
-                
+
                 if (empty($invoiceNumber)) {
                     Log::warning('bKash webhook missing invoice number', $payload);
+
                     return false;
                 }
-                
+
                 // First, find the invoice to get tenant_id
                 $invoice = Invoice::where('invoice_number', $invoiceNumber)->first();
-                    
-                if (!$invoice) {
+
+                if (! $invoice) {
                     Log::warning('bKash webhook invoice not found', [
                         'invoice_number' => $invoiceNumber,
                         'payload' => $payload,
                     ]);
+
                     return false;
                 }
-                
+
                 // Validate tenant context if provided in payload
                 if (isset($payload['tenant_id']) && $payload['tenant_id'] != $invoice->tenant_id) {
                     Log::warning('bKash webhook tenant mismatch', [
                         'invoice_tenant' => $invoice->tenant_id,
                         'payload_tenant' => $payload['tenant_id'],
                     ]);
+
                     return false;
                 }
-                
+
                 if (in_array($status, ['success', 'complete', 'completed'])) {
                     $this->billingService->processPayment($invoice, [
                         'amount' => $payload['amount'] ?? $invoice->total_amount,
@@ -626,6 +630,7 @@ class PaymentGatewayService
                 'payload' => $payload,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -638,39 +643,43 @@ class PaymentGatewayService
     {
         // Get signature from request header
         $signature = request()->header('X-Bkash-Signature');
-        
+
         if (empty($signature)) {
             Log::warning('bKash webhook missing signature header');
+
             return false;
         }
-        
+
         // Get gateway configuration
         $gateway = PaymentGateway::where('slug', 'bkash')
             ->where('is_active', true)
             ->first();
-            
-        if (!$gateway) {
+
+        if (! $gateway) {
             Log::warning('bKash gateway not found or inactive');
+
             return false;
         }
-        
+
         $config = $gateway->configuration ?? [];
         $webhookSecret = $config['webhook_secret'] ?? $config['app_secret'] ?? '';
-        
+
         if (empty($webhookSecret)) {
             Log::warning('bKash webhook secret not configured');
             // In development, skip verification but log the decision
             if (app()->environment('local')) {
                 Log::info('bKash webhook signature verification skipped in local environment');
+
                 return true;
             }
+
             return false;
         }
-        
+
         // Generate expected signature
         $payloadString = json_encode($payload, JSON_UNESCAPED_SLASHES);
         $expectedSignature = hash_hmac('sha256', $payloadString, $webhookSecret);
-        
+
         // Compare signatures
         return hash_equals($expectedSignature, $signature);
     }
@@ -682,8 +691,9 @@ class PaymentGatewayService
     {
         try {
             // Verify webhook signature
-            if (!$this->verifyNagadWebhookSignature($payload)) {
+            if (! $this->verifyNagadWebhookSignature($payload)) {
                 Log::warning('Nagad webhook signature verification failed', $payload);
+
                 return false;
             }
 
@@ -691,21 +701,22 @@ class PaymentGatewayService
             if (isset($payload['status']) && isset($payload['orderId'])) {
                 $status = strtolower($payload['status']);
                 $orderId = $payload['orderId'];
-                
+
                 // Extract invoice number from order ID (format: INVOICE_TIMESTAMP)
                 $invoiceNumber = explode('_', $orderId)[0] ?? $orderId;
-                
+
                 $invoice = Invoice::where('invoice_number', $invoiceNumber)->first();
-                
-                if (!$invoice) {
+
+                if (! $invoice) {
                     Log::warning('Nagad webhook invoice not found', [
                         'order_id' => $orderId,
                         'invoice_number' => $invoiceNumber,
                         'payload' => $payload,
                     ]);
+
                     return false;
                 }
-                
+
                 if ($status === 'success') {
                     $this->billingService->processPayment($invoice, [
                         'amount' => $payload['amount'] ?? $invoice->total_amount,
@@ -726,6 +737,7 @@ class PaymentGatewayService
                 'payload' => $payload,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -738,44 +750,49 @@ class PaymentGatewayService
     {
         // Get signature from request header
         $signature = request()->header('X-Nagad-Signature');
-        
+
         if (empty($signature)) {
             Log::warning('Nagad webhook missing signature header');
+
             return false;
         }
-        
+
         // Get gateway configuration
         $gateway = PaymentGateway::where('slug', 'nagad')
             ->where('is_active', true)
             ->first();
-            
-        if (!$gateway) {
+
+        if (! $gateway) {
             Log::warning('Nagad gateway not found or inactive');
+
             return false;
         }
-        
+
         $config = $gateway->configuration ?? [];
         $nagadPublicKey = $config['nagad_public_key'] ?? '';
-        
+
         if (empty($nagadPublicKey)) {
             Log::warning('Nagad public key not configured');
             // In development, skip verification but log the decision
             if (app()->environment('local')) {
                 Log::info('Nagad webhook signature verification skipped in local environment');
+
                 return true;
             }
+
             return false;
         }
-        
+
         // Verify signature using Nagad's public key
         $payloadString = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        
+
         try {
             return $this->verifyNagadSignature($payloadString, $signature, $nagadPublicKey);
         } catch (\Exception $e) {
             Log::error('Nagad signature verification error', [
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -787,8 +804,9 @@ class PaymentGatewayService
     {
         try {
             // Verify webhook signature
-            if (!$this->verifySSLCommerzWebhookSignature($payload)) {
+            if (! $this->verifySSLCommerzWebhookSignature($payload)) {
                 Log::warning('SSLCommerz webhook signature verification failed', $payload);
+
                 return false;
             }
 
@@ -796,48 +814,51 @@ class PaymentGatewayService
             if (isset($payload['status']) && in_array($payload['status'], ['VALID', 'VALIDATED'])) {
                 // Get invoice number from custom field value_a or tran_id
                 $invoiceNumber = $payload['value_a'] ?? null;
-                
+
                 if (empty($invoiceNumber)) {
                     // Try to extract from transaction ID
                     $tranId = $payload['tran_id'] ?? '';
                     $parts = explode('_', $tranId);
                     $invoiceNumber = $parts[count($parts) - 1] ?? null;
                 }
-                
+
                 if (empty($invoiceNumber)) {
                     Log::warning('SSLCommerz webhook missing invoice number', $payload);
+
                     return false;
                 }
-                
+
                 $invoice = Invoice::where('invoice_number', $invoiceNumber)->first();
-                
-                if (!$invoice) {
+
+                if (! $invoice) {
                     Log::warning('SSLCommerz webhook invoice not found', [
                         'invoice_number' => $invoiceNumber,
                         'payload' => $payload,
                     ]);
+
                     return false;
                 }
-                
+
                 // Verify payment with SSLCommerz API
                 $gateway = PaymentGateway::where('slug', 'sslcommerz')
                     ->where('tenant_id', $invoice->tenant_id)
                     ->where('is_active', true)
                     ->first();
-                    
-                if (!$gateway) {
+
+                if (! $gateway) {
                     Log::warning('SSLCommerz gateway not found for tenant', [
                         'tenant_id' => $invoice->tenant_id,
                     ]);
+
                     return false;
                 }
-                
+
                 // Validate transaction with SSLCommerz
                 $validationResult = $this->verifySSLCommerzPayment(
                     $payload['val_id'] ?? $payload['tran_id'],
                     $gateway->configuration ?? []
                 );
-                
+
                 if ($validationResult['verified'] ?? false) {
                     $this->billingService->processPayment($invoice, [
                         'amount' => $payload['amount'] ?? $invoice->total_amount,
@@ -858,6 +879,7 @@ class PaymentGatewayService
                 'payload' => $payload,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -869,8 +891,9 @@ class PaymentGatewayService
     protected function verifySSLCommerzWebhookSignature(array $payload): bool
     {
         // Check if required verification fields are present
-        if (!isset($payload['verify_sign']) || !isset($payload['verify_key'])) {
+        if (! isset($payload['verify_sign']) || ! isset($payload['verify_key'])) {
             Log::warning('SSLCommerz webhook missing verification fields');
+
             return false;
         }
 
@@ -878,30 +901,32 @@ class PaymentGatewayService
         $gateway = PaymentGateway::where('slug', 'sslcommerz')
             ->where('is_active', true)
             ->first();
-            
-        if (!$gateway) {
+
+        if (! $gateway) {
             Log::warning('SSLCommerz gateway not found or inactive');
+
             return false;
         }
-        
+
         $config = $gateway->configuration ?? [];
         $storeId = $config['store_id'] ?? '';
         $storePassword = $config['store_password'] ?? '';
-        
+
         if (empty($storeId) || empty($storePassword)) {
             Log::warning('SSLCommerz credentials not configured');
+
             return false;
         }
-        
+
         // Verify MD5 signature
-        if (!$this->verifySSLCommerzMD5Signature($payload, $storePassword)) {
+        if (! $this->verifySSLCommerzMD5Signature($payload, $storePassword)) {
             return false;
         }
-        
+
         // Additional validation: Check status
         return in_array($payload['status'] ?? '', ['VALID', 'VALIDATED']);
     }
-    
+
     /**
      * Verify SSLCommerz MD5 signature
      */
@@ -914,18 +939,19 @@ class PaymentGatewayService
             $payload['store_amount'] ?? '',
             $payload['tran_id'] ?? '',
         ]);
-        
+
         $expectedHash = md5($verifyString);
-        
+
         // Verify hash matches
-        if (!hash_equals($expectedHash, $payload['verify_sign'])) {
+        if (! hash_equals($expectedHash, $payload['verify_sign'])) {
             Log::warning('SSLCommerz signature mismatch', [
                 'expected' => $expectedHash,
                 'received' => $payload['verify_sign'],
             ]);
+
             return false;
         }
-        
+
         return true;
     }
 
@@ -937,36 +963,39 @@ class PaymentGatewayService
         try {
             // Verify Stripe webhook signature using Stripe-Signature header
             $signature = request()->header('Stripe-Signature');
-            
-            if (!$this->verifyStripeWebhookSignature($payload, $signature)) {
+
+            if (! $this->verifyStripeWebhookSignature($payload, $signature)) {
                 Log::warning('Stripe webhook signature verification failed');
+
                 return false;
             }
 
             // Handle different webhook events
             $eventType = $payload['type'] ?? '';
-            
+
             if ($eventType === 'payment_intent.succeeded') {
                 $paymentIntent = $payload['data']['object'] ?? [];
                 $metadata = $paymentIntent['metadata'] ?? [];
-                
+
                 $invoiceNumber = $metadata['invoice_number'] ?? null;
-                
+
                 if (empty($invoiceNumber)) {
                     Log::warning('Stripe webhook missing invoice number', $payload);
+
                     return false;
                 }
-                
+
                 $invoice = Invoice::where('invoice_number', $invoiceNumber)->first();
-                
-                if (!$invoice) {
+
+                if (! $invoice) {
                     Log::warning('Stripe webhook invoice not found', [
                         'invoice_number' => $invoiceNumber,
                         'payment_intent' => $paymentIntent['id'] ?? null,
                     ]);
+
                     return false;
                 }
-                
+
                 $this->billingService->processPayment($invoice, [
                     'amount' => ($paymentIntent['amount'] ?? 0) / 100,
                     'method' => 'stripe',
@@ -979,24 +1008,26 @@ class PaymentGatewayService
             } elseif ($eventType === 'checkout.session.completed') {
                 $session = $payload['data']['object'] ?? [];
                 $metadata = $session['metadata'] ?? [];
-                
+
                 $invoiceNumber = $metadata['invoice_number'] ?? $session['client_reference_id'] ?? null;
-                
+
                 if (empty($invoiceNumber)) {
                     Log::warning('Stripe checkout webhook missing invoice number', $payload);
+
                     return false;
                 }
-                
+
                 $invoice = Invoice::where('invoice_number', $invoiceNumber)->first();
-                
-                if (!$invoice) {
+
+                if (! $invoice) {
                     Log::warning('Stripe checkout webhook invoice not found', [
                         'invoice_number' => $invoiceNumber,
                         'session_id' => $session['id'] ?? null,
                     ]);
+
                     return false;
                 }
-                
+
                 if (($session['payment_status'] ?? '') === 'paid') {
                     $this->billingService->processPayment($invoice, [
                         'amount' => ($session['amount_total'] ?? 0) / 100,
@@ -1017,6 +1048,7 @@ class PaymentGatewayService
                 'payload' => $payload,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -1027,8 +1059,9 @@ class PaymentGatewayService
      */
     protected function verifyStripeWebhookSignature(array $payload, ?string $signature): bool
     {
-        if (!$signature) {
+        if (! $signature) {
             Log::warning('Stripe webhook missing signature header');
+
             return false;
         }
 
@@ -1042,8 +1075,9 @@ class PaymentGatewayService
             }
         }
 
-        if (!isset($signatureParts['t']) || !isset($signatureParts['v1'])) {
+        if (! isset($signatureParts['t']) || ! isset($signatureParts['v1'])) {
             Log::warning('Stripe webhook signature missing required parts');
+
             return false;
         }
 
@@ -1057,6 +1091,7 @@ class PaymentGatewayService
                 'current_time' => time(),
                 'difference' => abs(time() - $timestamp),
             ]);
+
             return false;
         }
 
@@ -1064,12 +1099,13 @@ class PaymentGatewayService
         $gateway = PaymentGateway::where('slug', 'stripe')
             ->where('is_active', true)
             ->first();
-            
-        if (!$gateway) {
+
+        if (! $gateway) {
             Log::warning('Stripe gateway not found or inactive');
+
             return false;
         }
-        
+
         $config = $gateway->configuration ?? [];
         $webhookSecret = $config['webhook_secret'] ?? '';
 
@@ -1078,8 +1114,10 @@ class PaymentGatewayService
             // In development, skip verification but log the decision
             if (app()->environment('local')) {
                 Log::info('Stripe webhook signature verification skipped in local environment');
+
                 return true;
             }
+
             return false;
         }
 
@@ -1089,11 +1127,12 @@ class PaymentGatewayService
         $expectedSignature = hash_hmac('sha256', $signedPayload, $webhookSecret);
 
         // Compare signatures using constant-time comparison
-        if (!hash_equals($expectedSignature, $receivedSignature)) {
+        if (! hash_equals($expectedSignature, $receivedSignature)) {
             Log::warning('Stripe webhook signature mismatch', [
                 'expected' => substr($expectedSignature, 0, 10) . '...',
                 'received' => substr($receivedSignature, 0, 10) . '...',
             ]);
+
             return false;
         }
 
@@ -1119,7 +1158,7 @@ class PaymentGatewayService
                 'app_secret' => $config['app_secret'] ?? '',
             ]);
 
-            if (!$tokenResponse->successful()) {
+            if (! $tokenResponse->successful()) {
                 throw new \Exception('Failed to get bKash token for verification');
             }
 
@@ -1133,7 +1172,7 @@ class PaymentGatewayService
                 'paymentID' => $transactionId,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new \Exception('Failed to verify bKash payment');
             }
 
@@ -1176,7 +1215,7 @@ class PaymentGatewayService
             // Verify payment
             $response = Http::get("{$baseUrl}/api/dfs/verify/payment/{$transactionId}");
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new \Exception('Failed to verify Nagad payment');
             }
 
@@ -1222,7 +1261,7 @@ class PaymentGatewayService
                 'format' => 'json',
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new \Exception('Failed to verify SSLCommerz payment');
             }
 
@@ -1264,7 +1303,7 @@ class PaymentGatewayService
             $response = Http::withBasicAuth($apiKey, '')
                 ->get("https://api.stripe.com/v1/payment_intents/{$transactionId}");
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new \Exception('Failed to verify Stripe payment');
             }
 

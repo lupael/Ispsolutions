@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class IpPool extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'name',
         'description',

@@ -13,12 +13,6 @@ trait HandlesCrudOperations
 {
     /**
      * Handle CRUD operation with proper error handling.
-     *
-     * @param callable $operation
-     * @param string $successMessage
-     * @param string $errorContext
-     * @param string|null $redirectRoute
-     * @return RedirectResponse|JsonResponse
      */
     protected function handleCrudOperation(
         callable $operation,
@@ -38,6 +32,7 @@ trait HandlesCrudOperations
             }
 
             $redirect = $redirectRoute ? redirect()->route($redirectRoute) : back();
+
             return $redirect->with('success', $successMessage);
 
         } catch (ValidationException $e) {
@@ -92,11 +87,6 @@ trait HandlesCrudOperations
 
     /**
      * Handle bulk operation with proper error handling.
-     *
-     * @param callable $operation
-     * @param string $successMessage
-     * @param string $errorContext
-     * @return RedirectResponse|JsonResponse
      */
     protected function handleBulkOperation(
         callable $operation,
@@ -137,11 +127,6 @@ trait HandlesCrudOperations
 
     /**
      * Handle soft delete with cascade options.
-     *
-     * @param callable $operation
-     * @param string $successMessage
-     * @param string $errorContext
-     * @return RedirectResponse|JsonResponse
      */
     protected function handleDelete(
         callable $operation,

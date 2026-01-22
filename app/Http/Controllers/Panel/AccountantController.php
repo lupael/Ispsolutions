@@ -70,10 +70,10 @@ class AccountantController extends Controller
         for ($month = 1; $month <= 12; $month++) {
             $incomeRecord = $incomeData->firstWhere('month', $month);
             $expenseRecord = $expenseData->firstWhere('month', $month);
-            
+
             $income = $incomeRecord ? ($incomeRecord->total ?? 0) : 0;
             $expense = $expenseRecord ? ($expenseRecord->total ?? 0) : 0;
-            
+
             $transactions->push([
                 'month' => \Carbon\Carbon::create(null, $month)->format('F'),
                 'month_num' => $month,
