@@ -28,7 +28,10 @@ class OtpService
      */
     public function generateOtp(): string
     {
-        return str_pad((string) random_int(100000, 999999), self::OTP_LENGTH, '0', STR_PAD_LEFT);
+        // Use crypto_rand for better randomness
+        $bytes = random_bytes(3);
+        $number = hexdec(bin2hex($bytes)) % 1000000;
+        return str_pad((string) $number, self::OTP_LENGTH, '0', STR_PAD_LEFT);
     }
 
     /**

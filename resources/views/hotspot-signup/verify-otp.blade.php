@@ -187,14 +187,6 @@
         // Auto-focus OTP input
         document.getElementById('otp_code').focus();
 
-        // Auto-submit on 6 digits
-        document.getElementById('otp_code').addEventListener('input', function(e) {
-            if (e.target.value.length === 6) {
-                // Optional: auto-submit form
-                // e.target.form.submit();
-            }
-        });
-
         // Resend OTP
         async function resendOtp() {
             const btn = document.getElementById('resend-btn');
