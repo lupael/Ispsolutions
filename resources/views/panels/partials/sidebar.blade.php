@@ -475,31 +475,17 @@
 <!-- Sidebar Overlay (Mobile) -->
 <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden"></div>
 
-<!-- Toggle Sidebar Button (Mobile) -->
-<button id="toggleSidebar" class="fixed top-4 left-4 z-50 lg:hidden bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg">
-    <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-</button>
-
 <script nonce="{{ csp_nonce() }}">
     document.addEventListener('DOMContentLoaded', function() {
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
-        const toggleSidebar = document.getElementById('toggleSidebar');
         const closeSidebarBtn = document.getElementById('closeSidebar');
 
-        function openSidebar() {
-            sidebar.classList.remove('-translate-x-full');
-            sidebarOverlay.classList.remove('hidden');
-        }
-
         function closeSidebar() {
-            sidebar.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('hidden');
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
         }
 
-        if (toggleSidebar) toggleSidebar.addEventListener('click', openSidebar);
         if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
         if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
     });
