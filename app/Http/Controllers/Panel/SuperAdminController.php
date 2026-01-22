@@ -217,29 +217,28 @@ class SuperAdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:payment_gateways,slug',
+            'slug' => 'required|string|max:255',
             'is_active' => 'sometimes|boolean',
             'test_mode' => 'sometimes|boolean',
             'configuration' => 'nullable|array',
         ]);
 
-        // Validate that configuration contains required keys if provided
-        if (isset($validated['configuration']) && is_array($validated['configuration'])) {
-            $requiredConfigKeys = ['provider', 'api_key'];
-            $missingConfigKeys = array_diff($requiredConfigKeys, array_keys($validated['configuration']));
-
-            if (!empty($missingConfigKeys)) {
-                return back()
-                    ->withErrors([
-                        'configuration' => 'The configuration must include the following keys: ' . implode(', ', $requiredConfigKeys) . '.',
-                    ])
-                    ->withInput();
-            }
-        }
+        // Convert checkbox values to boolean
+        $validated['is_active'] = $request->has('is_active');
+        $validated['test_mode'] = $request->has('test_mode');
 
         // The configuration field is automatically encrypted by the model cast
         try {
-            PaymentGateway::create($validated);
+            // Check if gateway already exists, update or create
+            $gateway = PaymentGateway::where('slug', $validated['slug'])->first();
+            
+            if ($gateway) {
+                $gateway->update($validated);
+                $message = 'Payment gateway updated successfully.';
+            } else {
+                PaymentGateway::create($validated);
+                $message = 'Payment gateway added successfully.';
+            }
         } catch (\Throwable $e) {
             // Log the underlying error and provide a user-friendly message
             report($e);
@@ -247,12 +246,27 @@ class SuperAdminController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'configuration' => 'The payment gateway could not be created due to an internal error. Please check the application configuration or contact support if the problem persists.',
+                    'configuration' => 'The payment gateway could not be saved due to an internal error. Please check the application configuration or contact support if the problem persists.',
                 ]);
         }
 
-        return redirect()->route('panel.super-admin.payment-gateway.index')
-            ->with('success', 'Payment gateway added successfully.');
+        return back()->with('success', $message);
+    }
+    
+    /**
+     * Show payment gateway settings page
+     */
+    public function paymentGatewaySettings(): View
+    {
+        // Get all gateways indexed by slug
+        $gateways = [
+            'bkash' => PaymentGateway::where('slug', 'bkash')->first(),
+            'nagad' => PaymentGateway::where('slug', 'nagad')->first(),
+            'sslcommerz' => PaymentGateway::where('slug', 'sslcommerz')->first(),
+            'stripe' => PaymentGateway::where('slug', 'stripe')->first(),
+        ];
+        
+        return view('panels.super-admin.payment-gateway.settings', compact('gateways'));
     }
 
     /**

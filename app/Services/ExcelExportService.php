@@ -12,6 +12,13 @@ use App\Exports\PaymentsExport;
 use App\Exports\CustomersExport;
 use App\Exports\BillingReportExport;
 use App\Exports\PaymentReportExport;
+use App\Exports\TransactionsExport;
+use App\Exports\VatCollectionsExport;
+use App\Exports\ExpenseReportExport;
+use App\Exports\IncomeExpenseReportExport;
+use App\Exports\ReceivableExport;
+use App\Exports\PayableExport;
+use App\Exports\SalesReportExport;
 
 class ExcelExportService
 {
@@ -79,6 +86,83 @@ class ExcelExportService
             new \App\Exports\GenericExport($data, $headers),
             $filename . '_' . now()->format('Y-m-d') . '.csv',
             \Maatwebsite\Excel\Excel::CSV
+        );
+    }
+
+    /**
+     * Export transactions to Excel
+     */
+    public function exportTransactions(Collection $transactions, string $filename = 'transactions'): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return Excel::download(
+            new TransactionsExport($transactions),
+            $filename . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Export VAT collections to Excel
+     */
+    public function exportVatCollections(Collection $vatCollections, string $filename = 'vat_collections'): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return Excel::download(
+            new VatCollectionsExport($vatCollections),
+            $filename . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Export expense report to Excel
+     */
+    public function exportExpenseReport(Collection $expenses, string $filename = 'expense_report'): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return Excel::download(
+            new ExpenseReportExport($expenses),
+            $filename . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Export income & expense report to Excel
+     */
+    public function exportIncomeExpenseReport(Collection $data, $startDate, $endDate, string $filename = 'income_expense_report'): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return Excel::download(
+            new IncomeExpenseReportExport($data, $startDate, $endDate),
+            $filename . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Export accounts receivable to Excel
+     */
+    public function exportReceivable(Collection $receivables, string $filename = 'accounts_receivable'): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return Excel::download(
+            new ReceivableExport($receivables),
+            $filename . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Export accounts payable to Excel
+     */
+    public function exportPayable(Collection $payables, string $filename = 'accounts_payable'): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return Excel::download(
+            new PayableExport($payables),
+            $filename . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Export sales report to Excel
+     */
+    public function exportSalesReport(Collection $sales, string $filename = 'sales_report'): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return Excel::download(
+            new SalesReportExport($sales),
+            $filename . '_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 }

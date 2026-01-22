@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCableTvSubscriptionRequest;
+use App\Http\Requests\UpdateCableTvSubscriptionRequest;
 use App\Models\CableTvChannel;
 use App\Models\CableTvPackage;
 use App\Models\CableTvSubscription;
@@ -10,6 +12,8 @@ use App\Models\User;
 use App\Services\CableTvBillingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class CableTvController extends Controller
@@ -66,49 +70,47 @@ class CableTvController extends Controller
     /**
      * Store new subscription
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreCableTvSubscriptionRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'user_id' => 'nullable|exists:users,id',
-            'package_id' => 'required|exists:cable_tv_packages,id',
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|max:20',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_address' => 'nullable|string',
-            'installation_address' => 'nullable|string',
-            'start_date' => 'required|date',
-            'auto_renew' => 'boolean',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validated();
+            
+            $package = CableTvPackage::findOrFail($validated['package_id']);
+            
+            // Generate unique subscriber ID
+            $subscriberId = $this->generateSubscriberId();
+            
+            // Calculate expiry date
+            $startDate = \Carbon\Carbon::parse($validated['start_date']);
+            $expiryDate = $startDate->copy()->addDays($package->validity_days);
 
-        $package = CableTvPackage::findOrFail($validated['package_id']);
-        
-        // Generate unique subscriber ID
-        $subscriberId = $this->generateSubscriberId();
-        
-        // Calculate expiry date
-        $startDate = \Carbon\Carbon::parse($validated['start_date']);
-        $expiryDate = $startDate->copy()->addDays($package->validity_days);
+            $subscription = CableTvSubscription::create([
+                'tenant_id' => auth()->user()->tenant_id,
+                'user_id' => $validated['user_id'] ?? null,
+                'package_id' => $validated['package_id'],
+                'subscriber_id' => $subscriberId,
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'],
+                'customer_email' => $validated['customer_email'] ?? null,
+                'customer_address' => $validated['customer_address'] ?? null,
+                'installation_address' => $validated['installation_address'] ?? null,
+                'start_date' => $startDate,
+                'expiry_date' => $expiryDate,
+                'status' => 'active',
+                'auto_renew' => $validated['auto_renew'] ?? false,
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        $subscription = CableTvSubscription::create([
-            'tenant_id' => auth()->user()->tenant_id,
-            'user_id' => $validated['user_id'] ?? null,
-            'package_id' => $validated['package_id'],
-            'subscriber_id' => $subscriberId,
-            'customer_name' => $validated['customer_name'],
-            'customer_phone' => $validated['customer_phone'],
-            'customer_email' => $validated['customer_email'] ?? null,
-            'customer_address' => $validated['customer_address'] ?? null,
-            'installation_address' => $validated['installation_address'] ?? null,
-            'start_date' => $startDate,
-            'expiry_date' => $expiryDate,
-            'status' => 'active',
-            'auto_renew' => $validated['auto_renew'] ?? false,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        return redirect()->route('admin.cable-tv.index')
-            ->with('success', 'Cable TV subscription created successfully. Subscriber ID: ' . $subscriberId);
+            return redirect()->route('admin.cable-tv.index')
+                ->with('success', 'Cable TV subscription created successfully. Subscriber ID: ' . $subscriberId);
+        } catch (\Exception $e) {
+            Log::error('Failed to create cable TV subscription: ' . $e->getMessage(), [
+                'data' => $request->validated(),
+            ]);
+            
+            return back()->withInput()
+                ->with('error', 'Failed to create subscription. Please try again.');
+        }
     }
 
     /**
@@ -125,26 +127,21 @@ class CableTvController extends Controller
     /**
      * Update subscription
      */
-    public function update(Request $request, CableTvSubscription $subscription): RedirectResponse
+    public function update(UpdateCableTvSubscriptionRequest $request, CableTvSubscription $subscription): RedirectResponse
     {
-        $validated = $request->validate([
-            'user_id' => 'nullable|exists:users,id',
-            'package_id' => 'required|exists:cable_tv_packages,id',
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|max:20',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_address' => 'nullable|string',
-            'installation_address' => 'nullable|string',
-            'expiry_date' => 'required|date',
-            'status' => 'required|in:active,suspended,expired,cancelled',
-            'auto_renew' => 'boolean',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $subscription->update($request->validated());
 
-        $subscription->update($validated);
-
-        return redirect()->route('admin.cable-tv.index')
-            ->with('success', 'Cable TV subscription updated successfully.');
+            return redirect()->route('admin.cable-tv.index')
+                ->with('success', 'Cable TV subscription updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to update cable TV subscription: ' . $e->getMessage(), [
+                'subscription_id' => $subscription->id,
+            ]);
+            
+            return back()->withInput()
+                ->with('error', 'Failed to update subscription. Please try again.');
+        }
     }
 
     /**
@@ -152,10 +149,18 @@ class CableTvController extends Controller
      */
     public function destroy(CableTvSubscription $subscription): RedirectResponse
     {
-        $subscription->delete();
+        try {
+            $subscription->delete();
 
-        return redirect()->route('admin.cable-tv.index')
-            ->with('success', 'Cable TV subscription deleted successfully.');
+            return redirect()->route('admin.cable-tv.index')
+                ->with('success', 'Cable TV subscription deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to delete cable TV subscription: ' . $e->getMessage(), [
+                'subscription_id' => $subscription->id,
+            ]);
+            
+            return back()->with('error', 'Failed to delete subscription. Please try again.');
+        }
     }
 
     /**
@@ -167,9 +172,17 @@ class CableTvController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
-        $this->billingService->suspendSubscription($subscription, $request->reason);
+        try {
+            $this->billingService->suspendSubscription($subscription, $request->reason);
 
-        return back()->with('success', 'Subscription suspended successfully.');
+            return back()->with('success', 'Subscription suspended successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to suspend cable TV subscription: ' . $e->getMessage(), [
+                'subscription_id' => $subscription->id,
+            ]);
+            
+            return back()->with('error', 'Failed to suspend subscription. Please try again.');
+        }
     }
 
     /**
@@ -177,13 +190,21 @@ class CableTvController extends Controller
      */
     public function reactivate(CableTvSubscription $subscription): RedirectResponse
     {
-        $result = $this->billingService->reactivateSubscription($subscription);
+        try {
+            $result = $this->billingService->reactivateSubscription($subscription);
 
-        if ($result) {
-            return back()->with('success', 'Subscription reactivated successfully.');
+            if ($result) {
+                return back()->with('success', 'Subscription reactivated successfully.');
+            }
+
+            return back()->with('error', 'Cannot reactivate expired subscription.');
+        } catch (\Exception $e) {
+            Log::error('Failed to reactivate cable TV subscription: ' . $e->getMessage(), [
+                'subscription_id' => $subscription->id,
+            ]);
+            
+            return back()->with('error', 'Failed to reactivate subscription. Please try again.');
         }
-
-        return back()->with('error', 'Cannot reactivate expired subscription.');
     }
 
     /**
@@ -197,9 +218,17 @@ class CableTvController extends Controller
             'transaction_id' => 'nullable|string',
         ]);
 
-        $result = $this->billingService->renewSubscription($subscription, $validated);
+        try {
+            $result = $this->billingService->renewSubscription($subscription, $validated);
 
-        return back()->with('success', 'Subscription renewed successfully. New expiry date: ' . $result['subscription']->expiry_date->format('Y-m-d'));
+            return back()->with('success', 'Subscription renewed successfully. New expiry date: ' . $result['subscription']->expiry_date->format('Y-m-d'));
+        } catch (\Exception $e) {
+            Log::error('Failed to renew cable TV subscription: ' . $e->getMessage(), [
+                'subscription_id' => $subscription->id,
+            ]);
+            
+            return back()->with('error', 'Failed to renew subscription. Please try again.');
+        }
     }
 
     /**

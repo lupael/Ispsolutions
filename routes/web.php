@@ -54,12 +54,26 @@ Route::post('webhooks/payment/{gateway}', [PaymentController::class, 'webhook'])
 */
 
 use App\Http\Controllers\HotspotController;
+use App\Http\Controllers\HotspotSelfSignupController;
 
-// Public hotspot self-signup routes
-Route::prefix('hotspot')->name('hotspot.')->group(function () {
-    Route::get('signup', [HotspotController::class, 'signupForm'])->name('signup');
-    Route::post('request-otp', [HotspotController::class, 'requestOtp'])->name('request-otp');
-    Route::post('verify-otp', [HotspotController::class, 'verifyOtp'])->name('verify-otp');
+// Public hotspot self-signup routes (no authentication required)
+Route::prefix('hotspot/signup')->name('hotspot.signup.')->group(function () {
+    Route::get('/', [HotspotSelfSignupController::class, 'showRegistrationForm'])->name('');
+    Route::post('/request-otp', [HotspotSelfSignupController::class, 'requestOtp'])->name('request-otp');
+    
+    Route::get('/verify-otp', [HotspotSelfSignupController::class, 'showVerifyOtp'])->name('verify-otp');
+    Route::post('/verify-otp', [HotspotSelfSignupController::class, 'verifyOtp'])->name('verify-otp.post');
+    Route::post('/resend-otp', [HotspotSelfSignupController::class, 'resendOtp'])->name('resend-otp');
+    
+    Route::get('/complete', [HotspotSelfSignupController::class, 'showCompleteProfile'])->name('complete');
+    Route::post('/complete', [HotspotSelfSignupController::class, 'completeRegistration'])->name('complete.post');
+    
+    Route::get('/payment/{user}', [HotspotSelfSignupController::class, 'showPaymentPage'])->name('payment');
+    Route::post('/payment/{user}', [HotspotSelfSignupController::class, 'processPayment'])->name('payment.post');
+    Route::get('/payment/callback', [HotspotSelfSignupController::class, 'paymentCallback'])->name('payment.callback');
+    
+    Route::get('/success', [HotspotSelfSignupController::class, 'showSuccess'])->name('success');
+    Route::get('/error', [HotspotSelfSignupController::class, 'showError'])->name('error');
 });
 
 // Admin hotspot management routes
@@ -161,6 +175,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
     // Payment Gateway Management
     Route::get('/payment-gateway', [SuperAdminController::class, 'paymentGatewayIndex'])->name('payment-gateway.index');
     Route::get('/payment-gateway/create', [SuperAdminController::class, 'paymentGatewayCreate'])->name('payment-gateway.create');
+    Route::get('/payment-gateway/settings', [SuperAdminController::class, 'paymentGatewaySettings'])->name('payment-gateway.settings');
     Route::post('/payment-gateway', [SuperAdminController::class, 'paymentGatewayStore'])->name('payment-gateway.store');
 
     // SMS Gateway Management
@@ -346,6 +361,14 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
         
         // Monthly report PDF
         Route::get('/monthly-report', [AdminController::class, 'monthlyReportPdf'])->name('monthly.report');
+
+        // Accounting report exports
+        Route::get('/reports/transactions/export', [AdminController::class, 'exportTransactions'])->name('reports.transactions.export');
+        Route::get('/reports/vat-collections/export', [AdminController::class, 'exportVatCollections'])->name('reports.vat-collections.export');
+        Route::get('/reports/expenses/export', [AdminController::class, 'exportExpenseReport'])->name('reports.expenses.export');
+        Route::get('/reports/income-expense/export', [AdminController::class, 'exportIncomeExpenseReport'])->name('reports.income-expense.export');
+        Route::get('/reports/receivable/export', [AdminController::class, 'exportReceivable'])->name('reports.receivable.export');
+        Route::get('/reports/payable/export', [AdminController::class, 'exportPayable'])->name('reports.payable.export');
     });
 });
 

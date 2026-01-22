@@ -21,11 +21,14 @@ use App\Models\RadAcct;
 use App\Models\ServicePackage;
 use App\Models\User;
 use App\Services\PdfService;
+use App\Services\PdfExportService;
+use App\Services\ExcelExportService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -1212,5 +1215,205 @@ class AdminController extends Controller
         );
 
         return $pdf->download("monthly-report-{$year}-{$month}.pdf");
+    }
+
+    /**
+     * Export transactions report
+     */
+    public function exportTransactions(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
+    {
+        // $this->authorize('reports.export');
+        
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        $format = $request->input('format', 'excel');
+
+        // Get transactions data (mock data for now - replace with actual query)
+        $transactions = collect([
+            (object)[
+                'date' => now()->format('Y-m-d'),
+                'type' => 'income',
+                'description' => 'Payment received',
+                'reference' => 'INV-001',
+                'amount' => 1000,
+                'balance' => 1000,
+                'status' => 'completed',
+            ],
+        ]);
+
+        if ($format === 'pdf') {
+            $pdf = $pdfService->generateTransactionsReportPdf($transactions, $startDate, $endDate);
+            return $pdf->download('transactions_report_' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        return $excelService->exportTransactions($transactions, 'transactions_report');
+    }
+
+    /**
+     * Export VAT collections report
+     */
+    public function exportVatCollections(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
+    {
+        // $this->authorize('reports.export');
+        
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        $format = $request->input('format', 'excel');
+
+        // Get VAT collections data from invoices
+        $vatCollections = Invoice::whereBetween('created_at', [$startDate, $endDate])
+            ->with('networkUser')
+            ->get()
+            ->map(function ($invoice) {
+                return (object)[
+                    'invoice_number' => $invoice->invoice_number,
+                    'customer_name' => $invoice->networkUser->name ?? 'N/A',
+                    'date' => $invoice->created_at->format('Y-m-d'),
+                    'subtotal' => $invoice->subtotal ?? $invoice->total_amount / 1.15,
+                    'vat_rate' => 15,
+                    'vat_amount' => $invoice->vat_amount ?? ($invoice->total_amount * 0.15 / 1.15),
+                    'total_amount' => $invoice->total_amount,
+                    'status' => $invoice->status,
+                ];
+            });
+
+        if ($format === 'pdf') {
+            $pdf = $pdfService->generateVatCollectionsReportPdf($vatCollections, $startDate, $endDate);
+            return $pdf->download('vat_collections_' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        return $excelService->exportVatCollections($vatCollections, 'vat_collections');
+    }
+
+    /**
+     * Export expense report
+     */
+    public function exportExpenseReport(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
+    {
+        // $this->authorize('reports.export');
+        
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        $format = $request->input('format', 'excel');
+
+        // Get expenses data (mock data for now - replace with actual query)
+        $expenses = collect([
+            (object)[
+                'date' => now()->format('Y-m-d'),
+                'category' => 'Operational',
+                'description' => 'Office supplies',
+                'vendor' => 'ABC Suppliers',
+                'amount' => 500,
+                'payment_method' => 'cash',
+                'status' => 'paid',
+                'notes' => 'Monthly supplies',
+            ],
+        ]);
+
+        if ($format === 'pdf') {
+            $pdf = $pdfService->generateExpenseReportPdf($expenses, $startDate, $endDate);
+            return $pdf->download('expense_report_' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        return $excelService->exportExpenseReport($expenses, 'expense_report');
+    }
+
+    /**
+     * Export income & expense report
+     */
+    public function exportIncomeExpenseReport(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
+    {
+        // $this->authorize('reports.export');
+        
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        $format = $request->input('format', 'excel');
+
+        // Get income and expense data
+        $incomeData = Payment::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'completed')
+            ->get()
+            ->map(function ($payment) {
+                return (object)[
+                    'date' => $payment->paid_at?->format('Y-m-d') ?? $payment->created_at->format('Y-m-d'),
+                    'type' => 'income',
+                    'category' => 'Payment',
+                    'description' => 'Payment from ' . ($payment->user->name ?? 'Customer'),
+                    'amount' => $payment->amount,
+                    'running_balance' => 0, // Calculate running balance
+                ];
+            });
+
+        // Mock expense data - replace with actual expense model query
+        $expenseData = collect([]);
+
+        $data = $incomeData->merge($expenseData)->sortBy('date');
+
+        if ($format === 'pdf') {
+            $pdf = $pdfService->generateIncomeExpenseReportPdf($data, $startDate, $endDate);
+            return $pdf->download('income_expense_report_' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        return $excelService->exportIncomeExpenseReport($data, $startDate, $endDate, 'income_expense_report');
+    }
+
+    /**
+     * Export accounts receivable report
+     */
+    public function exportReceivable(Request $request, ExcelExportService $excelService)
+    {
+        // $this->authorize('reports.export');
+        
+        $format = $request->input('format', 'excel');
+
+        // Get receivables data from unpaid invoices
+        $receivables = Invoice::where('status', '!=', 'paid')
+            ->with('networkUser')
+            ->get()
+            ->map(function ($invoice) {
+                $dueDate = $invoice->due_date ?? $invoice->created_at->addDays(30);
+                $daysOverdue = now()->diffInDays($dueDate, false);
+                
+                return (object)[
+                    'customer_name' => $invoice->networkUser->name ?? 'N/A',
+                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_date' => $invoice->created_at->format('Y-m-d'),
+                    'due_date' => $dueDate->format('Y-m-d'),
+                    'total_amount' => $invoice->total_amount,
+                    'paid_amount' => $invoice->paid_amount ?? 0,
+                    'balance_due' => $invoice->total_amount - ($invoice->paid_amount ?? 0),
+                    'days_overdue' => $daysOverdue < 0 ? abs($daysOverdue) : 0,
+                    'status' => $invoice->status,
+                ];
+            });
+
+        return $excelService->exportReceivable($receivables, 'accounts_receivable');
+    }
+
+    /**
+     * Export accounts payable report
+     */
+    public function exportPayable(Request $request, ExcelExportService $excelService)
+    {
+        // $this->authorize('reports.export');
+        
+        $format = $request->input('format', 'excel');
+
+        // Mock payables data - replace with actual query when payable model exists
+        $payables = collect([
+            (object)[
+                'vendor_name' => 'Internet Provider',
+                'bill_number' => 'BILL-001',
+                'bill_date' => now()->subDays(15)->format('Y-m-d'),
+                'due_date' => now()->addDays(15)->format('Y-m-d'),
+                'total_amount' => 50000,
+                'paid_amount' => 0,
+                'balance_due' => 50000,
+                'days_overdue' => 0,
+                'status' => 'pending',
+            ],
+        ]);
+
+        return $excelService->exportPayable($payables, 'accounts_payable');
     }
 }

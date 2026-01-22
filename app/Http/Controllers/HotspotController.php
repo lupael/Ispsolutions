@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHotspotUserRequest;
+use App\Http\Requests\UpdateHotspotUserRequest;
 use App\Models\HotspotUser;
 use App\Models\Package;
 use App\Services\HotspotService;
@@ -112,17 +113,9 @@ class HotspotController extends Controller
     /**
      * Update hotspot user
      */
-    public function update(Request $request, HotspotUser $hotspotUser): RedirectResponse
+    public function update(UpdateHotspotUserRequest $request, HotspotUser $hotspotUser): RedirectResponse
     {
-        $this->authorize('update', $hotspotUser);
-
-        $validated = $request->validate([
-            'phone_number' => 'required|string|max:20|unique:hotspot_users,phone_number,' . $hotspotUser->id,
-            'username' => 'required|string|max:50|unique:hotspot_users,username,' . $hotspotUser->id,
-            'password' => 'nullable|string|min:6|max:50',
-            'package_id' => 'required|exists:packages,id',
-            'status' => 'required|in:active,suspended,expired,pending',
-        ]);
+        $validated = $request->validated();
 
         try {
             if (! empty($validated['password'])) {
