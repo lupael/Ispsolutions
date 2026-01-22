@@ -2,29 +2,41 @@
 
 This file lists documentation that has been consolidated, superseded, or is no longer maintained.
 
-**Last Updated**: 2026-01-18
+**Last Updated**: 2026-01-23
+
+---
+
+## ✅ New in v3.1: Role System Documentation
+
+The role system has been completely updated and consolidated in v3.1:
+
+### Primary Role System Documentation
+- ✅ **[ROLE_SYSTEM.md](ROLE_SYSTEM.md)** - **NEW** Complete role system specification v3.1
+  - Comprehensive role hierarchy (levels 0-100)
+  - Tenancy creation rules
+  - Resource and billing responsibilities
+  - Demo accounts and seeding guide
+  - Implementation details
+
+### Deprecated Role Documentation
+The following role-related files are now **deprecated** and replaced by ROLE_SYSTEM.md:
+
+| Old File | Status | Replacement |
+|----------|--------|-------------|
+| **ROLE_HIERARCHY_CLARIFICATION.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
+| **ROLE_HIERARCHY_IMPLEMENTATION.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
+| **ROLE_SYSTEM_QUICK_REFERENCE.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
+| **SUMMARY.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
+| **DATA_ISOLATION.md** | ⚠️ Keep for now | See also ROLE_SYSTEM.md |
+| **docs/PR1_TENANCY_AND_ROLES.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
+
+**Migration Path**: Use **[ROLE_SYSTEM.md](ROLE_SYSTEM.md)** for all role system documentation.
 
 ---
 
 ## Consolidated Documentation
 
 The following files have been consolidated into comprehensive guides. They are marked for future removal after a transition period.
-
-### Role System Documentation → `docs/ROLES_AND_PERMISSIONS.md`
-
-The following files have been merged into the comprehensive **[Roles and Permissions Guide](docs/ROLES_AND_PERMISSIONS.md)**:
-
-| Old File | Status | Notes |
-|----------|--------|-------|
-| **SUMMARY.md** | ⚠️ Deprecated | Core content merged into ROLES_AND_PERMISSIONS.md |
-| **DATA_ISOLATION.md** | ⚠️ Deprecated | All data isolation rules moved to ROLES_AND_PERMISSIONS.md |
-| **ROLE_SYSTEM_QUICK_REFERENCE.md** | ⚠️ Deprecated | Quick reference now part of ROLES_AND_PERMISSIONS.md |
-| **docs/PR1_TENANCY_AND_ROLES.md** | ⚠️ Deprecated | Historical PR documentation, implementation details in ROLES_AND_PERMISSIONS.md |
-| **docs/tenancy.md** | ⚠️ Deprecated | Multi-tenancy basics merged into ROLES_AND_PERMISSIONS.md |
-
-**Migration Path**: Use `docs/ROLES_AND_PERMISSIONS.md` for all role, permission, and data isolation documentation.
-
----
 
 ### API Documentation → `docs/API.md`
 
@@ -42,31 +54,25 @@ The following files have been merged into the unified **[API Documentation](docs
 
 ### Implementation Tracking Files
 
-Multiple tracking files exist with overlapping content:
+Multiple tracking files exist with overlapping content. These are historical and for archive only:
 
 | File | Status | Notes |
 |------|--------|-------|
 | **TASK_COMPLETION_SUMMARY.md** | ℹ️ Archive Only | Historical task tracking |
+| **TASK_COMPLETION_SUMMARY_OLD.md** | ℹ️ Archive Only | Historical task tracking |
 | **COMPLETED_TASKS_SUMMARY.md** | ℹ️ Archive Only | Historical completion summary |
+| **COMPLETED_DEVELOPMENT_SUMMARY.md** | ℹ️ Archive Only | Historical development summary |
 | **IMPLEMENTATION_SUMMARY.md** | ℹ️ Archive Only | Historical implementation notes |
 | **IMPLEMENTATION_SUMMARY_PANELS.md** | ℹ️ Archive Only | Historical panel implementation |
+| **IMPLEMENTATION_SUMMARY_PAGINATION_ROUTING.md** | ℹ️ Archive Only | Historical pagination implementation |
+| **IMPLEMENTATION_COMPLETE_SUMMARY.md** | ℹ️ Archive Only | Historical completion summary |
 | **BILLING_IMPLEMENTATION_SUMMARY.md** | ℹ️ Archive Only | Historical billing implementation |
+| **ANALYTICS_IMPLEMENTATION_COMPLETE.md** | ℹ️ Archive Only | Historical analytics implementation |
+| **DEVELOPMENT_COMPLETION_*.md** | ℹ️ Archive Only | Multiple historical completion files |
+| **FEATURE_COMPLETION_REPORT.md** | ℹ️ Archive Only | Historical feature completion |
+| **FINAL_IMPLEMENTATION_SUMMARY.md** | ℹ️ Archive Only | Historical final summary |
 
-**Current Status**: Reference **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** for current implementation tracking.
-
----
-
-### Panel Documentation
-
-Multiple panel-related files with overlapping content:
-
-| File | Status | Notes |
-|------|--------|-------|
-| **PANEL_DEVELOPMENT_PROGRESS.md** | ℹ️ Reference | Development progress tracking |
-| **PANEL_SCREENSHOTS_GUIDE.md** | ✅ Keep | Visual guide still relevant |
-| **NAVIGATION_AND_SEARCH_IMPLEMENTATION.md** | ℹ️ Archive | Implementation-specific details |
-
-**Current Reference**: Use **[PANELS_SPECIFICATION.md](PANELS_SPECIFICATION.md)** for panel specifications.
+**Current Status**: Reference **[CHANGELOG.md](CHANGELOG.md)** for version history and **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** for current implementation tracking.
 
 ---
 
@@ -74,20 +80,17 @@ Multiple panel-related files with overlapping content:
 
 The following files are scheduled for removal in future releases:
 
-### Phase 1 (Next Release)
-- `SUMMARY.md` - Content fully merged
-- `DATA_ISOLATION.md` - Content fully merged
-- `ROLE_SYSTEM_QUICK_REFERENCE.md` - Content fully merged
-- `docs/API_DOCUMENTATION.md` - Content fully merged
-- `docs/tenancy.md` - Content merged into ROLES_AND_PERMISSIONS.md
-
-### Phase 2 (After Verification Period)
+### Phase 1 (Next Release - v3.2)
+- `ROLE_HIERARCHY_CLARIFICATION.md` - Superseded by ROLE_SYSTEM.md
+- `ROLE_HIERARCHY_IMPLEMENTATION.md` - Superseded by ROLE_SYSTEM.md
+- `ROLE_SYSTEM_QUICK_REFERENCE.md` - Superseded by ROLE_SYSTEM.md
+- `SUMMARY.md` - Superseded by ROLE_SYSTEM.md
 - `docs/PR1_TENANCY_AND_ROLES.md` - Historical PR documentation
-- `TASK_COMPLETION_SUMMARY.md` - Historical tracking
-- `COMPLETED_TASKS_SUMMARY.md` - Historical tracking
-- `IMPLEMENTATION_SUMMARY.md` - Historical notes
-- `IMPLEMENTATION_SUMMARY_PANELS.md` - Historical notes
-- `BILLING_IMPLEMENTATION_SUMMARY.md` - Historical notes
+- `docs/API_DOCUMENTATION.md` - Content fully merged into docs/API.md
+
+### Phase 2 (After Verification Period - v4.0)
+- All historical implementation/completion/summary files listed above
+- Archive these files or move to a separate `docs/archive/` directory
 
 ---
 
@@ -99,11 +102,13 @@ The following files are scheduled for removal in future releases:
 
 | Old | New |
 |-----|-----|
-| SUMMARY.md | docs/ROLES_AND_PERMISSIONS.md |
-| DATA_ISOLATION.md | docs/ROLES_AND_PERMISSIONS.md |
-| ROLE_SYSTEM_QUICK_REFERENCE.md | docs/ROLES_AND_PERMISSIONS.md |
+| ROLE_HIERARCHY_CLARIFICATION.md | ROLE_SYSTEM.md |
+| ROLE_HIERARCHY_IMPLEMENTATION.md | ROLE_SYSTEM.md |
+| ROLE_SYSTEM_QUICK_REFERENCE.md | ROLE_SYSTEM.md |
+| SUMMARY.md | ROLE_SYSTEM.md |
+| DATA_ISOLATION.md | ROLE_SYSTEM.md (Data Isolation section) |
 | docs/API_DOCUMENTATION.md | docs/API.md |
-| docs/tenancy.md | docs/ROLES_AND_PERMISSIONS.md (Tenancy section) |
+| docs/PR1_TENANCY_AND_ROLES.md | ROLE_SYSTEM.md |
 
 ### For Documentation Links
 
@@ -111,14 +116,14 @@ Update any links to deprecated files:
 
 ```markdown
 <!-- Old -->
-[Role System](SUMMARY.md)
+[Role System](ROLE_HIERARCHY_CLARIFICATION.md)
+[Quick Reference](ROLE_SYSTEM_QUICK_REFERENCE.md)
 [Data Isolation](DATA_ISOLATION.md)
-[API Docs](docs/API_DOCUMENTATION.md)
 
 <!-- New -->
-[Role System](docs/ROLES_AND_PERMISSIONS.md)
-[Data Isolation](docs/ROLES_AND_PERMISSIONS.md#data-isolation-rules)
-[API Docs](docs/API.md)
+[Role System](ROLE_SYSTEM.md)
+[Quick Reference](ROLE_SYSTEM.md#role-hierarchy)
+[Data Isolation](ROLE_SYSTEM.md#resource--billing-responsibilities)
 ```
 
 ### For Code Comments
@@ -127,10 +132,10 @@ Update code comments referencing old documentation:
 
 ```php
 // Old
-// See SUMMARY.md for role hierarchy
+// See ROLE_HIERARCHY_CLARIFICATION.md for role hierarchy
 
 // New
-// See docs/ROLES_AND_PERMISSIONS.md for role hierarchy
+// See ROLE_SYSTEM.md for role hierarchy
 ```
 
 ---
@@ -151,9 +156,10 @@ The following files are **NOT** deprecated and should continue to be used:
 
 ### Core Documentation
 - ✅ **README.md** - Main project documentation
-- ✅ **CHANGELOG.md** - Version history
+- ✅ **CHANGELOG.md** - Version history (updated with v3.1.0)
+- ✅ **ROLE_SYSTEM.md** - **NEW v3.1** Role system specification
 - ✅ **docs/INDEX.md** - Documentation index
-- ✅ **docs/ROLES_AND_PERMISSIONS.md** - Role system guide
+- ✅ **docs/ROLES_AND_PERMISSIONS.md** - Detailed permissions guide
 - ✅ **docs/API.md** - API documentation
 - ✅ **docs/DEPLOYMENT.md** - Deployment guide
 - ✅ **docs/TESTING.md** - Testing guide
@@ -166,18 +172,24 @@ The following files are **NOT** deprecated and should continue to be used:
 - ✅ **Feature.md** - Feature requests
 - ✅ **PANELS_SPECIFICATION.md** - Panel specs
 - ✅ **MULTI_TENANCY_ISOLATION.md** - Multi-tenancy overview
-- ✅ **IMPLEMENTATION_STATUS.md** - Current status
+- ✅ **IMPLEMENTATION_STATUS.md** - Current implementation status
+- ✅ **DATA_ISOLATION.md** - Data isolation rules (keep for now)
 
 ### MikroTik Documentation
 - ✅ **MIKROTIK_QUICKSTART.md** - Quick start guide
 - ✅ **MIKROTIK_ADVANCED_FEATURES.md** - Advanced features
 
-### Network Services
+### Network & Service Guides
 - ✅ **docs/NETWORK_SERVICES.md** - Network services guide
 - ✅ **docs/OLT_SERVICE_GUIDE.md** - OLT guide
 - ✅ **docs/OLT_API_REFERENCE.md** - OLT API reference
 - ✅ **docs/MONITORING_SYSTEM.md** - Monitoring guide
 - ✅ **docs/ROLE_BASED_MENU.md** - Menu system
+
+### Payment & Hotspot Guides
+- ✅ **PAYMENT_GATEWAY_GUIDE.md** - Payment gateway integration
+- ✅ **HOTSPOT_SELF_SIGNUP_GUIDE.md** - Hotspot self-signup
+- ✅ **ANALYTICS_DASHBOARD_GUIDE.md** - Analytics dashboard
 
 ---
 
@@ -207,9 +219,10 @@ The following files are **NOT** deprecated and should continue to be used:
 ## Questions?
 
 If you have questions about deprecated documentation:
-1. Check the **[Documentation Index](docs/INDEX.md)** for current docs
-2. Review the migration guide above
-3. Open an issue on GitHub if you need clarification
+1. Check **[ROLE_SYSTEM.md](ROLE_SYSTEM.md)** for role system documentation
+2. Check the **[Documentation Index](docs/INDEX.md)** for current docs
+3. Review the migration guide above
+4. Open an issue on GitHub if you need clarification
 
 ---
 
