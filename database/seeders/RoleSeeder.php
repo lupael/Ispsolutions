@@ -24,7 +24,7 @@ class RoleSeeder extends Seeder
                 'name' => 'Super Admin',
                 'slug' => 'super-admin',
                 'description' => 'Manages Admins within their own tenants only. Represents the overarching tenant context. Cannot access other tenants.',
-                'level' => 10,
+                'level' => 100,
                 'permissions' => [
                     'tenants.manage.own',
                     'admins.create',
@@ -40,12 +40,12 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'slug' => 'admin',
-                'description' => 'ISP Owner. Manages Operators within their ISP tenant segment. Full control over own ISP data including customers, packages, and network devices.',
-                'level' => 20,
+                'description' => 'ISP Owner. Manages Resellers within their ISP tenant segment. Full control over own ISP data including customers, packages, and network devices.',
+                'level' => 90,
                 'permissions' => [
-                    'operators.create',
-                    'operators.manage',
-                    'sub-operators.manage',
+                    'resellers.create',
+                    'resellers.manage',
+                    'sub-resellers.manage',
                     'managers.create',
                     'managers.manage',
                     'customers.manage',
@@ -61,16 +61,17 @@ class RoleSeeder extends Seeder
                     'recharge-cards.manage',
                     'vat.manage',
                     'affiliate-program.manage',
+                    'users.manage',
                 ],
             ],
             [
-                'name' => 'Operator',
-                'slug' => 'operator',
-                'description' => 'Manages Sub-Operators and customer accounts within their segment. Can view own customers and sub-operator customers. Restricted panel based on menu configuration.',
-                'level' => 30,
+                'name' => 'Reseller',
+                'slug' => 'reseller',
+                'description' => 'Manages Sub-Resellers and customer accounts within their segment. Can view own customers and sub-reseller customers. Restricted panel based on menu configuration.',
+                'level' => 60,
                 'permissions' => [
-                    'sub-operators.create',
-                    'sub-operators.manage',
+                    'sub-resellers.create',
+                    'sub-resellers.manage',
                     'customers.view',
                     'customers.create',
                     'customers.update',
@@ -89,12 +90,11 @@ class RoleSeeder extends Seeder
                     'packages.view',
                 ],
             ],
-            // Note: Operator replaces the deprecated "Reseller" role. Admins can customize the display label.
             [
-                'name' => 'Sub-Operator',
-                'slug' => 'sub-operator',
-                'description' => 'Manages only their own customers. Further restricted access under an Operator. Cannot create other sub-operators.',
-                'level' => 40,
+                'name' => 'Sub-Reseller',
+                'slug' => 'sub-reseller',
+                'description' => 'Manages only their own customers. Further restricted access under a Reseller. Cannot create other sub-resellers.',
+                'level' => 50,
                 'permissions' => [
                     'customers.view.own',
                     'customers.create.own',
@@ -107,12 +107,11 @@ class RoleSeeder extends Seeder
                     'packages.view',
                 ],
             ],
-            // Note: Sub-Operator replaces the deprecated "Sub-Reseller" role. Admins can customize the display label.
             [
                 'name' => 'Manager',
                 'slug' => 'manager',
                 'description' => 'View-only scoped access. Permission-based features with task-specific oversight. Cannot create or manage users.',
-                'level' => 50,
+                'level' => 40,
                 'permissions' => [
                     'customers.view',
                     'network.view',
@@ -128,7 +127,7 @@ class RoleSeeder extends Seeder
                 'name' => 'Staff',
                 'slug' => 'staff',
                 'description' => 'View-only scoped access. Support staff with limited operational permissions. Cannot create or manage users.',
-                'level' => 80,
+                'level' => 30,
                 'permissions' => [
                     'customers.view',
                     'network.view',
@@ -141,7 +140,7 @@ class RoleSeeder extends Seeder
                 'name' => 'Card Distributor',
                 'slug' => 'card-distributor',
                 'description' => 'Recharge card distributor with card operations only',
-                'level' => 60,
+                'level' => 20,
                 'permissions' => [
                     'cards.view',
                     'cards.sales.view',
@@ -150,25 +149,10 @@ class RoleSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Accountant',
-                'slug' => 'accountant',
-                'description' => 'View-only scoped access. Read-only financial reporting and transaction viewing. Cannot create or manage users.',
-                'level' => 70,
-                'permissions' => [
-                    'reports.financial.view',
-                    'reports.vat.view',
-                    'reports.payments.view',
-                    'reports.income-expense.view',
-                    'transactions.view',
-                    'expenses.view',
-                    'vat.view',
-                ],
-            ],
-            [
                 'name' => 'Customer',
                 'slug' => 'customer',
                 'description' => 'End customer with self-service access',
-                'level' => 100,
+                'level' => 10,
                 'permissions' => [
                     'profile.view',
                     'profile.update',

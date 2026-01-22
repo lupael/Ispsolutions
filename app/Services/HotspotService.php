@@ -15,7 +15,7 @@ class HotspotService
      */
     public function generateOTP(string $phoneNumber, int $tenantId): HotspotUser
     {
-        $otpCode = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+        $otpCode = $this->generateOtp();
         $expiresAt = now()->addMinutes(10);
 
         // Find or create hotspot user
@@ -47,6 +47,14 @@ class HotspotService
         $hotspotUser->plain_otp = $otpCode;
 
         return $hotspotUser;
+    }
+
+    /**
+     * Generate a standalone OTP code
+     */
+    public function generateOtp(): string
+    {
+        return str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -117,10 +125,16 @@ class HotspotService
             $package = Package::findOrFail($data['package_id']);
             $validityDays = $package->validity_days ?? 30;
 
+            // Support both 'phone_number' and 'mobile' fields
+            $phoneNumber = $data['phone_number'] ?? $data['mobile'] ?? null;
+            if (! $phoneNumber) {
+                throw new \InvalidArgumentException('Phone number or mobile is required');
+            }
+
             $hotspotUser = HotspotUser::create([
                 'tenant_id' => $data['tenant_id'],
-                'phone_number' => $data['phone_number'],
-                'username' => $data['username'] ?? $this->generateUsername($data['phone_number']),
+                'phone_number' => $phoneNumber,
+                'username' => $data['username'] ?? $this->generateUsername($phoneNumber),
                 'password' => Hash::make($password),
                 'package_id' => $data['package_id'],
                 'is_verified' => true,
@@ -136,9 +150,73 @@ class HotspotService
     }
 
     /**
-     * Renew hotspot user subscription
+     * Suspend hotspot user by ID
      */
-    public function renewSubscription(HotspotUser $hotspotUser, int $packageId): HotspotUser
+    public function suspendHotspotUser(int $hotspotUserId): bool
+    {
+        $hotspotUser = HotspotUser::findOrFail($hotspotUserId);
+        $hotspotUser->update([
+            'status' => 'suspended',
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Reactivate hotspot user by ID
+     */
+    public function reactivateHotspotUser(int $hotspotUserId): bool
+    {
+        $hotspotUser = HotspotUser::findOrFail($hotspotUserId);
+        $hotspotUser->update([
+            'status' => 'active',
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Renew hotspot user subscription by IDs
+     */
+    public function renewSubscription(int $hotspotUserId, int $packageId): bool
+    {
+        return DB::transaction(function () use ($hotspotUserId, $packageId) {
+            $hotspotUser = HotspotUser::findOrFail($hotspotUserId);
+            $package = Package::findOrFail($packageId);
+            $validityDays = $package->validity_days ?? 30;
+
+            $currentExpiry = $hotspotUser->expires_at && $hotspotUser->expires_at->isFuture()
+                ? $hotspotUser->expires_at
+                : now();
+
+            $hotspotUser->update([
+                'package_id' => $packageId,
+                'status' => 'active',
+                'expires_at' => $currentExpiry->addDays($validityDays),
+                'expired_at' => $currentExpiry->addDays($validityDays), // Support both field names
+            ]);
+
+            return true;
+        });
+    }
+
+    /**
+     * Get expired hotspot users
+     */
+    public function getExpiredUsers()
+    {
+        return HotspotUser::where('status', 'active')
+            ->where(function ($query) {
+                $query->where('expires_at', '<', now())
+                    ->orWhere('expired_at', '<', now());
+            })
+            ->get();
+    }
+
+    /**
+     * Renew hotspot user subscription (model-based, legacy support)
+     */
+    protected function renewSubscriptionLegacy(HotspotUser $hotspotUser, int $packageId): HotspotUser
     {
         return DB::transaction(function () use ($hotspotUser, $packageId) {
             $package = Package::findOrFail($packageId);
@@ -196,12 +274,12 @@ class HotspotService
     /**
      * Generate unique username from phone number
      */
-    protected function generateUsername(string $phoneNumber): string
+    public function generateUsername(string $phoneNumber): string
     {
         $base = preg_replace('/[^0-9]/', '', $phoneNumber);
         $base = substr($base, -8); // Last 8 digits
 
-        $username = 'HS' . $base;
+        $username = 'hs_' . $phoneNumber;
 
         // Ensure uniqueness
         $counter = 1;

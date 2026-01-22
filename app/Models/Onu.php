@@ -138,6 +138,11 @@ class Onu extends Model
      */
     public function getFullPonPath(): string
     {
+        // Reload the relationship to ensure we get the current state
+        if (! $this->relationLoaded('olt')) {
+            $this->load('olt');
+        }
+
         $oltName = $this->olt?->name ?? 'Unknown OLT';
 
         return "{$oltName} / {$this->pon_port} / {$this->onu_id}";
