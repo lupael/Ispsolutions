@@ -166,6 +166,20 @@ class User extends Authenticatable
     }
 
     /**
+     * Assign a role to the user.
+     */
+    public function assignRole(string $roleSlug): void
+    {
+        $role = Role::where('slug', $roleSlug)->first();
+        
+        if ($role && !$this->hasRole($roleSlug)) {
+            $this->roles()->attach($role->id, [
+                'tenant_id' => $this->tenant_id,
+            ]);
+        }
+    }
+
+    /**
      * Check if user has a specific permission.
      */
     public function hasPermission(string $permission): bool
