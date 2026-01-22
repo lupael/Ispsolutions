@@ -586,14 +586,22 @@ class PaymentGatewayService
                     return false;
                 }
                 
-                $invoice = Invoice::where('invoice_number', $invoiceNumber)
-                    ->where('tenant_id', $payload['tenant_id'] ?? null)
-                    ->first();
+                // First, find the invoice to get tenant_id
+                $invoice = Invoice::where('invoice_number', $invoiceNumber)->first();
                     
                 if (!$invoice) {
                     Log::warning('bKash webhook invoice not found', [
                         'invoice_number' => $invoiceNumber,
                         'payload' => $payload,
+                    ]);
+                    return false;
+                }
+                
+                // Validate tenant context if provided in payload
+                if (isset($payload['tenant_id']) && $payload['tenant_id'] != $invoice->tenant_id) {
+                    Log::warning('bKash webhook tenant mismatch', [
+                        'invoice_tenant' => $invoice->tenant_id,
+                        'payload_tenant' => $payload['tenant_id'],
                     ]);
                     return false;
                 }
@@ -651,8 +659,12 @@ class PaymentGatewayService
         
         if (empty($webhookSecret)) {
             Log::warning('bKash webhook secret not configured');
-            // In development, allow without verification
-            return app()->environment('local');
+            // In development, skip verification but log the decision
+            if (app()->environment('local')) {
+                Log::info('bKash webhook signature verification skipped in local environment');
+                return true;
+            }
+            return false;
         }
         
         // Generate expected signature
@@ -747,8 +759,12 @@ class PaymentGatewayService
         
         if (empty($nagadPublicKey)) {
             Log::warning('Nagad public key not configured');
-            // In development, allow without verification
-            return app()->environment('local');
+            // In development, skip verification but log the decision
+            if (app()->environment('local')) {
+                Log::info('Nagad webhook signature verification skipped in local environment');
+                return true;
+            }
+            return false;
         }
         
         // Verify signature using Nagad's public key
@@ -877,6 +893,20 @@ class PaymentGatewayService
             return false;
         }
         
+        // Verify MD5 signature
+        if (!$this->verifySSLCommerzMD5Signature($payload, $storePassword)) {
+            return false;
+        }
+        
+        // Additional validation: Check status
+        return in_array($payload['status'] ?? '', ['VALID', 'VALIDATED']);
+    }
+    
+    /**
+     * Verify SSLCommerz MD5 signature
+     */
+    protected function verifySSLCommerzMD5Signature(array $payload, string $storePassword): bool
+    {
         // Generate MD5 hash for verification
         $verifyString = $storePassword . implode('', [
             $payload['val_id'] ?? '',
@@ -896,8 +926,7 @@ class PaymentGatewayService
             return false;
         }
         
-        // Additional validation: Check status
-        return in_array($payload['status'] ?? '', ['VALID', 'VALIDATED']);
+        return true;
     }
 
     /**
@@ -1046,8 +1075,12 @@ class PaymentGatewayService
 
         if (empty($webhookSecret)) {
             Log::warning('Stripe webhook secret not configured');
-            // In development, allow without verification
-            return app()->environment('local');
+            // In development, skip verification but log the decision
+            if (app()->environment('local')) {
+                Log::info('Stripe webhook signature verification skipped in local environment');
+                return true;
+            }
+            return false;
         }
 
         // Construct signed payload

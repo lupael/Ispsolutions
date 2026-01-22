@@ -249,7 +249,7 @@
             <div class="card">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
-                        <i class="ki-filled ki-credit-cart"></i> Stripe (International)
+                        <i class="ki-filled ki-credit-card"></i> Stripe (International)
                     </h5>
                 </div>
                 <div class="card-body">
