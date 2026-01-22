@@ -161,6 +161,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
     // Payment Gateway Management
     Route::get('/payment-gateway', [SuperAdminController::class, 'paymentGatewayIndex'])->name('payment-gateway.index');
     Route::get('/payment-gateway/create', [SuperAdminController::class, 'paymentGatewayCreate'])->name('payment-gateway.create');
+    Route::get('/payment-gateway/settings', [SuperAdminController::class, 'paymentGatewaySettings'])->name('payment-gateway.settings');
     Route::post('/payment-gateway', [SuperAdminController::class, 'paymentGatewayStore'])->name('payment-gateway.store');
 
     // SMS Gateway Management
