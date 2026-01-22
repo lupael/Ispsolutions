@@ -125,10 +125,11 @@ class HotspotService
             $package = Package::findOrFail($data['package_id']);
             $validityDays = $package->validity_days ?? 30;
 
-            // Support both 'phone_number' and 'mobile' fields
+            // Support both 'phone_number' and 'mobile' fields for compatibility
+            // The model has a 'mobile' accessor that maps to 'phone_number'
             $phoneNumber = $data['phone_number'] ?? $data['mobile'] ?? null;
             if (! $phoneNumber) {
-                throw new \InvalidArgumentException('Phone number or mobile is required');
+                throw new \InvalidArgumentException('Phone number is required');
             }
 
             $hotspotUser = HotspotUser::create([
@@ -189,11 +190,13 @@ class HotspotService
                 ? $hotspotUser->expires_at
                 : now();
 
+            // Use copy() to avoid mutating the original Carbon instance
+            $newExpiry = $currentExpiry->copy()->addDays($validityDays);
+
             $hotspotUser->update([
                 'package_id' => $packageId,
                 'status' => 'active',
-                'expires_at' => $currentExpiry->addDays($validityDays),
-                'expired_at' => $currentExpiry->addDays($validityDays), // Support both field names
+                'expires_at' => $newExpiry,
             ]);
 
             return true;
@@ -206,10 +209,7 @@ class HotspotService
     public function getExpiredUsers()
     {
         return HotspotUser::where('status', 'active')
-            ->where(function ($query) {
-                $query->where('expires_at', '<', now())
-                    ->orWhere('expired_at', '<', now());
-            })
+            ->where('expires_at', '<', now())
             ->get();
     }
 

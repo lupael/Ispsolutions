@@ -22,6 +22,7 @@ class NotificationService
 
     /**
      * Send invoice generated notification
+     * @deprecated Use sendInvoiceGeneratedNotification() instead
      */
     public function sendInvoiceGenerated(Invoice $invoice): bool
     {
@@ -65,6 +66,7 @@ class NotificationService
 
     /**
      * Send payment received notification
+     * @deprecated Use sendPaymentReceivedNotification(Invoice, int) instead
      */
     public function sendPaymentReceived(Payment $payment): bool
     {
@@ -81,7 +83,8 @@ class NotificationService
 
         try {
             if ($invoice->user && $invoice->user->email) {
-                // Create a mock payment object for the email
+                // Create a temporary payment object for the email template
+                // Note: This is not persisted to the database
                 $payment = new Payment([
                     'invoice_id' => $invoice->id,
                     'amount' => $amount,
@@ -111,7 +114,8 @@ class NotificationService
 
         // Send SMS if enabled
         if (config('sms.enabled', false) && $this->smsService) {
-            // Create a mock payment for SMS
+            // Create a temporary payment object for SMS
+            // Note: This is not persisted to the database
             $payment = new Payment(['amount' => $amount]);
             $payment->invoice = $invoice;
             $smsSent = $this->smsService->sendPaymentReceivedSms($payment);
@@ -223,8 +227,11 @@ class NotificationService
         $results = [];
         
         foreach ($invoices as $invoice) {
+            // Calculate days until expiry, ensuring non-negative value
             $daysUntilExpiry = now()->diffInDays($invoice->due_date, false);
-            $sent = $this->sendInvoiceExpiringSoon($invoice, (int) $daysUntilExpiry);
+            // Use max(0, ...) to handle past dates as 0 days
+            $normalizedDays = max(0, (int) $daysUntilExpiry);
+            $sent = $this->sendInvoiceExpiringSoon($invoice, $normalizedDays);
             
             $results[] = [
                 'invoice_id' => $invoice->id,

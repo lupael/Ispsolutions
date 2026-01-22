@@ -15,19 +15,28 @@ class CommissionService
      */
     public function calculateCommission(Payment $payment): ?Commission
     {
-        // Get the reseller/operator who created this customer
+        // Get the customer and ensure relationships are loaded
         $customer = $payment->user;
-        $reseller = $customer->createdBy; // User who created this customer
+        
+        if (! $customer) {
+            return null;
+        }
+
+        // Get the reseller/operator who created this customer
+        $reseller = $customer->createdBy;
 
         if (! $reseller) {
             return null;
         }
 
-        // Check for reseller/operator roles (support both naming conventions)
-        $hasResellerRole = $reseller->hasRole('reseller') || $reseller->hasRole('operator');
-        $hasSubResellerRole = $reseller->hasRole('sub-reseller') || $reseller->hasRole('sub-operator');
+        // Eager load roles to avoid N+1 queries
+        if (! $reseller->relationLoaded('roles')) {
+            $reseller->load('roles');
+        }
 
-        if (! $hasResellerRole && ! $hasSubResellerRole) {
+        // Check for reseller/operator roles (support both naming conventions)
+        // Using hasAnyRole for better performance (single DB query instead of multiple)
+        if (! $reseller->hasAnyRole(['reseller', 'operator', 'sub-reseller', 'sub-operator'])) {
             return null;
         }
 
@@ -62,11 +71,12 @@ class CommissionService
             'sub-operator' => 5.0, // 5% (legacy name)
         ];
 
-        if ($reseller->hasRole('reseller') || $reseller->hasRole('operator')) {
+        // Using hasAnyRole for better performance (single DB query)
+        if ($reseller->hasAnyRole(['reseller', 'operator'])) {
             return $defaultRates['reseller'];
         }
 
-        if ($reseller->hasRole('sub-reseller') || $reseller->hasRole('sub-operator')) {
+        if ($reseller->hasAnyRole(['sub-reseller', 'sub-operator'])) {
             return $defaultRates['sub-reseller'];
         }
 
@@ -116,8 +126,9 @@ class CommissionService
             return [];
         }
 
-        $hasResellerRole = $directReseller->hasRole('reseller') || $directReseller->hasRole('operator');
-        $hasSubResellerRole = $directReseller->hasRole('sub-reseller') || $directReseller->hasRole('sub-operator');
+        // Using hasAnyRole for better performance (single DB query)
+        $hasResellerRole = $directReseller->hasAnyRole(['reseller', 'operator']);
+        $hasSubResellerRole = $directReseller->hasAnyRole(['sub-reseller', 'sub-operator']);
 
         if ($hasResellerRole || $hasSubResellerRole) {
             $commissions[] = $this->calculateCommission($payment);
@@ -126,8 +137,8 @@ class CommissionService
             if ($hasSubResellerRole) {
                 $parentReseller = $directReseller->createdBy;
                 if ($parentReseller) {
-                    $parentHasResellerRole = $parentReseller->hasRole('reseller') || $parentReseller->hasRole('operator');
-                    if ($parentHasResellerRole) {
+                    // Using hasAnyRole for better performance
+                    if ($parentReseller->hasAnyRole(['reseller', 'operator'])) {
                         // Calculate parent reseller commission (smaller percentage)
                         $parentRate = 3.0; // 3% for parent reseller
                         $parentAmount = $payment->amount * ($parentRate / 100);
