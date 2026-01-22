@@ -327,6 +327,26 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
         Route::get('/packages', [CableTvController::class, 'packagesIndex'])->name('packages.index');
         Route::get('/channels', [CableTvController::class, 'channelsIndex'])->name('channels.index');
     });
+    
+    // PDF & Excel Export Routes
+    Route::prefix('export')->name('export.')->group(function () {
+        // Invoice PDF exports
+        Route::get('/invoice/{invoice}/pdf', [AdminController::class, 'downloadInvoicePdf'])->name('invoice.pdf');
+        Route::get('/invoice/{invoice}/view', [AdminController::class, 'streamInvoicePdf'])->name('invoice.view');
+        
+        // Payment receipt PDF
+        Route::get('/payment/{payment}/receipt', [AdminController::class, 'downloadPaymentReceiptPdf'])->name('payment.receipt');
+        
+        // Excel exports
+        Route::get('/invoices/excel', [AdminController::class, 'exportInvoices'])->name('invoices.excel');
+        Route::get('/payments/excel', [AdminController::class, 'exportPayments'])->name('payments.excel');
+        
+        // Customer statement PDF
+        Route::get('/customer/{customer}/statement', [AdminController::class, 'customerStatementPdf'])->name('customer.statement');
+        
+        // Monthly report PDF
+        Route::get('/monthly-report', [AdminController::class, 'monthlyReportPdf'])->name('monthly.report');
+    });
 });
 
 // Sales Manager Panel
@@ -438,6 +458,12 @@ Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'r
     Route::get('/billing', [CustomerController::class, 'billing'])->name('billing');
     Route::get('/usage', [CustomerController::class, 'usage'])->name('usage');
     Route::get('/tickets', [CustomerController::class, 'tickets'])->name('tickets');
+    
+    // PDF Export Routes for Customer
+    Route::get('/invoice/{invoice}/pdf', [CustomerController::class, 'downloadInvoicePdf'])->name('invoice.pdf');
+    Route::get('/invoice/{invoice}/view', [CustomerController::class, 'viewInvoicePdf'])->name('invoice.view');
+    Route::get('/payment/{payment}/receipt', [CustomerController::class, 'downloadPaymentReceiptPdf'])->name('payment.receipt');
+    Route::get('/statement', [CustomerController::class, 'accountStatementPdf'])->name('statement.pdf');
 });
 
 // Developer Panel (Supreme Authority)

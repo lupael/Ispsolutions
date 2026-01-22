@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\RadiusServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreNetworkUserRequest;
 use App\Models\NetworkUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,25 +50,9 @@ class NetworkUserController extends Controller
     /**
      * Create a new network user
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreNetworkUserRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'username' => 'required|string|max:255|unique:network_users',
-            'password' => 'required|string|min:6',
-            'email' => 'nullable|email|unique:network_users',
-            'service_type' => 'required|in:pppoe,hotspot,static_ip',
-            'package_id' => 'nullable|exists:service_packages,id',
-            'status' => 'nullable|in:active,suspended,expired',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $data = $validator->validated();
+        $data = $request->validated();
         $password = $data['password'];
         unset($data['password']); // Don't store plain password in network_users
 

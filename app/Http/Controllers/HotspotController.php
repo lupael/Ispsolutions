@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreHotspotUserRequest;
 use App\Models\HotspotUser;
 use App\Models\Package;
 use App\Services\HotspotService;
@@ -53,14 +54,9 @@ class HotspotController extends Controller
     /**
      * Store new hotspot user
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreHotspotUserRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'phone_number' => 'required|string|max:20|unique:hotspot_users,phone_number',
-            'username' => 'nullable|string|max:50|unique:hotspot_users,username',
-            'password' => 'nullable|string|min:6|max:50',
-            'package_id' => 'required|exists:packages,id',
-        ]);
+        $validated = $request->validated();
 
         try {
             $tenantId = auth()->user()->tenant_id;

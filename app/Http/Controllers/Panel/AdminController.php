@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
+use App\Exports\InvoicesExport;
+use App\Exports\PaymentsExport;
 use App\Models\CiscoDevice;
 use App\Models\DeviceMonitor;
+use App\Models\Invoice;
 use App\Models\IpAllocation;
 use App\Models\IpPool;
 use App\Models\MikrotikProfile;
@@ -17,8 +20,12 @@ use App\Models\PaymentGateway;
 use App\Models\RadAcct;
 use App\Models\ServicePackage;
 use App\Models\User;
+use App\Services\PdfService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -1077,5 +1084,133 @@ class AdminController extends Controller
         ];
 
         return view('panels.admin.logs.hotspot', compact('logs', 'stats'));
+    }
+
+    /**
+     * Download invoice as PDF.
+     */
+    public function downloadInvoicePdf(Invoice $invoice, PdfService $pdfService): StreamedResponse
+    {
+        // Authorization check - ensure invoice belongs to user's tenant
+        $user = auth()->user();
+        if ($invoice->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+            abort(403, 'Unauthorized access to invoice');
+        }
+
+        return $pdfService->downloadInvoicePdf($invoice);
+    }
+
+    /**
+     * Stream invoice as PDF (display in browser).
+     */
+    public function streamInvoicePdf(Invoice $invoice, PdfService $pdfService): StreamedResponse
+    {
+        // Authorization check
+        $user = auth()->user();
+        if ($invoice->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+            abort(403, 'Unauthorized access to invoice');
+        }
+
+        return $pdfService->streamInvoicePdf($invoice);
+    }
+
+    /**
+     * Download payment receipt as PDF.
+     */
+    public function downloadPaymentReceiptPdf(Payment $payment, PdfService $pdfService): StreamedResponse
+    {
+        // Authorization check
+        $user = auth()->user();
+        if ($payment->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+            abort(403, 'Unauthorized access to payment');
+        }
+
+        return $pdfService->downloadPaymentReceiptPdf($payment);
+    }
+
+    /**
+     * Export invoices to Excel.
+     */
+    public function exportInvoices(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $user = auth()->user();
+        
+        // Get invoices based on user's access level
+        $query = Invoice::with(['networkUser', 'networkUser.package']);
+        
+        // Apply tenant filtering
+        if (!$user->isDeveloper()) {
+            $query->where('tenant_id', $user->tenant_id);
+        }
+        
+        $invoices = $query->get();
+
+        return Excel::download(new InvoicesExport($invoices), 'invoices-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    /**
+     * Export payments to Excel.
+     */
+    public function exportPayments(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $user = auth()->user();
+        
+        // Get payments based on user's access level
+        $query = Payment::with(['invoice', 'invoice.networkUser']);
+        
+        // Apply tenant filtering
+        if (!$user->isDeveloper()) {
+            $query->where('tenant_id', $user->tenant_id);
+        }
+        
+        $payments = $query->get();
+
+        return Excel::download(new PaymentsExport($payments), 'payments-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    /**
+     * Generate customer statement PDF.
+     */
+    public function customerStatementPdf(User $customer, PdfService $pdfService): StreamedResponse
+    {
+        $user = auth()->user();
+        
+        // Authorization check
+        if ($customer->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+            abort(403, 'Unauthorized access to customer data');
+        }
+
+        // Get date range from request or default to current month
+        $startDate = request()->get('start_date', now()->startOfMonth()->toDateString());
+        $endDate = request()->get('end_date', now()->endOfMonth()->toDateString());
+
+        $pdf = $pdfService->generateCustomerStatementPdf(
+            $customer->id,
+            $startDate,
+            $endDate,
+            $user->tenant_id
+        );
+
+        return $pdf->download("statement-{$customer->username}-" . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Generate monthly report PDF.
+     */
+    public function monthlyReportPdf(PdfService $pdfService): StreamedResponse
+    {
+        $user = auth()->user();
+        
+        // Get year and month from request or default to current
+        $year = request()->get('year', now()->year);
+        $month = request()->get('month', now()->month);
+
+        $pdf = $pdfService->generateMonthlyReportPdf(
+            $user->tenant_id,
+            $year,
+            $month
+        );
+
+        return $pdf->download("monthly-report-{$year}-{$month}.pdf");
     }
 }
