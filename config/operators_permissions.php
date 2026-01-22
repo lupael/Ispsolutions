@@ -107,13 +107,11 @@ return [
     'levels' => [
         'developer' => 0,        // Supreme authority. All tenants (can create/manage tenants)
         'super_admin' => 10,     // Only OWN tenants. Tenant context owner (can create/manage admins)
-        'admin' => 20,           // Admin (Formerly Group Admin) ISP Owner, Own ISP data (can create/manage operators)
+        'admin' => 20,           // Admin (ISP Owner) - Own ISP data (can create/manage operators)
         'operator' => 30,        // Own + sub-operator customers (can create/manage sub-operators)
         'sub_operator' => 40,    // Only own customers
         'manager' => 50,         // View based on permissions - Task-specific access
         'card_distributor' => 60, // Card operations only
-        'reseller' => 61,        // Customer management and sales
-        'sub_reseller' => 65,    // Subordinate to reseller
         'accountant' => 70,      // View based on permissions - Financial reporting (read-only)
         'staff' => 80,           // View based on permissions - Support staff
         'customer' => 100,       // End user (lowest privilege)
@@ -130,7 +128,7 @@ return [
     */
 
     'controllable_menus' => [
-        'resellers_managers' => 'Resellers & Managers menu',
+        'operators_managers' => 'Operators & Managers menu',
         'routers_packages' => 'Routers & Packages menu',
         'recharge_cards' => 'Recharge Card menu',
         'customers' => 'Customer menu',

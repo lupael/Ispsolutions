@@ -96,19 +96,21 @@ This integration includes 10 complete demo layouts, each showcasing different UI
 
 ### Multi-Tenant Role Management
 
-The platform implements a hierarchical role-based access control (RBAC) system with strict tenant boundaries:
+The platform implements a hierarchical role-based access control (RBAC) system with strict tenant boundaries.
+
+**📖 Complete Documentation:** See [ROLE_SYSTEM.md](ROLE_SYSTEM.md) for full specification v3.1
 
 #### Role Hierarchy (Lower level = Higher privilege)
 
 ```
 Level 0:   Developer        - Supreme authority across all tenants
 Level 10:  Super Admin      - Manages Admins within own tenants only
-Level 20:  Admin            - Manages Operators within ISP tenant segment
+Level 20:  Admin            - ISP owner, manages Operators within ISP tenant
 Level 30:  Operator         - Manages Sub-Operators and customers in segment
 Level 40:  Sub-Operator     - Manages only own customers
-Level 50:  Manager          - View-only scoped access
+Level 50:  Manager          - View/Edit if explicitly permitted by Admin
 Level 70:  Accountant       - View-only financial access
-Level 80:  Staff            - View-only scoped access
+Level 80:  Staff            - View/Edit if explicitly permitted by Admin
 Level 100: Customer         - End user
 ```
 
@@ -116,9 +118,9 @@ Level 100: Customer         - End user
 
 - **Developer** → Creates/Manages Super Admins across all tenants
 - **Super Admin** → Creates/Manages Admins within their own tenants only
-- **Admin** → Creates/Manages Operators, Sub-Operators, Managers, Staff within their ISP
-- **Operator** → Creates/Manages Sub-Operators and customer accounts
-- **Sub-Operator** → Creates customer accounts only
+- **Admin** → Creates/Manages Operators, Sub-Operators, Managers, Accountants, Staff within their ISP
+- **Operator** → Creates/Manages Sub-Operators and Customers
+- **Sub-Operator** → Creates Customers only
 - **Manager/Staff/Accountant** → View-only access, cannot create users
 
 #### Data Isolation Rules
@@ -130,9 +132,29 @@ Level 100: Customer         - End user
 - **Sub-Operator**: Access only own customers
 - **View-Only Roles**: Permission-based read access within tenant
 
-For detailed documentation, see:
-- [DATA_ISOLATION.md](DATA_ISOLATION.md) - Complete data isolation rules
-- [ROLE_SYSTEM_QUICK_REFERENCE.md](ROLE_SYSTEM_QUICK_REFERENCE.md) - Quick reference guide
+#### Demo Accounts
+
+All demo accounts use password: **`password`**
+
+| Email                        | Role          | Level |
+|------------------------------|---------------|-------|
+| developer@ispbills.com       | Developer     | 0     |
+| superadmin@ispbills.com      | Super Admin   | 10    |
+| admin@ispbills.com           | Admin         | 20    |
+| operator@ispbills.com        | Operator      | 30    |
+| suboperator@ispbills.com     | Sub-Operator  | 40    |
+| customer@ispbills.com        | Customer      | 100   |
+
+Seed demo data with:
+```bash
+php artisan db:seed --class=DemoSeeder
+```
+
+#### Documentation
+
+- **[ROLE_SYSTEM.md](ROLE_SYSTEM.md)** - Complete role system specification v3.1
+- **[DATA_ISOLATION.md](DATA_ISOLATION.md)** - Complete data isolation rules
+- **[CHANGELOG.md](CHANGELOG.md)** - Recent changes and updates
 
 ### ✅ Core Implementation
 

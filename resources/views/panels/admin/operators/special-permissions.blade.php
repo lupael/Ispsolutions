@@ -48,8 +48,8 @@
                             $roleColors = [
                                 'manager' => 'bg-purple-100 text-purple-800',
                                 'staff' => 'bg-blue-100 text-blue-800',
-                                'reseller' => 'bg-green-100 text-green-800',
-                                'sub-reseller' => 'bg-yellow-100 text-yellow-800',
+                                'operator' => 'bg-green-100 text-green-800',
+                                'sub-operator' => 'bg-yellow-100 text-yellow-800',
                             ];
                             $colorClass = $roleColors[$role->slug ?? ''] ?? 'bg-gray-100 text-gray-800';
                         @endphp

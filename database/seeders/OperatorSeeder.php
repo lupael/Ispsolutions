@@ -34,10 +34,10 @@ class OperatorSeeder extends Seeder
             ]
         );
 
-        $groupAdminRole = Role::firstOrCreate(
-            ['slug' => 'group-admin'],
+        $adminRole = Role::firstOrCreate(
+            ['slug' => 'admin'],
             [
-                'name' => 'Group Admin (ISP)',
+                'name' => 'Admin',
                 'description' => 'ISP administrator',
                 'permissions' => config('operators_permissions'),
                 'level' => 20,
@@ -77,9 +77,9 @@ class OperatorSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 20,
-                'operator_type' => 'group_admin',
+                'operator_type' => 'admin',
                 'is_active' => true,
-                'role' => $groupAdminRole,
+                'role' => $adminRole,
             ],
             [
                 'name' => 'John Operator',

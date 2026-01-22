@@ -80,6 +80,12 @@ if (! function_exists('getSidebarMenu')) {
         }
 
         $operatorType = $user->operator_type ?? 'customer';
+        
+        // Backward compatibility: map group_admin to admin
+        if ($operatorType === 'group_admin') {
+            $operatorType = 'admin';
+        }
+        
         $allMenus = config("sidebars.{$operatorType}", []);
 
         // Filter menus based on permissions and disabled status

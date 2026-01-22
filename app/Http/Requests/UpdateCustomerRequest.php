@@ -12,7 +12,7 @@ class UpdateCustomerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasAnyRole(['superadmin', 'admin', 'manager', 'staff', 'reseller', 'sub-reseller']);
+        return $this->user()->hasAnyRole(['super-admin', 'admin', 'manager', 'staff', 'operator', 'sub-operator']);
     }
 
     /**

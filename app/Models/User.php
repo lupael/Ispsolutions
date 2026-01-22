@@ -258,7 +258,7 @@ class User extends Authenticatable
     {
         return match ($this->operator_type) {
             'super_admin' => 'Super Admin',
-            'group_admin' => 'Group Admin (ISP)',
+            'admin', 'group_admin' => 'Admin', // group_admin for backward compatibility
             'operator' => 'Operator',
             'sub_operator' => 'Sub-Operator',
             'manager' => 'Manager',

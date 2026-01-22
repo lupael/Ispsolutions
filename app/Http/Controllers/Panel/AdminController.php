@@ -381,25 +381,45 @@ class AdminController extends Controller
      */
     public function operators(): View
     {
-        $operators = User::with('roles')
+        $user = auth()->user();
+        $tenantId = $user->tenant_id;
+
+        // Build base query with tenant scoping (unless Developer)
+        $baseQuery = User::with('roles')
             ->whereHas('roles', function ($query) {
-                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
-            })
-            ->latest()
-            ->paginate(20);
+                $query->whereIn('slug', ['manager', 'staff', 'operator', 'sub-operator']);
+            });
+
+        // Apply tenant filtering for non-Developer users
+        if (!$user->isDeveloper() && $tenantId) {
+            $baseQuery->where('tenant_id', $tenantId);
+        }
+
+        $operators = $baseQuery->latest()->paginate(20);
+
+        // Stats queries with same tenant scoping
+        $statsQuery = function() use ($user, $tenantId) {
+            $query = User::whereHas('roles', function ($query) {
+                $query->whereIn('slug', ['manager', 'staff', 'operator', 'sub-operator']);
+            });
+            if (!$user->isDeveloper() && $tenantId) {
+                $query->where('tenant_id', $tenantId);
+            }
+            return $query;
+        };
 
         $stats = [
-            'total' => User::whereHas('roles', function ($query) {
-                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
-            })->count(),
-            'active' => User::whereHas('roles', function ($query) {
-                $query->whereIn('slug', ['manager', 'staff', 'reseller', 'sub-reseller']);
-            })->where('is_active', true)->count(),
+            'total' => $statsQuery()->count(),
+            'active' => $statsQuery()->where('is_active', true)->count(),
             'managers' => User::whereHas('roles', function ($query) {
                 $query->where('slug', 'manager');
+            })->when(!$user->isDeveloper() && $tenantId, function($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
             })->count(),
             'staff' => User::whereHas('roles', function ($query) {
                 $query->where('slug', 'staff');
+            })->when(!$user->isDeveloper() && $tenantId, function($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
             })->count(),
         ];
 
