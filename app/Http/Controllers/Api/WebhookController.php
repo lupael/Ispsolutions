@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\WhatsAppService;
 use App\Services\TelegramBotService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,8 +14,7 @@ class WebhookController extends Controller
     public function __construct(
         private WhatsAppService $whatsappService,
         private TelegramBotService $telegramService
-    ) {
-    }
+    ) {}
 
     /**
      * Handle WhatsApp webhook
@@ -30,6 +29,7 @@ class WebhookController extends Controller
 
             if ($mode === 'subscribe' && $token === env('WHATSAPP_VERIFY_TOKEN')) {
                 Log::info('WhatsApp webhook verified');
+
                 return response($challenge, 200);
             }
 
@@ -40,8 +40,9 @@ class WebhookController extends Controller
         $signature = $request->header('X-Hub-Signature-256');
         $payload = $request->getContent();
 
-        if ($signature && !$this->whatsappService->verifyWebhookSignature($signature, $payload)) {
+        if ($signature && ! $this->whatsappService->verifyWebhookSignature($signature, $payload)) {
             Log::warning('WhatsApp webhook signature verification failed');
+
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 
@@ -73,7 +74,7 @@ class WebhookController extends Controller
     public function telegram(Request $request): JsonResponse
     {
         $update = $request->all();
-        
+
         Log::info('Telegram webhook received', ['update' => $update]);
 
         $result = $this->telegramService->handleWebhook($update);
@@ -124,7 +125,7 @@ class WebhookController extends Controller
         $messageType = $message['type'] ?? null;
         $messageBody = $message['text']['body'] ?? null;
 
-        if (!$from || !$messageType) {
+        if (! $from || ! $messageType) {
             return;
         }
 
@@ -148,7 +149,7 @@ class WebhookController extends Controller
     {
         // Implement your custom logic here
         // For example, handle commands like "STATUS", "BALANCE", etc.
-        
+
         $text = strtoupper(trim($text));
 
         switch ($text) {
@@ -156,22 +157,22 @@ class WebhookController extends Controller
                 // Send account status
                 $this->whatsappService->sendTextMessage($from, 'To check your account status, please visit our customer portal.');
                 break;
-            
+
             case 'BALANCE':
                 // Send balance information
                 $this->whatsappService->sendTextMessage($from, 'To check your balance, please visit our customer portal.');
                 break;
-            
+
             case 'HELP':
                 // Send help message
                 $helpMessage = "Available commands:\n"
                     . "STATUS - Check account status\n"
                     . "BALANCE - Check account balance\n"
                     . "HELP - Show this message\n\n"
-                    . "For more features, visit our customer portal.";
+                    . 'For more features, visit our customer portal.';
                 $this->whatsappService->sendTextMessage($from, $helpMessage);
                 break;
-            
+
             default:
                 $this->whatsappService->sendTextMessage($from, 'Unknown command. Reply with HELP to see available commands.');
                 break;

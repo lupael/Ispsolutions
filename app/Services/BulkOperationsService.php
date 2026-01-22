@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\NetworkUser;
 use App\Models\Payment;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -20,10 +19,6 @@ class BulkOperationsService
 
     /**
      * Process bulk payment for multiple invoices.
-     *
-     * @param array $invoiceIds
-     * @param array $paymentData
-     * @return array
      */
     public function processBulkPayments(array $invoiceIds, array $paymentData): array
     {
@@ -85,11 +80,6 @@ class BulkOperationsService
 
     /**
      * Bulk update network users.
-     *
-     * @param array $userIds
-     * @param string $action
-     * @param array $data
-     * @return array
      */
     public function bulkUpdateUsers(array $userIds, string $action, array $data = []): array
     {
@@ -172,9 +162,6 @@ class BulkOperationsService
 
     /**
      * Bulk delete network users (soft delete).
-     *
-     * @param array $userIds
-     * @return array
      */
     public function bulkDeleteUsers(array $userIds): array
     {
@@ -227,9 +214,6 @@ class BulkOperationsService
 
     /**
      * Bulk generate invoices for users.
-     *
-     * @param array $userIds
-     * @return array
      */
     public function bulkGenerateInvoices(array $userIds): array
     {
@@ -285,9 +269,6 @@ class BulkOperationsService
 
     /**
      * Bulk cancel invoices.
-     *
-     * @param array $invoiceIds
-     * @return array
      */
     public function bulkCancelInvoices(array $invoiceIds): array
     {

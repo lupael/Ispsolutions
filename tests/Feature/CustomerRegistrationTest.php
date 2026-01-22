@@ -19,7 +19,7 @@ class CustomerRegistrationTest extends TestCase
     {
         parent::setUp();
         $this->tenant = Tenant::factory()->create();
-        
+
         // Create roles
         Role::factory()->create(['name' => 'customer', 'level' => 10]);
         Role::factory()->create(['name' => 'operator', 'level' => 50]);
@@ -147,7 +147,7 @@ class CustomerRegistrationTest extends TestCase
         ]);
 
         $this->assertCount(5, $customers);
-        
+
         foreach ($customers as $customer) {
             $this->assertEquals($this->tenant->id, $customer->tenant_id);
         }
@@ -172,7 +172,7 @@ class CustomerRegistrationTest extends TestCase
 
         $this->assertTrue($tenant1Customers->contains($customer1));
         $this->assertFalse($tenant1Customers->contains($customer2));
-        
+
         $this->assertTrue($tenant2Customers->contains($customer2));
         $this->assertFalse($tenant2Customers->contains($customer1));
     }

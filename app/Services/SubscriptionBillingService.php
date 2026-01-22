@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Subscription;
 use App\Models\SubscriptionBill;
 use App\Models\SubscriptionPlan;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -132,7 +131,7 @@ class SubscriptionBillingService
         // Prefer last_billing_date, then start_date, and finally fall back to today.
         $referenceDate = $subscription->last_billing_date ?? $subscription->start_date ?? \Carbon\Carbon::today();
 
-        if (!$referenceDate instanceof \Carbon\Carbon) {
+        if (! $referenceDate instanceof \Carbon\Carbon) {
             $referenceDate = \Carbon\Carbon::parse($referenceDate);
         }
 
@@ -173,6 +172,7 @@ class SubscriptionBillingService
     protected function calculateTax(float $amount): float
     {
         $taxRate = config('billing.tax_rate', 0.0); // Default 0% if not configured
+
         return round($amount * $taxRate, 2);
     }
 
@@ -182,7 +182,7 @@ class SubscriptionBillingService
     public function sendRenewalReminder(Subscription $subscription): void
     {
         // Check if subscription is ending soon
-        if (!$subscription->end_date || !$subscription->end_date->isFuture()) {
+        if (! $subscription->end_date || ! $subscription->end_date->isFuture()) {
             return;
         }
 
@@ -194,13 +194,13 @@ class SubscriptionBillingService
                 // Get the tenant owner (subscriptions belong to tenants, not users)
                 $tenant = $subscription->tenant;
                 $user = $tenant?->owner;
-                
+
                 if ($user && $user->email) {
                     // Send email directly using Mail facade
                     \Illuminate\Support\Facades\Mail::to($user->email)->send(
                         new \App\Mail\SubscriptionRenewalReminder($subscription, $daysUntilExpiry)
                     );
-                    
+
                     Log::info('Renewal reminder sent', [
                         'subscription_id' => $subscription->id,
                         'tenant_id' => $subscription->tenant_id,
@@ -249,12 +249,12 @@ class SubscriptionBillingService
     {
         $currentPlan = $subscription->plan;
         $now = now();
-        
+
         // Get the billing period for accurate day calculation
         $billingPeriod = $this->calculateBillingPeriod($subscription);
         $periodStart = $billingPeriod['start'];
         $periodEnd = $billingPeriod['end'];
-        
+
         $daysRemaining = $now->diffInDays($periodEnd, false);
         $totalDays = $periodStart->diffInDays($periodEnd);
 
@@ -278,7 +278,7 @@ class SubscriptionBillingService
     {
         return DB::transaction(function () use ($subscription, $newPlan) {
             $proratedAmount = $this->calculateProration($subscription, $newPlan);
-            
+
             // Store old plan info before update
             $oldPlanName = $subscription->plan->name;
 

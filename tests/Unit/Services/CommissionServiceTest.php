@@ -17,9 +17,13 @@ class CommissionServiceTest extends TestCase
     use RefreshDatabase;
 
     protected CommissionService $commissionService;
+
     protected Tenant $tenant;
+
     protected User $operator;
+
     protected User $subOperator;
+
     protected User $customer;
 
     protected function setUp(): void
@@ -27,7 +31,7 @@ class CommissionServiceTest extends TestCase
         parent::setUp();
 
         $this->tenant = Tenant::factory()->create();
-        
+
         $operatorRole = Role::factory()->create(['name' => 'operator', 'level' => 50]);
         $subOperatorRole = Role::factory()->create(['name' => 'sub-operator', 'level' => 40]);
         $customerRole = Role::factory()->create(['name' => 'customer', 'level' => 10]);

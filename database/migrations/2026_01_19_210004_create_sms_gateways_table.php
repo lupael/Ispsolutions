@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('balance', 10, 2)->default(0); // SMS balance
             $table->decimal('rate_per_sms', 8, 4)->default(0); // Cost per SMS
             $table->timestamps();
-            
+
             $table->index(['tenant_id', 'is_active']);
             $table->index('is_default');
         });

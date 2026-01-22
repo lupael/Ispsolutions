@@ -23,7 +23,7 @@ class UpdatePaymentGatewayRequest extends FormRequest
     public function rules(): array
     {
         $gatewayId = $this->route('gateway') ?? $this->route('id');
-        
+
         return [
             'name' => 'required|string|max:255',
             'slug' => ['required', 'string', 'max:255', Rule::unique('payment_gateways')->ignore($gatewayId)],

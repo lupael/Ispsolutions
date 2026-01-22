@@ -23,7 +23,7 @@ class UpdateNetworkUserRequest extends FormRequest
     public function rules(): array
     {
         $networkUserId = $this->route('network_user') ?? $this->route('id');
-        
+
         return [
             'username' => [
                 'required',

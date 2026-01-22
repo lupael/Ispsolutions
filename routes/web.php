@@ -60,18 +60,18 @@ use App\Http\Controllers\HotspotSelfSignupController;
 Route::prefix('hotspot/signup')->name('hotspot.signup.')->group(function () {
     Route::get('/', [HotspotSelfSignupController::class, 'showRegistrationForm'])->name('');
     Route::post('/request-otp', [HotspotSelfSignupController::class, 'requestOtp'])->name('request-otp');
-    
+
     Route::get('/verify-otp', [HotspotSelfSignupController::class, 'showVerifyOtp'])->name('verify-otp');
     Route::post('/verify-otp', [HotspotSelfSignupController::class, 'verifyOtp'])->name('verify-otp.post');
     Route::post('/resend-otp', [HotspotSelfSignupController::class, 'resendOtp'])->name('resend-otp');
-    
+
     Route::get('/complete', [HotspotSelfSignupController::class, 'showCompleteProfile'])->name('complete');
     Route::post('/complete', [HotspotSelfSignupController::class, 'completeRegistration'])->name('complete.post');
-    
+
     Route::get('/payment/{user}', [HotspotSelfSignupController::class, 'showPaymentPage'])->name('payment');
     Route::post('/payment/{user}', [HotspotSelfSignupController::class, 'processPayment'])->name('payment.post');
     Route::get('/payment/callback', [HotspotSelfSignupController::class, 'paymentCallback'])->name('payment.callback');
-    
+
     Route::get('/success', [HotspotSelfSignupController::class, 'showSuccess'])->name('success');
     Route::get('/error', [HotspotSelfSignupController::class, 'showError'])->name('error');
 });
@@ -279,47 +279,47 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/logs/system', [AdminController::class, 'activityLogs'])
         ->name('logs.system')
         ->middleware('role:developer,super-admin,admin');
-    
+
     // Laravel Log - Developer only
     Route::get('/logs/laravel', [AdminController::class, 'laravelLogs'])
         ->name('logs.laravel')
         ->middleware('role:developer');
-    
+
     // Scheduler Log - Developer, Super Admin
     Route::get('/logs/scheduler', [AdminController::class, 'schedulerLogs'])
         ->name('logs.scheduler')
         ->middleware('role:developer,super-admin');
-    
+
     // Router Log - Developer, Super Admin, Admin
     Route::get('/logs/router', [AdminController::class, 'routerLogs'])
         ->name('logs.router')
         ->middleware('role:developer,super-admin,admin');
-    
+
     // PPP Log - All (filtered by router/customer ownership)
     Route::get('/logs/ppp', [AdminController::class, 'pppLogs'])
         ->name('logs.ppp');
-    
+
     // Hotspot Log - All (filtered by router/customer ownership)
     Route::get('/logs/hotspot', [AdminController::class, 'hotspotLogs'])
         ->name('logs.hotspot');
-    
+
     // RADIUS Log - Developer only
     Route::get('/logs/radius', [AdminController::class, 'radiusLogs'])
         ->name('logs.radius')
         ->middleware('role:developer');
-    
+
     // Activity Log - Developer, Super Admin, Admin
     Route::get('/logs/activity', [AdminController::class, 'activityLogs'])
         ->name('logs.activity')
         ->middleware('role:developer,super-admin,admin');
-    
+
     // Analytics Routes
     Route::get('/analytics/dashboard', [AnalyticsController::class, 'dashboard'])->name('analytics.dashboard');
     Route::get('/analytics/revenue-report', [AnalyticsController::class, 'revenueReport'])->name('analytics.revenue-report');
     Route::get('/analytics/customer-report', [AnalyticsController::class, 'customerReport'])->name('analytics.customer-report');
     Route::get('/analytics/service-report', [AnalyticsController::class, 'serviceReport'])->name('analytics.service-report');
     Route::get('/analytics/export', [AnalyticsController::class, 'exportAnalytics'])->name('analytics.export');
-    
+
     // Analytics API Endpoints (for AJAX requests)
     Route::get('/api/analytics/revenue', [AnalyticsController::class, 'revenueAnalytics'])->name('analytics.api.revenue');
     Route::get('/api/analytics/customers', [AnalyticsController::class, 'customerAnalytics'])->name('analytics.api.customers');
@@ -338,27 +338,27 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
         Route::post('/{subscription}/suspend', [CableTvController::class, 'suspend'])->name('suspend');
         Route::post('/{subscription}/reactivate', [CableTvController::class, 'reactivate'])->name('reactivate');
         Route::post('/{subscription}/renew', [CableTvController::class, 'renew'])->name('renew');
-        
+
         Route::get('/packages', [CableTvController::class, 'packagesIndex'])->name('packages.index');
         Route::get('/channels', [CableTvController::class, 'channelsIndex'])->name('channels.index');
     });
-    
+
     // PDF & Excel Export Routes
     Route::prefix('export')->name('export.')->group(function () {
         // Invoice PDF exports
         Route::get('/invoice/{invoice}/pdf', [AdminController::class, 'downloadInvoicePdf'])->name('invoice.pdf');
         Route::get('/invoice/{invoice}/view', [AdminController::class, 'streamInvoicePdf'])->name('invoice.view');
-        
+
         // Payment receipt PDF
         Route::get('/payment/{payment}/receipt', [AdminController::class, 'downloadPaymentReceiptPdf'])->name('payment.receipt');
-        
+
         // Excel exports
         Route::get('/invoices/excel', [AdminController::class, 'exportInvoices'])->name('invoices.excel');
         Route::get('/payments/excel', [AdminController::class, 'exportPayments'])->name('payments.excel');
-        
+
         // Customer statement PDF
         Route::get('/customer/{customer}/statement', [AdminController::class, 'customerStatementPdf'])->name('customer.statement');
-        
+
         // Monthly report PDF
         Route::get('/monthly-report', [AdminController::class, 'monthlyReportPdf'])->name('monthly.report');
 
@@ -481,7 +481,7 @@ Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'r
     Route::get('/billing', [CustomerController::class, 'billing'])->name('billing');
     Route::get('/usage', [CustomerController::class, 'usage'])->name('usage');
     Route::get('/tickets', [CustomerController::class, 'tickets'])->name('tickets');
-    
+
     // PDF Export Routes for Customer
     Route::get('/invoice/{invoice}/pdf', [CustomerController::class, 'downloadInvoicePdf'])->name('invoice.pdf');
     Route::get('/invoice/{invoice}/view', [CustomerController::class, 'viewInvoicePdf'])->name('invoice.view');
@@ -542,11 +542,11 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
 |--------------------------------------------------------------------------
 */
 
-use App\Http\Controllers\Panel\AuditLogController;
-use App\Http\Controllers\Panel\TwoFactorAuthController;
-use App\Http\Controllers\Panel\ApiKeyController;
 use App\Http\Controllers\Panel\AnalyticsDashboardController;
+use App\Http\Controllers\Panel\ApiKeyController;
+use App\Http\Controllers\Panel\AuditLogController;
 use App\Http\Controllers\Panel\NotificationController;
+use App\Http\Controllers\Panel\TwoFactorAuthController;
 
 // Audit Logs (Available to all authenticated users with proper permissions)
 Route::prefix('audit-logs')->name('audit-logs.')->middleware(['auth', 'can:view-audit-logs'])->group(function () {

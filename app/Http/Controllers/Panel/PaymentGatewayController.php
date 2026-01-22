@@ -121,6 +121,7 @@ class PaymentGatewayController extends Controller
         return $this->handleDelete(
             function () use ($gateway) {
                 $gateway->delete();
+
                 return $gateway;
             },
             'Payment gateway deleted successfully',
@@ -137,7 +138,7 @@ class PaymentGatewayController extends Controller
 
         return $this->handleCrudOperation(
             function () use ($gateway) {
-                $gateway->is_active = !$gateway->is_active;
+                $gateway->is_active = ! $gateway->is_active;
                 $gateway->save();
 
                 return $gateway;
@@ -158,7 +159,7 @@ class PaymentGatewayController extends Controller
             function () use ($gateway) {
                 // Basic validation of gateway configuration
                 $config = $gateway->configuration ?? [];
-                
+
                 // Validate gateway type
                 $validTypes = [
                     PaymentGateway::TYPE_STRIPE,
@@ -168,13 +169,13 @@ class PaymentGatewayController extends Controller
                     PaymentGateway::TYPE_PAYPAL,
                     PaymentGateway::TYPE_RAZORPAY,
                 ];
-                
-                if (!in_array($gateway->type, $validTypes, true)) {
+
+                if (! in_array($gateway->type, $validTypes, true)) {
                     throw new \Exception("Invalid gateway type: {$gateway->type}");
                 }
-                
+
                 // Check if required fields are present based on gateway type
-                $requiredFields = match($gateway->type) {
+                $requiredFields = match ($gateway->type) {
                     PaymentGateway::TYPE_STRIPE => ['api_key', 'api_secret'],
                     PaymentGateway::TYPE_BKASH => ['app_key', 'app_secret', 'username', 'password'],
                     PaymentGateway::TYPE_NAGAD => ['merchant_id', 'merchant_key'],
@@ -184,29 +185,29 @@ class PaymentGatewayController extends Controller
 
                 foreach ($requiredFields as $field) {
                     // Check field exists and is not empty
-                    if (!array_key_exists($field, $config)) {
+                    if (! array_key_exists($field, $config)) {
                         throw new \Exception("Missing required field: {$field}");
                     }
-                    
+
                     $value = $config[$field];
-                    
+
                     // Validate type
-                    if (!is_string($value)) {
+                    if (! is_string($value)) {
                         throw new \Exception("Invalid type for field: {$field}");
                     }
-                    
+
                     // Trim and validate not empty
                     $value = trim($value);
                     if ($value === '') {
                         throw new \Exception("Missing required field: {$field}");
                     }
-                    
+
                     // Basic length validation
                     $len = strlen($value);
                     if ($len < 4 || $len > 255) {
                         throw new \Exception("Invalid value length for field: {$field}");
                     }
-                    
+
                     // Format validation based on gateway and field
                     $this->validateFieldFormat($gateway->type, $field, $value);
                 }
@@ -225,16 +226,13 @@ class PaymentGatewayController extends Controller
 
     /**
      * Encrypt sensitive configuration fields.
-     *
-     * @param array $config
-     * @return array
      */
     private function encryptSensitiveConfig(array $config): array
     {
         $sensitiveKeys = ['api_secret', 'private_key', 'webhook_secret'];
 
         foreach ($sensitiveKeys as $key) {
-            if (isset($config[$key]) && !empty($config[$key])) {
+            if (isset($config[$key]) && ! empty($config[$key])) {
                 $config[$key] = encrypt($config[$key]);
             }
         }
@@ -244,16 +242,13 @@ class PaymentGatewayController extends Controller
 
     /**
      * Mask sensitive configuration fields for display.
-     *
-     * @param array $config
-     * @return array
      */
     private function maskSensitiveConfig(array $config): array
     {
         $sensitiveKeys = ['api_secret', 'private_key', 'webhook_secret'];
 
         foreach ($sensitiveKeys as $key) {
-            if (isset($config[$key]) && !empty($config[$key])) {
+            if (isset($config[$key]) && ! empty($config[$key])) {
                 try {
                     // Try to decrypt first
                     $decrypted = decrypt($config[$key]);
@@ -272,9 +267,6 @@ class PaymentGatewayController extends Controller
     /**
      * Validate field format based on gateway type and field name.
      *
-     * @param string $gatewayType
-     * @param string $field
-     * @param string $value
      * @throws \Exception
      */
     private function validateFieldFormat(string $gatewayType, string $field, string $value): void
@@ -282,42 +274,42 @@ class PaymentGatewayController extends Controller
         switch ($gatewayType) {
             case PaymentGateway::TYPE_STRIPE:
                 if (in_array($field, ['api_key', 'api_secret'], true)) {
-                    if (!preg_match('/^[A-Za-z0-9_\-]{8,255}$/', $value)) {
+                    if (! preg_match('/^[A-Za-z0-9_\-]{8,255}$/', $value)) {
                         throw new \Exception("Invalid format for Stripe {$field}");
                     }
                 }
                 break;
-            
+
             case PaymentGateway::TYPE_BKASH:
                 if (in_array($field, ['app_key', 'app_secret', 'username', 'password'], true)) {
-                    if (!preg_match('/^[\S]{4,255}$/', $value)) {
+                    if (! preg_match('/^[\S]{4,255}$/', $value)) {
                         throw new \Exception("Invalid format for bKash {$field}");
                     }
                 }
                 break;
-            
+
             case PaymentGateway::TYPE_NAGAD:
-                if ($field === 'merchant_id' && !preg_match('/^[0-9]{4,30}$/', $value)) {
-                    throw new \Exception("Invalid format for Nagad merchant_id");
+                if ($field === 'merchant_id' && ! preg_match('/^[0-9]{4,30}$/', $value)) {
+                    throw new \Exception('Invalid format for Nagad merchant_id');
                 }
-                if ($field === 'merchant_key' && !preg_match('/^[A-Za-z0-9]{8,255}$/', $value)) {
-                    throw new \Exception("Invalid format for Nagad merchant_key");
+                if ($field === 'merchant_key' && ! preg_match('/^[A-Za-z0-9]{8,255}$/', $value)) {
+                    throw new \Exception('Invalid format for Nagad merchant_key');
                 }
                 break;
-            
+
             case PaymentGateway::TYPE_SSLCOMMERZ:
-                if ($field === 'store_id' && !preg_match('/^[A-Za-z0-9_\-]{4,100}$/', $value)) {
-                    throw new \Exception("Invalid format for SSLCommerz store_id");
+                if ($field === 'store_id' && ! preg_match('/^[A-Za-z0-9_\-]{4,100}$/', $value)) {
+                    throw new \Exception('Invalid format for SSLCommerz store_id');
                 }
-                if ($field === 'store_password' && !preg_match('/^[\S]{4,255}$/', $value)) {
-                    throw new \Exception("Invalid format for SSLCommerz store_password");
+                if ($field === 'store_password' && ! preg_match('/^[\S]{4,255}$/', $value)) {
+                    throw new \Exception('Invalid format for SSLCommerz store_password');
                 }
                 break;
-            
+
             default:
                 // Generic API key validation for other gateways
-                if ($field === 'api_key' && !preg_match('/^[A-Za-z0-9_\-]{8,255}$/', $value)) {
-                    throw new \Exception("Invalid format for api_key");
+                if ($field === 'api_key' && ! preg_match('/^[A-Za-z0-9_\-]{8,255}$/', $value)) {
+                    throw new \Exception('Invalid format for api_key');
                 }
                 break;
         }

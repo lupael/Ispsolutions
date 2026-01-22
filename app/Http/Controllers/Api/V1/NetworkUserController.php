@@ -25,9 +25,9 @@ class NetworkUserController extends Controller
     {
         // Optimized: Use eager loading with select to avoid N+1 queries
         $query = NetworkUser::select([
-            'id', 'username', 'email', 'service_type', 
-            'package_id', 'status', 'user_id', 'tenant_id', 
-            'created_at', 'updated_at'
+            'id', 'username', 'email', 'service_type',
+            'package_id', 'status', 'user_id', 'tenant_id',
+            'created_at', 'updated_at',
         ])->with(['package:id,name,price,bandwidth_upload,bandwidth_download']);
 
         if ($request->has('service_type')) {
@@ -76,14 +76,14 @@ class NetworkUserController extends Controller
         $user = NetworkUser::select([
             'id', 'username', 'email', 'service_type',
             'package_id', 'status', 'user_id', 'tenant_id',
-            'created_at', 'updated_at'
+            'created_at', 'updated_at',
         ])->with([
             'package:id,name,price,bandwidth_upload,bandwidth_download',
             'sessions' => function ($q) {
                 $q->select('id', 'user_id', 'start_time', 'stop_time', 'input_octets', 'output_octets')
-                  ->latest()
-                  ->limit(10);
-            }
+                    ->latest()
+                    ->limit(10);
+            },
         ])->findOrFail($id);
 
         return response()->json($user);

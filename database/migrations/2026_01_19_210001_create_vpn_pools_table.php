@@ -28,7 +28,7 @@ return new class extends Migration
             $table->unsignedInteger('used_ips')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['tenant_id', 'is_active']);
             $table->index('protocol');
         });

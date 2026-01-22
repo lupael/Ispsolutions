@@ -30,7 +30,7 @@ class SmsService
                 $tenantId = $user->tenant_id;
             }
         }
-        
+
         if ($tenantId === null) {
             throw new \Exception('Cannot log SMS: No tenant context available');
         }
@@ -56,6 +56,7 @@ class SmsService
     {
         // Mask patterns like "Your OTP code is: 123456"
         $message = preg_replace('/(\b\d{4,8}\b)/', '****', $message);
+
         return $message;
     }
 
@@ -71,6 +72,7 @@ class SmsService
 
         if ($tenantId === null) {
             Log::warning('Cannot send template SMS: No tenant context available');
+
             return false;
         }
 
@@ -79,12 +81,14 @@ class SmsService
             ->bySlug($templateSlug)
             ->first();
 
-        if (!$template) {
+        if (! $template) {
             Log::warning('SMS template not found', ['slug' => $templateSlug, 'tenant_id' => $tenantId]);
+
             return false;
         }
 
         $message = $template->render($data);
+
         return $this->sendSms($phoneNumber, $message, null, $userId, $tenantId);
     }
 
@@ -443,8 +447,9 @@ class SmsService
         $senderId = config('sms.maestro.sender_id');
         $apiUrl = config('sms.maestro.api_url', 'https://api.maestrosms.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('Maestro SMS credentials not configured');
+
             return false;
         }
 
@@ -458,10 +463,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via Maestro', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('Maestro SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -474,8 +481,9 @@ class SmsService
         $senderId = config('sms.robi.sender_id');
         $apiUrl = config('sms.robi.api_url', 'https://esms.mimsms.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('Robi SMS credentials not configured');
+
             return false;
         }
 
@@ -489,10 +497,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via Robi', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('Robi SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -505,8 +515,9 @@ class SmsService
         $senderId = config('sms.m2mbd.sender_id');
         $apiUrl = config('sms.m2mbd.api_url', 'https://api.m2mbd.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('M2M BD SMS credentials not configured');
+
             return false;
         }
 
@@ -520,10 +531,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via M2M BD', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('M2M BD SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -536,8 +549,9 @@ class SmsService
         $senderId = config('sms.bangladeshsms.sender_id');
         $apiUrl = config('sms.bangladeshsms.api_url', 'https://api.bangladeshsms.com/send');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('BangladeshSMS credentials not configured');
+
             return false;
         }
 
@@ -550,10 +564,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via BangladeshSMS', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('BangladeshSMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -566,8 +582,9 @@ class SmsService
         $senderId = config('sms.bulksmsbd.sender_id');
         $apiUrl = config('sms.bulksmsbd.api_url', 'https://api.bulksmsbd.com/api/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('BulkSMSBD credentials not configured');
+
             return false;
         }
 
@@ -581,10 +598,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via BulkSMSBD', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('BulkSMSBD failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -597,8 +616,9 @@ class SmsService
         $senderId = config('sms.btssms.sender_id');
         $apiUrl = config('sms.btssms.api_url', 'https://api.btssms.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('BTS SMS credentials not configured');
+
             return false;
         }
 
@@ -612,10 +632,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via BTS SMS', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('BTS SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -628,8 +650,9 @@ class SmsService
         $senderId = config('sms.880sms.sender_id');
         $apiUrl = config('sms.880sms.api_url', 'https://api.880sms.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('880 SMS credentials not configured');
+
             return false;
         }
 
@@ -643,10 +666,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via 880 SMS', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('880 SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -659,8 +684,9 @@ class SmsService
         $senderId = config('sms.bdsmartpay.sender_id');
         $apiUrl = config('sms.bdsmartpay.api_url', 'https://api.bdsmartpay.com/sms');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('BD Smart Pay SMS credentials not configured');
+
             return false;
         }
 
@@ -673,10 +699,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via BD Smart Pay', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('BD Smart Pay SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -689,8 +717,9 @@ class SmsService
         $senderId = config('sms.elitbuzz.sender_id');
         $apiUrl = config('sms.elitbuzz.api_url', 'https://api.elitbuzz-bd.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('Elitbuzz SMS credentials not configured');
+
             return false;
         }
 
@@ -704,10 +733,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via Elitbuzz', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('Elitbuzz SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -721,8 +752,9 @@ class SmsService
         $senderId = config('sms.sslwireless.sender_id');
         $apiUrl = config('sms.sslwireless.api_url', 'https://smsplus.sslwireless.com/api/v3/send-sms');
 
-        if (!$apiKey || !$sid || !$senderId) {
+        if (! $apiKey || ! $sid || ! $senderId) {
             Log::warning('SSL Wireless SMS credentials not configured');
+
             return false;
         }
 
@@ -736,10 +768,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via SSL Wireless', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('SSL Wireless SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -752,8 +786,9 @@ class SmsService
         $senderId = config('sms.adnsms.sender_id');
         $apiUrl = config('sms.adnsms.api_url', 'https://api.adnsms.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('ADN SMS credentials not configured');
+
             return false;
         }
 
@@ -767,10 +802,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via ADN SMS', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('ADN SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -783,8 +820,9 @@ class SmsService
         $senderId = config('sms.24smsbd.sender_id');
         $apiUrl = config('sms.24smsbd.api_url', 'https://api.24smsbd.com/api/v1/SendSMS');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('24 SMS BD credentials not configured');
+
             return false;
         }
 
@@ -798,10 +836,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via 24 SMS BD', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('24 SMS BD failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -814,8 +854,9 @@ class SmsService
         $senderId = config('sms.smsnet.sender_id');
         $apiUrl = config('sms.smsnet.api_url', 'https://api.smsnet.com.bd/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('SMS Net credentials not configured');
+
             return false;
         }
 
@@ -829,10 +870,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via SMS Net', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('SMS Net failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -845,8 +888,9 @@ class SmsService
         $senderId = config('sms.brandsms.sender_id');
         $apiUrl = config('sms.brandsms.api_url', 'https://api.brandsms.com.bd/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('Brand SMS credentials not configured');
+
             return false;
         }
 
@@ -860,10 +904,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via Brand SMS', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('Brand SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -876,8 +922,9 @@ class SmsService
         $senderId = config('sms.metrotel.sender_id');
         $apiUrl = config('sms.metrotel.api_url', 'https://api.metrotel.com.bd/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('Metrotel SMS credentials not configured');
+
             return false;
         }
 
@@ -891,10 +938,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via Metrotel', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('Metrotel SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -907,8 +956,9 @@ class SmsService
         $senderId = config('sms.dianahost.sender_id');
         $apiUrl = config('sms.dianahost.api_url', 'https://sms.dianahost.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('Dianahost SMS credentials not configured');
+
             return false;
         }
 
@@ -922,10 +972,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via Dianahost', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('Dianahost SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -938,8 +990,9 @@ class SmsService
         $senderId = config('sms.smsinbd.sender_id');
         $apiUrl = config('sms.smsinbd.api_url', 'https://api.smsinbd.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('SMS in BD credentials not configured');
+
             return false;
         }
 
@@ -953,10 +1006,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via SMS in BD', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('SMS in BD failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 
@@ -969,8 +1024,9 @@ class SmsService
         $senderId = config('sms.dhakasoftbd.sender_id');
         $apiUrl = config('sms.dhakasoftbd.api_url', 'https://api.dhakasoftbd.com/smsapi');
 
-        if (!$apiKey || !$senderId) {
+        if (! $apiKey || ! $senderId) {
             Log::warning('Dhakasoft BD SMS credentials not configured');
+
             return false;
         }
 
@@ -984,10 +1040,12 @@ class SmsService
 
         if ($response->successful()) {
             Log::info('SMS sent via Dhakasoft BD', ['phone' => $phoneNumber]);
+
             return true;
         }
 
         Log::error('Dhakasoft BD SMS failed', ['phone' => $phoneNumber, 'response' => $response->body()]);
+
         return false;
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands\CableTv;
 
-use App\Models\CableTvSubscription;
 use App\Models\Tenant;
 use App\Services\CableTvBillingService;
 use Illuminate\Console\Command;
@@ -31,11 +30,12 @@ class ProcessExpiredSubscriptions extends Command
         $this->info('Processing expired cable TV subscriptions...');
 
         $tenantId = $this->option('tenant');
-        
+
         if ($tenantId) {
             $tenants = Tenant::where('id', $tenantId)->get();
             if ($tenants->isEmpty()) {
                 $this->error("Tenant with ID {$tenantId} not found.");
+
                 return 1;
             }
         } else {
@@ -46,7 +46,7 @@ class ProcessExpiredSubscriptions extends Command
 
         foreach ($tenants as $tenant) {
             $this->info("Processing tenant: {$tenant->name} (ID: {$tenant->id})");
-            
+
             $expiredCount = $billingService->processExpiredSubscriptions($tenant->id);
             $totalExpired += $expiredCount;
 
@@ -56,7 +56,7 @@ class ProcessExpiredSubscriptions extends Command
             $expiringSoon = $billingService->getExpiringSubscriptions($tenant->id, 7);
             if ($expiringSoon->count() > 0) {
                 $this->warn("  - Subscriptions expiring in 7 days: {$expiringSoon->count()}");
-                
+
                 foreach ($expiringSoon as $subscription) {
                     $daysRemaining = $subscription->daysRemaining();
                     $this->line("    • {$subscription->subscriber_id} - {$subscription->customer_name} ({$daysRemaining} days remaining)");
@@ -71,4 +71,3 @@ class ProcessExpiredSubscriptions extends Command
         return 0;
     }
 }
-

@@ -18,9 +18,7 @@ use Illuminate\View\View;
 
 class CableTvController extends Controller
 {
-    public function __construct(private CableTvBillingService $billingService)
-    {
-    }
+    public function __construct(private CableTvBillingService $billingService) {}
 
     /**
      * Display subscriptions listing
@@ -74,12 +72,12 @@ class CableTvController extends Controller
     {
         try {
             $validated = $request->validated();
-            
+
             $package = CableTvPackage::findOrFail($validated['package_id']);
-            
+
             // Generate unique subscriber ID
             $subscriberId = $this->generateSubscriberId();
-            
+
             // Calculate expiry date
             $startDate = \Carbon\Carbon::parse($validated['start_date']);
             $expiryDate = $startDate->copy()->addDays($package->validity_days);
@@ -107,7 +105,7 @@ class CableTvController extends Controller
             Log::error('Failed to create cable TV subscription: ' . $e->getMessage(), [
                 'data' => $request->validated(),
             ]);
-            
+
             return back()->withInput()
                 ->with('error', 'Failed to create subscription. Please try again.');
         }
@@ -138,7 +136,7 @@ class CableTvController extends Controller
             Log::error('Failed to update cable TV subscription: ' . $e->getMessage(), [
                 'subscription_id' => $subscription->id,
             ]);
-            
+
             return back()->withInput()
                 ->with('error', 'Failed to update subscription. Please try again.');
         }
@@ -158,7 +156,7 @@ class CableTvController extends Controller
             Log::error('Failed to delete cable TV subscription: ' . $e->getMessage(), [
                 'subscription_id' => $subscription->id,
             ]);
-            
+
             return back()->with('error', 'Failed to delete subscription. Please try again.');
         }
     }
@@ -180,7 +178,7 @@ class CableTvController extends Controller
             Log::error('Failed to suspend cable TV subscription: ' . $e->getMessage(), [
                 'subscription_id' => $subscription->id,
             ]);
-            
+
             return back()->with('error', 'Failed to suspend subscription. Please try again.');
         }
     }
@@ -202,7 +200,7 @@ class CableTvController extends Controller
             Log::error('Failed to reactivate cable TV subscription: ' . $e->getMessage(), [
                 'subscription_id' => $subscription->id,
             ]);
-            
+
             return back()->with('error', 'Failed to reactivate subscription. Please try again.');
         }
     }
@@ -226,7 +224,7 @@ class CableTvController extends Controller
             Log::error('Failed to renew cable TV subscription: ' . $e->getMessage(), [
                 'subscription_id' => $subscription->id,
             ]);
-            
+
             return back()->with('error', 'Failed to renew subscription. Please try again.');
         }
     }

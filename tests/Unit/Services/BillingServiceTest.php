@@ -20,8 +20,11 @@ class BillingServiceTest extends TestCase
     use RefreshDatabase;
 
     protected BillingService $billingService;
+
     protected User $customer;
+
     protected ServicePackage $package;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
@@ -30,7 +33,7 @@ class BillingServiceTest extends TestCase
 
         $this->tenant = Tenant::factory()->create();
         $customerRole = Role::factory()->create(['name' => 'customer', 'level' => 10]);
-        
+
         $this->customer = User::factory()->create(['tenant_id' => $this->tenant->id]);
         $this->customer->roles()->attach($customerRole);
 

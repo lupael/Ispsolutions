@@ -26,8 +26,11 @@ use Illuminate\Support\Str;
 class HotspotSelfSignupController extends Controller
 {
     protected OtpService $otpService;
+
     protected HotspotService $hotspotService;
+
     protected PaymentGatewayService $paymentGatewayService;
+
     protected SmsService $smsService;
 
     public function __construct(
@@ -90,7 +93,7 @@ class HotspotSelfSignupController extends Controller
                     'package_id' => $packageId,
                     'otp_expires_at' => $otpData['expires_at']->timestamp,
                     'tenant_id' => $tenantId,
-                ]
+                ],
             ]);
 
             return redirect()
@@ -116,7 +119,7 @@ class HotspotSelfSignupController extends Controller
     {
         $signupData = session('hotspot_signup');
 
-        if (!$signupData) {
+        if (! $signupData) {
             return redirect()
                 ->route('hotspot.signup')
                 ->withErrors(['error' => 'Session expired. Please start again.']);
@@ -136,7 +139,7 @@ class HotspotSelfSignupController extends Controller
         try {
             $signupData = session('hotspot_signup');
 
-            if (!$signupData) {
+            if (! $signupData) {
                 return redirect()
                     ->route('hotspot.signup')
                     ->withErrors(['error' => 'Session expired. Please start again.']);
@@ -183,7 +186,7 @@ class HotspotSelfSignupController extends Controller
         try {
             $signupData = session('hotspot_signup');
 
-            if (!$signupData) {
+            if (! $signupData) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Session expired. Please start again.',
@@ -221,7 +224,7 @@ class HotspotSelfSignupController extends Controller
     {
         $signupData = session('hotspot_signup');
 
-        if (!$signupData || !$signupData['otp_verified']) {
+        if (! $signupData || ! $signupData['otp_verified']) {
             return redirect()
                 ->route('hotspot.signup')
                 ->withErrors(['error' => 'Please verify OTP first.']);
@@ -243,7 +246,7 @@ class HotspotSelfSignupController extends Controller
         try {
             $signupData = session('hotspot_signup');
 
-            if (!$signupData || !$signupData['otp_verified']) {
+            if (! $signupData || ! $signupData['otp_verified']) {
                 return redirect()
                     ->route('hotspot.signup')
                     ->withErrors(['error' => 'Please verify OTP first.']);
@@ -316,7 +319,7 @@ class HotspotSelfSignupController extends Controller
     {
         $signupData = session('hotspot_signup');
 
-        if (!$signupData || $signupData['user_id'] !== (int) $userId) {
+        if (! $signupData || $signupData['user_id'] !== (int) $userId) {
             return redirect()
                 ->route('hotspot.signup')
                 ->withErrors(['error' => 'Invalid session. Please start again.']);
@@ -324,7 +327,7 @@ class HotspotSelfSignupController extends Controller
 
         $hotspotUser = HotspotUser::findOrFail($userId);
         $package = Package::findOrFail($hotspotUser->package_id);
-        
+
         // Get active payment gateways for the tenant
         $paymentGateways = PaymentGateway::where('tenant_id', $hotspotUser->tenant_id)
             ->where('is_active', true)
@@ -345,7 +348,7 @@ class HotspotSelfSignupController extends Controller
         try {
             $signupData = session('hotspot_signup');
 
-            if (!$signupData || $signupData['user_id'] !== (int) $userId) {
+            if (! $signupData || $signupData['user_id'] !== (int) $userId) {
                 return redirect()
                     ->route('hotspot.signup')
                     ->withErrors(['error' => 'Invalid session. Please start again.']);
@@ -414,15 +417,15 @@ class HotspotSelfSignupController extends Controller
     {
         try {
             $invoiceId = session('hotspot_signup.invoice_id');
-            
-            if (!$invoiceId) {
+
+            if (! $invoiceId) {
                 return redirect()
                     ->route('hotspot.signup.error')
                     ->with('error', 'Invalid payment session.');
             }
 
             $invoice = Invoice::findOrFail($invoiceId);
-            
+
             // Check if payment is successful
             if ($invoice->status === 'paid') {
                 // Activate hotspot account
@@ -453,13 +456,13 @@ class HotspotSelfSignupController extends Controller
     {
         $signupData = session('hotspot_signup');
 
-        if (!$signupData || !isset($signupData['user_id'])) {
+        if (! $signupData || ! isset($signupData['user_id'])) {
             return redirect()->route('hotspot.signup');
         }
 
         $hotspotUser = HotspotUser::find($signupData['user_id']);
 
-        if (!$hotspotUser || $hotspotUser->status !== 'active') {
+        if (! $hotspotUser || $hotspotUser->status !== 'active') {
             return redirect()->route('hotspot.signup');
         }
 
@@ -487,8 +490,8 @@ class HotspotSelfSignupController extends Controller
         DB::transaction(function () use ($invoice) {
             // Find hotspot user from session or invoice metadata
             $signupData = session('hotspot_signup');
-            
-            if (!$signupData) {
+
+            if (! $signupData) {
                 throw new \Exception('Signup session not found');
             }
 
@@ -524,13 +527,13 @@ class HotspotSelfSignupController extends Controller
         $message = "Welcome to Hotspot!\n\n";
         $message .= "Your account is now active.\n";
         $message .= "Username: {$hotspotUser->username}\n";
-        
+
         if (isset($hotspotUser->plain_password)) {
             $message .= "Password: {$hotspotUser->plain_password}\n";
         }
-        
+
         $message .= "\nPackage: {$package->name}\n";
-        $message .= "Valid until: " . $hotspotUser->expires_at->format('d M Y') . "\n";
+        $message .= 'Valid until: ' . $hotspotUser->expires_at->format('d M Y') . "\n";
         $message .= "\nThank you!";
 
         try {

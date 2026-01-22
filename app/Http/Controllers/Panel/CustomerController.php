@@ -164,6 +164,6 @@ class CustomerController extends Controller
             $user->tenant_id
         );
 
-        return $pdf->download("statement-" . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('statement-' . now()->format('Y-m-d') . '.pdf');
     }
 }

@@ -6,7 +6,6 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\SubscriptionBill;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\View;
 
 class PdfService
 {
@@ -58,7 +57,7 @@ class PdfService
     public function generateCustomerStatementPdf(int $userId, string $startDate, string $endDate, ?int $tenantId = null): \Barryvdh\DomPDF\PDF
     {
         $user = \App\Models\User::findOrFail($userId);
-        
+
         // Tenant isolation check
         if ($tenantId !== null && $user->tenant_id !== $tenantId) {
             throw new \Exception('Unauthorized access to user data from different tenant');
@@ -133,6 +132,7 @@ class PdfService
     public function downloadInvoicePdf(Invoice $invoice): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $pdf = $this->generateInvoicePdf($invoice);
+
         return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
     }
 
@@ -142,6 +142,7 @@ class PdfService
     public function streamInvoicePdf(Invoice $invoice): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $pdf = $this->generateInvoicePdf($invoice);
+
         return $pdf->stream("invoice-{$invoice->invoice_number}.pdf");
     }
 
@@ -151,6 +152,7 @@ class PdfService
     public function downloadSubscriptionBillPdf(SubscriptionBill $bill): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $pdf = $this->generateSubscriptionBillPdf($bill);
+
         return $pdf->download("bill-{$bill->bill_number}.pdf");
     }
 
@@ -160,6 +162,7 @@ class PdfService
     public function downloadPaymentReceiptPdf(Payment $payment): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $pdf = $this->generatePaymentReceiptPdf($payment);
+
         return $pdf->download("receipt-{$payment->payment_number}.pdf");
     }
 }

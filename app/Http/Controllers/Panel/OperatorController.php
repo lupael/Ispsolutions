@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\RechargeCard;
 use Illuminate\View\View;
 
 class OperatorController extends Controller

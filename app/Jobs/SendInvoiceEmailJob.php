@@ -15,6 +15,7 @@ class SendInvoiceEmailJob implements ShouldQueue
     use InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 60;
 
     /**
@@ -38,6 +39,7 @@ class SendInvoiceEmailJob implements ShouldQueue
                 Log::warning('Cannot send invoice email: User or email not found', [
                     'invoice_id' => $this->invoice->id,
                 ]);
+
                 return;
             }
 

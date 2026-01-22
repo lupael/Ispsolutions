@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * This table stores custom role labels that Admins can configure.
      * Allows renaming "Operator" to "Partner", "Agent", etc. without breaking role logic.
      */

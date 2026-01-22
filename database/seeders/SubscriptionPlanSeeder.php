@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\SubscriptionPlan;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class SubscriptionPlanSeeder extends Seeder
 {

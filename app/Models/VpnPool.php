@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToTenant;
 
 class VpnPool extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
         'tenant_id',
@@ -50,8 +50,8 @@ class VpnPool extends Model
 
     public function getUsagePercentageAttribute()
     {
-        return $this->total_ips > 0 
-            ? round(($this->used_ips / $this->total_ips) * 100, 2) 
+        return $this->total_ips > 0
+            ? round(($this->used_ips / $this->total_ips) * 100, 2)
             : 0;
     }
 }

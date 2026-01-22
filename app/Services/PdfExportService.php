@@ -41,7 +41,7 @@ class PdfExportService
     {
         $pdf = $this->generateInvoicePdf($invoice);
         $filename = 'invoice_' . $invoice->invoice_number . '.pdf';
-        
+
         return $pdf->download($filename);
     }
 
@@ -52,7 +52,7 @@ class PdfExportService
     {
         $pdf = $this->generateInvoicePdf($invoice);
         $filename = 'invoice_' . $invoice->invoice_number . '.pdf';
-        
+
         return $pdf->stream($filename);
     }
 
@@ -87,7 +87,7 @@ class PdfExportService
     {
         $pdf = $this->generateReceiptPdf($payment);
         $filename = 'receipt_' . $payment->transaction_id . '.pdf';
-        
+
         return $pdf->download($filename);
     }
 
@@ -176,7 +176,7 @@ class PdfExportService
             'summary' => [
                 'total_count' => $payments->count(),
                 'total_amount' => $payments->sum('amount'),
-                'by_method' => $payments->groupBy('payment_method')->map(fn($group) => [
+                'by_method' => $payments->groupBy('payment_method')->map(fn ($group) => [
                     'count' => $group->count(),
                     'amount' => $group->sum('amount'),
                 ]),
@@ -207,7 +207,7 @@ class PdfExportService
                 'total_count' => $customers->count(),
                 'active_count' => $customers->where('status', 'active')->count(),
                 'suspended_count' => $customers->where('status', 'suspended')->count(),
-                'by_package' => $customers->groupBy('package_id')->map(fn($group) => [
+                'by_package' => $customers->groupBy('package_id')->map(fn ($group) => [
                     'count' => $group->count(),
                     'package_name' => $group->first()->package->name ?? 'Unknown',
                 ]),
@@ -233,7 +233,7 @@ class PdfExportService
     {
         $totalIncome = $data->where('type', 'income')->sum('amount');
         $totalExpense = $data->where('type', 'expense')->sum('amount');
-        
+
         $reportData = [
             'data' => $data,
             'startDate' => $startDate,
@@ -273,7 +273,7 @@ class PdfExportService
                 'total_expenses' => $expenses->sum('amount'),
                 'total_count' => $expenses->count(),
                 'average_expense' => $expenses->avg('amount') ?? 0,
-                'by_category' => $expenses->groupBy('category')->map(fn($group) => [
+                'by_category' => $expenses->groupBy('category')->map(fn ($group) => [
                     'count' => $group->count(),
                     'amount' => $group->sum('amount'),
                 ]),
@@ -299,7 +299,7 @@ class PdfExportService
     {
         $totalDebits = $transactions->where('type', 'expense')->sum('amount');
         $totalCredits = $transactions->where('type', 'income')->sum('amount');
-        
+
         $reportData = [
             'transactions' => $transactions,
             'startDate' => $startDate,
@@ -363,7 +363,7 @@ class PdfExportService
         $totalDebits = $transactions->where('type', 'debit')->sum('amount');
         $totalCredits = $transactions->where('type', 'credit')->sum('amount');
         $closingBalance = $openingBalance + $totalCredits - $totalDebits;
-        
+
         $reportData = [
             'entity' => $entity,
             'transactions' => $transactions,

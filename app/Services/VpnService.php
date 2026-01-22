@@ -22,7 +22,7 @@ class VpnService
                 ->where('total_ips', '>', DB::raw('used_ips'))
                 ->first();
 
-            if (!$pool) {
+            if (! $pool) {
                 throw new \Exception('No available VPN pool found');
             }
 
@@ -46,8 +46,6 @@ class VpnService
             return $vpnAccount;
         });
     }
-
-
 
     /**
      * Release VPN account
@@ -131,7 +129,7 @@ class VpnService
             'usage_percentage' => $usagePercentage,
             'is_critical' => $usagePercentage >= $threshold,
             'available_ips' => $pool->available_ips,
-            'recommendation' => $usagePercentage >= $threshold 
+            'recommendation' => $usagePercentage >= $threshold
                 ? 'Pool capacity is critical. Consider adding more IPs or creating a new pool.'
                 : 'Pool capacity is adequate.',
         ];

@@ -19,10 +19,10 @@ class FinancialReportService
 
         // Get Revenue
         $revenue = $this->getAccountTypeTotal('revenue', $startDate, $endDate, $tenantId);
-        
+
         // Get Expenses
         $expenses = $this->getAccountTypeTotal('expense', $startDate, $endDate, $tenantId);
-        
+
         // Calculate breakdown
         $revenueBreakdown = $this->getAccountBreakdown('revenue', $startDate, $endDate, $tenantId);
         $expenseBreakdown = $this->getAccountBreakdown('expense', $startDate, $endDate, $tenantId);
@@ -54,7 +54,7 @@ class FinancialReportService
     /**
      * Generate Balance Sheet
      */
-    public function generateBalanceSheet(Carbon $date = null): array
+    public function generateBalanceSheet(?Carbon $date = null): array
     {
         $date = $date ?? now();
         $tenantId = auth()->user()->tenant_id;
@@ -172,7 +172,7 @@ class FinancialReportService
     /**
      * Generate Accounts Receivable Aging Report
      */
-    public function generateARAgingReport(Carbon $date = null): array
+    public function generateARAgingReport(?Carbon $date = null): array
     {
         $date = $date ?? now();
         $tenantId = auth()->user()->tenant_id;

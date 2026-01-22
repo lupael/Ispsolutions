@@ -2,34 +2,36 @@
 
 namespace Tests\Integration;
 
-use Tests\TestCase;
-use App\Services\HotspotService;
-use App\Services\SmsService;
 use App\Models\HotspotUser;
 use App\Models\Package;
 use App\Models\Tenant;
+use App\Services\HotspotService;
+use App\Services\SmsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 class HotspotFlowIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
     protected HotspotService $hotspotService;
+
     protected SmsService $smsService;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->hotspotService = new HotspotService();
-        $this->smsService = new SmsService();
-        
+
+        $this->hotspotService = new HotspotService;
+        $this->smsService = new SmsService;
+
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();
-        
+
         // Fake HTTP and enable SMS
         Http::fake();
         Config::set('sms.enabled', true);

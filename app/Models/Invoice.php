@@ -100,7 +100,7 @@ class Invoice extends Model
             'user:id,name,email',
             'payments' => function ($q) {
                 $q->select('id', 'invoice_id', 'amount', 'status', 'paid_at');
-            }
+            },
         ]);
     }
 
@@ -110,7 +110,7 @@ class Invoice extends Model
         return $query->with([
             'user:id,name,email',
             'package:id,name,price',
-            'payments:id,invoice_id,amount,status,paid_at'
+            'payments:id,invoice_id,amount,status,paid_at',
         ]);
     }
 }

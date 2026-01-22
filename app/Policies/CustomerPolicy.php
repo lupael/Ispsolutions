@@ -104,7 +104,7 @@ class CustomerPolicy
 
     /**
      * Check if customer is in user's zone or area.
-     * 
+     *
      * Note: Zone/area-based restrictions are not currently enforced because the
      * corresponding attributes (zone_id, area_id) are not available on the User model.
      * Access control is handled by other checks in this policy (tenant, hierarchy,

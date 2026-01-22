@@ -7,13 +7,16 @@ RUN apk add --no-cache \
     curl \
     libpng-dev \
     libzip-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     zip \
     unzip \
     nodejs \
     npm
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql zip
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql zip gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -41,6 +44,8 @@ FROM php:8.2-fpm-alpine
 RUN apk add --no-cache \
     libpng \
     libzip \
+    libjpeg-turbo \
+    freetype \
     mysql-client \
     nodejs \
     npm \

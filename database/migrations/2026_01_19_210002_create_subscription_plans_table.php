@@ -28,7 +28,7 @@ return new class extends Migration
             $table->unsignedInteger('sort_order')->default(0); // For ordering plans
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index('slug');
             $table->index(['is_active', 'sort_order']);
         });

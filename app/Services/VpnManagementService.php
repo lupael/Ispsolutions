@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\MikrotikRouter;
 use App\Models\MikrotikVpnAccount;
 use App\Models\VpnPool;
-use App\Models\MikrotikRouter;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class VpnManagementService
 {
@@ -74,7 +73,7 @@ class VpnManagementService
             // Get session data from accounting or monitoring
             // This would integrate with your existing radius/monitoring system
             $sessionData = $this->getAccountSessionData($account, $startDate, $endDate);
-            
+
             $totalSessions += $sessionData['session_count'];
             $totalUpload += $sessionData['upload_bytes'];
             $totalDownload += $sessionData['download_bytes'];
@@ -106,7 +105,7 @@ class VpnManagementService
 
         foreach ($accounts as $account) {
             $sessionData = $this->getAccountSessionData($account, $startDate, $endDate);
-            
+
             $accountReports[] = [
                 'username' => $account->username,
                 'protocol' => $account->protocol,
@@ -193,7 +192,7 @@ class VpnManagementService
     /**
      * Get connection history
      */
-    public function getConnectionHistory(int $accountId, Carbon $startDate = null, Carbon $endDate = null): array
+    public function getConnectionHistory(int $accountId, ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         $startDate = $startDate ?? now()->subDays(30);
         $endDate = $endDate ?? now();
@@ -226,7 +225,7 @@ class VpnManagementService
     {
         // This would query your radius_sessions or monitoring tables
         // For now, return sample data structure
-        
+
         // In production, this would be something like:
         // $sessions = DB::table('radius_sessions')
         //     ->where('username', $account->username)
@@ -268,8 +267,8 @@ class VpnManagementService
                 'is_online' => $router->is_online ?? true,
                 'total_vpn_accounts' => $vpnAccounts,
                 'active_vpn_accounts' => $activeVpnAccounts,
-                'load_percentage' => $activeVpnAccounts > 0 && $vpnAccounts > 0 
-                    ? round(($activeVpnAccounts / $vpnAccounts) * 100, 2) 
+                'load_percentage' => $activeVpnAccounts > 0 && $vpnAccounts > 0
+                    ? round(($activeVpnAccounts / $vpnAccounts) * 100, 2)
                     : 0,
             ];
         }

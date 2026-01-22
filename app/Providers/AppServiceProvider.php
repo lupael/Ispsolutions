@@ -56,9 +56,9 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('set-suboperator-pricing', function ($user) {
             // Operators can set prices for their Sub-Operators
-            return $user->isOperatorRole() 
-                || $user->isAdmin() 
-                || $user->isDeveloper() 
+            return $user->isOperatorRole()
+                || $user->isAdmin()
+                || $user->isDeveloper()
                 || $user->isSuperAdmin();
         });
     }
@@ -69,8 +69,8 @@ class AppServiceProvider extends ServiceProvider
      */
     private function canManageResource($user, string $permission): bool
     {
-        return $user->isAdmin() 
-            || $user->isDeveloper() 
+        return $user->isAdmin()
+            || $user->isDeveloper()
             || $user->isSuperAdmin()
             || $user->hasSpecialPermission($permission);
     }

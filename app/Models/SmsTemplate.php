@@ -28,11 +28,17 @@ class SmsTemplate extends Model
      * Template slug constants
      */
     public const SLUG_INVOICE_GENERATED = 'invoice_generated';
+
     public const SLUG_PAYMENT_RECEIVED = 'payment_received';
+
     public const SLUG_INVOICE_EXPIRING = 'invoice_expiring';
+
     public const SLUG_INVOICE_OVERDUE = 'invoice_overdue';
+
     public const SLUG_OTP = 'otp';
+
     public const SLUG_WELCOME = 'welcome';
+
     public const SLUG_PASSWORD_RESET = 'password_reset';
 
     /**

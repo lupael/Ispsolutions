@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamp('last_used_at')->nullable();
             $table->unsignedInteger('rate_limit')->default(1000); // Requests per hour
             $table->timestamps();
-            
+
             $table->index('key');
             $table->index(['user_id', 'is_active']);
             $table->index(['tenant_id', 'is_active']);

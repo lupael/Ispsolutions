@@ -50,10 +50,12 @@ class CacheWarmCommand extends Command
             $this->warmTenantCache((int) $tenantId);
         } else {
             $this->error('Please specify --tenant=ID or --all option');
+
             return Command::FAILURE;
         }
 
         $this->info('Cache warm-up completed successfully!');
+
         return Command::SUCCESS;
     }
 
@@ -109,6 +111,6 @@ class CacheWarmCommand extends Command
                 ->where('status', 'pending')->count(),
         ];
         $this->cacheService->cacheDashboardStats($tenantId, $stats);
-        $this->line("  - Cached dashboard statistics");
+        $this->line('  - Cached dashboard statistics');
     }
 }

@@ -13,7 +13,9 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class IncomeExpenseReportExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected Collection $data;
+
     protected $startDate;
+
     protected $endDate;
 
     public function __construct(Collection $data, $startDate, $endDate)

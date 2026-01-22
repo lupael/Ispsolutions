@@ -13,25 +13,25 @@ use Illuminate\Notifications\Notifiable;
 
 /**
  * User Model
- * 
+ *
  * ROLE HIERARCHY AND TENANCY RULES:
- * 
+ *
  * 1. Tenancy Definition:
  *    - A tenancy is represented by a single Super Admin account
  *    - Tenancy and Super Admin are effectively the same entity
  *    - Each tenancy contains multiple ISPs, represented by Admin accounts
- * 
+ *
  * 2. Role Consolidation:
  *    - Operator (level 30): Replaces deprecated "Reseller" role
  *    - Sub-Operator (level 40): Replaces deprecated "Sub-Reseller" role
  *    - Admins can rename these roles via custom labels (e.g., "Partner", "Agent")
- * 
+ *
  * 3. Tenancy Creation Rules:
  *    - Only Developer can create tenancies
  *    - When a Developer creates a tenancy, a Super Admin is automatically provisioned
  *    - Creating a Super Admin without a tenancy is impossible
  *    - When a Super Admin creates an ISP, an Admin is automatically provisioned
- * 
+ *
  * 4. Role Hierarchy:
  *    - Developer (level 0): Supreme authority across all tenants
  *    - Super Admin (level 10): Manages Admins within their own tenants only
@@ -42,7 +42,7 @@ use Illuminate\Notifications\Notifiable;
  *    - Accountant (level 70): Financial view-only access
  *    - Staff (level 80): Support staff with limited permissions
  *    - Customer (level 100): End customer with self-service access
- * 
+ *
  * 5. Permission Rules:
  *    - Only Admin can add/manage NAS, OLT, Router, PPP profiles, Pools, Packages, Package Prices
  *    - If Admin provides explicit permission, Staff/Manager can view/edit/manage resources
@@ -272,13 +272,11 @@ class User extends Authenticatable
     /**
      * Get the display label for the user's primary role.
      * Uses custom label if set by Admin, otherwise returns default role name.
-     * 
-     * @return string
      */
     public function getRoleDisplayLabel(): string
     {
         $role = $this->roles->first();
-        
+
         if (! $role) {
             return 'No Role';
         }
@@ -613,11 +611,9 @@ class User extends Authenticatable
     /**
      * Check if two-factor authentication is enabled for the user.
      * This method abstracts the internal implementation detail of checking the secret.
-     *
-     * @return bool
      */
     public function hasTwoFactorEnabled(): bool
     {
-        return !empty($this->two_factor_secret);
+        return ! empty($this->two_factor_secret);
     }
 }

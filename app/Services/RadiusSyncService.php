@@ -22,22 +22,22 @@ class RadiusSyncService
 
     /**
      * Sync user to RADIUS database.
-     * 
+     *
      * This method is not implemented as it requires cleartext passwords.
      * In production, you need to either:
      * 1. Store cleartext passwords separately (security risk)
      * 2. Generate temporary passwords and notify users
      * 3. Use a different authentication method (CHAP, etc.)
-     * 
+     *
      * @throws \Exception
      */
     public function syncUser(User $user): bool
     {
         Log::warning("RadiusSyncService: Cannot sync hashed password to RADIUS for user {$user->id}");
-        
+
         throw new \Exception(
-            "RADIUS user sync not implemented. User passwords are hashed and cannot be used for RADIUS authentication. " .
-            "Please implement alternative authentication or password handling."
+            'RADIUS user sync not implemented. User passwords are hashed and cannot be used for RADIUS authentication. ' .
+            'Please implement alternative authentication or password handling.'
         );
     }
 
@@ -88,7 +88,8 @@ class RadiusSyncService
 
         // Group assignment would require additional RADIUS tables
         // This is a placeholder for now
-        Log::warning("Group assignment not yet implemented");
+        Log::warning('Group assignment not yet implemented');
+
         return false;
     }
 
@@ -109,16 +110,17 @@ class RadiusSyncService
     {
         try {
             $query = RadAcct::whereNull('acctstoptime');
-            
+
             // Filter by tenant if provided (would need to join with users table)
             if ($tenantId) {
                 // This would require adding tenant_id to RadAcct or joining with users
-                Log::info("Tenant filtering for RADIUS sessions not implemented");
+                Log::info('Tenant filtering for RADIUS sessions not implemented');
             }
 
             return $query->get()->toArray();
         } catch (\Exception $e) {
-            Log::error("Failed to get active RADIUS sessions", ['error' => $e->getMessage()]);
+            Log::error('Failed to get active RADIUS sessions', ['error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -135,10 +137,11 @@ class RadiusSyncService
                 ->get()
                 ->toArray();
         } catch (\Exception $e) {
-            Log::error("Failed to get user session history", [
+            Log::error('Failed to get user session history', [
                 'username' => $username,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -154,7 +157,8 @@ class RadiusSyncService
 
         // RADIUS Disconnect-Message (DM) or Change-of-Authorization (CoA)
         // requires additional implementation and NAS support
-        Log::warning("RADIUS session disconnect not yet implemented - requires CoA/DM");
+        Log::warning('RADIUS session disconnect not yet implemented - requires CoA/DM');
+
         return false;
     }
 
@@ -173,7 +177,7 @@ class RadiusSyncService
                 ')
                 ->first();
 
-            if (!$result) {
+            if (! $result) {
                 return ['upload' => 0, 'download' => 0, 'total' => 0];
             }
 
@@ -183,10 +187,11 @@ class RadiusSyncService
                 'total' => $result->total_usage ?? 0,
             ];
         } catch (\Exception $e) {
-            Log::error("Failed to get user bandwidth usage", [
+            Log::error('Failed to get user bandwidth usage', [
                 'username' => $username,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return ['upload' => 0, 'download' => 0, 'total' => 0];
         }
     }
@@ -199,7 +204,7 @@ class RadiusSyncService
         Log::info('RadiusSyncService: Syncing all users to RADIUS' . ($tenantId ? " for tenant {$tenantId}" : ''));
 
         $query = User::query();
-        
+
         if ($tenantId) {
             $query->where('tenant_id', $tenantId);
         }
@@ -214,6 +219,7 @@ class RadiusSyncService
         }
 
         Log::info("Synced {$synced} users to RADIUS");
+
         return $synced;
     }
 

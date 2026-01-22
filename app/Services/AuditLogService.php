@@ -90,6 +90,7 @@ class AuditLogService
     public function logInvoiceGeneration(Model $invoice): AuditLog
     {
         $amount = $invoice->getAttribute('total_amount') ?? $invoice->getAttribute('amount');
+
         return $this->log('invoice.generated', $invoice, null, [
             'invoice_id' => $invoice->getKey(),
             'amount' => $amount,
@@ -118,6 +119,7 @@ class AuditLogService
     public function logCreated(Model $model, array $attributes = []): AuditLog
     {
         $modelName = class_basename($model);
+
         return $this->log("{$modelName}.created", $model, null, $attributes, ['created']);
     }
 
@@ -127,6 +129,7 @@ class AuditLogService
     public function logUpdated(Model $model, array $oldValues, array $newValues): AuditLog
     {
         $modelName = class_basename($model);
+
         return $this->log("{$modelName}.updated", $model, $oldValues, $newValues, ['updated']);
     }
 
@@ -136,6 +139,7 @@ class AuditLogService
     public function logDeleted(Model $model, array $attributes = []): AuditLog
     {
         $modelName = class_basename($model);
+
         return $this->log("{$modelName}.deleted", $model, $attributes, null, ['deleted']);
     }
 

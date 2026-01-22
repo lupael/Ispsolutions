@@ -21,7 +21,9 @@ class PaymentFlowTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+
     protected User $customer;
+
     protected ServicePackage $package;
 
     protected function setUp(): void
@@ -31,9 +33,9 @@ class PaymentFlowTest extends TestCase
         Mail::fake();
 
         $this->tenant = Tenant::factory()->create();
-        
+
         $customerRole = Role::factory()->create(['name' => 'customer', 'level' => 10]);
-        
+
         $this->customer = User::factory()->create([
             'tenant_id' => $this->tenant->id,
             'email' => 'customer@test.com',
@@ -53,7 +55,7 @@ class PaymentFlowTest extends TestCase
 
         // Step 1: Generate invoice
         $invoice = $billingService->generateInvoice($this->customer, $this->package);
-        
+
         $this->assertDatabaseHas('invoices', [
             'user_id' => $this->customer->id,
             'status' => 'pending',
@@ -112,12 +114,12 @@ class PaymentFlowTest extends TestCase
         $result = $gatewayService->initiatePayment($invoice, 'bkash');
 
         $this->assertIsArray($result);
-        
+
         // The test HTTP fake might be returning success: false on error
-        if (isset($result['success']) && !$result['success']) {
+        if (isset($result['success']) && ! $result['success']) {
             $this->markTestIncomplete('Payment gateway returned error: ' . ($result['error'] ?? 'Unknown'));
         }
-        
+
         $this->assertArrayHasKey('payment_id', $result);
         $this->assertArrayHasKey('payment_url', $result);
     }
@@ -190,7 +192,7 @@ class PaymentFlowTest extends TestCase
         ]);
 
         $this->assertEquals($invoice->total_amount + 100, $payment->amount);
-        
+
         $invoice->refresh();
         $this->assertEquals('paid', $invoice->status);
     }

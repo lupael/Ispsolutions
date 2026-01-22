@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Lead;
 use App\Services\LeadService;
 use Illuminate\Console\Command;
 
@@ -26,12 +25,13 @@ class SendLeadFollowUpReminders extends Command
         $this->info('Checking for leads requiring follow-up...');
 
         try {
-            $tenantIds = $this->option('tenant-id') 
-                ? [$this->option('tenant-id')] 
+            $tenantIds = $this->option('tenant-id')
+                ? [$this->option('tenant-id')]
                 : \App\Models\Tenant::pluck('id')->toArray();
 
             if (empty($tenantIds)) {
                 $this->warn('No tenants found. Skipping follow-up reminder processing.');
+
                 return Command::SUCCESS;
             }
 

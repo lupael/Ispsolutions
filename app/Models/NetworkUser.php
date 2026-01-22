@@ -77,7 +77,7 @@ class NetworkUser extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%");
         });
     }
 }

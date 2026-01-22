@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class TelegramBotService
 {
     private string $botToken;
+
     private string $apiUrl;
+
     private bool $enabled;
 
     public function __construct()
@@ -23,8 +25,9 @@ class TelegramBotService
      */
     public function sendMessage(string $chatId, string $text, array $options = []): array
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             Log::info('Telegram bot service is disabled');
+
             return ['success' => false, 'error' => 'Telegram bot service is disabled'];
         }
 
@@ -101,7 +104,7 @@ class TelegramBotService
             . "Amount: <b>\${$amount}</b>\n"
             . "Due Date: {$dueDate}\n"
             . "Status: {$status}\n\n"
-            . "Please pay your invoice on time to avoid service interruption.";
+            . 'Please pay your invoice on time to avoid service interruption.';
 
         $buttons = [[
             [
@@ -132,7 +135,7 @@ class TelegramBotService
             . "Date: {$date}\n"
             . "Receipt: <code>{$receiptNumber}</code>\n"
             . "Method: {$method}\n\n"
-            . "Thank you for your payment!";
+            . 'Thank you for your payment!';
 
         $buttons = [[
             [
@@ -153,7 +156,7 @@ class TelegramBotService
             . "Your service will expire in <b>{$serviceData['days_remaining']} days</b>.\n"
             . "Package: {$serviceData['package_name']}\n"
             . "Expiry Date: {$serviceData['expiry_date']}\n\n"
-            . "Please renew to avoid service interruption.";
+            . 'Please renew to avoid service interruption.';
 
         $buttons = [[
             [
@@ -178,9 +181,9 @@ class TelegramBotService
             . "Username: <code>{$statusData['username']}</code>\n"
             . "Package: {$statusData['package_name']}\n";
 
-        if (!$statusData['is_active']) {
+        if (! $statusData['is_active']) {
             $text .= "Reason: {$statusData['reason']}\n\n";
-            $text .= "Please contact support or make payment to unlock your account.";
+            $text .= 'Please contact support or make payment to unlock your account.';
         } else {
             $text .= "\nYour account is now active. Enjoy our services!";
         }
@@ -218,7 +221,7 @@ class TelegramBotService
         if ($usageData['percentage'] >= 90) {
             $text .= "⚠️ You have used {$usageData['percentage']}% of your bandwidth limit!";
         } else {
-            $text .= "You are approaching your bandwidth limit.";
+            $text .= 'You are approaching your bandwidth limit.';
         }
 
         return $this->sendMessage($chatId, $text);
@@ -234,7 +237,7 @@ class TelegramBotService
             . "Time: {$maintenanceData['start_time']} - {$maintenanceData['end_time']}\n"
             . "Duration: {$maintenanceData['duration']}\n\n"
             . "Affected Services: {$maintenanceData['affected_services']}\n\n"
-            . "We apologize for any inconvenience.";
+            . 'We apologize for any inconvenience.';
 
         return $this->sendMessage($chatId, $text);
     }
@@ -246,7 +249,7 @@ class TelegramBotService
     {
         Log::info('Telegram webhook received', ['update' => $update]);
 
-        if (!isset($update['message'])) {
+        if (! isset($update['message'])) {
             return ['success' => false, 'error' => 'No message in update'];
         }
 
@@ -287,7 +290,7 @@ class TelegramBotService
             . "• Payment confirmations\n"
             . "• Service status updates\n"
             . "• Network alerts\n\n"
-            . "Type /help to see available commands.";
+            . 'Type /help to see available commands.';
 
         $buttons = [[
             [
@@ -309,7 +312,7 @@ class TelegramBotService
             . "/help - Show this help\n"
             . "/status - Check account status\n"
             . "/balance - Check account balance\n\n"
-            . "For more features, please visit our customer portal.";
+            . 'For more features, please visit our customer portal.';
 
         return $this->sendMessage($chatId, $text);
     }
@@ -361,6 +364,6 @@ class TelegramBotService
      */
     public function isEnabled(): bool
     {
-        return $this->enabled && !empty($this->botToken);
+        return $this->enabled && ! empty($this->botToken);
     }
 }

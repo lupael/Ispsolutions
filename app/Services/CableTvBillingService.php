@@ -52,9 +52,9 @@ class CableTvBillingService
     {
         return DB::transaction(function () use ($subscription, $paymentData) {
             $package = $subscription->package;
-            
+
             // Calculate new expiry date
-            $newExpiryDate = $subscription->expiry_date->isPast() 
+            $newExpiryDate = $subscription->expiry_date->isPast()
                 ? now()->addDays($package->validity_days)
                 : $subscription->expiry_date->addDays($package->validity_days);
 
@@ -153,7 +153,7 @@ class CableTvBillingService
     {
         $package = $subscription->package;
         $dailyRate = $package->monthly_price / $package->validity_days;
-        
+
         return round($dailyRate * $daysRemaining, 2);
     }
 
@@ -246,6 +246,7 @@ class CableTvBillingService
     private function generateInvoiceNumber(): string
     {
         $prefix = 'CATV-';
+
         return DB::transaction(function () use ($prefix) {
             $lastInvoice = Invoice::where('invoice_number', 'like', $prefix . '%')
                 ->lockForUpdate()

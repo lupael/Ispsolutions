@@ -23,7 +23,7 @@ class UpdateHotspotUserRequest extends FormRequest
     public function rules(): array
     {
         $hotspotUserId = $this->route('hotspotUser')->id ?? null;
-        
+
         return [
             'phone_number' => [
                 'required',

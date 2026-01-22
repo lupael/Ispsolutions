@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Panel;
 
-use App\Http\Controllers\Controller;
 use App\Exports\InvoicesExport;
 use App\Exports\PaymentsExport;
+use App\Http\Controllers\Controller;
 use App\Models\CiscoDevice;
 use App\Models\DeviceMonitor;
 use App\Models\Invoice;
@@ -17,18 +17,16 @@ use App\Models\NetworkUser;
 use App\Models\Olt;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
-use App\Models\RadAcct;
 use App\Models\ServicePackage;
 use App\Models\User;
-use App\Services\PdfService;
-use App\Services\PdfExportService;
 use App\Services\ExcelExportService;
-use Illuminate\Http\Response;
+use App\Services\PdfExportService;
+use App\Services\PdfService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -39,7 +37,7 @@ class AdminController extends Controller
     {
         // Exclude developer and super-admin from user counts
         $excludedRoleSlugs = ['developer', 'super-admin'];
-        
+
         $stats = [
             'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                 $query->whereIn('slug', $excludedRoleSlugs);
@@ -391,20 +389,21 @@ class AdminController extends Controller
             });
 
         // Apply tenant filtering for non-Developer users
-        if (!$user->isDeveloper() && $tenantId) {
+        if (! $user->isDeveloper() && $tenantId) {
             $baseQuery->where('tenant_id', $tenantId);
         }
 
         $operators = $baseQuery->latest()->paginate(20);
 
         // Stats queries with same tenant scoping
-        $statsQuery = function() use ($user, $tenantId) {
+        $statsQuery = function () use ($user, $tenantId) {
             $query = User::whereHas('roles', function ($query) {
                 $query->whereIn('slug', ['manager', 'staff', 'operator', 'sub-operator']);
             });
-            if (!$user->isDeveloper() && $tenantId) {
+            if (! $user->isDeveloper() && $tenantId) {
                 $query->where('tenant_id', $tenantId);
             }
+
             return $query;
         };
 
@@ -413,12 +412,12 @@ class AdminController extends Controller
             'active' => $statsQuery()->where('is_active', true)->count(),
             'managers' => User::whereHas('roles', function ($query) {
                 $query->where('slug', 'manager');
-            })->when(!$user->isDeveloper() && $tenantId, function($q) use ($tenantId) {
+            })->when(! $user->isDeveloper() && $tenantId, function ($q) use ($tenantId) {
                 $q->where('tenant_id', $tenantId);
             })->count(),
             'staff' => User::whereHas('roles', function ($query) {
                 $query->where('slug', 'staff');
-            })->when(!$user->isDeveloper() && $tenantId, function($q) use ($tenantId) {
+            })->when(! $user->isDeveloper() && $tenantId, function ($q) use ($tenantId) {
                 $q->where('tenant_id', $tenantId);
             })->count(),
         ];
@@ -711,7 +710,7 @@ class AdminController extends Controller
         $onlineCount = DeviceMonitor::online()->count();
         $offlineCount = DeviceMonitor::offline()->count();
         $degradedCount = DeviceMonitor::degraded()->count();
-        
+
         // Total devices from all types
         $totalDevices = MikrotikRouter::count() + Olt::count() + CiscoDevice::count();
 
@@ -910,18 +909,20 @@ class AdminController extends Controller
         // Read scheduler log file if it exists
         $logFile = storage_path('logs/scheduler.log');
         $logs = collect();
-        
+
         if (file_exists($logFile)) {
             $content = file_get_contents($logFile);
             $lines = explode("\n", $content);
-            
+
             // Get last 100 scheduler entries
             $recentLines = array_slice($lines, -100);
             $parsedLogs = [];
-            
+
             foreach ($recentLines as $line) {
-                if (empty(trim($line))) continue;
-                
+                if (empty(trim($line))) {
+                    continue;
+                }
+
                 if (preg_match('/\[(.*?)\]\s+(.*)/', $line, $matches)) {
                     $parsedLogs[] = [
                         'timestamp' => $matches[1] ?? now()->toDateTimeString(),
@@ -929,7 +930,7 @@ class AdminController extends Controller
                     ];
                 }
             }
-            
+
             $logs = collect(array_reverse($parsedLogs));
         }
 
@@ -986,18 +987,20 @@ class AdminController extends Controller
             'debug' => 0,
             'total' => 0,
         ];
-        
+
         if (file_exists($logFile)) {
             $content = file_get_contents($logFile);
             $lines = explode("\n", $content);
-            
+
             // Parse log entries (last 200 lines for performance)
             $recentLines = array_slice($lines, -200);
             $parsedLogs = [];
-            
+
             foreach ($recentLines as $line) {
-                if (empty(trim($line))) continue;
-                
+                if (empty(trim($line))) {
+                    continue;
+                }
+
                 if (preg_match('/\[(.*?)\]\s+\w+\.(INFO|WARNING|ERROR|DEBUG):\s+(.*)/', $line, $matches)) {
                     $level = strtolower($matches[2]);
                     $parsedLogs[] = [
@@ -1009,10 +1012,10 @@ class AdminController extends Controller
                     $stats['total']++;
                 }
             }
-            
+
             $logs = collect(array_reverse($parsedLogs));
         }
-        
+
         // Create paginator
         $page = request()->get('page', 1);
         $perPage = 20;
@@ -1034,13 +1037,13 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $userRole = $user->roles->first()?->slug ?? '';
-        
+
         // Base query for PPP sessions from RADIUS accounting
         $query = \App\Models\RadAcct::where('username', 'LIKE', '%ppp%')
             ->orWhere('nasporttype', 'PPP');
-        
+
         // Filter by ownership for non-admin roles
-        if (!in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+        if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
             // For operators and staff, show only their assigned customers
             if ($userRole === 'operator' || $userRole === 'staff') {
                 $customerIds = $user->customers()->pluck('id')->toArray();
@@ -1053,7 +1056,7 @@ class AdminController extends Controller
                 $query->where('username', $user->username);
             }
         }
-        
+
         $logs = $query->latest('acctstarttime')->paginate(50);
 
         $stats = [
@@ -1073,17 +1076,17 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $userRole = $user->roles->first()?->slug ?? '';
-        
+
         // Base query for Hotspot sessions from RADIUS accounting
         $query = \App\Models\RadAcct::where('username', 'NOT LIKE', '%ppp%')
             ->where(function ($q) {
                 $q->where('nasporttype', 'Wireless-802.11')
-                  ->orWhere('nasporttype', 'Ethernet')
-                  ->orWhereNull('nasporttype');
+                    ->orWhere('nasporttype', 'Ethernet')
+                    ->orWhereNull('nasporttype');
             });
-        
+
         // Filter by ownership for non-admin roles
-        if (!in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+        if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
             // For operators and staff, show only their assigned customers
             if ($userRole === 'operator' || $userRole === 'staff') {
                 $customerIds = $user->customers()->pluck('id')->toArray();
@@ -1096,7 +1099,7 @@ class AdminController extends Controller
                 $query->where('username', $user->username);
             }
         }
-        
+
         $logs = $query->latest('acctstarttime')->paginate(50);
 
         $stats = [
@@ -1116,7 +1119,7 @@ class AdminController extends Controller
     {
         // Authorization check - ensure invoice belongs to user's tenant
         $user = auth()->user();
-        if ($invoice->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+        if ($invoice->tenant_id !== $user->tenant_id && ! $user->isDeveloper()) {
             abort(403, 'Unauthorized access to invoice');
         }
 
@@ -1130,7 +1133,7 @@ class AdminController extends Controller
     {
         // Authorization check
         $user = auth()->user();
-        if ($invoice->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+        if ($invoice->tenant_id !== $user->tenant_id && ! $user->isDeveloper()) {
             abort(403, 'Unauthorized access to invoice');
         }
 
@@ -1144,7 +1147,7 @@ class AdminController extends Controller
     {
         // Authorization check
         $user = auth()->user();
-        if ($payment->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+        if ($payment->tenant_id !== $user->tenant_id && ! $user->isDeveloper()) {
             abort(403, 'Unauthorized access to payment');
         }
 
@@ -1157,15 +1160,15 @@ class AdminController extends Controller
     public function exportInvoices(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $user = auth()->user();
-        
+
         // Get invoices based on user's access level
         $query = Invoice::with(['networkUser', 'networkUser.package']);
-        
+
         // Apply tenant filtering
-        if (!$user->isDeveloper()) {
+        if (! $user->isDeveloper()) {
             $query->where('tenant_id', $user->tenant_id);
         }
-        
+
         $invoices = $query->get();
 
         return Excel::download(new InvoicesExport($invoices), 'invoices-' . now()->format('Y-m-d') . '.xlsx');
@@ -1177,15 +1180,15 @@ class AdminController extends Controller
     public function exportPayments(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $user = auth()->user();
-        
+
         // Get payments based on user's access level
         $query = Payment::with(['invoice', 'invoice.networkUser']);
-        
+
         // Apply tenant filtering
-        if (!$user->isDeveloper()) {
+        if (! $user->isDeveloper()) {
             $query->where('tenant_id', $user->tenant_id);
         }
-        
+
         $payments = $query->get();
 
         return Excel::download(new PaymentsExport($payments), 'payments-' . now()->format('Y-m-d') . '.xlsx');
@@ -1197,9 +1200,9 @@ class AdminController extends Controller
     public function customerStatementPdf(User $customer, PdfService $pdfService): StreamedResponse
     {
         $user = auth()->user();
-        
+
         // Authorization check
-        if ($customer->tenant_id !== $user->tenant_id && !$user->isDeveloper()) {
+        if ($customer->tenant_id !== $user->tenant_id && ! $user->isDeveloper()) {
             abort(403, 'Unauthorized access to customer data');
         }
 
@@ -1223,7 +1226,7 @@ class AdminController extends Controller
     public function monthlyReportPdf(PdfService $pdfService): StreamedResponse
     {
         $user = auth()->user();
-        
+
         // Get year and month from request or default to current
         $year = request()->get('year', now()->year);
         $month = request()->get('month', now()->month);
@@ -1243,14 +1246,14 @@ class AdminController extends Controller
     public function exportTransactions(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
     {
         // $this->authorize('reports.export');
-        
+
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
         $format = $request->input('format', 'excel');
 
         // Get transactions data (mock data for now - replace with actual query)
         $transactions = collect([
-            (object)[
+            (object) [
                 'date' => now()->format('Y-m-d'),
                 'type' => 'income',
                 'description' => 'Payment received',
@@ -1263,6 +1266,7 @@ class AdminController extends Controller
 
         if ($format === 'pdf') {
             $pdf = $pdfService->generateTransactionsReportPdf($transactions, $startDate, $endDate);
+
             return $pdf->download('transactions_report_' . now()->format('Y-m-d') . '.pdf');
         }
 
@@ -1275,7 +1279,7 @@ class AdminController extends Controller
     public function exportVatCollections(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
     {
         // $this->authorize('reports.export');
-        
+
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
         $format = $request->input('format', 'excel');
@@ -1285,7 +1289,7 @@ class AdminController extends Controller
             ->with('networkUser')
             ->get()
             ->map(function ($invoice) {
-                return (object)[
+                return (object) [
                     'invoice_number' => $invoice->invoice_number,
                     'customer_name' => $invoice->networkUser->name ?? 'N/A',
                     'date' => $invoice->created_at->format('Y-m-d'),
@@ -1299,6 +1303,7 @@ class AdminController extends Controller
 
         if ($format === 'pdf') {
             $pdf = $pdfService->generateVatCollectionsReportPdf($vatCollections, $startDate, $endDate);
+
             return $pdf->download('vat_collections_' . now()->format('Y-m-d') . '.pdf');
         }
 
@@ -1311,14 +1316,14 @@ class AdminController extends Controller
     public function exportExpenseReport(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
     {
         // $this->authorize('reports.export');
-        
+
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
         $format = $request->input('format', 'excel');
 
         // Get expenses data (mock data for now - replace with actual query)
         $expenses = collect([
-            (object)[
+            (object) [
                 'date' => now()->format('Y-m-d'),
                 'category' => 'Operational',
                 'description' => 'Office supplies',
@@ -1332,6 +1337,7 @@ class AdminController extends Controller
 
         if ($format === 'pdf') {
             $pdf = $pdfService->generateExpenseReportPdf($expenses, $startDate, $endDate);
+
             return $pdf->download('expense_report_' . now()->format('Y-m-d') . '.pdf');
         }
 
@@ -1344,7 +1350,7 @@ class AdminController extends Controller
     public function exportIncomeExpenseReport(Request $request, ExcelExportService $excelService, PdfExportService $pdfService)
     {
         // $this->authorize('reports.export');
-        
+
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
         $format = $request->input('format', 'excel');
@@ -1354,7 +1360,7 @@ class AdminController extends Controller
             ->where('status', 'completed')
             ->get()
             ->map(function ($payment) {
-                return (object)[
+                return (object) [
                     'date' => $payment->paid_at?->format('Y-m-d') ?? $payment->created_at->format('Y-m-d'),
                     'type' => 'income',
                     'category' => 'Payment',
@@ -1371,6 +1377,7 @@ class AdminController extends Controller
 
         if ($format === 'pdf') {
             $pdf = $pdfService->generateIncomeExpenseReportPdf($data, $startDate, $endDate);
+
             return $pdf->download('income_expense_report_' . now()->format('Y-m-d') . '.pdf');
         }
 
@@ -1383,7 +1390,7 @@ class AdminController extends Controller
     public function exportReceivable(Request $request, ExcelExportService $excelService)
     {
         // $this->authorize('reports.export');
-        
+
         $format = $request->input('format', 'excel');
 
         // Get receivables data from unpaid invoices
@@ -1393,8 +1400,8 @@ class AdminController extends Controller
             ->map(function ($invoice) {
                 $dueDate = $invoice->due_date ?? $invoice->created_at->addDays(30);
                 $daysOverdue = now()->diffInDays($dueDate, false);
-                
-                return (object)[
+
+                return (object) [
                     'customer_name' => $invoice->networkUser->name ?? 'N/A',
                     'invoice_number' => $invoice->invoice_number,
                     'invoice_date' => $invoice->created_at->format('Y-m-d'),
@@ -1416,12 +1423,12 @@ class AdminController extends Controller
     public function exportPayable(Request $request, ExcelExportService $excelService)
     {
         // $this->authorize('reports.export');
-        
+
         $format = $request->input('format', 'excel');
 
         // Mock payables data - replace with actual query when payable model exists
         $payables = collect([
-            (object)[
+            (object) [
                 'vendor_name' => 'Internet Provider',
                 'bill_number' => 'BILL-001',
                 'bill_date' => now()->subDays(15)->format('Y-m-d'),

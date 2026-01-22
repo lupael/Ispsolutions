@@ -16,6 +16,7 @@ class ProcessPaymentJob implements ShouldQueue
     use InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 120;
 
     /**
@@ -38,7 +39,7 @@ class ProcessPaymentJob implements ShouldQueue
                 // If payment has a transaction_id, verify with gateway
                 if ($this->payment->transaction_id && $this->payment->payment_method) {
                     $paymentGatewayService = app(\App\Services\PaymentGatewayService::class);
-                    
+
                     try {
                         $verificationResult = $paymentGatewayService->verifyPayment(
                             $this->payment->transaction_id,
@@ -64,13 +65,13 @@ class ProcessPaymentJob implements ShouldQueue
                             'payment_id' => $this->payment->id,
                             'error' => $e->getMessage(),
                         ]);
-                        
+
                         // Mark payment as failed to require manual review instead of auto-completing
                         $this->payment->update([
                             'status' => 'failed',
                             'payment_data' => ['error' => $e->getMessage()],
                         ]);
-                        
+
                         throw $e;
                     }
                 } else {
@@ -94,9 +95,9 @@ class ProcessPaymentJob implements ShouldQueue
                             'status' => 'paid',
                             'paid_at' => now(),
                         ]);
-                        
+
                         // Unlock user account only if there are no remaining overdue/unpaid invoices
-                        if ($invoice->user && !$invoice->user->is_active) {
+                        if ($invoice->user && ! $invoice->user->is_active) {
                             $hasOutstandingInvoices = \App\Models\Invoice::where('user_id', $invoice->user_id)
                                 ->whereIn('status', ['overdue', 'pending'])
                                 ->where('id', '!=', $invoice->id)

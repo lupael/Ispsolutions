@@ -46,9 +46,13 @@ class SubscriptionBill extends Model
      * Bill status constants
      */
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_OVERDUE = 'overdue';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
@@ -86,7 +90,7 @@ class SubscriptionBill extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->status === self::STATUS_OVERDUE || 
+        return $this->status === self::STATUS_OVERDUE ||
                ($this->status === self::STATUS_PENDING && $this->due_date && $this->due_date->isPast());
     }
 
@@ -111,7 +115,7 @@ class SubscriptionBill extends Model
         // Use timestamp with microseconds and random suffix for better uniqueness
         $timestamp = now()->format('YmdHis') . now()->format('u');
         $random = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
-        
+
         return 'BILL-' . $timestamp . '-' . $random;
     }
 
@@ -123,7 +127,7 @@ class SubscriptionBill extends Model
         $subtotal = $this->amount;
         $taxAmount = $this->tax ?? 0;
         $discountAmount = $this->discount ?? 0;
-        
+
         return $subtotal + $taxAmount - $discountAmount;
     }
 
@@ -158,10 +162,10 @@ class SubscriptionBill extends Model
     {
         return $query->where(function ($q) {
             $q->where('status', self::STATUS_OVERDUE)
-              ->orWhere(function ($q2) {
-                  $q2->where('status', self::STATUS_PENDING)
-                     ->where('due_date', '<', now());
-              });
+                ->orWhere(function ($q2) {
+                    $q2->where('status', self::STATUS_PENDING)
+                        ->where('due_date', '<', now());
+                });
         });
     }
 

@@ -2,26 +2,27 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Services\StaticIpBillingService;
+use App\Models\Invoice;
 use App\Models\IpAllocation;
 use App\Models\NetworkUser;
-use App\Models\Invoice;
 use App\Models\Tenant;
+use App\Services\StaticIpBillingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class StaticIpBillingServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected StaticIpBillingService $staticIpBillingService;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->staticIpBillingService = new StaticIpBillingService();
-        
+        $this->staticIpBillingService = new StaticIpBillingService;
+
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();
     }

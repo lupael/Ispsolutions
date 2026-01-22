@@ -2,37 +2,40 @@
 
 namespace Tests\Integration;
 
-use Tests\TestCase;
-use App\Services\BillingService;
-use App\Services\PaymentGatewayService;
-use App\Services\NotificationService;
+use App\Models\Invoice;
 use App\Models\NetworkUser;
 use App\Models\Package;
-use App\Models\Invoice;
 use App\Models\Tenant;
+use App\Services\BillingService;
+use App\Services\NotificationService;
+use App\Services\PaymentGatewayService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Tests\TestCase;
 
 class BillingFlowIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
     protected BillingService $billingService;
+
     protected PaymentGatewayService $paymentGatewayService;
+
     protected NotificationService $notificationService;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->billingService = new BillingService();
-        $this->paymentGatewayService = new PaymentGatewayService();
-        $this->notificationService = new NotificationService();
-        
+
+        $this->billingService = new BillingService;
+        $this->paymentGatewayService = new PaymentGatewayService;
+        $this->notificationService = new NotificationService;
+
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();
-        
+
         // Fake mail
         Mail::fake();
     }

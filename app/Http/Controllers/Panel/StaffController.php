@@ -56,7 +56,7 @@ class StaffController extends Controller
         // Optimized: Use eager loading with select to avoid N+1 queries
         $networkUsers = NetworkUser::select([
             'id', 'username', 'email', 'service_type',
-            'package_id', 'status', 'created_at'
+            'package_id', 'status', 'created_at',
         ])->with('package:id,name,price')
             ->latest()
             ->paginate(20);

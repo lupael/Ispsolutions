@@ -32,10 +32,15 @@ class LeadActivity extends Model
      * Activity type constants
      */
     public const TYPE_CALL = 'call';
+
     public const TYPE_EMAIL = 'email';
+
     public const TYPE_MEETING = 'meeting';
+
     public const TYPE_NOTE = 'note';
+
     public const TYPE_TASK = 'task';
+
     public const TYPE_STATUS_CHANGE = 'status_change';
 
     /**

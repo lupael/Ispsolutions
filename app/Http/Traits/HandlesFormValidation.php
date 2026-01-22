@@ -14,7 +14,6 @@ trait HandlesFormValidation
      * @param string $successMessage Success message to display
      * @param string $errorContext Context for logging errors
      * @param string|null $redirectRoute Route to redirect to on success
-     * @return RedirectResponse
      */
     protected function handleFormSubmission(
         callable $callback,
@@ -24,17 +23,17 @@ trait HandlesFormValidation
     ): RedirectResponse {
         try {
             $result = $callback();
-            
-            $redirect = $redirectRoute 
-                ? redirect()->route($redirectRoute) 
+
+            $redirect = $redirectRoute
+                ? redirect()->route($redirectRoute)
                 : back();
-                
+
             return $redirect->with('success', $successMessage);
         } catch (\Exception $e) {
             Log::error("{$errorContext}: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return back()
                 ->withInput()
                 ->with('error', 'Operation failed. Please try again or contact support.');
@@ -48,7 +47,6 @@ trait HandlesFormValidation
      * @param callable $callback Operation to perform on each item
      * @param string $successMessage Success message template
      * @param string $errorContext Context for logging
-     * @return RedirectResponse
      */
     protected function handleBulkOperation(
         array $ids,
@@ -74,10 +72,10 @@ trait HandlesFormValidation
         if ($failedCount === 0) {
             return back()->with('success', sprintf($successMessage, $successCount));
         } elseif ($successCount === 0) {
-            return back()->with('error', "All operations failed. Please check the logs.");
+            return back()->with('error', 'All operations failed. Please check the logs.');
         } else {
             return back()->with('warning', sprintf(
-                "Partial success: %d succeeded, %d failed.",
+                'Partial success: %d succeeded, %d failed.',
                 $successCount,
                 $failedCount
             ));

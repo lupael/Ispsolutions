@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 class PaymentReportExport implements WithMultipleSheets
 {
     protected Collection $payments;
+
     protected array $summary;
 
     public function __construct(Collection $payments, $startDate = null, $endDate = null)

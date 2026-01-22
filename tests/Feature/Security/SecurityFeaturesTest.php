@@ -27,19 +27,19 @@ class SecurityFeaturesTest extends TestCase
         $response = $this->get('/');
 
         $cspHeader = $response->headers->get('Content-Security-Policy');
-        
+
         // Verify script-src includes required domains
         $this->assertStringContainsString('cdn.jsdelivr.net', $cspHeader);
         $this->assertStringContainsString('cdn.tailwindcss.com', $cspHeader);
         $this->assertStringContainsString('static.cloudflareinsights.com', $cspHeader);
-        
+
         // Verify style-src includes required domains
         $this->assertStringContainsString('fonts.googleapis.com', $cspHeader);
         $this->assertStringContainsString('fonts.bunny.net', $cspHeader);
-        
+
         // Verify font-src includes required domains
         $this->assertStringContainsString('fonts.gstatic.com', $cspHeader);
-        
+
         // Verify nonce is present
         $this->assertStringContainsString("'nonce-", $cspHeader);
     }
@@ -47,7 +47,7 @@ class SecurityFeaturesTest extends TestCase
     public function test_csp_nonce_helper_works(): void
     {
         $response = $this->get('/');
-        
+
         // Make a request to ensure middleware sets the nonce
         $this->assertNotEmpty(request()->attributes->get('csp_nonce'));
     }
@@ -56,12 +56,12 @@ class SecurityFeaturesTest extends TestCase
     {
         // Create a test route that requires CSRF protection
         $user = User::factory()->create();
-        
+
         // Attempt POST request without CSRF token (should be rejected)
         $response = $this->actingAs($user)->post('/api/test-csrf', [
-            'test' => 'data'
+            'test' => 'data',
         ]);
-        
+
         // CSRF protection is enabled by default in Laravel web middleware
         // Verify CSRF middleware class exists
         $this->assertTrue(
@@ -88,7 +88,7 @@ class SecurityFeaturesTest extends TestCase
         $twoFactorService = app(TwoFactorAuthenticationService::class);
 
         $twoFactorService->enable2FA($user);
-        
+
         // Note: In real tests, you'd generate a valid TOTP code
         // This is just structural verification
         $this->assertFalse($twoFactorService->verify2FACode($user, '000000'));
@@ -100,7 +100,7 @@ class SecurityFeaturesTest extends TestCase
         $auditService = app(AuditLogService::class);
 
         $this->actingAs($user);
-        
+
         $log = $auditService->log('test.action', $user, null, ['test' => 'data']);
 
         $this->assertDatabaseHas('audit_logs', [
