@@ -347,6 +347,14 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
         
         // Monthly report PDF
         Route::get('/monthly-report', [AdminController::class, 'monthlyReportPdf'])->name('monthly.report');
+
+        // Accounting report exports
+        Route::get('/reports/transactions/export', [AdminController::class, 'exportTransactions'])->name('reports.transactions.export');
+        Route::get('/reports/vat-collections/export', [AdminController::class, 'exportVatCollections'])->name('reports.vat-collections.export');
+        Route::get('/reports/expenses/export', [AdminController::class, 'exportExpenseReport'])->name('reports.expenses.export');
+        Route::get('/reports/income-expense/export', [AdminController::class, 'exportIncomeExpenseReport'])->name('reports.income-expense.export');
+        Route::get('/reports/receivable/export', [AdminController::class, 'exportReceivable'])->name('reports.receivable.export');
+        Route::get('/reports/payable/export', [AdminController::class, 'exportPayable'])->name('reports.payable.export');
     });
 });
 
