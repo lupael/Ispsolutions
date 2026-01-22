@@ -167,12 +167,24 @@ class User extends Authenticatable
 
     /**
      * Assign a role to the user.
+     *
+     * @throws \InvalidArgumentException if the role is not found
      */
     public function assignRole(string $roleSlug): void
     {
         $role = Role::where('slug', $roleSlug)->first();
         
-        if ($role && !$this->hasRole($roleSlug)) {
+        if (! $role) {
+            throw new \InvalidArgumentException("Role '{$roleSlug}' not found.");
+        }
+
+        // Check if this exact role-tenant combination already exists
+        $existingPivot = $this->roles()
+            ->wherePivot('role_id', $role->id)
+            ->wherePivot('tenant_id', $this->tenant_id)
+            ->exists();
+
+        if (! $existingPivot) {
             $this->roles()->attach($role->id, [
                 'tenant_id' => $this->tenant_id,
             ]);
