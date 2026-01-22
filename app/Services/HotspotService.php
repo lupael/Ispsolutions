@@ -11,9 +11,9 @@ use Illuminate\Support\Str;
 class HotspotService
 {
     /**
-     * Generate OTP for hotspot user signup
+     * Generate and send OTP for hotspot user signup
      */
-    public function generateOTP(string $phoneNumber, int $tenantId): HotspotUser
+    public function sendOtpForSignup(string $phoneNumber, int $tenantId): HotspotUser
     {
         $otpCode = $this->generateOtp();
         $expiresAt = now()->addMinutes(10);
@@ -50,7 +50,7 @@ class HotspotService
     }
 
     /**
-     * Generate a standalone OTP code
+     * Generate a standalone OTP code (returns just the string)
      */
     public function generateOtp(): string
     {
