@@ -83,4 +83,22 @@ class HotspotUser extends Model
                 ->orWhere('expires_at', '>', now());
         });
     }
+
+    /**
+     * Accessor for 'mobile' to support legacy code/tests
+     * Maps to phone_number field
+     */
+    public function getMobileAttribute(): ?string
+    {
+        return $this->phone_number;
+    }
+
+    /**
+     * Mutator for 'mobile' to support legacy code/tests
+     * Maps to phone_number field
+     */
+    public function setMobileAttribute(?string $value): void
+    {
+        $this->attributes['phone_number'] = $value;
+    }
 }

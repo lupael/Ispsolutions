@@ -13,17 +13,26 @@ use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
-    protected SmsService $smsService;
+    protected ?SmsService $smsService;
 
-    public function __construct(SmsService $smsService)
+    public function __construct(?SmsService $smsService = null)
     {
         $this->smsService = $smsService;
     }
 
     /**
      * Send invoice generated notification
+     * @deprecated Use sendInvoiceGeneratedNotification() instead
      */
     public function sendInvoiceGenerated(Invoice $invoice): bool
+    {
+        return $this->sendInvoiceGeneratedNotification($invoice);
+    }
+
+    /**
+     * Send invoice generated notification
+     */
+    public function sendInvoiceGeneratedNotification(Invoice $invoice): bool
     {
         $emailSent = false;
         $smsSent = false;
@@ -48,7 +57,7 @@ class NotificationService
         }
 
         // Send SMS if enabled
-        if (config('sms.enabled', false)) {
+        if (config('sms.enabled', false) && $this->smsService) {
             $smsSent = $this->smsService->sendInvoiceGeneratedSms($invoice);
         }
 
@@ -57,33 +66,58 @@ class NotificationService
 
     /**
      * Send payment received notification
+     * @deprecated Use sendPaymentReceivedNotification(Invoice, int) instead
      */
     public function sendPaymentReceived(Payment $payment): bool
+    {
+        return $this->sendPaymentReceivedNotification($payment->invoice, $payment->amount);
+    }
+
+    /**
+     * Send payment received notification
+     */
+    public function sendPaymentReceivedNotification(Invoice $invoice, int $amount): bool
     {
         $emailSent = false;
         $smsSent = false;
 
         try {
-            if ($payment->user && $payment->user->email) {
-                Mail::to($payment->user->email)
+            if ($invoice->user && $invoice->user->email) {
+                // Create a temporary payment object for the email template
+                // Note: This is not persisted to the database
+                $payment = new Payment([
+                    'invoice_id' => $invoice->id,
+                    'amount' => $amount,
+                    'user_id' => $invoice->user_id,
+                    'tenant_id' => $invoice->tenant_id,
+                ]);
+                $payment->invoice = $invoice;
+                $payment->user = $invoice->user;
+
+                Mail::to($invoice->user->email)
                     ->send(new PaymentReceived($payment));
 
                 Log::info('Payment received email sent', [
-                    'payment_id' => $payment->id,
-                    'user_id' => $payment->user_id,
+                    'invoice_id' => $invoice->id,
+                    'user_id' => $invoice->user_id,
+                    'amount' => $amount,
                 ]);
 
                 $emailSent = true;
             }
         } catch (\Exception $e) {
             Log::error('Failed to send payment received email', [
-                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
         // Send SMS if enabled
-        if (config('sms.enabled', false)) {
+        if (config('sms.enabled', false) && $this->smsService) {
+            // Create a temporary payment object for SMS
+            // Note: This is not persisted to the database
+            $payment = new Payment(['amount' => $amount]);
+            $payment->invoice = $invoice;
             $smsSent = $this->smsService->sendPaymentReceivedSms($payment);
         }
 
@@ -118,7 +152,7 @@ class NotificationService
         }
 
         // Send SMS if enabled
-        if (config('sms.enabled', false)) {
+        if (config('sms.enabled', false) && $this->smsService) {
             $smsSent = $this->smsService->sendInvoiceOverdueSms($invoice);
         }
 
@@ -154,7 +188,7 @@ class NotificationService
         }
 
         // Send SMS if enabled
-        if (config('sms.enabled', false)) {
+        if (config('sms.enabled', false) && $this->smsService) {
             $smsSent = $this->smsService->sendInvoiceExpiringSoonSms($invoice, $daysUntilExpiry);
         }
 
@@ -162,16 +196,58 @@ class NotificationService
     }
 
     /**
+     * Get invoices that will expire in N days
+     */
+    public function getPreExpirationInvoices(int $days): \Illuminate\Database\Eloquent\Collection
+    {
+        $targetDate = now()->addDays($days)->format('Y-m-d');
+
+        return Invoice::whereDate('due_date', $targetDate)
+            ->where('status', 'pending')
+            ->with(['user', 'package'])
+            ->get();
+    }
+
+    /**
+     * Get overdue invoices
+     */
+    public function getOverdueInvoices(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Invoice::where('status', 'overdue')
+            ->whereDate('due_date', '<', now())
+            ->with(['user', 'package'])
+            ->get();
+    }
+
+    /**
+     * Send bulk pre-expiration notifications
+     */
+    public function sendBulkPreExpirationNotifications(array $invoices): array
+    {
+        $results = [];
+        
+        foreach ($invoices as $invoice) {
+            // Calculate days until expiry, ensuring non-negative value
+            $daysUntilExpiry = now()->diffInDays($invoice->due_date, false);
+            // Use max(0, ...) to handle past dates as 0 days
+            $normalizedDays = max(0, (int) $daysUntilExpiry);
+            $sent = $this->sendInvoiceExpiringSoon($invoice, $normalizedDays);
+            
+            $results[] = [
+                'invoice_id' => $invoice->id,
+                'sent' => $sent,
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
      * Send pre-expiration reminders for invoices expiring in N days
      */
     public function sendPreExpirationReminders(int $daysBeforeExpiry = 3): int
     {
-        $targetDate = now()->addDays($daysBeforeExpiry)->format('Y-m-d');
-
-        $expiringInvoices = Invoice::whereDate('due_date', $targetDate)
-            ->where('status', 'pending')
-            ->with(['user', 'package'])
-            ->get();
+        $expiringInvoices = $this->getPreExpirationInvoices($daysBeforeExpiry);
 
         $count = 0;
         foreach ($expiringInvoices as $invoice) {
@@ -188,10 +264,7 @@ class NotificationService
      */
     public function sendOverdueNotifications(): int
     {
-        $overdueInvoices = Invoice::where('status', 'overdue')
-            ->whereDate('due_date', '<', now())
-            ->with(['user', 'package'])
-            ->get();
+        $overdueInvoices = $this->getOverdueInvoices();
 
         $count = 0;
         foreach ($overdueInvoices as $invoice) {

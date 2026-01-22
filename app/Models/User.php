@@ -249,6 +249,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user who created this user (for commission tracking).
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
      * Get operator permissions for this user.
      */
     public function operatorPermissions(): HasMany

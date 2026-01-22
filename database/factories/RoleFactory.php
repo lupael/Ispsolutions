@@ -37,4 +37,18 @@ class RoleFactory extends Factory
             'level' => $this->faker->numberBetween(10, 100),
         ];
     }
+
+    /**
+     * Configure the factory.
+     */
+    public function configure(): self
+    {
+        return $this->afterMaking(function (Role $role) {
+            // Ensure slug matches name if they differ
+            // This handles the case where tests override 'name' but not 'slug'
+            if ($role->name !== $role->slug) {
+                $role->slug = $role->name;
+            }
+        });
+    }
 }

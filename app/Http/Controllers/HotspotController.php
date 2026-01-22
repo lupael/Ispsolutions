@@ -252,7 +252,7 @@ class HotspotController extends Controller
         ]);
 
         try {
-            $hotspotUser = $this->hotspotService->generateOTP(
+            $hotspotUser = $this->hotspotService->sendOtpForSignup(
                 $validated['phone_number'],
                 $validated['tenant_id']
             );

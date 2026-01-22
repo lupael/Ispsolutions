@@ -11,30 +11,43 @@ class CommissionService
 {
     /**
      * Calculate and create commission for a payment
-     * Note: Uses "operator" and "sub-operator" roles (formerly "reseller" and "sub-reseller")
-     *
-     * IMPORTANT: The database column 'reseller_id' is retained for backward compatibility.
-     * TODO (v2.0): Create a migration to rename 'reseller_id' to 'operator_id' and add an
-     * accessor method for backward compatibility with existing integrations and reports.
+     * Supports both "reseller"/"sub-reseller" and "operator"/"sub-operator" role names
      */
     public function calculateCommission(Payment $payment): ?Commission
     {
-        // Get the operator who created this customer
+        // Get the customer and ensure relationships are loaded
         $customer = $payment->user;
-        $operator = $customer->createdBy; // User who created this customer
-
-        if (! $operator || ! $operator->hasRole('operator') && ! $operator->hasRole('sub-operator')) {
+        
+        if (! $customer) {
             return null;
         }
 
-        return DB::transaction(function () use ($payment, $operator) {
-            // Get commission rate from operator profile or default
-            $commissionRate = $this->getCommissionRate($operator);
+        // Get the reseller/operator who created this customer
+        $reseller = $customer->createdBy;
+
+        if (! $reseller) {
+            return null;
+        }
+
+        // Eager load roles to avoid N+1 queries
+        if (! $reseller->relationLoaded('roles')) {
+            $reseller->load('roles');
+        }
+
+        // Check for reseller/operator roles (support both naming conventions)
+        // Using hasAnyRole for better performance (single DB query instead of multiple)
+        if (! $reseller->hasAnyRole(['reseller', 'operator', 'sub-reseller', 'sub-operator'])) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($payment, $reseller) {
+            // Get commission rate from reseller profile or default
+            $commissionRate = $this->getCommissionRate($reseller);
             $commissionAmount = $payment->amount * ($commissionRate / 100);
 
             return Commission::create([
                 'tenant_id' => $payment->tenant_id,
-                'reseller_id' => $operator->id, // Column name retained for backward compatibility
+                'reseller_id' => $reseller->id,
                 'payment_id' => $payment->id,
                 'invoice_id' => $payment->invoice_id,
                 'commission_amount' => $commissionAmount,
@@ -45,30 +58,33 @@ class CommissionService
     }
 
     /**
-     * Get commission rate for an operator
-     * Note: Uses "operator" and "sub-operator" roles (formerly "reseller" and "sub-reseller")
+     * Get commission rate for a reseller/operator
+     * Supports both "reseller"/"sub-reseller" and "operator"/"sub-operator" role names
      */
-    protected function getCommissionRate(User $operator): float
+    protected function getCommissionRate(User $reseller): float
     {
         // Default commission rates by role
         $defaultRates = [
-            'operator' => 10.0, // 10%
-            'sub-operator' => 5.0, // 5%
+            'reseller' => 10.0, // 10%
+            'operator' => 10.0, // 10% (legacy name)
+            'sub-reseller' => 5.0, // 5%
+            'sub-operator' => 5.0, // 5% (legacy name)
         ];
 
-        if ($operator->hasRole('operator')) {
-            return $defaultRates['operator'];
+        // Using hasAnyRole for better performance (single DB query)
+        if ($reseller->hasAnyRole(['reseller', 'operator'])) {
+            return $defaultRates['reseller'];
         }
 
-        if ($operator->hasRole('sub-operator')) {
-            return $defaultRates['sub-operator'];
+        if ($reseller->hasAnyRole(['sub-reseller', 'sub-operator'])) {
+            return $defaultRates['sub-reseller'];
         }
 
         return 0;
     }
 
     /**
-     * Pay commission to operator
+     * Pay commission to reseller
      */
     public function payCommission(Commission $commission, array $paymentData = []): bool
     {
@@ -80,12 +96,11 @@ class CommissionService
     }
 
     /**
-     * Get operator commission summary
-     * Note: Method name retained for backward compatibility
+     * Get reseller commission summary
      */
-    public function getResellerCommissionSummary(User $operator): array
+    public function getResellerCommissionSummary(User $reseller): array
     {
-        $commissions = Commission::where('reseller_id', $operator->id);
+        $commissions = Commission::where('reseller_id', $reseller->id)->get();
 
         return [
             'total_earned' => $commissions->sum('commission_amount'),
@@ -97,36 +112,47 @@ class CommissionService
     }
 
     /**
-     * Calculate multi-level commission (operator + sub-operator)
-     * Note: Uses "operator" and "sub-operator" roles (formerly "reseller" and "sub-reseller")
+     * Calculate multi-level commission (reseller + sub-reseller)
+     * Supports both "reseller"/"sub-reseller" and "operator"/"sub-operator" role names
      */
     public function calculateMultiLevelCommission(Payment $payment): array
     {
         $commissions = [];
         $customer = $payment->user;
 
-        // Direct operator commission
-        $directOperator = $customer->createdBy;
-        if ($directOperator && ($directOperator->hasRole('operator') || $directOperator->hasRole('sub-operator'))) {
+        // Direct reseller/operator commission
+        $directReseller = $customer->createdBy;
+        if (! $directReseller) {
+            return [];
+        }
+
+        // Using hasAnyRole for better performance (single DB query)
+        $hasResellerRole = $directReseller->hasAnyRole(['reseller', 'operator']);
+        $hasSubResellerRole = $directReseller->hasAnyRole(['sub-reseller', 'sub-operator']);
+
+        if ($hasResellerRole || $hasSubResellerRole) {
             $commissions[] = $this->calculateCommission($payment);
 
-            // Check if direct operator has a parent operator
-            if ($directOperator->hasRole('sub-operator')) {
-                $parentOperator = $directOperator->createdBy;
-                if ($parentOperator && $parentOperator->hasRole('operator')) {
-                    // Calculate parent operator commission (smaller percentage)
-                    $parentRate = 3.0; // 3% for parent operator
-                    $parentAmount = $payment->amount * ($parentRate / 100);
+            // Check if direct reseller has a parent reseller
+            if ($hasSubResellerRole) {
+                $parentReseller = $directReseller->createdBy;
+                if ($parentReseller) {
+                    // Using hasAnyRole for better performance
+                    if ($parentReseller->hasAnyRole(['reseller', 'operator'])) {
+                        // Calculate parent reseller commission (smaller percentage)
+                        $parentRate = 3.0; // 3% for parent reseller
+                        $parentAmount = $payment->amount * ($parentRate / 100);
 
-                    $commissions[] = Commission::create([
-                        'tenant_id' => $payment->tenant_id,
-                        'reseller_id' => $parentOperator->id, // Column name retained for backward compatibility
-                        'payment_id' => $payment->id,
-                        'invoice_id' => $payment->invoice_id,
-                        'commission_amount' => $parentAmount,
-                        'commission_percentage' => $parentRate,
-                        'status' => 'pending',
-                    ]);
+                        $commissions[] = Commission::create([
+                            'tenant_id' => $payment->tenant_id,
+                            'reseller_id' => $parentReseller->id,
+                            'payment_id' => $payment->id,
+                            'invoice_id' => $payment->invoice_id,
+                            'commission_amount' => $parentAmount,
+                            'commission_percentage' => $parentRate,
+                            'status' => 'pending',
+                        ]);
+                    }
                 }
             }
         }
@@ -152,8 +178,7 @@ class CommissionService
     }
 
     /**
-     * Get top earning operators
-     * Note: Method name retained for backward compatibility
+     * Get top earning resellers
      */
     public function getTopResellers(int $tenantId, int $limit = 10): array
     {
@@ -168,11 +193,11 @@ class CommissionService
     }
 
     /**
-     * Bulk pay commissions for an operator
+     * Bulk pay commissions for a reseller
      */
-    public function bulkPayCommissions(User $operator, array $paymentData = []): int
+    public function bulkPayCommissions(User $reseller, array $paymentData = []): int
     {
-        $commissions = Commission::where('reseller_id', $operator->id)
+        $commissions = Commission::where('reseller_id', $reseller->id)
             ->where('status', 'pending')
             ->get();
 
@@ -187,7 +212,7 @@ class CommissionService
 
     /**
      * Get commission report for date range
-     * Note: Returns data by operator (formerly reseller)
+     * Note: Returns data by reseller
      */
     public function getCommissionReport(int $tenantId, $startDate, $endDate): array
     {
@@ -205,7 +230,7 @@ class CommissionService
                 'pending' => (clone $query)->where('status', 'pending')->sum('commission_amount'),
                 'paid' => (clone $query)->where('status', 'paid')->sum('commission_amount'),
             ],
-            'by_operator' => (clone $query)
+            'by_reseller' => (clone $query)
                 ->selectRaw('reseller_id, SUM(commission_amount) as total, COUNT(*) as count')
                 ->groupBy('reseller_id')
                 ->with('reseller:id,name')
