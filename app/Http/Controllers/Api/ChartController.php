@@ -187,16 +187,17 @@ class ChartController extends Controller
 
     /**
      * Get commission earnings chart
+     * Note: reseller_id column name retained for backward compatibility (refers to operator_id)
      */
     public function getCommissionChart(Request $request): JsonResponse
     {
-        $resellerId = $request->get('reseller_id', auth()->id());
+        $operatorId = $request->get('reseller_id', auth()->id()); // TODO: Rename parameter to operator_id
         $months = $request->get('months', 12);
 
         $data = [];
         for ($i = $months - 1; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $earnings = \App\Models\Commission::where('reseller_id', $resellerId)
+            $earnings = \App\Models\Commission::where('reseller_id', $operatorId) // Column name kept for backward compatibility
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->sum('commission_amount');

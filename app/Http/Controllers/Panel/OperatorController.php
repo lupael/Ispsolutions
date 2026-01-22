@@ -187,6 +187,7 @@ class OperatorController extends Controller
         $user = auth()->user();
 
         // Get commission transactions for this operator
+        // Note: reseller_id column name retained for backward compatibility (refers to operator_id)
         $transactions = \App\Models\Commission::where('reseller_id', $user->id)
             ->latest()
             ->paginate(20);

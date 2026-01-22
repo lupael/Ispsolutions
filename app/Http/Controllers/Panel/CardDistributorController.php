@@ -74,6 +74,7 @@ class CardDistributorController extends Controller
         $user = auth()->user();
 
         // Get commission records for this card distributor
+        // Note: reseller_id column name retained for backward compatibility (refers to distributor_id)
         $commissions = Commission::where('reseller_id', $user->id)
             ->with(['payment', 'invoice'])
             ->latest()

@@ -183,20 +183,6 @@
                 ]
             ],
         ];
-    } elseif ($userRole === 'reseller') {
-        $menus = [
-            ['label' => 'Dashboard', 'route' => 'panel.reseller.dashboard', 'icon' => 'home'],
-            ['label' => 'My Customers', 'route' => 'panel.reseller.customers', 'icon' => 'users'],
-            ['label' => 'Packages', 'route' => 'panel.reseller.packages', 'icon' => 'box'],
-            ['label' => 'Commission', 'route' => 'panel.reseller.commission', 'icon' => 'currency'],
-        ];
-    } elseif ($userRole === 'sub-reseller') {
-        $menus = [
-            ['label' => 'Dashboard', 'route' => 'panel.sub-reseller.dashboard', 'icon' => 'home'],
-            ['label' => 'My Customers', 'route' => 'panel.sub-reseller.customers', 'icon' => 'users'],
-            ['label' => 'Packages', 'route' => 'panel.sub-reseller.packages', 'icon' => 'box'],
-            ['label' => 'Commission', 'route' => 'panel.sub-reseller.commission', 'icon' => 'currency'],
-        ];
     } elseif ($userRole === 'card-distributor') {
         $menus = [
             ['label' => 'Dashboard', 'route' => 'panel.card-distributor.dashboard', 'icon' => 'home'],
