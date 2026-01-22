@@ -19,7 +19,9 @@
                     <option value="all">All Clients</option>
                     <option value="active">Active Clients Only</option>
                     <option value="inactive">Inactive Clients</option>
-                    <!-- TODO: Load specific clients from database -->
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->name }} ({{ $customer->email }})</option>
+                    @endforeach
                 </select>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Hold Ctrl/Cmd to select multiple options</p>
             </div>
