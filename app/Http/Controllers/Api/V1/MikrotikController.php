@@ -100,6 +100,8 @@ class MikrotikController extends Controller
      */
     public function createPppoeUser(Request $request): JsonResponse
     {
+        $this->authorize('create', \App\Models\NetworkUser::class);
+
         $validator = Validator::make($request->all(), [
             'router_id' => 'required|exists:mikrotik_routers,id',
             'username' => 'required|string|max:255',
@@ -143,6 +145,8 @@ class MikrotikController extends Controller
      */
     public function updatePppoeUser(Request $request, string $username): JsonResponse
     {
+        $this->authorize('update', \App\Models\NetworkUser::class);
+
         $validator = Validator::make($request->all(), [
             'password' => 'nullable|string|min:6',
             'service' => 'nullable|string',
@@ -186,6 +190,8 @@ class MikrotikController extends Controller
      */
     public function deletePppoeUser(string $username): JsonResponse
     {
+        $this->authorize('delete', \App\Models\NetworkUser::class);
+
         $user = MikrotikPppoeUser::where('username', $username)->firstOrFail();
 
         // Delete from MikroTik router
@@ -288,8 +294,13 @@ class MikrotikController extends Controller
     /**
      * Create a PPPoE profile
      */
+    /**
+     * Create a new PPP profile
+     */
     public function createProfile(Request $request): JsonResponse
     {
+        $this->authorize('create', \App\Models\MikrotikRouter::class);
+
         $validator = Validator::make($request->all(), [
             'router_id' => 'required|exists:mikrotik_routers,id',
             'name' => 'required|string|max:255',
@@ -362,6 +373,8 @@ class MikrotikController extends Controller
      */
     public function createIpPool(Request $request): JsonResponse
     {
+        $this->authorize('create', \App\Models\IpPool::class);
+
         $validator = Validator::make($request->all(), [
             'router_id' => 'required|exists:mikrotik_routers,id',
             'name' => 'required|string|max:255',

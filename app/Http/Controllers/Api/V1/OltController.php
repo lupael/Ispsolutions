@@ -23,6 +23,8 @@ class OltController extends Controller
      */
     public function index(): JsonResponse
     {
+        $this->authorize('viewAny', Olt::class);
+
         $olts = Olt::with('onus')->get()->map(function ($olt) {
             return [
                 'id' => $olt->id,
@@ -53,6 +55,8 @@ class OltController extends Controller
         $olt = Olt::with(['onus' => function ($query) {
             $query->latest();
         }])->findOrFail($id);
+
+        $this->authorize('view', $olt);
 
         return response()->json([
             'success' => true,

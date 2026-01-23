@@ -17,6 +17,8 @@ class PackageProfileMappingController extends Controller
      */
     public function index(Package $package)
     {
+        $this->authorize('view', $package);
+
         $mappings = PackageProfileMapping::with(['router', 'ipPool'])
             ->where('package_id', $package->id)
             ->get();
@@ -29,6 +31,8 @@ class PackageProfileMappingController extends Controller
      */
     public function create(Package $package)
     {
+        $this->authorize('create', $package);
+
         $user = auth()->user();
         $routers = MikrotikRouter::where('tenant_id', $user->tenant_id)->get();
         $ipPools = IpPool::where('tenant_id', $user->tenant_id)->where('status', 'active')->get();
@@ -41,6 +45,8 @@ class PackageProfileMappingController extends Controller
      */
     public function store(Request $request, Package $package)
     {
+        $this->authorize('create', $package);
+
         $validated = $request->validate([
             'router_id' => [
                 'required',
@@ -72,6 +78,8 @@ class PackageProfileMappingController extends Controller
      */
     public function edit(Package $package, PackageProfileMapping $mapping)
     {
+        $this->authorize('update', $package);
+
         // Ensure mapping belongs to package (scoped binding should handle this, but double check)
         if ($mapping->package_id !== $package->id) {
             abort(404);
@@ -89,6 +97,8 @@ class PackageProfileMappingController extends Controller
      */
     public function update(Request $request, Package $package, PackageProfileMapping $mapping)
     {
+        $this->authorize('update', $package);
+
         // Ensure mapping belongs to package
         if ($mapping->package_id !== $package->id) {
             abort(404);
@@ -123,6 +133,8 @@ class PackageProfileMappingController extends Controller
      */
     public function destroy(Package $package, PackageProfileMapping $mapping)
     {
+        $this->authorize('delete', $package);
+
         // Ensure mapping belongs to package
         if ($mapping->package_id !== $package->id) {
             abort(404);
