@@ -73,21 +73,20 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex justify-end space-x-2">
-                                        @can('update', $package)
-                                            <a href="{{ route('panel.admin.packages.mappings.edit', [$package, $mapping]) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">Edit</a>
-                                        @endcan
-                                        @can('delete', $package)
-                                            <form action="{{ route('panel.admin.packages.mappings.destroy', [$package, $mapping]) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this mapping?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
-                                            </form>
-                                        @endcan
-                                        @cannot('update', $package)
-                                            @cannot('delete', $package)
-                                                <span class="text-gray-400">No Actions</span>
-                                            @endcannot
-                                        @endcannot
+                                        @canany(['update', 'delete'], $package)
+                                            @can('update', $package)
+                                                <a href="{{ route('panel.admin.packages.mappings.edit', [$package, $mapping]) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">Edit</a>
+                                            @endcan
+                                            @can('delete', $package)
+                                                <form action="{{ route('panel.admin.packages.mappings.destroy', [$package, $mapping]) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this mapping?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
+                                                </form>
+                                            @endcan
+                                        @else
+                                            <span class="text-gray-400">No Actions</span>
+                                        @endcanany
                                     </div>
                                 </td>
                             </tr>

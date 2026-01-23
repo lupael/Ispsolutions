@@ -100,7 +100,7 @@ class MikrotikController extends Controller
      */
     public function createPppoeUser(Request $request): JsonResponse
     {
-        $this->authorize('create', \App\Models\NetworkUser::class);
+        $this->authorize('create', \App\Models\MikrotikPppoeUser::class);
 
         $validator = Validator::make($request->all(), [
             'router_id' => 'required|exists:mikrotik_routers,id',
@@ -145,7 +145,7 @@ class MikrotikController extends Controller
      */
     public function updatePppoeUser(Request $request, string $username): JsonResponse
     {
-        $this->authorize('update', \App\Models\NetworkUser::class);
+        $this->authorize('update', \App\Models\MikrotikPppoeUser::class);
 
         $validator = Validator::make($request->all(), [
             'password' => 'nullable|string|min:6',
@@ -190,7 +190,7 @@ class MikrotikController extends Controller
      */
     public function deletePppoeUser(string $username): JsonResponse
     {
-        $this->authorize('delete', \App\Models\NetworkUser::class);
+        $this->authorize('delete', \App\Models\MikrotikPppoeUser::class);
 
         $user = MikrotikPppoeUser::where('username', $username)->firstOrFail();
 

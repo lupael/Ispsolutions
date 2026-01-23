@@ -247,7 +247,7 @@ class PolicyEnforcementTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->postJson('/api/v1/mikrotik/profiles', $profileData);
         // May fail if API connection is not available, but should not be forbidden
-        $response->assertStatus(fn($status) => $status !== 403);
+        $this->assertNotEquals(403, $response->status());
 
         // Operator cannot create
         $response = $this->actingAs($this->operator)

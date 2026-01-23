@@ -69,9 +69,7 @@ class RoleLabelManagementTest extends TestCase
     public function admin_can_set_custom_operator_label()
     {
         $response = $this->actingAs($this->admin)
-            ->withSession(['_token' => 'test-token'])
             ->put(route('panel.admin.settings.role-labels.update'), [
-                '_token' => 'test-token',
                 'role_slug' => 'operator',
                 'custom_label' => 'Partner',
             ]);
@@ -139,6 +137,28 @@ class RoleLabelManagementTest extends TestCase
 
         $response->assertRedirect(route('panel.admin.settings.role-labels'));
         $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('role_label_settings', [
+            'tenant_id' => $this->tenant->id,
+            'role_slug' => 'operator',
+        ]);
+    }
+
+    /** @test */
+    public function admin_can_remove_custom_label_by_submitting_empty_value()
+    {
+        // Create initial label
+        RoleLabelSetting::setCustomLabel($this->tenant->id, 'operator', 'Partner');
+
+        // Submit empty custom_label to remove it
+        $response = $this->actingAs($this->admin)
+            ->put(route('panel.admin.settings.role-labels.update'), [
+                'role_slug' => 'operator',
+                'custom_label' => '',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Custom role label removed. Using default label.');
 
         $this->assertDatabaseMissing('role_label_settings', [
             'tenant_id' => $this->tenant->id,
