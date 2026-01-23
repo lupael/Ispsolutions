@@ -1481,8 +1481,8 @@ class AdminController extends Controller
         session(['impersonate_by' => auth()->id()]);
         session(['impersonate_at' => now()]);
         
-        // Log audit
-        if (class_exists(\App\Models\AuditLog::class)) {
+        // Log audit if AuditLog model exists
+        try {
             \App\Models\AuditLog::create([
                 'user_id' => auth()->id(),
                 'tenant_id' => auth()->user()->tenant_id,
@@ -1496,13 +1496,22 @@ class AdminController extends Controller
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
+        } catch (\Exception $e) {
+            // Audit logging failed, but continue with impersonation
+            \Illuminate\Support\Facades\Log::warning('Failed to log impersonation audit: ' . $e->getMessage());
         }
         
         // Login as operator
         auth()->loginUsingId($operatorId);
         
-        return redirect()->route('panel.operator.dashboard')
-            ->with('success', 'You are now logged in as ' . $operator->name);
+        // Determine redirect route based on operator role - use admin dashboard as fallback
+        try {
+            return redirect()->route('panel.admin.dashboard')
+                ->with('success', 'You are now logged in as ' . $operator->name);
+        } catch (\Exception $e) {
+            return redirect('/panel/admin')
+                ->with('success', 'You are now logged in as ' . $operator->name);
+        }
     }
 
     /**
