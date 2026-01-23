@@ -397,6 +397,8 @@ class DemoSeeder extends Seeder
         $this->command->info("✓ Demo NAS created: {$nas->name}");
 
         // Create demo OLT
+        // WARNING: Using demo credentials for testing purposes only.
+        // DO NOT use these credentials in production environments.
         $olt = Olt::firstOrCreate(
             ['ip_address' => '192.168.1.20'],
             [
