@@ -673,8 +673,8 @@ class AdminController extends Controller
             'sms_cost_per_unit' => $validated['sms_charges_by'] === 'operator' ? ($validated['sms_cost_per_unit'] ?? 0) : 0,
             'allow_sub_operator' => $request->has('allow_sub_operator'),
             'allow_rename_package' => $request->has('allow_rename_package'),
-            'can_manage_customers' => $request->has('can_manage_customers') ? true : true, // Default to true
-            'can_view_financials' => $request->has('can_view_financials') ? true : true, // Default to true
+            'can_manage_customers' => true, // Default to true - operators can always manage their own customers
+            'can_view_financials' => true, // Default to true - operators can always view their own financials
             'is_active' => $request->has('is_active'),
             'operator_level' => User::OPERATOR_LEVEL_OPERATOR,
             'tenant_id' => auth()->user()->tenant_id,

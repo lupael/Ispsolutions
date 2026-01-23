@@ -77,12 +77,13 @@
                 </div>
 
                 <!-- Billing & Payment Configuration -->
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <!-- Billing & Payment Configuration -->
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-6" x-data="{ paymentType: '{{ old('payment_type', 'postpaid') }}' }">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Billing & Payment Configuration</h3>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
                             <label for="payment_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Type <span class="text-red-500">*</span></label>
-                            <select name="payment_type" id="payment_type" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-data="{ paymentType: '{{ old('payment_type', 'postpaid') }}' }" x-model="paymentType">
+                            <select name="payment_type" id="payment_type" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-model="paymentType">
                                 <option value="prepaid">Prepaid</option>
                                 <option value="postpaid" selected>Credit (Postpaid)</option>
                             </select>
@@ -91,7 +92,7 @@
                             @enderror
                         </div>
 
-                        <div x-show="paymentType === 'postpaid'" x-data="{ paymentType: '{{ old('payment_type', 'postpaid') }}' }">
+                        <div x-show="paymentType === 'postpaid'">
                             <label for="credit_limit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Credit Limit</label>
                             <input type="number" name="credit_limit" id="credit_limit" value="{{ old('credit_limit', 0) }}" min="0" step="0.01" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('credit_limit')
@@ -102,12 +103,12 @@
                 </div>
 
                 <!-- SMS Configuration -->
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-6" x-data="{ smsChargesBy: '{{ old('sms_charges_by', 'admin') }}' }">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">SMS Configuration</h3>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
                             <label for="sms_charges_by" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SMS Charges By</label>
-                            <select name="sms_charges_by" id="sms_charges_by" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-data="{ smsChargesBy: '{{ old('sms_charges_by', 'admin') }}' }" x-model="smsChargesBy">
+                            <select name="sms_charges_by" id="sms_charges_by" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-model="smsChargesBy">
                                 <option value="admin" selected>Admin</option>
                                 <option value="operator">Operator</option>
                             </select>
@@ -116,7 +117,7 @@
                             @enderror
                         </div>
 
-                        <div x-show="smsChargesBy === 'operator'" x-data="{ smsChargesBy: '{{ old('sms_charges_by', 'admin') }}' }">
+                        <div x-show="smsChargesBy === 'operator'">
                             <label for="sms_cost_per_unit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per SMS Cost</label>
                             <input type="number" name="sms_cost_per_unit" id="sms_cost_per_unit" value="{{ old('sms_cost_per_unit', 0) }}" min="0" step="0.0001" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('sms_cost_per_unit')
