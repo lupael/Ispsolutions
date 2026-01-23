@@ -1409,8 +1409,43 @@ class AdminController extends Controller
             'active' => MikrotikProfile::count(), // Currently counts all profiles; adjust if a status field is introduced
             'users' => NetworkUser::count(),
         ];
+        
+        $routers = MikrotikRouter::where('status', 'active')->get();
 
-        return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats'));
+        return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers'));
+    }
+
+    /**
+     * Store a new PPPoE profile.
+     */
+    public function pppoeProfilesStore(Request $request)
+    {
+        $validated = $request->validate([
+            'router_id' => 'required|exists:mikrotik_routers,id',
+            'name' => 'required|string|max:255',
+            'local_address' => 'required|ip',
+            'remote_address' => 'required|string|max:255',
+            'rate_limit' => 'nullable|string|max:255',
+            'session_timeout' => 'nullable|integer|min:0',
+            'idle_timeout' => 'nullable|integer|min:0',
+        ]);
+
+        MikrotikProfile::create($validated);
+
+        return redirect()->route('panel.admin.network.pppoe-profiles')
+            ->with('success', 'PPPoE profile created successfully.');
+    }
+
+    /**
+     * Delete a PPPoE profile.
+     */
+    public function pppoeProfilesDestroy($id)
+    {
+        $profile = MikrotikProfile::findOrFail($id);
+        $profile->delete();
+
+        return redirect()->route('panel.admin.network.pppoe-profiles')
+            ->with('success', 'PPPoE profile deleted successfully.');
     }
 
     /**
