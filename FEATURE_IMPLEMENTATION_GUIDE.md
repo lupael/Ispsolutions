@@ -20,10 +20,9 @@ This document outlines the remaining feature implementations that require busine
      - Configure gateway-specific settings (API keys, URLs, etc.)
 
 2. **Supported Gateway Types**
-   - Twilio
-   - Nexmo/Vonage
-   - Custom HTTP API
-   - Local GSM modem
+
+*International*: Twilio, Nexmo/Vonage, MSG91, BulkSMS, Custom HTTP API
+*Bangladesh*: Maestro, Robi, M2M BD, Bangladesh SMS, BulkSMS BD, BTS SMS, 880 SMS, BD SmartPay, Elitbuzz, SSL Wireless, ADN SMS, 24 SMS BD, SMS Net, Brand SMS, Metrotel, DianaHost, SMS in BD, DhakaSoft BD
 
 3. **Files to Create/Modify**
    - Controller: `app/Http/Controllers/Panel/SmsGatewayController.php`
@@ -229,6 +228,13 @@ public function stopImpersonating()
 - Add Router button
 - Edit User button
 - Add Operator button
+
+### 4.4 Not found
+https://dev.ispbills.com/panel/admin/customers/pppoe-import 
+https://dev.ispbills.com/panel/admin/customers/bulk-update
+https://dev.ispbills.com/panel/admin/customers/import-requests
+https://dev.ispbills.com/panel/admin/customers/pppoe-import
+https://dev.ispbills.com/panel/admin/customers/bulk-update
 
 **Investigation Steps:**
 1. Check JavaScript console for errors
