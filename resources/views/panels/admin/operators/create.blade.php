@@ -45,13 +45,14 @@
                         </div>
 
                         <div>
-                            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
-                            <input type="tel" name="phone" id="phone" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
-
-                        <div>
-                            <label for="employee_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Employee ID</label>
-                            <input type="text" name="employee_id" id="employee_id" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="operator_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Operator Type</label>
+                            <select name="operator_type" id="operator_type" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Select Type</option>
+                                <option value="field">Field Operator</option>
+                                <option value="support">Support Operator</option>
+                                <option value="billing">Billing Operator</option>
+                                <option value="technical">Technical Operator</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -68,74 +69,20 @@
                             <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm Password <span class="text-red-500">*</span></label>
                             <input type="password" name="password_confirmation" id="password_confirmation" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
-
-                        <!-- Role is automatically assigned as 'operator', no need to show -->
-                        <input type="hidden" name="role" value="operator">
-
-                        <div>
-                            <label for="operator_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Operator Type <span class="text-red-500">*</span></label>
-                            <select name="operator_type" id="operator_type" required class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">Select Type</option>
-                                <option value="field">Field Operator</option>
-                                <option value="support">Support Operator</option>
-                                <option value="billing">Billing Operator</option>
-                                <option value="technical">Technical Operator</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
 
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Additional Information</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <div>
-                            <label for="supervisor_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reporting To</label>
-                            <select name="supervisor_id" id="supervisor_id" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">Select Supervisor</option>
-                                <!-- Supervisors list will be populated -->
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="joining_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Joining Date</label>
-                            <input type="date" name="joining_date" id="joining_date" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
-
-                        <div class="sm:col-span-2">
-                            <label for="address" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
-                            <textarea name="address" id="address" rows="3" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
-                        </div>
-                    </div>
-                </div>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">                </div>
 
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Status & Permissions</h3>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Status</h3>
                     <div class="space-y-4">
                         <div class="flex items-center">
                             <input type="checkbox" name="is_active" id="is_active" value="1" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded">
                             <label for="is_active" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
                                 Active Account
-                            </label>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input type="checkbox" name="can_create_customers" id="can_create_customers" value="1" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded">
-                            <label for="can_create_customers" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-                                Can Create Customers
-                            </label>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input type="checkbox" name="can_modify_packages" id="can_modify_packages" value="1" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded">
-                            <label for="can_modify_packages" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-                                Can Modify Packages
-                            </label>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input type="checkbox" name="can_view_reports" id="can_view_reports" value="1" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded">
-                            <label for="can_view_reports" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-                                Can View Reports
                             </label>
                         </div>
                     </div>
