@@ -375,6 +375,30 @@ class AdminController extends Controller
     }
 
     /**
+     * Store a newly created customer.
+     */
+    public function customersStore(Request $request)
+    {
+        $validated = $request->validate([
+            'username' => 'required|string|min:3|max:255|unique:network_users,username|regex:/^[a-zA-Z0-9_-]+$/',
+            'password' => 'required|string|min:8',
+            'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
+            'package_id' => 'required|exists:packages,id',
+            'status' => 'required|in:active,inactive,suspended',
+        ]);
+
+        // Hash the password and set is_active to true by default
+        $validated['password'] = bcrypt($validated['password']);
+        $validated['is_active'] = true;
+
+        // Create the network user
+        NetworkUser::create($validated);
+
+        return redirect()->route('panel.admin.customers')
+            ->with('success', 'Customer created successfully.');
+    }
+
+    /**
      * Show customer edit form.
      */
     public function customersEdit($id): View

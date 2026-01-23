@@ -26,7 +26,7 @@
 
     <!-- Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <form action="#" method="POST" class="p-6" novalidate>
+        <form action="{{ route('panel.admin.customers.store') }}" method="POST" class="p-6" novalidate>
             @csrf
             
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
