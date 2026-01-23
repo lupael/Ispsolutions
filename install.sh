@@ -93,7 +93,9 @@ deep_clean_system() {
     
     # Remove PHP and all extensions
     print_status "Removing PHP..."
-    apt-get remove --purge -y php8.2* php8.1* php8.0* php7.4* libapache2-mod-php* 2>/dev/null || true
+    apt-get remove --purge -y php8.2-fpm php8.2-cli php8.2-mysql php8.2-mbstring php8.2-curl php8.2-xml php8.2-bcmath php8.2-intl php8.2-common 2>/dev/null || true
+    apt-get remove --purge -y php8.1-fpm php8.1-cli php8.1-common php8.0-fpm php8.0-cli php8.0-common php7.4-fpm php7.4-cli php7.4-common 2>/dev/null || true
+    apt-get remove --purge -y libapache2-mod-php8.2 libapache2-mod-php8.1 libapache2-mod-php8.0 libapache2-mod-php7.4 2>/dev/null || true
     apt-get autoremove -y 2>/dev/null || true
     rm -rf /etc/php /usr/lib/php
     
@@ -108,10 +110,13 @@ deep_clean_system() {
     rm -rf /usr/local/lib/node_modules /usr/local/bin/node /usr/local/bin/npm
     rm -rf /root/.npm /root/.node-gyp
     # Also clean up common user directories if they exist
-    for user_home in /home/*; do
-        [ -d "$user_home/.npm" ] && rm -rf "$user_home/.npm" 2>/dev/null || true
-        [ -d "$user_home/.node-gyp" ] && rm -rf "$user_home/.node-gyp" 2>/dev/null || true
-    done
+    if [ -d /home ]; then
+        for user_home in /home/*; do
+            [ -d "$user_home" ] || continue
+            [ -d "$user_home/.npm" ] && rm -rf "$user_home/.npm" 2>/dev/null || true
+            [ -d "$user_home/.node-gyp" ] && rm -rf "$user_home/.node-gyp" 2>/dev/null || true
+        done
+    fi
     
     # Remove Redis
     print_status "Removing Redis..."
@@ -136,7 +141,7 @@ deep_clean_system() {
     
     # Remove any leftover configuration files
     print_status "Removing leftover configuration files..."
-    dpkg -l | grep '^rc' | awk '{print $2}' | xargs dpkg --purge 2>/dev/null || true
+    dpkg -l | grep '^rc' | awk '{print $2}' | xargs -r dpkg --purge 2>/dev/null || true
     
     print_done "Deep clean completed. System is ready for fresh installation."
     
@@ -161,23 +166,24 @@ setup_swap() {
     fi
 }
 
-# --- Step 1: Presence Detection (Simplified after Deep Clean) ---
+# --- Step 1: Verification after Deep Clean ---
 check_existing_presence() {
     print_status "Verifying clean state after deep clean..."
     
-    # Since we've already done deep clean, just verify the cleanup was successful
-    # These are safety checks to ensure nothing unexpected remains
+    # This is a safety check to ensure the deep clean was successful
+    # At this point, MySQL should be completely removed
     
     if [ -d "$INSTALL_DIR" ]; then
-        print_status "Note: Application directory still exists, but will be overwritten."
+        print_status "Note: Application directory still exists (will be removed during installation)."
     fi
     
-    # Check if MySQL is still accessible (shouldn't be after deep clean)
-    if command -v mysql >/dev/null 2>&1 && mysql -u root -e "status" >/dev/null 2>&1; then
-        print_status "Warning: MySQL is still accessible after cleanup - this is unexpected."
+    # MySQL should not be accessible at this point (it's been removed by deep_clean_system)
+    # It will be installed fresh in the next step (install_stack)
+    if command -v mysql >/dev/null 2>&1; then
+        print_status "Warning: MySQL binary still found after cleanup."
     fi
     
-    print_done "System verified clean and ready for installation."
+    print_done "System verified clean and ready for fresh installation."
 }
 
 # --- Step 2: Install Stack ---
