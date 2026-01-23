@@ -187,7 +187,7 @@ class CommissionService
             ->groupBy('reseller_id')
             ->orderByDesc('total_earned')
             ->limit($limit)
-            ->with('reseller:id,name,email')
+            ->with('reseller:id,name,email') // Relationship name kept for backward compatibility (refers to operator)
             ->get()
             ->toArray();
     }
@@ -233,7 +233,7 @@ class CommissionService
             'by_operator' => (clone $query) // Changed key from 'by_reseller' to 'by_operator'
                 ->selectRaw('reseller_id, SUM(commission_amount) as total, COUNT(*) as count') // reseller_id column kept for backward compatibility (refers to operator_id)
                 ->groupBy('reseller_id')
-                ->with('reseller:id,name')
+                ->with('reseller:id,name') // Relationship name kept for backward compatibility (refers to operator)
                 ->get()
                 ->toArray(),
         ];
