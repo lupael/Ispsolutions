@@ -375,6 +375,33 @@ class AdminController extends Controller
     }
 
     /**
+     * Store a newly created customer.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function customersStore(Request $request)
+    {
+        $validated = $request->validate([
+            'username' => 'required|string|min:3|max:255|unique:network_users,username|regex:/^[a-zA-Z0-9_-]+$/',
+            'password' => 'required|string|min:8',
+            'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
+            'package_id' => 'required|exists:packages,id',
+            'status' => 'required|in:active,inactive,suspended',
+        ]);
+
+        // Hash the password and set is_active to true by default
+        $validated['password'] = bcrypt($validated['password']);
+        $validated['is_active'] = true;
+
+        // Create the network user
+        NetworkUser::create($validated);
+
+        return redirect()->route('panel.admin.customers')
+            ->with('success', 'Customer created successfully.');
+    }
+
+    /**
      * Show customer edit form.
      */
     public function customersEdit($id): View
@@ -383,6 +410,59 @@ class AdminController extends Controller
         $packages = ServicePackage::all();
 
         return view('panels.admin.customers.edit', compact('customer', 'packages'));
+    }
+
+    /**
+     * Update the specified customer.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function customersUpdate(Request $request, $id)
+    {
+        $customer = NetworkUser::findOrFail($id);
+
+        $validated = $request->validate([
+            'username' => 'required|string|min:3|max:255|unique:network_users,username,'.$id.'|regex:/^[a-zA-Z0-9_-]+$/',
+            'password' => 'nullable|string|min:8',
+            'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
+            'package_id' => 'required|exists:packages,id',
+            'status' => 'required|in:active,inactive,suspended',
+        ]);
+
+        // Prepare update data
+        $updateData = [
+            'username' => $validated['username'],
+            'service_type' => $validated['service_type'],
+            'package_id' => $validated['package_id'],
+            'status' => $validated['status'],
+        ];
+
+        // Only update password if provided
+        if (!empty($validated['password'])) {
+            $updateData['password'] = bcrypt($validated['password']);
+        }
+
+        $customer->update($updateData);
+
+        return redirect()->route('panel.admin.customers')
+            ->with('success', 'Customer updated successfully.');
+    }
+
+    /**
+     * Remove the specified customer.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function customersDestroy($id)
+    {
+        $customer = NetworkUser::findOrFail($id);
+        $customer->delete();
+
+        return redirect()->route('panel.admin.customers')
+            ->with('success', 'Customer deleted successfully.');
     }
 
     /**

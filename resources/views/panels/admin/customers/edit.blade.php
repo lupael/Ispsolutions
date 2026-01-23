@@ -26,7 +26,7 @@
 
     <!-- Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <form action="#" method="POST" class="p-6">
+        <form action="{{ route('panel.admin.customers.update', $customer->id) }}" method="POST" class="p-6">
             @csrf
             @method('PUT')
             
