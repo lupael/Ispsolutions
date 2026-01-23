@@ -112,11 +112,17 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
         // Profiles
         Route::get('/profiles', [MikrotikController::class, 'listProfiles'])->name('api.mikrotik.profiles.index');
         Route::post('/profiles', [MikrotikController::class, 'createProfile'])->name('api.mikrotik.profiles.store');
+        Route::get('/profiles/{id}', [MikrotikController::class, 'viewProfile'])->name('api.mikrotik.profiles.show');
+        Route::put('/profiles/{id}', [MikrotikController::class, 'updateProfile'])->name('api.mikrotik.profiles.update');
+        Route::delete('/profiles/{id}', [MikrotikController::class, 'deleteProfile'])->name('api.mikrotik.profiles.destroy');
         Route::post('/routers/{routerId}/import-profiles', [MikrotikController::class, 'importProfiles'])->name('api.mikrotik.profiles.import');
 
         // IP Pools
         Route::get('/ip-pools', [MikrotikController::class, 'listIpPools'])->name('api.mikrotik.ip-pools.index');
         Route::post('/ip-pools', [MikrotikController::class, 'createIpPool'])->name('api.mikrotik.ip-pools.store');
+        Route::get('/ip-pools/{id}', [MikrotikController::class, 'viewIpPool'])->name('api.mikrotik.ip-pools.show');
+        Route::put('/ip-pools/{id}', [MikrotikController::class, 'updateIpPool'])->name('api.mikrotik.ip-pools.update');
+        Route::delete('/ip-pools/{id}', [MikrotikController::class, 'deleteIpPool'])->name('api.mikrotik.ip-pools.destroy');
         Route::post('/routers/{routerId}/import-pools', [MikrotikController::class, 'importIpPools'])->name('api.mikrotik.ip-pools.import');
 
         // Secrets
@@ -129,19 +135,28 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
         // VPN Management
         Route::get('/vpn-accounts', [MikrotikController::class, 'listVpnAccounts'])->name('api.mikrotik.vpn.index');
         Route::post('/vpn-accounts', [MikrotikController::class, 'createVpnAccount'])->name('api.mikrotik.vpn.store');
+        Route::get('/vpn-accounts/{id}', [MikrotikController::class, 'viewVpnAccount'])->name('api.mikrotik.vpn.show');
+        Route::put('/vpn-accounts/{id}', [MikrotikController::class, 'updateVpnAccount'])->name('api.mikrotik.vpn.update');
+        Route::delete('/vpn-accounts/{id}', [MikrotikController::class, 'deleteVpnAccount'])->name('api.mikrotik.vpn.destroy');
         Route::get('/routers/{routerId}/vpn-status', [MikrotikController::class, 'getVpnStatus'])->name('api.mikrotik.vpn.status');
 
         // Queue Management
         Route::get('/queues', [MikrotikController::class, 'listQueues'])->name('api.mikrotik.queues.index');
         Route::post('/queues', [MikrotikController::class, 'createQueue'])->name('api.mikrotik.queues.store');
+        Route::get('/queues/{id}', [MikrotikController::class, 'viewQueue'])->name('api.mikrotik.queues.show');
+        Route::put('/queues/{id}', [MikrotikController::class, 'updateQueue'])->name('api.mikrotik.queues.update');
+        Route::delete('/queues/{id}', [MikrotikController::class, 'deleteQueue'])->name('api.mikrotik.queues.destroy');
 
         // Firewall Management
         Route::get('/routers/{routerId}/firewall-rules', [MikrotikController::class, 'listFirewallRules'])->name('api.mikrotik.firewall.index');
         Route::post('/firewall-rules', [MikrotikController::class, 'addFirewallRule'])->name('api.mikrotik.firewall.store');
 
         // Package Speed Mapping
-        Route::post('/package-mappings', [MikrotikController::class, 'mapPackageToProfile'])->name('api.mikrotik.package-mappings.store');
         Route::get('/package-mappings', [MikrotikController::class, 'listPackageMappings'])->name('api.mikrotik.package-mappings.index');
+        Route::post('/package-mappings', [MikrotikController::class, 'mapPackageToProfile'])->name('api.mikrotik.package-mappings.store');
+        Route::get('/package-mappings/{id}', [MikrotikController::class, 'viewPackageMapping'])->name('api.mikrotik.package-mappings.show');
+        Route::put('/package-mappings/{id}', [MikrotikController::class, 'updatePackageMapping'])->name('api.mikrotik.package-mappings.update');
+        Route::delete('/package-mappings/{id}', [MikrotikController::class, 'deletePackageMapping'])->name('api.mikrotik.package-mappings.destroy');
         Route::post('/users/{userId}/apply-speed', [MikrotikController::class, 'applySpeedToUser'])->name('api.mikrotik.users.apply-speed');
     });
 

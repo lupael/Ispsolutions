@@ -331,6 +331,59 @@ class MikrotikController extends Controller
     }
 
     /**
+     * View a single profile
+     */
+    public function viewProfile(int $id): JsonResponse
+    {
+        $profile = MikrotikProfile::with('router')->findOrFail($id);
+
+        return response()->json($profile);
+    }
+
+    /**
+     * Update a profile
+     */
+    public function updateProfile(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'local_address' => 'nullable|string',
+            'remote_address' => 'nullable|string',
+            'rate_limit' => 'nullable|string',
+            'session_timeout' => 'nullable|integer',
+            'idle_timeout' => 'nullable|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $profile = MikrotikProfile::findOrFail($id);
+        $profile->update($validator->validated());
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'data' => $profile->load('router'),
+        ]);
+    }
+
+    /**
+     * Delete a profile
+     */
+    public function deleteProfile(int $id): JsonResponse
+    {
+        $profile = MikrotikProfile::findOrFail($id);
+        $profile->delete();
+
+        return response()->json([
+            'message' => 'Profile deleted successfully',
+        ]);
+    }
+
+    /**
      * Import profiles from router
      */
     public function importProfiles(int $routerId): JsonResponse
@@ -399,6 +452,56 @@ class MikrotikController extends Controller
         return response()->json([
             'message' => 'IP pool created successfully',
         ], 201);
+    }
+
+    /**
+     * View a single IP pool
+     */
+    public function viewIpPool(int $id): JsonResponse
+    {
+        $pool = MikrotikIpPool::with('router')->findOrFail($id);
+
+        return response()->json($pool);
+    }
+
+    /**
+     * Update an IP pool
+     */
+    public function updateIpPool(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'ranges' => 'nullable|array',
+            'ranges.*' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $pool = MikrotikIpPool::findOrFail($id);
+        $pool->update($validator->validated());
+
+        return response()->json([
+            'message' => 'IP pool updated successfully',
+            'data' => $pool->load('router'),
+        ]);
+    }
+
+    /**
+     * Delete an IP pool
+     */
+    public function deleteIpPool(int $id): JsonResponse
+    {
+        $pool = MikrotikIpPool::findOrFail($id);
+        $pool->delete();
+
+        return response()->json([
+            'message' => 'IP pool deleted successfully',
+        ]);
     }
 
     /**
@@ -534,6 +637,57 @@ class MikrotikController extends Controller
     }
 
     /**
+     * View a single VPN account
+     */
+    public function viewVpnAccount(int $id): JsonResponse
+    {
+        $account = MikrotikVpnAccount::with('router')->findOrFail($id);
+
+        return response()->json($account);
+    }
+
+    /**
+     * Update a VPN account
+     */
+    public function updateVpnAccount(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'username' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:6',
+            'profile' => 'nullable|string',
+            'enabled' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $account = MikrotikVpnAccount::findOrFail($id);
+        $account->update($validator->validated());
+
+        return response()->json([
+            'message' => 'VPN account updated successfully',
+            'data' => $account->load('router'),
+        ]);
+    }
+
+    /**
+     * Delete a VPN account
+     */
+    public function deleteVpnAccount(int $id): JsonResponse
+    {
+        $account = MikrotikVpnAccount::findOrFail($id);
+        $account->delete();
+
+        return response()->json([
+            'message' => 'VPN account deleted successfully',
+        ]);
+    }
+
+    /**
      * Get VPN status
      */
     public function getVpnStatus(int $routerId): JsonResponse
@@ -603,6 +757,61 @@ class MikrotikController extends Controller
         return response()->json([
             'message' => 'Queue created successfully',
         ], 201);
+    }
+
+    /**
+     * View a single queue
+     */
+    public function viewQueue(int $id): JsonResponse
+    {
+        $queue = MikrotikQueue::with('router')->findOrFail($id);
+
+        return response()->json($queue);
+    }
+
+    /**
+     * Update a queue
+     */
+    public function updateQueue(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'target' => 'nullable|string',
+            'parent' => 'nullable|string',
+            'max_limit' => 'nullable|string',
+            'burst_limit' => 'nullable|string',
+            'burst_threshold' => 'nullable|string',
+            'burst_time' => 'nullable|integer',
+            'priority' => 'nullable|integer|min:1|max:8',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $queue = MikrotikQueue::findOrFail($id);
+        $queue->update($validator->validated());
+
+        return response()->json([
+            'message' => 'Queue updated successfully',
+            'data' => $queue->load('router'),
+        ]);
+    }
+
+    /**
+     * Delete a queue
+     */
+    public function deleteQueue(int $id): JsonResponse
+    {
+        $queue = MikrotikQueue::findOrFail($id);
+        $queue->delete();
+
+        return response()->json([
+            'message' => 'Queue deleted successfully',
+        ]);
     }
 
     /**
@@ -714,6 +923,56 @@ class MikrotikController extends Controller
         $mappings = $query->paginate($request->get('per_page', 15));
 
         return response()->json($mappings);
+    }
+
+    /**
+     * View a single package mapping
+     */
+    public function viewPackageMapping(int $id): JsonResponse
+    {
+        $mapping = PackageProfileMapping::with(['package', 'router'])->findOrFail($id);
+
+        return response()->json($mapping);
+    }
+
+    /**
+     * Update a package mapping
+     */
+    public function updatePackageMapping(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'package_id' => 'nullable|exists:packages,id',
+            'router_id' => 'nullable|exists:mikrotik_routers,id',
+            'profile_name' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $mapping = PackageProfileMapping::findOrFail($id);
+        $mapping->update($validator->validated());
+
+        return response()->json([
+            'message' => 'Package mapping updated successfully',
+            'data' => $mapping->load(['package', 'router']),
+        ]);
+    }
+
+    /**
+     * Delete a package mapping
+     */
+    public function deletePackageMapping(int $id): JsonResponse
+    {
+        $mapping = PackageProfileMapping::findOrFail($id);
+        $mapping->delete();
+
+        return response()->json([
+            'message' => 'Package mapping deleted successfully',
+        ]);
     }
 
     /**
