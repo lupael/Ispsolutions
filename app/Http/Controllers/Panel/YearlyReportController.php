@@ -417,12 +417,13 @@ class YearlyReportController extends Controller
      * Export yearly report to PDF
      * Note: PDF export functionality requires PDF templates to be created.
      * For now, redirecting to the view page as PDF generation needs proper templates.
+    /**
+     * Export report as PDF
      */
     public function exportPdf(Request $request, string $reportType)
     {
         // Redirect to the report view page instead of placeholder
         return redirect()->route('panel.admin.reports.yearly.index', ['year' => $request->input('year')])
             ->with('info', 'PDF export functionality is planned for future release. Please use Excel export or print the report page.');
-    }
     }
 }
