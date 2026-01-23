@@ -578,7 +578,7 @@ class AdminController extends Controller
      */
     public function routers(): View
     {
-        $routers = MikrotikRouter::with('networkUsers')->paginate(20);
+        $routers = MikrotikRouter::with('pppoeUsers')->paginate(20);
 
         $stats = [
             'total' => MikrotikRouter::count(),

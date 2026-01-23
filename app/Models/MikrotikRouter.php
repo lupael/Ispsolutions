@@ -72,11 +72,6 @@ class MikrotikRouter extends Model
         return $this->hasMany(PackageProfileMapping::class, 'router_id');
     }
 
-    public function networkUsers(): HasMany
-    {
-        return $this->hasMany(NetworkUser::class, 'router_id');
-    }
-
     // Optimized query scopes
     public function scopeActive(Builder $query): Builder
     {
