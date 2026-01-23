@@ -268,8 +268,7 @@ api_keys table:
 
 ### API Documentation Location
 **Existing Documentation**:
-- `docs/API.md` - Complete API reference
-- `docs/API_DOCUMENTATION.md` - Additional API docs
+- `docs/API.md` - Complete API reference (consolidated)
 - `docs/OLT_API_REFERENCE.md` - OLT-specific API
 
 ### API Routes

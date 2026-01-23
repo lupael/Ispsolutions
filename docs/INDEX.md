@@ -60,7 +60,6 @@ Comprehensive guides for each user role in the system:
 
 ### API Documentation
 - **[API Documentation](API.md)** - Complete REST API reference
-- **[API Documentation v2](API_DOCUMENTATION.md)** - Alternative API docs
 
 ### Testing & Quality
 - **[Testing Guide](TESTING.md)** - How to run and write tests
@@ -71,7 +70,8 @@ Comprehensive guides for each user role in the system:
 ### Core Features
 - **[TODO Features A-Z](../TODO_FEATURES_A2Z.md)** - Complete feature list and specifications
 - **[Feature Requests](../Feature.md)** - Requested features
-- **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current development status
+- **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current development status (Feature tracking)
+- **[Network Services Status](../IMPLEMENTATION_STATUS.md)** - Network services implementation
 - **[Implementation TODO](../IMPLEMENTATION_TODO.md)** - Implementation tasks
 
 ### Panel & UI
@@ -90,10 +90,8 @@ Comprehensive guides for each user role in the system:
 ## 📋 Guides & References
 
 ### Quick Reference Guides
-- **[Quick Reference (Pagination/Routing)](../QUICK_REFERENCE_PAGINATION_ROUTING.md)**
-- **[Phase 7 Quick Reference](../PHASE_7_QUICK_REFERENCE.md)**
-- **[Routing Troubleshooting](../ROUTING_TROUBLESHOOTING_GUIDE.md)**
-- **[Pagination Fix](../PAGINATION_FIX_DOCUMENTATION.md)**
+- **[Routing Troubleshooting](../ROUTING_TROUBLESHOOTING_GUIDE.md)** - Diagnose and fix routing issues
+- **[Pagination Fix](../PAGINATION_FIX_DOCUMENTATION.md)** - Pagination implementation guide
 
 ### Specialized Guides
 - **[User Guides](USER_GUIDES.md)** - Consolidated user documentation
@@ -174,6 +172,8 @@ Comprehensive guides for each user role in the system:
 
 ## 🔄 Recently Updated
 
+- **2026-01-23**: Documentation cleanup - removed outdated files and marked progress as complete
+- **2026-01-23**: Archived historical completion summaries and deprecated role hierarchy files
 - **2026-01-23**: Created comprehensive role-based user guides (8 guides)
 - **2026-01-23**: Reorganized documentation structure
 - **2026-01-23**: Created automated installation script (install.sh)

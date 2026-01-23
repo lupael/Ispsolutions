@@ -2,7 +2,8 @@
 
 This file lists documentation that has been consolidated, superseded, or is no longer maintained.
 
-**Last Updated**: 2026-01-23
+**Last Updated**: 2026-01-23  
+**Status**: Phases 1 & 2 completed, documentation cleanup finished
 
 ---
 
@@ -78,19 +79,29 @@ Multiple tracking files exist with overlapping content. These are historical and
 
 ## Scheduled for Removal
 
-The following files are scheduled for removal in future releases:
+The following files have been successfully removed or archived:
 
-### Phase 1 (Next Release - v3.2)
-- `ROLE_HIERARCHY_CLARIFICATION.md` - Superseded by ROLE_SYSTEM.md
-- `ROLE_HIERARCHY_IMPLEMENTATION.md` - Superseded by ROLE_SYSTEM.md
-- `ROLE_SYSTEM_QUICK_REFERENCE.md` - Superseded by ROLE_SYSTEM.md
-- `SUMMARY.md` - Superseded by ROLE_SYSTEM.md
-- `docs/PR1_TENANCY_AND_ROLES.md` - Historical PR documentation
-- `docs/API_DOCUMENTATION.md` - Content fully merged into docs/API.md
+### Phase 1 (v3.2) - ✅ COMPLETED
+- ✅ `ROLE_HIERARCHY_CLARIFICATION.md` - Removed, superseded by ROLE_SYSTEM.md
+- ✅ `ROLE_HIERARCHY_IMPLEMENTATION.md` - Removed, superseded by ROLE_SYSTEM.md
+- ✅ `ROLE_HIERARCHY_COMPLETION.md` - Removed, archived
+- ✅ `ROLE_SYSTEM_QUICK_REFERENCE.md` - Removed from docs/archived/
+- ✅ `SUMMARY.md` - Removed from docs/archived/
+- ✅ `docs/PR1_TENANCY_AND_ROLES.md` - Removed, historical PR documentation
+- ✅ `docs/API_DOCUMENTATION.md` - Removed, content fully merged into docs/API.md
 
-### Phase 2 (After Verification Period - v4.0)
-- All historical implementation/completion/summary files listed above
-- Archive these files or move to a separate `docs/archive/` directory
+### Phase 2 (v3.2) - ✅ COMPLETED
+- ✅ Historical implementation/completion/summary files archived:
+  - `COMPLETION_SUMMARY.md` → `docs/archived/COMPLETION_SUMMARY_ROOT.md`
+  - `FIX_SUMMARY.md` → `docs/archived/FIX_SUMMARY_ROOT.md`
+  - `IMPLEMENTATION_SUMMARY.md` → `docs/archived/IMPLEMENTATION_SUMMARY_ROOT.md`
+  - `DEPLOYMENT_GUIDE.md` → `docs/archived/DEPLOYMENT_GUIDE.md`
+  - `QUICK_REFERENCE.md` → `docs/archived/QUICK_REFERENCE.md`
+  - `PHASE_7_QUICK_REFERENCE.md` → `docs/archived/PHASE_7_QUICK_REFERENCE.md`
+  - `QUICK_REFERENCE_PAGINATION_ROUTING.md` → `docs/archived/QUICK_REFERENCE_PAGINATION_ROUTING.md`
+  - `NEXT_200_TASKS_COMPLETED.md` → `docs/archived/NEXT_200_TASKS_COMPLETED.md`
+  - `NEXT_STEPS.md` → `docs/archived/NEXT_STEPS.md`
+  - `DOCUMENTATION_CHANGES.md` → `docs/archived/DOCUMENTATION_CHANGES.md`
 
 ---
 

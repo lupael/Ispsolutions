@@ -23,7 +23,7 @@ $items = collect([]);  // Returns Collection
 $customers = User::paginate(20);  // Returns LengthAwarePaginator
 $packages = ServicePackage::paginate(20);  // Returns LengthAwarePaginator
 
-// For empty results (TODO/not-yet-implemented features):
+// For empty results (not-yet-implemented features):
 $items = new \Illuminate\Pagination\LengthAwarePaginator(
     [],  // items
     0,   // total

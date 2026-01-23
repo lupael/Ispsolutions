@@ -235,13 +235,16 @@ public function up(): void
 
 ### Blade Components
 
-TODO: Document available Blade components for:
-- Cards
-- Tables
-- Forms
-- Pagination
-- Alerts
-- Modals
+The application includes the following reusable Blade components:
+
+- **Cards** - Pre-styled card layouts for content sections
+- **Tables** - Data table components with sorting and filtering
+- **Forms** - Form input components with validation styling
+- **Pagination** - Pagination UI (see `panels/partials/pagination.blade.php`)
+- **Alerts** - Toast notifications and alert messages
+- **Modals** - Modal dialog components for user interactions
+
+For component usage examples, refer to existing panel views in `resources/views/panels/`.
 
 ### Styling
 
