@@ -23,11 +23,11 @@ class RoleFactory extends Factory
             'super-admin',
             'admin',
             'manager',
+            'accountant',
             'staff',
-            'reseller',
-            'sub-reseller',
+            'operator',
+            'sub-operator',
             'customer',
-            'card-distributor',
             'developer',
         ]);
 

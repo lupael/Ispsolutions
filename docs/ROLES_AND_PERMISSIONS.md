@@ -57,8 +57,7 @@ Level 20:  Admin           (ISP Owner - Own ISP Data)
 Level 30:  Operator        (Own + Sub-Operator Customers)
 Level 40:  Sub-Operator    (Only Own Customers)
 Level 50:  Manager         (Permission-Based)
-Level 60:  Card Distributor / Reseller
-Level 65:  Sub-Reseller
+
 Level 70:  Accountant      (Read-Only Financial)
 Level 80:  Staff           (Permission-Based Support)
 Level 100: Customer        (End User)
@@ -74,8 +73,6 @@ Level 100: Customer        (End User)
 │          ├─ Operator (30) - Own + Sub-Op Customers      │
 │          │   └─ Sub-Operator (40) - Own Customers       │
 │          ├─ Manager (50) - Permission-Based             │
-│          ├─ Card Distributor/Reseller (60)              │
-│          │   └─ Sub-Reseller (65)                       │
 │          ├─ Accountant (70) - Financial Reports         │
 │          └─ Staff (80) - Limited Support                │
 │              └─ Customer (100) - Self-Service           │
@@ -297,28 +294,7 @@ if (auth()->user()->hasPermission('customers.view')) {
 
 ---
 
-### 7. Card Distributor / Reseller (Level 60)
-
-#### Card Distributor
-- Recharge card management
-- Sell cards and view balance
-- Commission tracking
-
-#### Reseller
-- Customer management
-- View packages, billing, reports
-- Commission access
-
----
-
-### 8. Sub-Reseller (Level 65)
-Similar to reseller but subordinate:
-- Customer and package management
-- Commission view
-
----
-
-### 9. Accountant (Level 70)
+### 7. Accountant (Level 70)
 **Read-Only Financial**
 
 #### Responsibilities
@@ -334,7 +310,7 @@ Similar to reseller but subordinate:
 
 ---
 
-### 10. Staff (Level 80)
+### 8. Staff (Level 80)
 **Limited Operational Access**
 
 #### Responsibilities
@@ -350,7 +326,7 @@ Similar to reseller but subordinate:
 
 ---
 
-### 11. Customer (Level 100)
+### 9. Customer (Level 100)
 **End User - Self-Service**
 
 #### Data Access
@@ -428,9 +404,6 @@ Advanced permissions that must be explicitly granted by Admin:
     'operator' => 30,        // Own + sub-operator customers
     'sub_operator' => 40,    // Only own customers
     'manager' => 50,
-    'reseller' => 60,
-    'card_distributor' => 60,
-    'sub_reseller' => 65,
     'accountant' => 70,
     'staff' => 80,
     'customer' => 100,

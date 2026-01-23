@@ -1,6 +1,6 @@
 # ISP Solution - User Guides
 
-Complete user documentation for all 9 user roles in the ISP Solution system.
+Complete user documentation for all user roles in the ISP Solution system.
 
 ---
 
@@ -12,43 +12,40 @@ Complete user documentation for all 9 user roles in the ISP Solution system.
 4. [Sub-Operator Guide](#4-sub-operator-guide)
 5. [Manager Guide](#5-manager-guide)
 6. [Staff Guide](#6-staff-guide)
-7. [Reseller Guide](#7-reseller-guide)
-8. [Sub-Reseller Guide](#8-sub-reseller-guide)
-9. [Card Distributor Guide](#9-card-distributor-guide)
-10. [Customer Guide](#10-customer-guide)
-11. [Developer Guide](#11-developer-guide)
-12. [Accountant Guide](#12-accountant-guide)
+7. [Customer Guide](#7-customer-guide)
+8. [Developer Guide](#8-developer-guide)
+9. [Accountant Guide](#9-accountant-guide)
 
 ---
 
 ## 1. Super Admin Guide
 
 ### Overview
-Super Admins have system-wide access across all tenants and can manage the entire ISP solution infrastructure without restrictions.
+Super Admins manage their own tenancies and can create and manage Admins (ISP Owners) within those tenancies.
 
 ### Key Responsibilities
-- Manage all ISP accounts (tenants)
-- Configure system-wide settings
-- Monitor overall system health
-- Manage subscription billing
-- Configure payment and SMS gateways
-- Access all tenant features without restrictions
+- Manage Admins (ISPs) within their own tenancies
+- Configure tenant-wide settings
+- Monitor tenant health
+- Manage subscription billing for Admins
+- Configure payment and SMS gateways for Admins
+- Access features within own tenancies only
 
 ### Access Level
-- **Scope**: All tenant features without restrictions
+- **Scope**: Own tenancies only
 - **URL**: `/panel/super-admin/*`
 
 ### Common Tasks
 
-#### 1.1 Create New ISP/Tenant
-1. Navigate to **Panel → Super Admin → Tenant Management**
-2. Click **"Add Tenant"**
-3. Fill in ISP details:
+#### 1.1 Create New Admin (ISP)
+1. Navigate to **Panel → Super Admin → Admin Management**
+2. Click **"Add Admin"**
+3. Fill in Admin details:
    - Company name
    - Contact email
    - Admin username and password
    - Billing plan (fixed, user-based, or panel-based)
-4. Click **"Create Tenant"**
+4. Click **"Create Admin"**
 
 #### 1.2 Manage Subscriptions
 1. Go to **Panel → Super Admin → Subscription Management**
@@ -59,13 +56,13 @@ Super Admins have system-wide access across all tenants and can manage the entir
 3. Configure billing parameters
 4. Track subscription renewals
 
-#### 1.3 Configure Global Settings
-1. Navigate to **Panel → Super Admin → Global Configuration**
+#### 1.3 Configure Tenant Settings
+1. Navigate to **Panel → Super Admin → Tenant Configuration**
 2. Configure:
-   - System-wide settings
-   - Payment gateways (for all tenants)
-   - SMS gateways (for all tenants)
-3. Set system defaults and limits
+   - Tenant-wide settings
+   - Payment gateways (for own tenancy)
+   - SMS gateways (for own tenancy)
+3. Set tenant defaults and limits
 
 #### 1.4 Monitor System
 1. Go to **Panel → Super Admin → Monitoring**
@@ -86,7 +83,7 @@ Super Admins have system-wide access across all tenants and can manage the entir
 ## 2. Admin Guide
 
 ### Overview
-Admins manage a single ISP/tenant and have full control over their organization's operations.
+Admins (also known as ISP Owners) manage a single ISP and have full control over their organization's operations within their tenant.
 
 ### Key Responsibilities
 - Manage users and customers
@@ -107,6 +104,8 @@ Admins manage a single ISP/tenant and have full control over their organization'
    - Billing start date
 4. Click **"Create Customer"**
 5. Credentials will be auto-generated and can be sent via email/SMS
+
+Note: Admins, Operators, and Sub-Operators can all create customers.
 
 #### 2.2 Create Service Package
 1. Go to **Panel → Admin → Packages**
@@ -351,7 +350,7 @@ Managers have task-specific access with permission-based features, focusing on p
 
 ---
 
-## 4. Staff Guide
+## 6. Staff Guide
 
 ### Overview
 Staff members provide frontline customer support and handle basic account management.
@@ -364,7 +363,7 @@ Staff members provide frontline customer support and handle basic account manage
 
 ### Common Tasks
 
-#### 4.1 Handle Support Ticket
+#### 6.1 Handle Support Ticket
 1. Navigate to **Panel → Staff → Support Tickets**
 2. Click on unassigned ticket
 3. Assign to yourself
@@ -373,14 +372,14 @@ Staff members provide frontline customer support and handle basic account manage
 6. Update ticket status
 7. Close ticket when resolved
 
-#### 4.2 Help Customer Reset Password
+#### 6.2 Help Customer Reset Password
 1. Go to **Panel → Staff → Network Users**
 2. Search for customer by username
 3. Click **"Reset Password"**
 4. New password generated automatically
 5. Share with customer via secure channel
 
-#### 4.3 Check Customer Connection Status
+#### 6.3 Check Customer Connection Status
 1. Search for customer in Network Users
 2. View connection status
 3. Check for:
@@ -391,104 +390,7 @@ Staff members provide frontline customer support and handle basic account manage
 
 ---
 
-## 5. Reseller Guide
-
-### Overview
-Resellers sell services to customers and earn commissions on sales and renewals.
-
-### Key Responsibilities
-- Acquire new customers
-- Manage customer accounts
-- Track commission earnings
-- Renew customer packages
-
-### Common Tasks
-
-#### 5.1 Add New Customer
-1. Navigate to **Panel → Reseller → Customers**
-2. Click **"Add Customer"**
-3. Fill in customer details
-4. Select package
-5. Click **"Create"**
-6. Commission will be calculated automatically on first payment
-
-#### 5.2 View Commission Earnings
-1. Go to **Panel → Reseller → Commission**
-2. View commission summary:
-   - Total earned
-   - Pending commissions
-   - Paid commissions
-3. Filter by date range
-4. Request payment for pending commissions
-
-#### 5.3 Renew Customer Package
-1. Navigate to **Panel → Reseller → Customers**
-2. Find customer with expiring package
-3. Click **"Renew"**
-4. Confirm package and duration
-5. Generate invoice
-6. Collect payment from customer
-
----
-
-## 6. Sub-Reseller Guide
-
-### Overview
-Sub-Resellers work under Resellers and earn commissions on their sales.
-
-### Key Responsibilities
-- Similar to Reseller but reports to parent Reseller
-- Earn sub-reseller commission rate (typically lower)
-
-### Common Tasks
-(Same as Reseller Guide but with different commission structure)
-
----
-
-## 7. Card Distributor Guide
-
-### Overview
-Card Distributors manage prepaid recharge cards for services.
-
-### Key Responsibilities
-- Generate recharge cards
-- Track card inventory
-- Monitor sales
-- Manage distributor balance
-
-### Common Tasks
-
-#### 7.1 Generate Recharge Cards
-1. Navigate to **Panel → Card Distributor → Cards**
-2. Click **"Generate Cards"**
-3. Specify:
-   - Quantity (max 1000)
-   - Denomination (card value)
-   - Expiration date
-4. Click **"Generate"**
-5. Cards generated with unique numbers and PINs
-6. Download card list (secure it properly)
-
-#### 7.2 Check Card Inventory
-1. Go to **Panel → Card Distributor → Inventory**
-2. View:
-   - Total cards
-   - Unused cards
-   - Used cards
-   - Expired cards
-3. Filter by denomination or status
-
-#### 7.3 View Sales Report
-1. Navigate to **Panel → Card Distributor → Sales**
-2. View sales transactions:
-   - Cards sold
-   - Revenue generated
-   - Commission earned
-3. Export report for records
-
----
-
-## 8. Customer Guide
+## 7. Customer Guide
 
 ### Overview
 Customers access their account to view usage, pay bills, and manage their service.
@@ -501,7 +403,7 @@ Customers access their account to view usage, pay bills, and manage their servic
 
 ### Common Tasks
 
-#### 8.1 View and Pay Invoice
+#### 7.1 View and Pay Invoice
 1. Login to **Customer Panel**
 2. Navigate to **Billing**
 3. View pending invoices
@@ -512,7 +414,7 @@ Customers access their account to view usage, pay bills, and manage their servic
 6. Complete payment
 7. Account activated automatically after payment
 
-#### 8.2 Check Usage Statistics
+#### 7.2 Check Usage Statistics
 1. Go to **Panel → Customer → Usage**
 2. View:
    - Data uploaded/downloaded
@@ -520,7 +422,7 @@ Customers access their account to view usage, pay bills, and manage their servic
    - Current bandwidth
 3. Review monthly trends
 
-#### 8.3 Submit Support Ticket
+#### 7.3 Submit Support Ticket
 1. Navigate to **Panel → Customer → Support**
 2. Click **"New Ticket"**
 3. Select issue category
@@ -529,7 +431,7 @@ Customers access their account to view usage, pay bills, and manage their servic
 6. Submit ticket
 7. Track ticket status and responses
 
-#### 8.4 Update Profile
+#### 7.4 Update Profile
 1. Go to **Panel → Customer → Profile**
 2. Update:
    - Contact information
@@ -540,7 +442,7 @@ Customers access their account to view usage, pay bills, and manage their servic
 
 ---
 
-## 9. Developer Guide
+## 8. Developer Guide
 
 ### Overview
 Developers integrate with the system via API and manage system customizations.
@@ -553,7 +455,7 @@ Developers integrate with the system via API and manage system customizations.
 
 ### Common Tasks
 
-#### 9.1 Generate API Token
+#### 8.1 Generate API Token
 1. Login to **Developer Panel**
 2. Navigate to **API Settings**
 3. Click **"Generate New Token"**
@@ -562,13 +464,13 @@ Developers integrate with the system via API and manage system customizations.
 6. Copy token (shown only once)
 7. Use in API requests
 
-#### 9.2 View API Documentation
+#### 8.2 View API Documentation
 1. Go to **Panel → Developer → API Docs**
 2. Browse endpoint documentation
 3. Test endpoints using built-in API tester
 4. Copy sample code
 
-#### 9.3 Check System Logs
+#### 8.3 Check System Logs
 1. Navigate to **Panel → Developer → Logs**
 2. Filter by:
    - Log level
@@ -577,7 +479,7 @@ Developers integrate with the system via API and manage system customizations.
 3. Debug issues
 4. Export logs for analysis
 
-#### 9.4 Run Debug Tools
+#### 8.4 Run Debug Tools
 1. Go to **Panel → Developer → Debug**
 2. Available tools:
    - Database query monitor
@@ -588,7 +490,7 @@ Developers integrate with the system via API and manage system customizations.
 
 ---
 
-## 12. Accountant Guide
+## 9. Accountant Guide
 
 ### Overview
 Accountants have read-only access to financial data and can generate comprehensive financial reports for compliance and analysis.
@@ -606,14 +508,14 @@ Accountants have read-only access to financial data and can generate comprehensi
 
 ### Common Tasks
 
-#### 12.1 View Dashboard
+#### 9.1 View Dashboard
 1. Login to **Accountant Panel**
 2. View financial overview:
    - Revenue metrics
    - Outstanding balances
    - Collection summary
 
-#### 12.2 Generate Financial Reports
+#### 9.2 Generate Financial Reports
 1. Navigate to **Panel → Accountant → Financial Reports**
 2. Select report type:
    - Income/Expense Report
@@ -624,21 +526,21 @@ Accountants have read-only access to financial data and can generate comprehensi
 4. Click **"Generate Report"**
 5. Export to PDF or Excel
 
-#### 12.3 Track Income/Expense
+#### 9.3 Track Income/Expense
 1. Go to **Panel → Accountant → Income/Expense Tracking**
 2. View transaction history (read-only)
 3. Review expense records
 4. Analyze category-wise breakdown
 5. Compare periods
 
-#### 12.4 Review VAT Collections
+#### 9.4 Review VAT Collections
 1. Navigate to **Panel → Accountant → VAT Collections**
 2. View VAT collected summary
 3. Generate tax reports
 4. Download compliance documentation
 5. Track period-wise VAT
 
-#### 12.5 View Payment History
+#### 9.5 View Payment History
 1. Go to **Panel → Accountant → Payment History**
 2. View all payment records (read-only)
 3. Filter by:
@@ -647,7 +549,7 @@ Accountants have read-only access to financial data and can generate comprehensi
    - Customer
 4. Export payment history
 
-#### 12.6 Generate Customer Statements
+#### 9.6 Generate Customer Statements
 1. Navigate to **Panel → Accountant → Customer Statements**
 2. Select customer
 3. Choose date range
