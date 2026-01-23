@@ -16,7 +16,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete()
                 ->comment('The operator/staff who collected this payment');
-            $table->index('collected_by');
+            // Note: Foreign key automatically creates an index, so no need for explicit index()
         });
     }
 

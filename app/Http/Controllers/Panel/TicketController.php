@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -53,7 +54,9 @@ class TicketController extends Controller
             
             // For operators/staff, check if ticket belongs to their customers
             if ($user->isOperator() || $user->isSubOperator()) {
-                $customerIds = $user->subordinates()->where('operator_level', 100)->pluck('id');
+                $customerIds = $user->subordinates()
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->pluck('id');
                 if (!$customerIds->contains($ticket->customer_id)) {
                     abort(403, 'Unauthorized access to ticket');
                 }
