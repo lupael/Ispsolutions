@@ -223,17 +223,22 @@ class YearlyReportController extends Controller
 
         $operatorIds = $operators->pluck('id');
 
-        // Note: collected_by column requires migration to add to payments table
-        // For now, we'll use user_id as a fallback since operators collect their own customers' payments
-        // TODO: Run migration to add collected_by column for accurate operator payment tracking
+        // Use collected_by column to track which operator collected the payment
+        // Fallback to user_id for backwards compatibility with existing data
         $paymentsData = Payment::whereYear('paid_at', $year)
-            ->whereIn('user_id', $operatorIds)
+            ->where(function($query) use ($operatorIds) {
+                $query->whereIn('collected_by', $operatorIds)
+                    ->orWhere(function($q) use ($operatorIds) {
+                        $q->whereNull('collected_by')
+                          ->whereIn('user_id', $operatorIds);
+                    });
+            })
             ->select(
-                'user_id as operator_id',
+                DB::raw('COALESCE(collected_by, user_id) as operator_id'),
                 DB::raw('MONTH(paid_at) as month'),
                 DB::raw('SUM(amount) as total_amount')
             )
-            ->groupBy('user_id', DB::raw('MONTH(paid_at)'))
+            ->groupBy(DB::raw('COALESCE(collected_by, user_id)'), DB::raw('MONTH(paid_at)'))
             ->get();
 
         // Single query for all commissions
