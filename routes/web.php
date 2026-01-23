@@ -347,6 +347,8 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::put('/network/ipv6-pools/{id}', [AdminController::class, 'ipv6PoolsUpdate'])->name('network.ipv6-pools.update');
     Route::delete('/network/ipv6-pools/{id}', [AdminController::class, 'ipv6PoolsDestroy'])->name('network.ipv6-pools.destroy');
     Route::get('/network/pppoe-profiles', [AdminController::class, 'pppoeProfiles'])->name('network.pppoe-profiles');
+    Route::post('/network/pppoe-profiles', [AdminController::class, 'pppoeProfilesStore'])->name('network.pppoe-profiles.store');
+    Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->name('network.pppoe-profiles.destroy');
     Route::get('/network/package-fup-edit/{id}', [AdminController::class, 'packageFupEdit'])->name('network.package-fup-edit');
     Route::get('/network/ping-test', [AdminController::class, 'pingTest'])->name('network.ping-test');
 

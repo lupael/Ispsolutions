@@ -89,6 +89,19 @@ class User extends Authenticatable
         'two_factor_enabled',
         'two_factor_secret',
         'two_factor_recovery_codes',
+        'company_name',
+        'company_address',
+        'company_phone',
+        'credit_limit',
+        'allow_sub_operator',
+        'allow_rename_package',
+        'sms_charges_by',
+        'sms_cost_per_unit',
+        'can_manage_customers',
+        'can_view_financials',
+        'payment_type',
+        'wallet_balance',
+        'sms_balance',
     ];
 
     /**
@@ -117,6 +130,10 @@ class User extends Authenticatable
             'activated_at' => 'datetime',
             'disabled_menus' => 'array',
             'two_factor_enabled' => 'boolean',
+            'allow_sub_operator' => 'boolean',
+            'allow_rename_package' => 'boolean',
+            'can_manage_customers' => 'boolean',
+            'can_view_financials' => 'boolean',
         ];
     }
 

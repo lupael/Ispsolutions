@@ -145,9 +145,10 @@ class AdvancedAnalyticsService
     public function getServiceAnalytics(Carbon $startDate, Carbon $endDate, int $tenantId): array
     {
         // Service package distribution
-        $packageDistribution = NetworkUser::where('tenant_id', $tenantId)
+        $packageDistribution = NetworkUser::where('network_users.tenant_id', $tenantId)
             ->join('packages', 'network_users.package_id', '=', 'packages.id')
             ->where('network_users.status', 'active')
+            ->where('packages.tenant_id', $tenantId)
             ->select(
                 'packages.name',
                 'packages.price',

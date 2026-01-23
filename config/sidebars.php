@@ -91,8 +91,10 @@ return [
             'children' => [
                 ['label' => 'Master Packages', 'route' => 'panel.admin.packages.index'],
                 ['label' => 'PPPoE Profiles', 'route' => 'panel.admin.network.pppoe-profiles'],
-                ['label' => 'NAS Management', 'route' => 'panel.admin.nas'],
-                ['label' => 'Routers', 'route' => 'panel.admin.network.routers'],
+                ['label' => 'Router (RADIUS NAS)', 'route' => 'panel.admin.nas'],
+                // Temporarily hidden as per issue requirements
+                // ['label' => 'Cisco Devices', 'route' => 'panel.admin.network.cisco'],
+                // ['label' => 'MikroTik Routers', 'route' => 'panel.admin.network.routers'],
             ],
         ],
         [
@@ -190,7 +192,9 @@ return [
             'children' => [
                 ['label' => 'Billing Profiles', 'route' => 'panel.admin.config.billing'],
                 ['label' => 'Custom Fields', 'route' => 'panel.admin.config.custom-fields'],
-                ['label' => 'Devices', 'route' => 'panel.admin.network.devices'],
+                ['label' => 'All Devices', 'route' => 'panel.admin.network.devices'],
+                // Temporarily hidden from device list as per issue requirements
+                // Note: Cisco and MikroTik still accessible via direct routes if needed
             ],
         ],
         [
@@ -487,9 +491,10 @@ return [
             'label' => 'Network Devices',
             'icon' => 'bi-hdd-network',
             'children' => [
-                ['label' => 'MikroTik', 'route' => 'panel.staff.mikrotik'],
-                ['label' => 'NAS Devices', 'route' => 'panel.staff.nas'],
-                ['label' => 'Cisco Devices', 'route' => 'panel.staff.cisco'],
+                // Temporarily hidden as per issue requirements
+                // ['label' => 'MikroTik', 'route' => 'panel.staff.mikrotik'],
+                // ['label' => 'Cisco Devices', 'route' => 'panel.staff.cisco'],
+                ['label' => 'Router (RADIUS NAS)', 'route' => 'panel.staff.nas'],
                 ['label' => 'OLT Devices', 'route' => 'panel.staff.olt'],
             ],
         ],

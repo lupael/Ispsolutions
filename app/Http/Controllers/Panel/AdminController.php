@@ -645,23 +645,47 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'operator_type' => 'nullable|string',
+            'company_name' => 'nullable|string|max:255',
+            'company_address' => 'nullable|string',
+            'company_phone' => 'nullable|string|max:20',
+            'payment_type' => 'required|in:prepaid,postpaid',
+            'credit_limit' => 'nullable|numeric|min:0',
+            'sms_charges_by' => 'required|in:admin,operator',
+            'sms_cost_per_unit' => 'nullable|numeric|min:0',
+            'allow_sub_operator' => 'nullable|boolean',
+            'allow_rename_package' => 'nullable|boolean',
+            'can_manage_customers' => 'nullable|boolean',
+            'can_view_financials' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        // Create the user
+        // Create the user with all fields
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
-            'operator_type' => $validated['operator_type'] ?? null,
-            'is_active' => true,
+            'company_name' => $validated['company_name'] ?? null,
+            'company_address' => $validated['company_address'] ?? null,
+            'company_phone' => $validated['company_phone'] ?? null,
+            'payment_type' => $validated['payment_type'],
+            'credit_limit' => $validated['payment_type'] === 'postpaid' ? ($validated['credit_limit'] ?? 0) : 0,
+            'sms_charges_by' => $validated['sms_charges_by'],
+            'sms_cost_per_unit' => $validated['sms_charges_by'] === 'operator' ? ($validated['sms_cost_per_unit'] ?? 0) : 0,
+            'allow_sub_operator' => $request->has('allow_sub_operator'),
+            'allow_rename_package' => $request->has('allow_rename_package'),
+            'can_manage_customers' => array_key_exists('can_manage_customers', $validated) ? (bool) $validated['can_manage_customers'] : true,
+            'can_view_financials' => array_key_exists('can_view_financials', $validated) ? (bool) $validated['can_view_financials'] : true,
+            'is_active' => $request->has('is_active'),
+            'operator_level' => User::OPERATOR_LEVEL_OPERATOR,
+            'operator_type' => 'operator',
+            'tenant_id' => auth()->user()->tenant_id,
         ]);
 
         // Assign operator role using the model method
         $user->assignRole('operator');
 
         return redirect()->route('panel.admin.operators')
-            ->with('success', 'Operator created successfully.');
+            ->with('success', 'Operator created successfully with all configurations.');
     }
 
     /**
@@ -1060,19 +1084,21 @@ class AdminController extends Controller
         $ciscoQuery = CiscoDevice::select('id', 'name', DB::raw('ip_address as host'), 'status', 'created_at')
             ->addSelect(DB::raw("'cisco' as device_type"));
 
-        // Execute a single query using UNION ALL and order results in the database
+        // Execute paginated query using UNION ALL
         $devices = $routerQuery
             ->unionAll($oltQuery)
             ->unionAll($ciscoQuery)
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(20);
 
         $stats = [
-            'total' => $devices->count(),
+            'total' => MikrotikRouter::count() + Olt::count() + CiscoDevice::count(),
             'routers' => MikrotikRouter::count(),
             'olts' => Olt::count(),
             'switches' => CiscoDevice::count(),
-            'online' => $devices->where('status', 'active')->count(),
+            'online' => MikrotikRouter::where('status', 'active')->count() + 
+                        Olt::where('status', 'active')->count() + 
+                        CiscoDevice::where('status', 'active')->count(),
         ];
 
         return view('panels.admin.network.devices', compact('devices', 'stats'));
@@ -1384,8 +1410,55 @@ class AdminController extends Controller
             'active' => MikrotikProfile::count(), // Currently counts all profiles; adjust if a status field is introduced
             'users' => NetworkUser::count(),
         ];
+        
+        $routers = MikrotikRouter::where('status', 'active')->get();
 
-        return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats'));
+        return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers'));
+    }
+
+    /**
+     * Store a new PPPoE profile.
+     */
+    public function pppoeProfilesStore(Request $request)
+    {
+        $validated = $request->validate([
+            'router_id' => 'required|exists:mikrotik_routers,id',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                // Ensure name is unique for the selected router
+                \Illuminate\Validation\Rule::unique('mikrotik_profiles')->where(function ($query) use ($request) {
+                    return $query->where('router_id', $request->router_id);
+                }),
+            ],
+            'local_address' => 'required|ip',
+            'remote_address' => 'required|string|max:255',
+            'rate_limit' => 'nullable|string|max:255',
+            'session_timeout' => 'nullable|integer|min:0',
+            'idle_timeout' => 'nullable|integer|min:0',
+        ]);
+
+        MikrotikProfile::create($validated);
+
+        return redirect()->route('panel.admin.network.pppoe-profiles')
+            ->with('success', 'PPPoE profile created successfully.');
+    }
+
+    /**
+     * Delete a PPPoE profile.
+     */
+    public function pppoeProfilesDestroy($id)
+    {
+        // Ensure the profile belongs to a router in the current tenant
+        $profile = MikrotikProfile::where('id', $id)
+            ->whereHas('router')
+            ->firstOrFail();
+        
+        $profile->delete();
+
+        return redirect()->route('panel.admin.network.pppoe-profiles')
+            ->with('success', 'PPPoE profile deleted successfully.');
     }
 
     /**
