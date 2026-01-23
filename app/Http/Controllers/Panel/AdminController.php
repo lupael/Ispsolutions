@@ -1464,4 +1464,64 @@ class AdminController extends Controller
 
         return $excelService->exportPayable($payables, 'accounts_payable');
     }
+
+    /**
+     * Login as operator (impersonate operator).
+     */
+    public function loginAsOperator(Request $request, int $operatorId)
+    {
+        $operator = User::findOrFail($operatorId);
+        
+        // Only allow super-admins and admins to impersonate
+        if (!auth()->user()->hasRole(['super-admin', 'admin'])) {
+            abort(403, 'Unauthorized to impersonate users.');
+        }
+        
+        // Store original admin ID in session
+        session(['impersonate_by' => auth()->id()]);
+        session(['impersonate_at' => now()]);
+        
+        // Log audit
+        if (class_exists(\App\Models\AuditLog::class)) {
+            \App\Models\AuditLog::create([
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()->tenant_id,
+                'event' => 'login_as_operator',
+                'auditable_type' => User::class,
+                'auditable_id' => $operatorId,
+                'new_values' => json_encode([
+                    'operator_id' => $operatorId,
+                    'operator_name' => $operator->name,
+                ]),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        }
+        
+        // Login as operator
+        auth()->loginUsingId($operatorId);
+        
+        return redirect()->route('panel.operator.dashboard')
+            ->with('success', 'You are now logged in as ' . $operator->name);
+    }
+
+    /**
+     * Stop impersonating and return to admin account.
+     */
+    public function stopImpersonating()
+    {
+        $adminId = session('impersonate_by');
+        
+        if (!$adminId) {
+            return redirect()->route('panel.admin.dashboard')
+                ->with('error', 'No active impersonation session.');
+        }
+        
+        session()->forget(['impersonate_by', 'impersonate_at']);
+        
+        auth()->loginUsingId($adminId);
+        
+        return redirect()->route('panel.admin.dashboard')
+            ->with('success', 'You are now logged back in as admin.');
+    }
 }

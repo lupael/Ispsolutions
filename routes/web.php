@@ -241,6 +241,10 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/operators/{id}/profile', [AdminController::class, 'operatorProfile'])->name('operators.profile');
     Route::get('/operators/{id}/special-permissions', [AdminController::class, 'operatorSpecialPermissions'])->name('operators.special-permissions');
     Route::put('/operators/{id}/special-permissions', [AdminController::class, 'updateOperatorSpecialPermissions'])->name('operators.special-permissions.update');
+    
+    // Operator Impersonation
+    Route::post('/operators/{operatorId}/login-as', [AdminController::class, 'loginAsOperator'])->name('operators.login-as');
+    Route::post('/stop-impersonating', [AdminController::class, 'stopImpersonating'])->name('stop-impersonating');
 
     // Payment Gateway Management
     Route::get('/payment-gateways', [AdminController::class, 'paymentGateways'])->name('payment-gateways');
@@ -274,6 +278,19 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/sms/events', [AdminController::class, 'smsEvents'])->name('sms.events');
     Route::get('/sms/due-date-notification', [AdminController::class, 'dueDateNotification'])->name('sms.due-date-notification');
     Route::get('/sms/payment-link-broadcast', [AdminController::class, 'paymentLinkBroadcast'])->name('sms.payment-link-broadcast');
+    
+    // SMS Gateway Management
+    Route::prefix('sms/gateways')->name('sms.gateways.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'store'])->name('store');
+        Route::get('/{gateway}', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'show'])->name('show');
+        Route::get('/{gateway}/edit', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'edit'])->name('edit');
+        Route::put('/{gateway}', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'update'])->name('update');
+        Route::delete('/{gateway}', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'destroy'])->name('destroy');
+        Route::post('/{gateway}/test', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'test'])->name('test');
+        Route::post('/{gateway}/set-default', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'setDefault'])->name('set-default');
+    });
 
     // Logs Management with role-based access control
     // System/Activity Log - Developer, Super Admin, Admin
