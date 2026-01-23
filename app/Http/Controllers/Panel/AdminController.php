@@ -1675,11 +1675,6 @@ class AdminController extends Controller
         DB::beginTransaction();
         try {
             $balanceBefore = $operator->wallet_balance ?? 0;
-            
-            if ($balanceBefore < $validated['amount']) {
-                return back()->with('error', 'Insufficient wallet balance.');
-            }
-
             $balanceAfter = $balanceBefore - $validated['amount'];
 
             // Update operator wallet balance
