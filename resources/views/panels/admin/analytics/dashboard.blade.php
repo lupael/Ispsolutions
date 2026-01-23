@@ -214,7 +214,7 @@
 </div>
 
 @push('styles')
-<style>
+<style nonce="{{ csp_nonce() }}">
     .apexcharts-tooltip {
         background: rgba(0, 0, 0, 0.8) !important;
         color: white !important;
