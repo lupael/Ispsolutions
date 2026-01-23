@@ -146,10 +146,12 @@ class SmsGatewayController extends Controller
             $smsService = app(\App\Services\SmsService::class);
             $result = $smsService->sendTestSms($gateway, $request->phone_number);
             
-            if ($result) {
-                return back()->with('success', "Test SMS sent successfully to {$request->phone_number}. Check SMS logs for delivery status.");
+            if ($result['success']) {
+                $logId = $result['log']->id ?? 'unknown';
+                return back()->with('success', "Test SMS sent successfully to {$request->phone_number}. SMS Log ID: #{$logId}");
             } else {
-                return back()->with('error', 'Failed to send test SMS. Check SMS logs for details.');
+                $logId = $result['log']->id ?? 'N/A';
+                return back()->with('error', "Failed to send test SMS. Check SMS Log ID: #{$logId} for details.");
             }
         } catch (\Exception $e) {
             Log::error('SMS Gateway test failed: ' . $e->getMessage(), [

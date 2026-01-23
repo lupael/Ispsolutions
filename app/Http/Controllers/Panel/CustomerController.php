@@ -106,12 +106,19 @@ class CustomerController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         
-        // Calculate stats
+        // Calculate stats with a single aggregated query
+        $statsRow = Ticket::where('customer_id', $user->id)
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as open', [Ticket::STATUS_OPEN])
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending', [Ticket::STATUS_PENDING])
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as resolved', [Ticket::STATUS_RESOLVED])
+            ->first();
+
         $stats = [
-            'total' => Ticket::where('customer_id', $user->id)->count(),
-            'open' => Ticket::where('customer_id', $user->id)->where('status', Ticket::STATUS_OPEN)->count(),
-            'pending' => Ticket::where('customer_id', $user->id)->where('status', Ticket::STATUS_PENDING)->count(),
-            'resolved' => Ticket::where('customer_id', $user->id)->where('status', Ticket::STATUS_RESOLVED)->count(),
+            'total' => (int) ($statsRow->total ?? 0),
+            'open' => (int) ($statsRow->open ?? 0),
+            'pending' => (int) ($statsRow->pending ?? 0),
+            'resolved' => (int) ($statsRow->resolved ?? 0),
         ];
 
         return view('panels.customer.tickets.index', compact('tickets', 'stats'));

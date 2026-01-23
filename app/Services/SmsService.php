@@ -1051,10 +1051,13 @@ class SmsService
 
     /**
      * Send test SMS using a specific gateway
+     * 
+     * @return array{success: bool, log: SmsLog} Result with success status and SMS log
      */
-    public function sendTestSms(SmsGateway $gateway, string $phoneNumber): bool
+    public function sendTestSms(SmsGateway $gateway, string $phoneNumber): array
     {
         $testMessage = "Test SMS from {$gateway->name}. This is a test message to verify gateway configuration. Sent at " . now()->format('Y-m-d H:i:s');
+        $smsLog = null;
         
         try {
             // Create SMS log for test
@@ -1101,27 +1104,36 @@ class SmsService
                 Log::info('Test SMS sent successfully', [
                     'gateway' => $gateway->name,
                     'provider' => $gateway->provider,
-                    'phone' => $phoneNumber
+                    'phone' => $phoneNumber,
+                    'log_id' => $smsLog->id
                 ]);
             } else {
-                $smsLog->markAsFailed('Gateway returned false');
+                $smsLog->markAsFailed('Gateway returned false - check gateway configuration');
                 Log::warning('Test SMS failed', [
                     'gateway' => $gateway->name,
                     'provider' => $gateway->provider,
-                    'phone' => $phoneNumber
+                    'phone' => $phoneNumber,
+                    'log_id' => $smsLog->id
                 ]);
             }
 
-            return $result;
+            return ['success' => $result, 'log' => $smsLog];
         } catch (\Exception $e) {
+            // Mark log as failed if it was created
+            if ($smsLog) {
+                $smsLog->markAsFailed($e->getMessage());
+            }
+            
             Log::error('Test SMS sending failed', [
                 'gateway' => $gateway->name,
                 'provider' => $gateway->provider,
                 'phone' => $phoneNumber,
                 'error' => $e->getMessage(),
+                'log_id' => $smsLog?->id
             ]);
 
-            return false;
+            // Return the log even if failed, so controller can display it
+            return ['success' => false, 'log' => $smsLog];
         }
     }
 }

@@ -46,13 +46,22 @@ class TicketController extends Controller
         
         // Ensure user has access to this ticket
         $user = auth()->user();
+        
+        // Developers, Super Admins, and Admins can view all tickets in their scope
         if (!$user->isDeveloper() && !$user->isSuperAdmin() && !$user->isAdmin()) {
-            // For customers, they can only view their own tickets
+            // Customers can only view their own tickets
             if ($user->isCustomer() && $ticket->customer_id !== $user->id) {
                 abort(403, 'Unauthorized access to ticket');
             }
             
-            // For operators/staff, check if ticket belongs to their customers
+            // Staff can view tickets assigned to them or unassigned tickets
+            if ($user->isStaff()) {
+                if ($ticket->assigned_to !== $user->id && $ticket->assigned_to !== null) {
+                    abort(403, 'Unauthorized access to ticket');
+                }
+            }
+            
+            // Operators can view tickets from their customers
             if ($user->isOperator() || $user->isSubOperator()) {
                 $customerIds = $user->subordinates()
                     ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
@@ -71,10 +80,41 @@ class TicketController extends Controller
      */
     public function update(Request $request, Ticket $ticket): RedirectResponse
     {
+        // Authorization check - ensure user can update this ticket
+        $user = auth()->user();
+        
+        if (!$user->isDeveloper() && !$user->isSuperAdmin() && !$user->isAdmin()) {
+            // Customers cannot update tickets
+            if ($user->isCustomer()) {
+                abort(403, 'Customers cannot update tickets');
+            }
+            
+            // Staff can only update tickets assigned to them
+            if ($user->isStaff() && $ticket->assigned_to !== $user->id) {
+                abort(403, 'Unauthorized to update this ticket');
+            }
+            
+            // Operators can only update tickets from their customers
+            if ($user->isOperator() || $user->isSubOperator()) {
+                $customerIds = $user->subordinates()
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->pluck('id');
+                if (!$customerIds->contains($ticket->customer_id)) {
+                    abort(403, 'Unauthorized to update this ticket');
+                }
+            }
+        }
+        
         $validated = $request->validate([
             'status' => 'sometimes|in:open,pending,in_progress,resolved,closed',
             'priority' => 'sometimes|in:low,medium,high,urgent',
-            'assigned_to' => 'sometimes|nullable|exists:users,id',
+            'assigned_to' => [
+                'sometimes',
+                'nullable',
+                \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) use ($user) {
+                    $query->where('tenant_id', $user->tenant_id);
+                })
+            ],
             'resolution_notes' => 'sometimes|nullable|string',
         ]);
 
@@ -94,6 +134,13 @@ class TicketController extends Controller
      */
     public function destroy(Ticket $ticket): RedirectResponse
     {
+        // Authorization check - only admins and above can delete tickets
+        $user = auth()->user();
+        
+        if (!$user->isDeveloper() && !$user->isSuperAdmin() && !$user->isAdmin()) {
+            abort(403, 'Unauthorized to delete tickets');
+        }
+        
         $ticket->delete();
 
         return redirect()->back()->with('success', 'Ticket deleted successfully.');

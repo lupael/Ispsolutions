@@ -16,7 +16,9 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete()
                 ->comment('The operator/staff who collected this payment');
-            // Note: Foreign key automatically creates an index, so no need for explicit index()
+            
+            // Add explicit index for queries filtering/grouping by collected_by
+            $table->index('collected_by');
         });
     }
 
@@ -26,6 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('payments', function (Blueprint $table) {
+            $table->dropIndex(['collected_by']);
             $table->dropForeign(['collected_by']);
             $table->dropColumn('collected_by');
         });
