@@ -4,16 +4,13 @@
 # ISP Solution - Complete Installation Script for Ubuntu 22.04+
 ################################################################################
 
-# <<<----------------- BEGIN: DEFAULT ENVIRONMENT VARIABLES ------------------->>>
+# <<<----------------- BEGIN: DEFAULT ENVIRONMENT VARIABLES ------------------->
 DOMAIN_NAME="radius.ispbills.com"
 SETUP_SSL="yes"
 EMAIL="admin@radius.ispbills.com"
-# <<<------------------ END: DEFAULT ENVIRONMENT VARIABLES -------------------->>>
+# <<<------------------ END: DEFAULT ENVIRONMENT VARIABLES -------------------->>
 
-# You can override these above variables on the command line as needed.
-# For example: DOMAIN_NAME=other.com sudo bash install.sh
-
-set -e
+set -euo pipefail
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -31,7 +28,6 @@ RADIUS_DB_PASSWORD=${RADIUS_DB_PASSWORD:-"$(openssl rand -base64 18 | tr -d '=+/
 INSTALL_DIR="/var/www/ispsolution"
 INSTALL_OPENVPN=${INSTALL_OPENVPN:-"yes"}
 SWAP_SIZE=${SWAP_SIZE:-"2G"}
-# (DOMAIN_NAME, SETUP_SSL, EMAIL already set above; use as-is below)
 
 print_info()      { echo -e "${BLUE}[INFO]${NC} $1"; }
 print_success()   { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
@@ -53,12 +49,15 @@ EOF
 
 setup_swap() {
     print_info "Setting up swap memory (${SWAP_SIZE})..."
-    if swapon --show | grep -q "/swapfile"; then print_info "Swap file exists, skipping"; return; fi
-    fallocate -l "$SWAP_SIZE" /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=$(echo "$SWAP_SIZE"|sed 's/G/*1024/;s/M//;s/K/*1/;s/B//g'|bc)
+    if swapon --show | grep -q "/swapfile"; then
+        print_info "Swap file exists, skipping"
+        return
+    fi
+    fallocate -l "$SWAP_SIZE" /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=$(echo "$SWAP_SIZE"|sed 's/G/*1024/;s/M//;s/K/*1/;s/B//g'|bc)
     chmod 600 /swapfile
     mkswap /swapfile
     swapon /swapfile
-    echo "/swapfile none swap sw 0 0" >> /etc/fstab
+    grep -q '^/swapfile' /etc/fstab || echo "/swapfile none swap sw 0 0" >> /etc/fstab
     sysctl vm.swappiness=10
     sysctl vm.vfs_cache_pressure=50
     print_success "Swap configured: $(free -h | awk '/Swap:/ {print $2}')"
@@ -66,13 +65,14 @@ setup_swap() {
 
 update_system() {
     print_info "Updating system packages..."
-    apt-get update -y && apt-get upgrade -y
+    DEBIAN_FRONTEND=noninteractive apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
     print_success "System updated"
 }
 
 install_basic_dependencies() {
     print_info "Installing basic dependencies..."
-    apt-get install -y software-properties-common curl wget git unzip zip gnupg2 ca-certificates lsb-release apt-transport-https build-essential openssl ufw dialog
+    DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common curl wget git unzip zip gnupg2 ca-certificates lsb-release apt-transport-https build-essential openssl ufw dialog
     print_success "Basic dependencies installed"
 }
 
@@ -80,65 +80,71 @@ install_php() {
     print_info "Installing PHP 8.2..."
     add-apt-repository ppa:ondrej/php -y
     apt-get update -y
-    apt-get install -y php8.2 php8.2-fpm php8.2-cli php8.2-common php8.2-mysql php8.2-zip php8.2-gd php8.2-mbstring php8.2-curl php8.2-xml php8.2-bcmath php8.2-redis php8.2-intl php8.2-soap php8.2-imagick
+    DEBIAN_FRONTEND=noninteractive apt-get install -y php8.2 php8.2-fpm php8.2-cli php8.2-common php8.2-mysql php8.2-zip php8.2-gd php8.2-mbstring php8.2-curl php8.2-xml php8.2-bcmath php8.2-redis php8.2-intl php8.2-soap php8.2-imagick
     sed -i 's/upload_max_filesize = .*/upload_max_filesize = 100M/' /etc/php/8.2/fpm/php.ini
     sed -i 's/post_max_size = .*/post_max_size = 100M/' /etc/php/8.2/fpm/php.ini
     sed -i 's/memory_limit = .*/memory_limit = 512M/' /etc/php/8.2/fpm/php.ini
     sed -i 's/max_execution_time = .*/max_execution_time = 300/' /etc/php/8.2/fpm/php.ini
-    systemctl enable php8.2-fpm; systemctl start php8.2-fpm
+    systemctl enable php8.2-fpm
+    systemctl start php8.2-fpm
     print_success "PHP installed and configured"
 }
 
 install_composer() {
     print_info "Installing Composer..."
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    chmod +x /usr/local/bin/composer
-    print_success "Composer installed"
+    if ! command -v composer >/dev/null 2>&1; then
+        curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+        chmod +x /usr/local/bin/composer
+        print_success "Composer installed"
+    else
+        print_info "Composer already installed"
+    fi
 }
 
 install_nodejs() {
     print_info "Installing Node.js LTS..."
     curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
-    apt-get install -y nodejs
+    DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
     npm install -g npm@latest
     print_success "Node.js and npm ready"
 }
 
 install_mysql() {
     print_info "Installing MySQL 8.0..."
-    debconf-set-selections <<< "mysql-server mysql-server/root_password password ${DB_ROOT_PASSWORD}"
-    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password ${DB_ROOT_PASSWORD}"
-    apt-get install -y mysql-server mysql-client
-    systemctl enable mysql && systemctl start mysql
-    mysql -u root <<MYSQL_SCRIPT
+    DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server mysql-client
+    systemctl enable mysql
+    systemctl start mysql
+    # Set password and auth plugin for root
+    if ! mysql -u root -e "SELECT user,plugin FROM mysql.user;" | grep 'mysql_native_password' | grep root > /dev/null; then
+        sudo mysql <<MYSQL_SCRIPT
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${DB_ROOT_PASSWORD}';
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 FLUSH PRIVILEGES;
 MYSQL_SCRIPT
-    print_success "MySQL 8.0 set up and secured"
+        print_success "MySQL root password and plugin set."
+    fi
+    print_success "MySQL 8.0 installed and configured"
 }
 
 install_redis() {
     print_info "Installing Redis..."
-    apt-get install -y redis-server
+    DEBIAN_FRONTEND=noninteractive apt-get install -y redis-server
     sed -i 's/^supervised .*/supervised systemd/' /etc/redis/redis.conf
-    systemctl enable redis-server && systemctl restart redis-server
+    systemctl enable redis-server
+    systemctl restart redis-server
     print_success "Redis installed"
 }
 
 install_nginx() {
     print_info "Installing Nginx..."
-    apt-get install -y nginx
-    systemctl enable nginx && systemctl start nginx
+    DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+    systemctl enable nginx
+    systemctl start nginx
     print_success "Nginx up"
 }
 
 install_freeradius() {
     print_info "Installing FreeRADIUS..."
-    apt-get install -y freeradius freeradius-mysql freeradius-utils
+    DEBIAN_FRONTEND=noninteractive apt-get install -y freeradius freeradius-mysql freeradius-utils
     systemctl enable freeradius
     print_success "FreeRADIUS installed"
 }
@@ -146,7 +152,7 @@ install_freeradius() {
 install_openvpn() {
     if [ "$INSTALL_OPENVPN" = "yes" ]; then
         print_info "Installing OpenVPN and Easy-RSA 3.x..."
-        apt-get install -y openvpn easy-rsa
+        DEBIAN_FRONTEND=noninteractive apt-get install -y openvpn easy-rsa
         make-cadir ~/openvpn-ca
         cd ~/openvpn-ca
 
@@ -186,7 +192,8 @@ EOF
         echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
         sysctl -p
         ufw allow 1194/udp
-        systemctl start openvpn@server; systemctl enable openvpn@server
+        systemctl start openvpn@server
+        systemctl enable openvpn@server
         cd "$INSTALL_DIR"
         print_success "OpenVPN server installed and configured"
         print_info "Client certs in ~/openvpn-ca/pki/"
@@ -209,6 +216,10 @@ clone_repository() {
 
 setup_databases() {
     print_info "Setting up databases..."
+    if ! command -v mysql >/dev/null 2>&1; then
+        print_error "mysql client not found"
+        exit 1
+    fi
     MYSQL_CREDS=$(mktemp)
     cat > "$MYSQL_CREDS" <<EOF
 [client]
@@ -245,6 +256,7 @@ configure_laravel() {
     sed -i "s|RADIUS_DB_DATABASE=.*|RADIUS_DB_DATABASE=${RADIUS_DB_NAME}|" .env
     sed -i "s|RADIUS_DB_USERNAME=.*|RADIUS_DB_USERNAME=${RADIUS_DB_USER}|" .env
     sed -i "s|RADIUS_DB_PASSWORD=.*|RADIUS_DB_PASSWORD=${RADIUS_DB_PASSWORD}|" .env
+    if ! command -v composer > /dev/null 2>&1; then print_error "composer not available"; exit 1; fi
     composer install --no-interaction --optimize-autoloader --no-dev
     php artisan key:generate --force
     chown -R www-data:www-data "$INSTALL_DIR"
@@ -256,6 +268,7 @@ configure_laravel() {
 install_node_dependencies() {
     print_info "Building front-end assets..."
     cd "$INSTALL_DIR"
+    if ! command -v npm >/dev/null 2>&1; then print_error "npm not available"; exit 1; fi
     npm install
     npm run build
     print_success "Node assets built"
@@ -343,9 +356,10 @@ setup_ssl() {
     if [ "$SETUP_SSL" = "yes" ] && [ "$DOMAIN_NAME" != "localhost" ]; then
         print_info "Setting up Let's Encrypt SSL..."
         [ -z "$EMAIL" ] && { print_error "EMAIL required for SSL."; return; }
-        apt-get install -y certbot python3-certbot-nginx
+        DEBIAN_FRONTEND=noninteractive apt-get install -y certbot python3-certbot-nginx
         certbot --nginx -d "${DOMAIN_NAME}" --non-interactive --agree-tos --email "${EMAIL}" --redirect
-        systemctl enable certbot.timer && systemctl start certbot.timer
+        systemctl enable certbot.timer || true
+        systemctl start certbot.timer || true
         print_success "SSL certified for ${DOMAIN_NAME}"
     else
         print_info "Skipping SSL (domain is localhost or SETUP_SSL!=yes)"
