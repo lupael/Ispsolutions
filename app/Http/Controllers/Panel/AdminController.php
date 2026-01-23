@@ -114,8 +114,6 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'service_type' => 'required|in:pppoe,hotspot,static',
-            'speed' => 'nullable|string|max:50',
             'bandwidth_up' => 'nullable|integer|min:0',
             'bandwidth_down' => 'nullable|integer|min:0',
             'price' => 'required|numeric|min:0',
@@ -124,6 +122,7 @@ class AdminController extends Controller
             'status' => 'required|in:active,inactive',
         ]);
 
+        // Tenant ID is automatically set by BelongsToTenant trait
         ServicePackage::create($validated);
 
         return redirect()->route('panel.admin.packages')
@@ -135,6 +134,7 @@ class AdminController extends Controller
      */
     public function packagesEdit($id): View
     {
+        // Find package within current tenant scope (automatically filtered by BelongsToTenant trait)
         $package = ServicePackage::findOrFail($id);
 
         return view('panels.admin.packages.edit', compact('package'));
@@ -145,13 +145,12 @@ class AdminController extends Controller
      */
     public function packagesUpdate(Request $request, $id)
     {
+        // Find package within current tenant scope (automatically filtered by BelongsToTenant trait)
         $package = ServicePackage::findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'service_type' => 'required|in:pppoe,hotspot,static',
-            'speed' => 'nullable|string|max:50',
             'bandwidth_up' => 'nullable|integer|min:0',
             'bandwidth_down' => 'nullable|integer|min:0',
             'price' => 'required|numeric|min:0',
@@ -171,6 +170,7 @@ class AdminController extends Controller
      */
     public function packagesDestroy($id)
     {
+        // Find package within current tenant scope (automatically filtered by BelongsToTenant trait)
         $package = ServicePackage::findOrFail($id);
         $package->delete();
 

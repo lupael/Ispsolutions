@@ -43,19 +43,6 @@
                             @enderror
                         </div>
 
-                        <div>
-                            <label for="service_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Service Type *</label>
-                            <select name="service_type" id="service_type" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">Select Type</option>
-                                <option value="pppoe" {{ old('service_type', $package->service_type) == 'pppoe' ? 'selected' : '' }}>PPPoE</option>
-                                <option value="hotspot" {{ old('service_type', $package->service_type) == 'hotspot' ? 'selected' : '' }}>Hotspot</option>
-                                <option value="static" {{ old('service_type', $package->service_type) == 'static' ? 'selected' : '' }}>Static IP</option>
-                            </select>
-                            @error('service_type')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         <div class="sm:col-span-2">
                             <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                             <textarea name="description" id="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('description', $package->description) }}</textarea>
@@ -66,18 +53,10 @@
                     </div>
                 </div>
 
-                <!-- Speed & Bandwidth -->
+                <!-- Bandwidth -->
                 <div>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Speed & Bandwidth</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                        <div>
-                            <label for="speed" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Speed (Display)</label>
-                            <input type="text" name="speed" id="speed" value="{{ old('speed', $package->speed) }}" placeholder="e.g., 10 Mbps" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            @error('speed')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Bandwidth</h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
                             <label for="bandwidth_up" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Upload (Kbps)</label>
                             <input type="number" name="bandwidth_up" id="bandwidth_up" value="{{ old('bandwidth_up', $package->bandwidth_up) }}" min="0" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
