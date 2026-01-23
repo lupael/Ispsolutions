@@ -76,7 +76,9 @@ Use &#123;&#123;variable_name&#125;&#125; for template variables
 DB::raw('COALESCE(host, ip_address) as host')
 ```
 
-**Impact**: Devices page works with both old and new database schemas
+**Note**: Migration must be run first to add the `host` column. COALESCE then provides data-level compatibility by using `ip_address` when `host` is NULL.
+
+**Impact**: After migration, devices page handles both NULL and populated `host` values gracefully
 
 ---
 

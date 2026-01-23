@@ -53,13 +53,13 @@ Route::get('/customers/{id}', [AdminController::class, 'customersShow'])->name('
 #### Network Devices Query
 **Issue**: Query selecting `host` column from `mikrotik_routers` table was failing because the column doesn't exist in older database schemas.
 
-**Fix**: Updated query in `app/Http/Controllers/Panel/AdminController.php` to use `COALESCE` for backward compatibility:
+**Fix**: Updated query in `app/Http/Controllers/Panel/AdminController.php` to use `COALESCE` for data-level compatibility:
 ```php
 $routerQuery = MikrotikRouter::select('id', 'name', DB::raw('COALESCE(host, ip_address) as host'), 'status', 'created_at')
     ->addSelect(DB::raw("'router' as device_type"));
 ```
 
-This allows the application to work with both old and new database schemas.
+**Note**: This query requires the `host` column to exist (run the migration that adds `host` first). The `COALESCE(host, ip_address)` then provides backward compatibility at the data level by using `ip_address` when `host` is NULL or not yet populated.
 
 ### 4. Model Relationship Documentation
 
