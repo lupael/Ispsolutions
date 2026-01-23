@@ -16,6 +16,7 @@ class Payment extends Model
         'tenant_id',
         'payment_number',
         'user_id',
+        'collected_by',
         'invoice_id',
         'payment_gateway_id',
         'amount',
@@ -48,6 +49,11 @@ class Payment extends Model
     public function gateway(): BelongsTo
     {
         return $this->belongsTo(PaymentGateway::class, 'payment_gateway_id');
+    }
+
+    public function collector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'collected_by');
     }
 
     public function isCompleted(): bool
@@ -88,6 +94,7 @@ class Payment extends Model
             'user:id,name,email',
             'invoice:id,invoice_number,total_amount,status',
             'gateway:id,name,type',
+            'collector:id,name,email',
         ]);
     }
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Panel\DeveloperController;
 use App\Http\Controllers\Panel\ManagerController;
 use App\Http\Controllers\Panel\StaffController;
 use App\Http\Controllers\Panel\SuperAdminController;
+use App\Http\Controllers\Panel\TicketController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -565,6 +566,10 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:st
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
     Route::get('/tickets', [StaffController::class, 'tickets'])->name('tickets');
+    
+    // Ticket management for staff
+    Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+    Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
 
     // Network Device Management (permission-based)
     Route::get('/mikrotik', [StaffController::class, 'mikrotikRouters'])->name('mikrotik');
@@ -589,6 +594,10 @@ Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'r
     Route::get('/billing', [CustomerController::class, 'billing'])->name('billing');
     Route::get('/usage', [CustomerController::class, 'usage'])->name('usage');
     Route::get('/tickets', [CustomerController::class, 'tickets'])->name('tickets');
+    
+    // Ticket management
+    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+    Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
 
     // PDF Export Routes for Customer
     Route::get('/invoice/{invoice}/pdf', [CustomerController::class, 'downloadInvoicePdf'])->name('invoice.pdf');

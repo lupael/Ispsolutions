@@ -223,17 +223,22 @@ class YearlyReportController extends Controller
 
         $operatorIds = $operators->pluck('id');
 
-        // Note: collected_by column requires migration to add to payments table
-        // For now, we'll use user_id as a fallback since operators collect their own customers' payments
-        // TODO: Run migration to add collected_by column for accurate operator payment tracking
+        // Use collected_by column to track which operator collected the payment
+        // Fallback to user_id for backwards compatibility with existing data
         $paymentsData = Payment::whereYear('paid_at', $year)
-            ->whereIn('user_id', $operatorIds)
+            ->where(function($query) use ($operatorIds) {
+                $query->whereIn('collected_by', $operatorIds)
+                    ->orWhere(function($q) use ($operatorIds) {
+                        $q->whereNull('collected_by')
+                          ->whereIn('user_id', $operatorIds);
+                    });
+            })
             ->select(
-                'user_id as operator_id',
+                DB::raw('COALESCE(collected_by, user_id) as operator_id'),
                 DB::raw('MONTH(paid_at) as month'),
                 DB::raw('SUM(amount) as total_amount')
             )
-            ->groupBy('user_id', DB::raw('MONTH(paid_at)'))
+            ->groupBy(DB::raw('COALESCE(collected_by, user_id)'), DB::raw('MONTH(paid_at)'))
             ->get();
 
         // Single query for all commissions
@@ -359,93 +364,65 @@ class YearlyReportController extends Controller
     /**
      * Export yearly report to Excel
      */
-    public function exportExcel(Request $request, string $reportType)
+    public function exportExcel(Request $request, string $reportType, ExcelExportService $excelService)
     {
         $year = $request->input('year', Carbon::now()->year);
+        $tenantId = auth()->user()->tenant_id;
         
-        // Implementation would use ExcelExportService
-        // For now, return a placeholder
-        return response()->json([
-            'message' => 'Excel export for ' . $reportType . ' will be implemented',
-            'year' => $year
-        ]);
-    }
-
-    /**
-     * Export yearly report to PDF
-     */
-    public function exportPdf(Request $request, string $reportType)
-    {
-        $year = $request->input('year', Carbon::now()->year);
-        
-        // Implementation would use PdfService
-        // For now, return a placeholder
-        return response()->json([
-            'message' => 'PDF export for ' . $reportType . ' will be implemented',
-            'year' => $year
-        ]);
-    }
-}
-
-
-        for ($month = 1; $month <= 12; $month++) {
-            $monthlyExpenses[$month] = [
-                'total' => 0,
-                'categories' => [],
-            ];
-
-            foreach ($categories as $category) {
-                $amount = 0; // In production, fetch from expenses table
-                $monthlyExpenses[$month]['categories'][$category] = $amount;
-                $monthlyExpenses[$month]['total'] += $amount;
-
-                if (!isset($categoryTotals[$category])) {
-                    $categoryTotals[$category] = 0;
-                }
-                $categoryTotals[$category] += $amount;
-            }
+        // Get data based on report type
+        switch ($reportType) {
+            case 'cash-in':
+                $data = Payment::where('tenant_id', $tenantId)
+                    ->whereYear('paid_at', $year)
+                    ->where('status', 'completed')
+                    ->with(['user:id,name', 'invoice:id,invoice_number'])
+                    ->orderBy('paid_at')
+                    ->get();
+                $filename = "cash_in_report_{$year}";
+                return $excelService->exportPayments($data, $filename);
+                
+            case 'operator-income':
+                // Get operators for this tenant
+                $operators = User::where('tenant_id', $tenantId)
+                    ->where(function($query) {
+                        $query->where('operator_type', 'operator')
+                            ->orWhere('operator_type', 'sub_operator');
+                    })
+                    ->get();
+                $operatorIds = $operators->pluck('id');
+                
+                // Filter payments by operator who collected them (with fallback)
+                $payments = Payment::where('tenant_id', $tenantId)
+                    ->whereYear('paid_at', $year)
+                    ->where('status', 'completed')
+                    ->where(function($query) use ($operatorIds) {
+                        $query->whereIn('collected_by', $operatorIds)
+                            ->orWhere(function($q) use ($operatorIds) {
+                                $q->whereNull('collected_by')
+                                  ->whereIn('user_id', $operatorIds);
+                            });
+                    })
+                    ->with(['user:id,name', 'collector:id,name'])
+                    ->orderBy('paid_at')
+                    ->get();
+                $filename = "operator_income_report_{$year}";
+                return $excelService->exportPayments($payments, $filename);
+                
+            default:
+                abort(404, 'Unknown report type');
         }
-
-        $yearlyTotal = array_sum(array_column($monthlyExpenses, 'total'));
-        $averageMonthly = $yearlyTotal / 12;
-
-        return view('panels.admin.reports.yearly.expenses', compact(
-            'year',
-            'monthlyExpenses',
-            'categoryTotals',
-            'categories',
-            'yearlyTotal',
-            'averageMonthly'
-        ));
-    }
-
-    /**
-     * Export yearly report to Excel
-     */
-    public function exportExcel(Request $request, string $reportType)
-    {
-        $year = $request->input('year', Carbon::now()->year);
-        
-        // Implementation would use ExcelExportService
-        // For now, return a placeholder
-        return response()->json([
-            'message' => 'Excel export for ' . $reportType . ' will be implemented',
-            'year' => $year
-        ]);
     }
 
     /**
      * Export yearly report to PDF
+     * Note: PDF export functionality requires PDF templates to be created.
+     * For now, redirecting to the view page as PDF generation needs proper templates.
      */
     public function exportPdf(Request $request, string $reportType)
     {
-        $year = $request->input('year', Carbon::now()->year);
-        
-        // Implementation would use PdfService
-        // For now, return a placeholder
-        return response()->json([
-            'message' => 'PDF export for ' . $reportType . ' will be implemented',
-            'year' => $year
-        ]);
+        // Redirect to the report view page instead of placeholder
+        return redirect()->route('panel.admin.reports.yearly.index', ['year' => $request->input('year')])
+            ->with('info', 'PDF export functionality is planned for future release. Please use Excel export or print the report page.');
+    }
     }
 }

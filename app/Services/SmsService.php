@@ -1048,4 +1048,92 @@ class SmsService
 
         return false;
     }
+
+    /**
+     * Send test SMS using a specific gateway
+     * 
+     * @return array{success: bool, log: SmsLog} Result with success status and SMS log
+     */
+    public function sendTestSms(SmsGateway $gateway, string $phoneNumber): array
+    {
+        $testMessage = "Test SMS from {$gateway->name}. This is a test message to verify gateway configuration. Sent at " . now()->format('Y-m-d H:i:s');
+        $smsLog = null;
+        
+        try {
+            // Create SMS log for test
+            $smsLog = $this->logSms(
+                $phoneNumber, 
+                $testMessage, 
+                SmsLog::STATUS_PENDING, 
+                $gateway->id, 
+                auth()->id(),
+                null,
+                $gateway->tenant_id
+            );
+
+            // Determine which gateway method to use based on provider
+            $result = match ($gateway->provider) {
+                'twilio' => $this->sendViaTwilio($phoneNumber, $testMessage),
+                'nexmo', 'vonage' => $this->sendViaNexmo($phoneNumber, $testMessage),
+                'bulksms' => $this->sendViaBulkSms($phoneNumber, $testMessage),
+                'bangladeshi' => $this->sendViaBangladeshiGateway($phoneNumber, $testMessage),
+                'maestro' => $this->sendViaMaestro($phoneNumber, $testMessage),
+                'robi' => $this->sendViaRobi($phoneNumber, $testMessage),
+                'm2mbd' => $this->sendViaM2mbd($phoneNumber, $testMessage),
+                'bangladeshsms' => $this->sendViaBangladeshSms($phoneNumber, $testMessage),
+                'bulksmsbd' => $this->sendViaBulkSmsBd($phoneNumber, $testMessage),
+                'btssms' => $this->sendViaBtsSms($phoneNumber, $testMessage),
+                '880sms' => $this->sendVia880Sms($phoneNumber, $testMessage),
+                'bdsmartpay' => $this->sendViaBdSmartPay($phoneNumber, $testMessage),
+                'elitbuzz' => $this->sendViaElitbuzz($phoneNumber, $testMessage),
+                'sslwireless' => $this->sendViaSslWireless($phoneNumber, $testMessage),
+                'adnsms' => $this->sendViaAdnSms($phoneNumber, $testMessage),
+                '24smsbd' => $this->sendVia24SmsBd($phoneNumber, $testMessage),
+                'smsnet' => $this->sendViaSmsNet($phoneNumber, $testMessage),
+                'brandsms' => $this->sendViaBrandSms($phoneNumber, $testMessage),
+                'metrotel' => $this->sendViaMetrotel($phoneNumber, $testMessage),
+                'dianahost' => $this->sendViaDianahost($phoneNumber, $testMessage),
+                'smsinbd' => $this->sendViaSmsInBd($phoneNumber, $testMessage),
+                'dhakasoftbd' => $this->sendViaDhakasoftBd($phoneNumber, $testMessage),
+                default => throw new \Exception("Unsupported SMS provider: {$gateway->provider}"),
+            };
+
+            // Update log status
+            if ($result) {
+                $smsLog->markAsSent();
+                Log::info('Test SMS sent successfully', [
+                    'gateway' => $gateway->name,
+                    'provider' => $gateway->provider,
+                    'phone' => $phoneNumber,
+                    'log_id' => $smsLog->id
+                ]);
+            } else {
+                $smsLog->markAsFailed('Gateway returned false - check gateway configuration');
+                Log::warning('Test SMS failed', [
+                    'gateway' => $gateway->name,
+                    'provider' => $gateway->provider,
+                    'phone' => $phoneNumber,
+                    'log_id' => $smsLog->id
+                ]);
+            }
+
+            return ['success' => $result, 'log' => $smsLog];
+        } catch (\Exception $e) {
+            // Mark log as failed if it was created
+            if ($smsLog) {
+                $smsLog->markAsFailed($e->getMessage());
+            }
+            
+            Log::error('Test SMS sending failed', [
+                'gateway' => $gateway->name,
+                'provider' => $gateway->provider,
+                'phone' => $phoneNumber,
+                'error' => $e->getMessage(),
+                'log_id' => $smsLog?->id
+            ]);
+
+            // Return the log even if failed, so controller can display it
+            return ['success' => false, 'log' => $smsLog];
+        }
+    }
 }

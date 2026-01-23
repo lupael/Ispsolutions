@@ -8,6 +8,7 @@ use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Models\NetworkUser;
 use App\Models\Olt;
+use App\Models\Ticket;
 use Illuminate\View\View;
 
 class StaffController extends Controller
@@ -19,7 +20,7 @@ class StaffController extends Controller
     {
         $stats = [
             'assigned_users' => NetworkUser::count(),
-            'pending_tickets' => 0, // To be implemented
+            'pending_tickets' => Ticket::where('status', Ticket::STATUS_PENDING)->count(),
         ];
 
         // Eager load roles to avoid N+1 queries
@@ -69,8 +70,19 @@ class StaffController extends Controller
      */
     public function tickets(): View
     {
-        // To be implemented with ticket system
-        return view('panels.staff.tickets.index');
+        $user = auth()->user();
+        
+        // Get tickets assigned to staff or unassigned tickets
+        $tickets = Ticket::where(function($query) use ($user) {
+                $query->where('assigned_to', $user->id)
+                    ->orWhereNull('assigned_to');
+            })
+            ->with(['customer', 'assignedTo', 'creator'])
+            ->orderBy('priority', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+        
+        return view('panels.staff.tickets.index', compact('tickets'));
     }
 
     /**

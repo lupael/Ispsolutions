@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\View\View;
 
 class OperatorController extends Controller
@@ -17,7 +19,7 @@ class OperatorController extends Controller
         $user = auth()->user();
 
         // Get customer IDs for this operator
-        $customerIds = $user->subordinates()->where('operator_level', 100)->pluck('id');
+        $customerIds = $user->subordinates()->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->pluck('id');
 
         // Get operator metrics with optimized queries
         $invoiceData = Invoice::whereIn('user_id', $customerIds)
@@ -31,7 +33,7 @@ class OperatorController extends Controller
 
         $stats = [
             'total_customers' => $customerIds->count(),
-            'active_customers' => $user->subordinates()->where('operator_level', 100)->where('is_active', true)->count(),
+            'active_customers' => $user->subordinates()->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->where('is_active', true)->count(),
             'pending_payments' => $invoiceData->pending_payments ?? 0,
             'monthly_collection' => $paymentData->monthly_collection ?? 0,
         ];
@@ -61,7 +63,7 @@ class OperatorController extends Controller
 
         // Get customers created by this operator or their sub-operators
         $customers = $user->subordinates()
-            ->where('operator_level', 100)
+            ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
             ->paginate(20);
 
         return view('panels.operator.customers.index', compact('customers'));
@@ -76,7 +78,7 @@ class OperatorController extends Controller
 
         // Get bills for operator's customers
         $customerIds = $user->subordinates()
-            ->where('operator_level', 100)
+            ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
             ->pluck('id');
 
         // Check if there are any customers before querying invoices
@@ -118,16 +120,17 @@ class OperatorController extends Controller
      */
     public function complaints(): View
     {
-        // TODO: Implement ticket system
-        // When implemented, filter tickets by operator's assigned customers
-        // For now, return empty paginated collection to prevent blade errors
-        $complaints = new \Illuminate\Pagination\LengthAwarePaginator(
-            [],
-            0,
-            20,
-            1,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+        $user = auth()->user();
+        
+        // Get customer IDs for this operator (own customers + sub-operator customers)
+        $customerIds = $user->subordinates()->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->pluck('id');
+        
+        // Get tickets for these customers
+        $complaints = Ticket::whereIn('customer_id', $customerIds)
+            ->with(['customer', 'assignedTo', 'creator'])
+            ->orderBy('priority', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
         return view('panels.operator.complaints.index', compact('complaints'));
     }
@@ -140,7 +143,7 @@ class OperatorController extends Controller
         $user = auth()->user();
 
         // Get customer IDs for this operator
-        $customerIds = $user->subordinates()->where('operator_level', 100)->pluck('id');
+        $customerIds = $user->subordinates()->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->pluck('id');
 
         // Generate operator reports with optimized queries
         $paymentData = Payment::whereIn('user_id', $customerIds)
