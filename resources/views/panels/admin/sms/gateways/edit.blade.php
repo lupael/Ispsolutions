@@ -41,11 +41,33 @@
                         <label for="slug" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Gateway Type</label>
                         <select name="slug" id="slug" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                             <option value="">Select Gateway Type</option>
-                            <option value="twilio" {{ old('slug', $gateway->slug) == 'twilio' ? 'selected' : '' }}>Twilio</option>
-                            <option value="nexmo" {{ old('slug', $gateway->slug) == 'nexmo' ? 'selected' : '' }}>Nexmo/Vonage</option>
-                            <option value="msg91" {{ old('slug', $gateway->slug) == 'msg91' ? 'selected' : '' }}>MSG91</option>
-                            <option value="bulksms" {{ old('slug', $gateway->slug) == 'bulksms' ? 'selected' : '' }}>BulkSMS</option>
-                            <option value="custom" {{ old('slug', $gateway->slug) == 'custom' ? 'selected' : '' }}>Custom HTTP API</option>
+                            <optgroup label="International Providers">
+                                <option value="twilio" {{ old('slug', $gateway->slug) == 'twilio' ? 'selected' : '' }}>Twilio</option>
+                                <option value="nexmo" {{ old('slug', $gateway->slug) == 'nexmo' ? 'selected' : '' }}>Nexmo/Vonage</option>
+                                <option value="msg91" {{ old('slug', $gateway->slug) == 'msg91' ? 'selected' : '' }}>MSG91</option>
+                                <option value="bulksms" {{ old('slug', $gateway->slug) == 'bulksms' ? 'selected' : '' }}>BulkSMS</option>
+                                <option value="custom" {{ old('slug', $gateway->slug) == 'custom' ? 'selected' : '' }}>Custom HTTP API</option>
+                            </optgroup>
+                            <optgroup label="Bangladesh Providers">
+                                <option value="maestro" {{ old('slug', $gateway->slug) == 'maestro' ? 'selected' : '' }}>Maestro</option>
+                                <option value="robi" {{ old('slug', $gateway->slug) == 'robi' ? 'selected' : '' }}>Robi</option>
+                                <option value="m2mbd" {{ old('slug', $gateway->slug) == 'm2mbd' ? 'selected' : '' }}>M2M BD</option>
+                                <option value="bangladeshsms" {{ old('slug', $gateway->slug) == 'bangladeshsms' ? 'selected' : '' }}>Bangladesh SMS</option>
+                                <option value="bulksmsbd" {{ old('slug', $gateway->slug) == 'bulksmsbd' ? 'selected' : '' }}>BulkSMS BD</option>
+                                <option value="btssms" {{ old('slug', $gateway->slug) == 'btssms' ? 'selected' : '' }}>BTS SMS</option>
+                                <option value="880sms" {{ old('slug', $gateway->slug) == '880sms' ? 'selected' : '' }}>880 SMS</option>
+                                <option value="bdsmartpay" {{ old('slug', $gateway->slug) == 'bdsmartpay' ? 'selected' : '' }}>BD SmartPay</option>
+                                <option value="elitbuzz" {{ old('slug', $gateway->slug) == 'elitbuzz' ? 'selected' : '' }}>Elitbuzz</option>
+                                <option value="sslwireless" {{ old('slug', $gateway->slug) == 'sslwireless' ? 'selected' : '' }}>SSL Wireless</option>
+                                <option value="adnsms" {{ old('slug', $gateway->slug) == 'adnsms' ? 'selected' : '' }}>ADN SMS</option>
+                                <option value="24smsbd" {{ old('slug', $gateway->slug) == '24smsbd' ? 'selected' : '' }}>24 SMS BD</option>
+                                <option value="smsnet" {{ old('slug', $gateway->slug) == 'smsnet' ? 'selected' : '' }}>SMS Net</option>
+                                <option value="brandsms" {{ old('slug', $gateway->slug) == 'brandsms' ? 'selected' : '' }}>Brand SMS</option>
+                                <option value="metrotel" {{ old('slug', $gateway->slug) == 'metrotel' ? 'selected' : '' }}>Metrotel</option>
+                                <option value="dianahost" {{ old('slug', $gateway->slug) == 'dianahost' ? 'selected' : '' }}>DianaHost</option>
+                                <option value="smsinbd" {{ old('slug', $gateway->slug) == 'smsinbd' ? 'selected' : '' }}>SMS in BD</option>
+                                <option value="dhakasoftbd" {{ old('slug', $gateway->slug) == 'dhakasoftbd' ? 'selected' : '' }}>DhakaSoft BD</option>
+                            </optgroup>
                         </select>
                         @error('slug')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

@@ -33,7 +33,7 @@ class SmsGatewayController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|in:twilio,nexmo,msg91,bulksms,custom',
+            'slug' => 'required|string|in:twilio,nexmo,msg91,bulksms,custom,maestro,robi,m2mbd,bangladeshsms,bulksmsbd,btssms,880sms,bdsmartpay,elitbuzz,sslwireless,adnsms,24smsbd,smsnet,brandsms,metrotel,dianahost,smsinbd,dhakasoftbd',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
             'configuration' => 'nullable|array',
@@ -74,7 +74,7 @@ class SmsGatewayController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|in:twilio,nexmo,msg91,bulksms,custom',
+            'slug' => 'required|string|in:twilio,nexmo,msg91,bulksms,custom,maestro,robi,m2mbd,bangladeshsms,bulksmsbd,btssms,880sms,bdsmartpay,elitbuzz,sslwireless,adnsms,24smsbd,smsnet,brandsms,metrotel,dianahost,smsinbd,dhakasoftbd',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
             'configuration' => 'nullable|array',
