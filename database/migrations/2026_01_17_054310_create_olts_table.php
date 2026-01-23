@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('management_protocol', 20)->default('telnet');
             $table->string('username', 100)->nullable();
             $table->text('password')->nullable();
-            $table->string('snmp_community', 100)->nullable();
+            $table->string('snmp_community', 500)->nullable(); // Increased size to accommodate encrypted data
             $table->string('snmp_version', 10)->nullable();
             $table->string('model', 100)->nullable();
             $table->string('location')->nullable();

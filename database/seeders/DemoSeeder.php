@@ -402,15 +402,14 @@ class DemoSeeder extends Seeder
             [
                 'name' => 'Demo OLT Device',
                 'ip_address' => '192.168.1.20',
-                'vendor' => 'huawei',
-                'model' => 'Generic OLT',
-                'telnet_username' => 'admin',
-                'telnet_password' => 'demo-password',
+                'port' => 23,
+                'management_protocol' => 'telnet',
+                'username' => 'admin',
+                'password' => 'demo-password',
                 'snmp_community' => 'public',
-                'telnet_port' => 23,
-                'snmp_port' => 161,
-                'max_onts' => 128,
-                'description' => 'Demo OLT for testing',
+                'snmp_version' => 'v2c',
+                'model' => 'Generic OLT',
+                'location' => 'Demo Data Center',
                 'status' => 'active',
             ]
         );
