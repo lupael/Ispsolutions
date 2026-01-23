@@ -63,7 +63,7 @@ class OperatorSeeder extends Seeder
         $operators = [
             [
                 'name' => 'Super Admin',
-                'email' => 'superadmin@ispsolution.local',
+                'email' => 'superadmin@ispbills.com',
                 'password' => Hash::make('password'),
                 'tenant_id' => null,
                 'operator_level' => 10,
@@ -73,7 +73,7 @@ class OperatorSeeder extends Seeder
             ],
             [
                 'name' => 'ISP Admin',
-                'email' => 'admin@demo-isp.local',
+                'email' => 'admin@ispbills.com',
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 20,
@@ -83,7 +83,7 @@ class OperatorSeeder extends Seeder
             ],
             [
                 'name' => 'John Operator',
-                'email' => 'operator@demo-isp.local',
+                'email' => 'operator@ispbills.com',
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 30,
