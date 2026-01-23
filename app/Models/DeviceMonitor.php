@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class DeviceMonitor extends Model
 {
     use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *

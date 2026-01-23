@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class NetworkUser extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'username',
         'password',

@@ -21,7 +21,7 @@ class TicketController extends Controller
 
         // Cache customerIds for Operators/Sub-Operators to avoid duplicate queries
         $customerIds = null;
-        
+
         // Filter tickets based on user role
         if ($user->isCustomer()) {
             $query->where('customer_id', $user->id);
@@ -29,7 +29,7 @@ class TicketController extends Controller
             // Staff can see tickets assigned to them or unassigned tickets
             $query->where(function ($q) use ($user) {
                 $q->where('assigned_to', $user->id)
-                  ->orWhereNull('assigned_to');
+                    ->orWhereNull('assigned_to');
             });
         } elseif ($user->isOperatorRole() || $user->isSubOperator()) {
             // Operators (level 30) and Sub-Operators (level 40) can see tickets from their customers
@@ -57,7 +57,7 @@ class TicketController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%");
+                    ->orWhere('message', 'like', "%{$search}%");
             });
         }
 
@@ -65,19 +65,19 @@ class TicketController extends Controller
 
         // Get statistics (role-based) - reuse cached customerIds
         $statsQuery = Ticket::query();
-        
+
         if ($user->isCustomer()) {
             $statsQuery->where('customer_id', $user->id);
         } elseif ($user->isStaff()) {
             $statsQuery->where(function ($q) use ($user) {
                 $q->where('assigned_to', $user->id)
-                  ->orWhereNull('assigned_to');
+                    ->orWhereNull('assigned_to');
             });
         } elseif ($user->isOperatorRole() || $user->isSubOperator()) {
             // Reuse cached customerIds from above to avoid duplicate query
             $statsQuery->whereIn('customer_id', $customerIds);
         }
-        
+
         $stats = [
             'total' => $statsQuery->count(),
             'open' => (clone $statsQuery)->where('status', Ticket::STATUS_OPEN)->count(),
@@ -95,7 +95,7 @@ class TicketController extends Controller
     {
         $priorities = Ticket::getPriorities();
         $categories = Ticket::getCategories();
-        
+
         return view('panels.shared.tickets.create', compact('priorities', 'categories'));
     }
 
@@ -132,35 +132,35 @@ class TicketController extends Controller
     public function show(Ticket $ticket): View
     {
         $ticket->load(['customer', 'assignedTo', 'resolver', 'creator']);
-        
+
         // Ensure user has access to this ticket
         $user = auth()->user();
-        
+
         // Developers, Super Admins, and Admins can view all tickets in their scope
-        if (!$user->isDeveloper() && !$user->isSuperAdmin() && !$user->isAdmin()) {
+        if (! $user->isDeveloper() && ! $user->isSuperAdmin() && ! $user->isAdmin()) {
             // Customers can only view their own tickets
             if ($user->isCustomer() && $ticket->customer_id !== $user->id) {
                 abort(403, 'Unauthorized access to ticket');
             }
-            
+
             // Staff can view tickets assigned to them or unassigned tickets
             if ($user->isStaff()) {
                 if ($ticket->assigned_to !== $user->id && $ticket->assigned_to !== null) {
                     abort(403, 'Unauthorized access to ticket');
                 }
             }
-            
+
             // Operators can view tickets from their customers
             if ($user->isOperator() || $user->isSubOperator()) {
                 $customerIds = $user->subordinates()
                     ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
                     ->pluck('id');
-                if (!$customerIds->contains($ticket->customer_id)) {
+                if (! $customerIds->contains($ticket->customer_id)) {
                     abort(403, 'Unauthorized access to ticket');
                 }
             }
         }
-        
+
         return view('panels.shared.tickets.show', compact('ticket'));
     }
 
@@ -171,29 +171,29 @@ class TicketController extends Controller
     {
         // Authorization check - ensure user can update this ticket
         $user = auth()->user();
-        
-        if (!$user->isDeveloper() && !$user->isSuperAdmin() && !$user->isAdmin()) {
+
+        if (! $user->isDeveloper() && ! $user->isSuperAdmin() && ! $user->isAdmin()) {
             // Customers cannot update tickets
             if ($user->isCustomer()) {
                 abort(403, 'Customers cannot update tickets');
             }
-            
+
             // Staff can only update tickets assigned to them
             if ($user->isStaff() && $ticket->assigned_to !== $user->id) {
                 abort(403, 'Unauthorized to update this ticket');
             }
-            
+
             // Operators can only update tickets from their customers
             if ($user->isOperator() || $user->isSubOperator()) {
                 $customerIds = $user->subordinates()
                     ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
                     ->pluck('id');
-                if (!$customerIds->contains($ticket->customer_id)) {
+                if (! $customerIds->contains($ticket->customer_id)) {
                     abort(403, 'Unauthorized to update this ticket');
                 }
             }
         }
-        
+
         $validated = $request->validate([
             'status' => 'sometimes|in:open,pending,in_progress,resolved,closed',
             'priority' => 'sometimes|in:low,medium,high,urgent',
@@ -202,7 +202,7 @@ class TicketController extends Controller
                 'nullable',
                 \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) use ($user) {
                     $query->where('tenant_id', $user->tenant_id);
-                })
+                }),
             ],
             'resolution_notes' => 'sometimes|nullable|string',
         ]);
@@ -225,11 +225,11 @@ class TicketController extends Controller
     {
         // Authorization check - only admins and above can delete tickets
         $user = auth()->user();
-        
-        if (!$user->isDeveloper() && !$user->isSuperAdmin() && !$user->isAdmin()) {
+
+        if (! $user->isDeveloper() && ! $user->isSuperAdmin() && ! $user->isAdmin()) {
             abort(403, 'Unauthorized to delete tickets');
         }
-        
+
         $ticket->delete();
 
         return redirect()->back()->with('success', 'Ticket deleted successfully.');

@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::table('mikrotik_routers', function (Blueprint $table) {
             // Add host column if it doesn't exist
-            if (!Schema::hasColumn('mikrotik_routers', 'host')) {
+            if (! Schema::hasColumn('mikrotik_routers', 'host')) {
                 $table->string('host', 255)->nullable()->after('ip_address');
             }
-            
+
             // Add tenant_id column if it doesn't exist
-            if (!Schema::hasColumn('mikrotik_routers', 'tenant_id')) {
+            if (! Schema::hasColumn('mikrotik_routers', 'tenant_id')) {
                 $table->foreignId('tenant_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
                 $table->index('tenant_id');
             }
@@ -28,7 +28,7 @@ return new class extends Migration
             if (Schema::hasColumn('mikrotik_routers', 'host')) {
                 $table->dropColumn('host');
             }
-            
+
             if (Schema::hasColumn('mikrotik_routers', 'tenant_id')) {
                 $table->dropForeign(['tenant_id']);
                 $table->dropIndex(['tenant_id']);

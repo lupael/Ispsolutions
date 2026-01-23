@@ -16,7 +16,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete()
                 ->comment('The operator/staff who collected this payment');
-            
+
             // Add explicit index for queries filtering/grouping by collected_by
             $table->index('collected_by');
         });

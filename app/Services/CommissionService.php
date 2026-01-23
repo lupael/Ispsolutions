@@ -17,7 +17,7 @@ class CommissionService
     {
         // Get the customer and ensure relationships are loaded
         $customer = $payment->user;
-        
+
         if (! $customer) {
             return null;
         }

@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::table('onus', function (Blueprint $table) {
             // Make olt_id nullable first
             $table->foreignId('olt_id')->nullable()->change();
-            
+
             // Drop the existing foreign key
             $table->dropForeign(['olt_id']);
-            
+
             // Re-add with nullOnDelete instead of cascade
             $table->foreign('olt_id')
                 ->references('id')
@@ -34,10 +34,10 @@ return new class extends Migration
         Schema::table('onus', function (Blueprint $table) {
             // Drop the foreign key
             $table->dropForeign(['olt_id']);
-            
+
             // Make olt_id not nullable
             $table->foreignId('olt_id')->nullable(false)->change();
-            
+
             // Re-add with cascade
             $table->foreign('olt_id')
                 ->references('id')

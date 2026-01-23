@@ -71,17 +71,17 @@ class StaffController extends Controller
     public function tickets(): View
     {
         $user = auth()->user();
-        
+
         // Get tickets assigned to staff or unassigned tickets
-        $tickets = Ticket::where(function($query) use ($user) {
-                $query->where('assigned_to', $user->id)
-                    ->orWhereNull('assigned_to');
-            })
+        $tickets = Ticket::where(function ($query) use ($user) {
+            $query->where('assigned_to', $user->id)
+                ->orWhereNull('assigned_to');
+        })
             ->with(['customer', 'assignedTo', 'creator'])
             ->orderBy('priority', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-        
+
         return view('panels.staff.tickets.index', compact('tickets'));
     }
 

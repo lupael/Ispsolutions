@@ -17,9 +17,13 @@ class PolicyEnforcementTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+
     protected User $admin;
+
     protected User $operator;
+
     protected User $staff;
+
     protected User $manager;
 
     protected function setUp(): void

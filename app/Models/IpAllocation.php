@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class IpAllocation extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'subnet_id',
         'ip_address',

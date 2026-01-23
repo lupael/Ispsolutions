@@ -287,10 +287,10 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/operators/{id}/profile', [AdminController::class, 'operatorProfile'])->name('operators.profile');
     Route::get('/operators/{id}/special-permissions', [AdminController::class, 'operatorSpecialPermissions'])->name('operators.special-permissions');
     Route::put('/operators/{id}/special-permissions', [AdminController::class, 'updateOperatorSpecialPermissions'])->name('operators.special-permissions.update');
-    
+
     // Operator Impersonation
     Route::post('/operators/{operatorId}/login-as', [AdminController::class, 'loginAsOperator'])->name('operators.login-as');
-    
+
     // Stop impersonating - accessible from impersonated sessions
     Route::post('/stop-impersonating', [AdminController::class, 'stopImpersonating'])
         ->name('stop-impersonating')
@@ -375,7 +375,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/sms/events', [AdminController::class, 'smsEvents'])->name('sms.events');
     Route::get('/sms/due-date-notification', [AdminController::class, 'dueDateNotification'])->name('sms.due-date-notification');
     Route::get('/sms/payment-link-broadcast', [AdminController::class, 'paymentLinkBroadcast'])->name('sms.payment-link-broadcast');
-    
+
     // SMS Gateway Management
     Route::prefix('sms/gateways')->name('sms.gateways.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'index'])->name('index');
@@ -584,7 +584,7 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:st
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
     Route::get('/tickets', [StaffController::class, 'tickets'])->name('tickets');
-    
+
     // Ticket management for staff
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
@@ -596,14 +596,14 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:st
     Route::get('/olt', [StaffController::class, 'oltDevices'])->name('olt');
 });
 
-// Card Distributor Panel (DEPRECATED - Role removed from v3.1 role hierarchy)
-// Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'role:card-distributor'])->group(function () {
-//     Route::get('/dashboard', [CardDistributorController::class, 'dashboard'])->name('dashboard');
-//     Route::get('/cards', [CardDistributorController::class, 'cards'])->name('cards.index');
-//     Route::get('/sales', [CardDistributorController::class, 'sales'])->name('sales.index');
-//     Route::get('/commissions', [CardDistributorController::class, 'commissions'])->name('commissions.index');
-//     Route::get('/balance', [CardDistributorController::class, 'balance'])->name('balance');
-// });
+// Card Distributor Panel
+Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'role:card-distributor'])->group(function () {
+    Route::get('/dashboard', [CardDistributorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/cards', [CardDistributorController::class, 'cards'])->name('cards');
+    Route::get('/sales', [CardDistributorController::class, 'sales'])->name('sales');
+    Route::get('/commissions', [CardDistributorController::class, 'commissions'])->name('commissions');
+    Route::get('/balance', [CardDistributorController::class, 'balance'])->name('balance');
+});
 
 // Customer Panel
 Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'role:customer'])->group(function () {
@@ -612,7 +612,7 @@ Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'r
     Route::get('/billing', [CustomerController::class, 'billing'])->name('billing');
     Route::get('/usage', [CustomerController::class, 'usage'])->name('usage');
     Route::get('/tickets', [CustomerController::class, 'tickets'])->name('tickets');
-    
+
     // Ticket management
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');

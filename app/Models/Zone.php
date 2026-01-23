@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Zone Model
- * 
+ *
  * Represents geographic zones/areas for customer organization and reporting.
  * Supports hierarchical zones with parent-child relationships.
  */
 class Zone extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
@@ -110,12 +110,12 @@ class Zone extends Model
     {
         $path = [$this->name];
         $parent = $this->parent;
-        
+
         while ($parent) {
             array_unshift($path, $parent->name);
             $parent = $parent->parent;
         }
-        
+
         return implode(' > ', $path);
     }
 

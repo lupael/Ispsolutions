@@ -99,13 +99,13 @@ class CustomerController extends Controller
     public function tickets(): View
     {
         $user = auth()->user();
-        
+
         // Get customer's own tickets
         $tickets = Ticket::where('customer_id', $user->id)
             ->with(['assignedTo', 'resolver'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-        
+
         // Calculate stats with a single aggregated query
         $statsRow = Ticket::where('customer_id', $user->id)
             ->selectRaw('COUNT(*) as total')

@@ -3,17 +3,14 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\Invoice;
-use App\Models\Payment;
 use App\Models\OperatorWalletTransaction;
+use App\Models\Payment;
 use App\Models\User;
-use App\Models\RechargeCard;
 use App\Services\ExcelExportService;
-use App\Services\PdfService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class YearlyReportController extends Controller
 {
@@ -36,7 +33,7 @@ class YearlyReportController extends Controller
     {
         $year = $request->input('year', Carbon::now()->year);
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Get card distributors with tenant scoping
         $distributors = User::where('role_level', 90)
             ->where('tenant_id', $tenantId)
@@ -91,7 +88,7 @@ class YearlyReportController extends Controller
     {
         $year = $request->input('year', Carbon::now()->year);
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Single query to get all monthly income data
         $paymentData = Payment::whereYear('paid_at', $year)
             ->when($tenantId, function ($query) use ($tenantId) {
@@ -109,7 +106,7 @@ class YearlyReportController extends Controller
         // Build monthly income structure
         $monthlyIncome = [];
         $sourceBreakdown = [];
-        
+
         for ($month = 1; $month <= 12; $month++) {
             $monthlyIncome[$month] = [
                 'total' => 0,
@@ -121,15 +118,15 @@ class YearlyReportController extends Controller
         foreach ($paymentData as $data) {
             $month = $data->month;
             $method = $data->payment_method ?? 'cash';
-            
+
             $monthlyIncome[$month]['total'] += $data->total_amount;
             $monthlyIncome[$month]['count'] += $data->payment_count;
             $monthlyIncome[$month]['by_method'][$method] = [
                 'amount' => $data->total_amount,
-                'count' => $data->payment_count
+                'count' => $data->payment_count,
             ];
 
-            if (!isset($sourceBreakdown[$method])) {
+            if (! isset($sourceBreakdown[$method])) {
                 $sourceBreakdown[$method] = array_fill(1, 12, 0);
             }
             $sourceBreakdown[$method][$month] = $data->total_amount;
@@ -155,7 +152,7 @@ class YearlyReportController extends Controller
     {
         $year = $request->input('year', Carbon::now()->year);
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Single aggregated query for all operator transactions
         $transactionData = OperatorWalletTransaction::whereYear('created_at', $year)
             ->when($tenantId, function ($query) use ($tenantId) {
@@ -178,10 +175,10 @@ class YearlyReportController extends Controller
             'Operator Commissions' => array_fill(1, 12, 0),
             'Operator Withdrawals' => array_fill(1, 12, 0),
         ];
-        
+
         for ($month = 1; $month <= 12; $month++) {
             $data = $transactionData->get($month);
-            
+
             $monthlyExpenses[$month] = [
                 'operator_commissions' => $data->commissions ?? 0,
                 'operator_withdrawals' => $data->withdrawals ?? 0,
@@ -213,7 +210,7 @@ class YearlyReportController extends Controller
     {
         $year = $request->input('year', Carbon::now()->year);
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Get all operators with tenant scoping
         $operators = User::whereIn('role_level', [30, 40])
             ->when($tenantId, function ($query) use ($tenantId) {
@@ -226,11 +223,11 @@ class YearlyReportController extends Controller
         // Use collected_by column to track which operator collected the payment
         // Fallback to user_id for backwards compatibility with existing data
         $paymentsData = Payment::whereYear('paid_at', $year)
-            ->where(function($query) use ($operatorIds) {
+            ->where(function ($query) use ($operatorIds) {
                 $query->whereIn('collected_by', $operatorIds)
-                    ->orWhere(function($q) use ($operatorIds) {
+                    ->orWhere(function ($q) use ($operatorIds) {
                         $q->whereNull('collected_by')
-                          ->whereIn('user_id', $operatorIds);
+                            ->whereIn('user_id', $operatorIds);
                     });
             })
             ->select(
@@ -291,7 +288,7 @@ class YearlyReportController extends Controller
                 'commissions' => 0,
                 'total' => 0,
             ];
-            
+
             for ($month = 1; $month <= 12; $month++) {
                 $totalByOperator[$operator->id]['collections'] += $monthlyData[$month][$operator->id]['collections'];
                 $totalByOperator[$operator->id]['commissions'] += $monthlyData[$month][$operator->id]['commissions'];
@@ -313,10 +310,10 @@ class YearlyReportController extends Controller
     public function expenses(Request $request): View
     {
         $year = $request->input('year', Carbon::now()->year);
-        
+
         $monthlyExpenses = [];
         $categoryTotals = [];
-        
+
         // Define expense categories
         $categories = [
             'Salaries & Wages',
@@ -341,7 +338,7 @@ class YearlyReportController extends Controller
                 $monthlyExpenses[$month]['categories'][$category] = $amount;
                 $monthlyExpenses[$month]['total'] += $amount;
 
-                if (!isset($categoryTotals[$category])) {
+                if (! isset($categoryTotals[$category])) {
                     $categoryTotals[$category] = 0;
                 }
                 $categoryTotals[$category] += $amount;
@@ -368,7 +365,7 @@ class YearlyReportController extends Controller
     {
         $year = $request->input('year', Carbon::now()->year);
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Get data based on report type
         switch ($reportType) {
             case 'cash-in':
@@ -379,35 +376,37 @@ class YearlyReportController extends Controller
                     ->orderBy('paid_at')
                     ->get();
                 $filename = "cash_in_report_{$year}";
+
                 return $excelService->exportPayments($data, $filename);
-                
+
             case 'operator-income':
                 // Get operators for this tenant
                 $operators = User::where('tenant_id', $tenantId)
-                    ->where(function($query) {
+                    ->where(function ($query) {
                         $query->where('operator_type', 'operator')
                             ->orWhere('operator_type', 'sub_operator');
                     })
                     ->get();
                 $operatorIds = $operators->pluck('id');
-                
+
                 // Filter payments by operator who collected them (with fallback)
                 $payments = Payment::where('tenant_id', $tenantId)
                     ->whereYear('paid_at', $year)
                     ->where('status', 'completed')
-                    ->where(function($query) use ($operatorIds) {
+                    ->where(function ($query) use ($operatorIds) {
                         $query->whereIn('collected_by', $operatorIds)
-                            ->orWhere(function($q) use ($operatorIds) {
+                            ->orWhere(function ($q) use ($operatorIds) {
                                 $q->whereNull('collected_by')
-                                  ->whereIn('user_id', $operatorIds);
+                                    ->whereIn('user_id', $operatorIds);
                             });
                     })
                     ->with(['user:id,name', 'collector:id,name'])
                     ->orderBy('paid_at')
                     ->get();
                 $filename = "operator_income_report_{$year}";
+
                 return $excelService->exportPayments($payments, $filename);
-                
+
             default:
                 abort(404, 'Unknown report type');
         }

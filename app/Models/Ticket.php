@@ -6,7 +6,6 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ticket extends Model
@@ -36,26 +35,37 @@ class Ticket extends Model
      * Ticket status constants
      */
     public const STATUS_OPEN = 'open';
+
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_RESOLVED = 'resolved';
+
     public const STATUS_CLOSED = 'closed';
 
     /**
      * Ticket priority constants
      */
     public const PRIORITY_LOW = 'low';
+
     public const PRIORITY_MEDIUM = 'medium';
+
     public const PRIORITY_HIGH = 'high';
+
     public const PRIORITY_URGENT = 'urgent';
 
     /**
      * Ticket category constants
      */
     public const CATEGORY_TECHNICAL = 'technical';
+
     public const CATEGORY_BILLING = 'billing';
+
     public const CATEGORY_GENERAL = 'general';
+
     public const CATEGORY_COMPLAINT = 'complaint';
+
     public const CATEGORY_FEATURE_REQUEST = 'feature_request';
 
     /**

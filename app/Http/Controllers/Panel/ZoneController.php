@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\Zone;
 use App\Models\User;
-use App\Models\NetworkUser;
-use Illuminate\Http\Request;
+use App\Models\Zone;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class ZoneController extends Controller
 {
@@ -20,7 +18,7 @@ class ZoneController extends Controller
     public function index(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $zones = Zone::where('tenant_id', $tenantId)
             ->with(['parent', 'children'])
             ->withCount('customers')
@@ -36,7 +34,7 @@ class ZoneController extends Controller
     public function create(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $parentZones = Zone::where('tenant_id', $tenantId)
             ->active()
             ->orderBy('name')
@@ -51,7 +49,7 @@ class ZoneController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => [
@@ -92,12 +90,12 @@ class ZoneController extends Controller
     public function edit(Zone $zone): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Ensure zone belongs to current tenant
         if ($zone->tenant_id !== $tenantId) {
             abort(403, 'Unauthorized access to zone');
         }
-        
+
         $parentZones = Zone::where('tenant_id', $tenantId)
             ->active()
             ->where('id', '!=', $zone->id)
@@ -106,7 +104,7 @@ class ZoneController extends Controller
 
         // Filter out descendants to prevent circular references
         $parentZones = $parentZones->filter(function ($parentZone) use ($zone) {
-            return !$this->isDescendant($zone, $parentZone);
+            return ! $this->isDescendant($zone, $parentZone);
         });
 
         return view('panels.admin.zones.edit', compact('zone', 'parentZones'));
@@ -119,21 +117,21 @@ class ZoneController extends Controller
     {
         $current = $potentialDescendant;
         $visited = [];
-        
+
         while ($current && $current->parent_id) {
             if ($current->parent_id === $ancestor->id) {
                 return true;
             }
-            
+
             // Prevent infinite loop in case of circular references
             if (in_array($current->parent_id, $visited)) {
                 break;
             }
-            
+
             $visited[] = $current->parent_id;
             $current = Zone::find($current->parent_id);
         }
-        
+
         return false;
     }
 
@@ -143,12 +141,12 @@ class ZoneController extends Controller
     public function update(Request $request, Zone $zone): RedirectResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Ensure zone belongs to current tenant
         if ($zone->tenant_id !== $tenantId) {
             abort(403, 'Unauthorized access to zone');
         }
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => [
@@ -169,7 +167,7 @@ class ZoneController extends Controller
                     if ($value == $zone->id) {
                         $fail('A zone cannot be its own parent.');
                     }
-                    
+
                     // Check for circular references
                     if ($value && $this->wouldCreateCircularReference($zone, $value)) {
                         $fail('This parent assignment would create a circular reference.');
@@ -198,21 +196,21 @@ class ZoneController extends Controller
     {
         $currentZone = Zone::find($newParentId);
         $visited = [];
-        
+
         while ($currentZone) {
             if ($currentZone->id === $zone->id) {
                 return true;
             }
-            
+
             // Prevent infinite loop
             if (in_array($currentZone->id, $visited)) {
                 break;
             }
-            
+
             $visited[] = $currentZone->id;
             $currentZone = $currentZone->parent;
         }
-        
+
         return false;
     }
 
@@ -222,15 +220,15 @@ class ZoneController extends Controller
     public function destroy(Zone $zone): RedirectResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Ensure zone belongs to current tenant
         if ($zone->tenant_id !== $tenantId) {
             abort(403, 'Unauthorized access to zone');
         }
-        
+
         // Check if zone has customers
         $customerCount = $zone->customers()->count();
-        
+
         if ($customerCount > 0) {
             return redirect()
                 ->route('panel.admin.zones.index')
@@ -257,14 +255,14 @@ class ZoneController extends Controller
     public function show(Zone $zone): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Ensure zone belongs to current tenant
         if ($zone->tenant_id !== $tenantId) {
             abort(403, 'Unauthorized access to zone');
         }
-        
+
         $zone->load(['parent', 'children']);
-        
+
         $stats = [
             'total_customers' => $zone->customers()->count(),
             'active_customers' => $zone->customers()->where('is_active', true)->count(),
@@ -283,7 +281,7 @@ class ZoneController extends Controller
     public function report(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $zones = Zone::where('tenant_id', $tenantId)
             ->withCount([
                 'customers',
@@ -317,7 +315,7 @@ class ZoneController extends Controller
     public function bulkAssign(Request $request): RedirectResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $validated = $request->validate([
             'customer_ids' => 'required|array',
             'customer_ids.*' => [

@@ -27,7 +27,7 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes for performance
             $table->index(['tenant_id', 'status']);
             $table->index(['tenant_id', 'customer_id']);

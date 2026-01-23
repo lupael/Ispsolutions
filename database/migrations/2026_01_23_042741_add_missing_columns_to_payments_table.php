@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('payments', function (Blueprint $table) {
             // Add payment_date column if it doesn't exist
-            if (!Schema::hasColumn('payments', 'payment_date')) {
+            if (! Schema::hasColumn('payments', 'payment_date')) {
                 $table->date('payment_date')->nullable()->after('paid_at');
             }
         });

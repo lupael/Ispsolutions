@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::table('network_users', function (Blueprint $table) {
             // Add is_active column if it doesn't exist
-            if (!Schema::hasColumn('network_users', 'is_active')) {
+            if (! Schema::hasColumn('network_users', 'is_active')) {
                 $table->boolean('is_active')->default(true)->after('status');
             }
-            
+
             // Add tenant_id column if it doesn't exist
-            if (!Schema::hasColumn('network_users', 'tenant_id')) {
+            if (! Schema::hasColumn('network_users', 'tenant_id')) {
                 $table->foreignId('tenant_id')->nullable()->after('user_id')->constrained()->cascadeOnDelete();
                 $table->index('tenant_id');
             }
@@ -28,7 +28,7 @@ return new class extends Migration
             if (Schema::hasColumn('network_users', 'is_active')) {
                 $table->dropColumn('is_active');
             }
-            
+
             if (Schema::hasColumn('network_users', 'tenant_id')) {
                 $table->dropForeign(['tenant_id']);
                 $table->dropIndex(['tenant_id']);

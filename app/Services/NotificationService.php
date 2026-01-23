@@ -22,6 +22,7 @@ class NotificationService
 
     /**
      * Send invoice generated notification
+     *
      * @deprecated Use sendInvoiceGeneratedNotification() instead
      */
     public function sendInvoiceGenerated(Invoice $invoice): bool
@@ -66,6 +67,7 @@ class NotificationService
 
     /**
      * Send payment received notification
+     *
      * @deprecated Use sendPaymentReceivedNotification(Invoice, int) instead
      */
     public function sendPaymentReceived(Payment $payment): bool
@@ -225,14 +227,14 @@ class NotificationService
     public function sendBulkPreExpirationNotifications(array $invoices): array
     {
         $results = [];
-        
+
         foreach ($invoices as $invoice) {
             // Calculate days until expiry, ensuring non-negative value
             $daysUntilExpiry = now()->diffInDays($invoice->due_date, false);
             // Use max(0, ...) to handle past dates as 0 days
             $normalizedDays = max(0, (int) $daysUntilExpiry);
             $sent = $this->sendInvoiceExpiringSoon($invoice, $normalizedDays);
-            
+
             $results[] = [
                 'invoice_id' => $invoice->id,
                 'sent' => $sent,

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('package_profile_mappings', function (Blueprint $table) {
-            if (!Schema::hasColumn('package_profile_mappings', 'ip_pool_id')) {
+            if (! Schema::hasColumn('package_profile_mappings', 'ip_pool_id')) {
                 $table->foreignId('ip_pool_id')->nullable()->after('router_id')->constrained('ip_pools')->onDelete('set null');
             }
         });

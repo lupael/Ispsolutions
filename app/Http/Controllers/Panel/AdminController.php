@@ -19,12 +19,14 @@ use App\Models\OperatorPackageRate;
 use App\Models\OperatorSmsRate;
 use App\Models\OperatorWalletTransaction;
 use App\Models\Package;
+use App\Models\PackageProfileMapping;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
 use App\Models\Role;
 use App\Models\ServicePackage;
 use App\Models\User;
 use App\Services\ExcelExportService;
+use App\Services\MikrotikService;
 use App\Services\PdfExportService;
 use App\Services\PdfService;
 use Illuminate\Http\Request;
@@ -135,7 +137,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$id,
+            'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|exists:roles,slug',
             'is_active' => 'nullable|boolean',
@@ -149,7 +151,7 @@ class AdminController extends Controller
         ];
 
         // Only update password if provided
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = bcrypt($validated['password']);
         }
 
@@ -169,7 +171,7 @@ class AdminController extends Controller
     public function usersDestroy($id)
     {
         $user = User::findOrFail($id);
-        
+
         // Prevent deleting own account
         if ($user->id === auth()->id()) {
             return redirect()->route('panel.admin.users')
@@ -188,7 +190,7 @@ class AdminController extends Controller
     public function networkUsers(): View
     {
         $networkUsers = NetworkUser::with(['user', 'package'])->latest()->paginate(20);
-        
+
         $stats = [
             'active' => NetworkUser::where('status', 'active')->count(),
             'suspended' => NetworkUser::where('status', 'suspended')->count(),
@@ -238,12 +240,47 @@ class AdminController extends Controller
 
         $networkUser = NetworkUser::create($networkUserData);
 
-        // TODO: Push the password to the actual router via MikrotikService
-        // $mikrotikService->createPppoeUser([
-        //     'username' => $validated['username'],
-        //     'password' => $validated['password'],
-        //     ...
-        // ]);
+        // Push the password to the actual router via MikrotikService
+        // SECURITY WARNING: MikrotikService currently uses HTTP for router communication.
+        // For production environments, configure HTTPS with certificate validation in the
+        // MikrotikService to protect credentials during transmission. See MikrotikService
+        // class documentation for security considerations.
+        if ($validated['service_type'] === 'pppoe') {
+            // Select router with explicit ordering for consistency
+            $router = MikrotikRouter::where('status', 'active')
+                ->orderBy('id')
+                ->first();
+
+            if ($router) {
+                try {
+                    $mikrotikService = app(MikrotikService::class);
+
+                    // Resolve PPPoE profile for this package and router
+                    $profileName = 'default';
+                    $profileMapping = PackageProfileMapping::where('package_id', $validated['package_id'])
+                        ->where('router_id', $router->id)
+                        ->first();
+
+                    if ($profileMapping && ! empty($profileMapping->profile_name)) {
+                        $profileName = $profileMapping->profile_name;
+                    }
+
+                    $mikrotikService->createPppoeUser([
+                        'router_id' => $router->id,
+                        'username' => $validated['username'],
+                        'password' => $validated['password'],
+                        'service' => 'pppoe',
+                        'profile' => $profileName,
+                    ]);
+                } catch (\Exception $e) {
+                    // Log the error but don't fail the user creation
+                    Log::warning('Failed to sync network user to router', [
+                        'username' => $validated['username'],
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('panel.admin.network-users')
             ->with('success', 'Network user created successfully.');
@@ -281,6 +318,9 @@ class AdminController extends Controller
     {
         $networkUser = NetworkUser::findOrFail($id);
 
+        // Capture original username before update for router sync
+        $originalUsername = $networkUser->username;
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'username' => 'required|string|max:255|unique:network_users,username,' . $id,
@@ -301,12 +341,28 @@ class AdminController extends Controller
 
         $networkUser->update($networkUserData);
 
-        // TODO: If password is provided, update it on the router via MikrotikService
-        // if (!empty($validated['password'])) {
-        //     $mikrotikService->updatePppoeUser($validated['username'], [
-        //         'password' => $validated['password'],
-        //     ]);
-        // }
+        // If password is provided, update it on the router via MikrotikService
+        // SECURITY WARNING: MikrotikService currently uses HTTP for router communication.
+        // For production environments, configure HTTPS with certificate validation in the
+        // MikrotikService to protect credentials during transmission. See MikrotikService
+        // class documentation for security considerations.
+        if (! empty($validated['password']) && $validated['service_type'] === 'pppoe') {
+            try {
+                $mikrotikService = app(MikrotikService::class);
+
+                // Use original username to locate the user on the router
+                $mikrotikService->updatePppoeUser($originalUsername, [
+                    'password' => $validated['password'],
+                ]);
+            } catch (\Exception $e) {
+                // Log the error but don't fail the update
+                Log::warning('Failed to sync password update to router', [
+                    'original_username' => $originalUsername,
+                    'new_username' => $validated['username'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return redirect()->route('panel.admin.network-users')
             ->with('success', 'Network user updated successfully.');
@@ -348,10 +404,10 @@ class AdminController extends Controller
 
         try {
             $mikrotikService = app(\App\Services\MikrotikService::class);
-            
+
             // Import secrets (PPPoE users) from router
             $secrets = $mikrotikService->importSecrets($validated['router_id']);
-            
+
             if (empty($secrets)) {
                 return redirect()->route('panel.admin.network-users.import')
                     ->with('error', 'No users found on the selected router or unable to connect.');
@@ -367,6 +423,7 @@ class AdminController extends Controller
                     if ($validated['skip_existing'] ?? true) {
                         if (NetworkUser::where('username', $secret['name'])->exists()) {
                             $skipped++;
+
                             continue;
                         }
                     }
@@ -419,8 +476,8 @@ class AdminController extends Controller
             if ($skipped > 0) {
                 $message .= " Skipped {$skipped} existing users.";
             }
-            if (!empty($errors)) {
-                $message .= " Encountered " . count($errors) . " errors.";
+            if (! empty($errors)) {
+                $message .= ' Encountered ' . count($errors) . ' errors.';
             }
 
             return redirect()->route('panel.admin.network-users')
@@ -625,7 +682,6 @@ class AdminController extends Controller
     /**
      * Store a newly created customer.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function customersStore(Request $request)
@@ -663,8 +719,8 @@ class AdminController extends Controller
     /**
      * Update the specified customer.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
     public function customersUpdate(Request $request, $id)
@@ -672,7 +728,7 @@ class AdminController extends Controller
         $customer = NetworkUser::findOrFail($id);
 
         $validated = $request->validate([
-            'username' => 'required|string|min:3|max:255|unique:network_users,username,'.$id.'|regex:/^[a-zA-Z0-9_-]+$/',
+            'username' => 'required|string|min:3|max:255|unique:network_users,username,' . $id . '|regex:/^[a-zA-Z0-9_-]+$/',
             'password' => 'nullable|string|min:8',
             'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
             'package_id' => 'required|exists:packages,id',
@@ -688,7 +744,7 @@ class AdminController extends Controller
         ];
 
         // Only update password if provided
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = bcrypt($validated['password']);
         }
 
@@ -701,7 +757,8 @@ class AdminController extends Controller
     /**
      * Remove the specified customer.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
     public function customersDestroy($id)
@@ -1025,7 +1082,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$id,
+            'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:8|confirmed',
             'operator_type' => 'nullable|string',
             'is_active' => 'nullable|boolean',
@@ -1040,7 +1097,7 @@ class AdminController extends Controller
         ];
 
         // Only update password if provided
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = bcrypt($validated['password']);
         }
 
@@ -1056,7 +1113,7 @@ class AdminController extends Controller
     public function operatorsDestroy($id)
     {
         $operator = User::findOrFail($id);
-        
+
         // Prevent deleting own account
         if ($operator->id === auth()->id()) {
             return redirect()->route('panel.admin.operators')
@@ -1157,11 +1214,11 @@ class AdminController extends Controller
         ]);
 
         $operator = User::findOrFail($id);
-        
+
         // Here you would update the operator's permissions
         // This depends on your permission system implementation
         // Example: $operator->syncPermissions($validated['permissions'] ?? []);
-        
+
         return redirect()
             ->route('panel.admin.operators.special-permissions', $id)
             ->with('success', 'Special permissions updated successfully.');
@@ -1273,7 +1330,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'router_name' => 'required|string|max:255',
-            'ip_address' => 'required|ip|unique:mikrotik_routers,ip_address,'.$id,
+            'ip_address' => 'required|ip|unique:mikrotik_routers,ip_address,' . $id,
             'username' => 'required|string|max:100',
             'password' => 'nullable|string',
             'port' => 'nullable|integer|min:1|max:65535',
@@ -1290,7 +1347,7 @@ class AdminController extends Controller
         ];
 
         // Only update password if provided
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = $validated['password'];
         }
 
@@ -1424,8 +1481,8 @@ class AdminController extends Controller
             'routers' => MikrotikRouter::count(),
             'olts' => Olt::count(),
             'switches' => CiscoDevice::count(),
-            'online' => MikrotikRouter::where('status', 'active')->count() + 
-                        Olt::where('status', 'active')->count() + 
+            'online' => MikrotikRouter::where('status', 'active')->count() +
+                        Olt::where('status', 'active')->count() +
                         CiscoDevice::where('status', 'active')->count(),
         ];
 
@@ -1533,7 +1590,7 @@ class AdminController extends Controller
             'start_ip' => $validated['start_ip'],
             'end_ip' => $validated['end_ip'],
             'gateway' => $validated['gateway'] ?? null,
-            'dns_servers' => !empty($dnsServers) ? implode(',', $dnsServers) : null,
+            'dns_servers' => ! empty($dnsServers) ? implode(',', $dnsServers) : null,
             'description' => $validated['description'] ?? null,
             'pool_type' => 'ipv4',
             'status' => 'active',
@@ -1583,7 +1640,7 @@ class AdminController extends Controller
             'start_ip' => $validated['start_ip'],
             'end_ip' => $validated['end_ip'],
             'gateway' => $validated['gateway'] ?? null,
-            'dns_servers' => !empty($dnsServers) ? implode(',', $dnsServers) : null,
+            'dns_servers' => ! empty($dnsServers) ? implode(',', $dnsServers) : null,
             'description' => $validated['description'] ?? null,
         ]);
 
@@ -1656,7 +1713,7 @@ class AdminController extends Controller
             'start_ip' => $validated['start_ip'],
             'end_ip' => $validated['end_ip'],
             'gateway' => $validated['gateway'] ?? null,
-            'dns_servers' => !empty($dnsServers) ? implode(',', $dnsServers) : null,
+            'dns_servers' => ! empty($dnsServers) ? implode(',', $dnsServers) : null,
             'description' => $validated['description'] ?? null,
             'pool_type' => 'ipv6',
             'status' => 'active',
@@ -1706,7 +1763,7 @@ class AdminController extends Controller
             'start_ip' => $validated['start_ip'],
             'end_ip' => $validated['end_ip'],
             'gateway' => $validated['gateway'] ?? null,
-            'dns_servers' => !empty($dnsServers) ? implode(',', $dnsServers) : null,
+            'dns_servers' => ! empty($dnsServers) ? implode(',', $dnsServers) : null,
             'description' => $validated['description'] ?? null,
         ]);
 
@@ -1738,7 +1795,7 @@ class AdminController extends Controller
             'active' => MikrotikProfile::count(), // Currently counts all profiles; adjust if a status field is introduced
             'users' => NetworkUser::count(),
         ];
-        
+
         $routers = MikrotikRouter::where('status', 'active')->get();
 
         return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers'));
@@ -1782,7 +1839,7 @@ class AdminController extends Controller
         $profile = MikrotikProfile::where('id', $id)
             ->whereHas('router')
             ->firstOrFail();
-        
+
         $profile->delete();
 
         return redirect()->route('panel.admin.network.pppoe-profiles')
@@ -2446,12 +2503,12 @@ class AdminController extends Controller
     public function loginAsOperator(Request $request, int $operatorId)
     {
         $currentUser = auth()->user();
-        
+
         // Only allow super-admins and admins to impersonate
-        if (!$currentUser->hasRole(['super-admin', 'admin'])) {
+        if (! $currentUser->hasRole(['super-admin', 'admin'])) {
             abort(403, 'Unauthorized to impersonate users.');
         }
-        
+
         // Scope query to current tenant and ensure target is an operator
         $operator = User::where('id', $operatorId)
             ->where('tenant_id', $currentUser->tenant_id)
@@ -2459,11 +2516,11 @@ class AdminController extends Controller
                 $query->whereIn('slug', ['operator', 'sub-operator', 'manager', 'staff']);
             })
             ->firstOrFail();
-        
+
         // Store original admin ID in session
         session(['impersonate_by' => $currentUser->id]);
         session(['impersonate_at' => now()]);
-        
+
         // Log audit if AuditLog model exists
         try {
             \App\Models\AuditLog::create([
@@ -2483,10 +2540,10 @@ class AdminController extends Controller
             // Audit logging failed, but continue with impersonation
             \Illuminate\Support\Facades\Log::warning('Failed to log impersonation audit: ' . $e->getMessage());
         }
-        
+
         // Login as operator
         auth()->loginUsingId($operatorId);
-        
+
         // Determine redirect route based on impersonated user's role
         $redirectRoute = null;
 
@@ -2494,10 +2551,10 @@ class AdminController extends Controller
             // Keep admins / super-admins on the admin dashboard
             if ($operator->hasRole(['super-admin', 'admin'])) {
                 $redirectRoute = 'panel.admin.dashboard';
-            // Send operators to their own dashboard if route exists
+                // Send operators to their own dashboard if route exists
             } elseif ($operator->hasRole('operator')) {
-                $redirectRoute = \Illuminate\Support\Facades\Route::has('panel.operator.dashboard') 
-                    ? 'panel.operator.dashboard' 
+                $redirectRoute = \Illuminate\Support\Facades\Route::has('panel.operator.dashboard')
+                    ? 'panel.operator.dashboard'
                     : 'panel.admin.dashboard';
             }
         }
@@ -2527,8 +2584,8 @@ class AdminController extends Controller
     public function stopImpersonating()
     {
         $adminId = session('impersonate_by');
-        
-        if (!$adminId) {
+
+        if (! $adminId) {
             return redirect()->route('panel.admin.dashboard')
                 ->with('error', 'No active impersonation session.');
         }
@@ -2538,8 +2595,8 @@ class AdminController extends Controller
         $currentUser = auth()->user();
 
         if (
-            !$admin ||
-            !$admin->hasRole(['super-admin', 'admin']) ||
+            ! $admin ||
+            ! $admin->hasRole(['super-admin', 'admin']) ||
             ($currentUser && property_exists($currentUser, 'tenant_id') && $admin->tenant_id !== $currentUser->tenant_id)
         ) {
             // Clear impersonation data and do not restore an invalid or unauthorized admin account
@@ -2548,12 +2605,12 @@ class AdminController extends Controller
             return redirect()->route('panel.admin.dashboard')
                 ->with('error', 'Unable to restore the original admin account.');
         }
-        
+
         // Clear impersonation session data before switching back
         session()->forget(['impersonate_by', 'impersonate_at']);
-        
+
         auth()->loginUsingId($admin->id);
-        
+
         return redirect()->route('panel.admin.dashboard')
             ->with('success', 'You are now logged back in as admin.');
     }
@@ -2576,7 +2633,7 @@ class AdminController extends Controller
     public function addOperatorFunds(User $operator): View
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         return view('panels.admin.operators.add-funds', compact('operator'));
     }
 
@@ -2586,7 +2643,7 @@ class AdminController extends Controller
     public function storeOperatorFunds(Request $request, User $operator)
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:500',
@@ -2617,6 +2674,7 @@ class AdminController extends Controller
                 ->with('success', 'Funds added successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to add funds: ' . $e->getMessage());
         }
     }
@@ -2627,7 +2685,7 @@ class AdminController extends Controller
     public function deductOperatorFunds(User $operator): View
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         return view('panels.admin.operators.deduct-funds', compact('operator'));
     }
 
@@ -2637,7 +2695,7 @@ class AdminController extends Controller
     public function processDeductOperatorFunds(Request $request, User $operator)
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01|max:' . ($operator->wallet_balance ?? 0),
             'description' => 'nullable|string|max:500',
@@ -2668,6 +2726,7 @@ class AdminController extends Controller
                 ->with('success', 'Funds deducted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to deduct funds: ' . $e->getMessage());
         }
     }
@@ -2678,7 +2737,7 @@ class AdminController extends Controller
     public function operatorWalletHistory(User $operator): View
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         $transactions = OperatorWalletTransaction::where('operator_id', $operator->id)
             ->with('creator')
             ->latest()
@@ -2705,10 +2764,10 @@ class AdminController extends Controller
     public function assignOperatorPackageRate(User $operator): View
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         $packages = Package::where(function ($query) use ($operator) {
             $query->where('is_global', true)
-                  ->orWhere('operator_id', $operator->id);
+                ->orWhere('operator_id', $operator->id);
         })->get();
         $existingRates = OperatorPackageRate::where('operator_id', $operator->id)
             ->pluck('package_id')
@@ -2723,7 +2782,7 @@ class AdminController extends Controller
     public function storeOperatorPackageRate(Request $request, User $operator)
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         $validated = $request->validate([
             'package_id' => 'required|exists:packages,id',
             'custom_price' => 'required|numeric|min:0',
@@ -2750,7 +2809,7 @@ class AdminController extends Controller
     public function deleteOperatorPackageRate(User $operator, $package)
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         OperatorPackageRate::where('operator_id', $operator->id)
             ->where('package_id', $package)
             ->delete();
@@ -2777,7 +2836,7 @@ class AdminController extends Controller
     public function assignOperatorSmsRate(User $operator): View
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         $smsRate = OperatorSmsRate::where('operator_id', $operator->id)->first();
 
         return view('panels.admin.operators.assign-sms-rate', compact('operator', 'smsRate'));
@@ -2789,7 +2848,7 @@ class AdminController extends Controller
     public function storeOperatorSmsRate(Request $request, User $operator)
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         $validated = $request->validate([
             'rate_per_sms' => 'required|numeric|min:0',
             'bulk_rate_threshold' => 'required_with:bulk_rate_per_sms|nullable|integer|min:1',
@@ -2813,7 +2872,7 @@ class AdminController extends Controller
     public function deleteOperatorSmsRate(User $operator)
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
-        
+
         OperatorSmsRate::where('operator_id', $operator->id)->delete();
 
         return redirect()->route('panel.admin.operators.sms-rates')

@@ -15,6 +15,7 @@ class SmsGatewayController extends Controller
     public function index()
     {
         $gateways = SmsGateway::latest()->paginate(15);
+
         return view('panels.admin.sms.gateways.index', compact('gateways'));
     }
 
@@ -94,6 +95,7 @@ class SmsGatewayController extends Controller
             foreach ($incomingConfiguration as $key => $value) {
                 if ($key === 'api_secret' && ($value === null || $value === '')) {
                     unset($incomingConfiguration[$key]);
+
                     continue;
                 }
 
@@ -112,7 +114,7 @@ class SmsGatewayController extends Controller
         }
 
         // If setting as default, unset other defaults
-        if ($validated['is_default'] && !$gateway->is_default) {
+        if ($validated['is_default'] && ! $gateway->is_default) {
             SmsGateway::where('is_default', true)->update(['is_default' => false]);
         }
 
@@ -145,12 +147,14 @@ class SmsGatewayController extends Controller
         try {
             $smsService = app(\App\Services\SmsService::class);
             $result = $smsService->sendTestSms($gateway, $request->phone_number);
-            
+
             if ($result['success']) {
                 $logId = $result['log']->id ?? 'unknown';
+
                 return back()->with('success', "Test SMS sent successfully to {$request->phone_number}. SMS Log ID: #{$logId}");
             } else {
                 $logId = $result['log']->id ?? 'N/A';
+
                 return back()->with('error', "Failed to send test SMS. Check SMS Log ID: #{$logId} for details.");
             }
         } catch (\Exception $e) {
@@ -158,6 +162,7 @@ class SmsGatewayController extends Controller
                 'gateway' => $gateway->id,
                 'phone' => $request->phone_number,
             ]);
+
             return back()->with('error', 'Failed to send test SMS: ' . $e->getMessage());
         }
     }

@@ -119,6 +119,17 @@ return [
             ],
         ],
         [
+            'key' => 'cable_tv',
+            'label' => 'Cable TV',
+            'icon' => 'bi-tv',
+            'children' => [
+                ['label' => 'Subscriptions', 'route' => 'panel.admin.cable-tv.index'],
+                ['label' => 'Add Subscription', 'route' => 'panel.admin.cable-tv.create'],
+                ['label' => 'Packages', 'route' => 'panel.admin.cable-tv.packages.index'],
+                ['label' => 'Channels', 'route' => 'panel.admin.cable-tv.channels.index'],
+            ],
+        ],
+        [
             'key' => 'bills_payments',
             'label' => 'Bills & Payments',
             'icon' => 'bi-receipt',
@@ -156,6 +167,12 @@ return [
                 ['label' => 'Financial Reports', 'route' => 'panel.admin.reports.financial'],
                 ['label' => 'Customer Reports', 'route' => 'panel.admin.reports.customer'],
             ],
+        ],
+        [
+            'key' => 'analytics_dashboard',
+            'label' => 'Analytics Dashboard',
+            'icon' => 'bi-bar-chart-line',
+            'route' => 'panel.admin.analytics.dashboard',
         ],
         [
             'key' => 'affiliate_program',
@@ -204,6 +221,15 @@ return [
             'children' => [
                 ['label' => 'Audit Trail', 'route' => 'panel.admin.logs.audit'],
                 ['label' => 'Authentication Logs', 'route' => 'panel.admin.logs.auth'],
+            ],
+        ],
+        [
+            'key' => 'notifications',
+            'label' => 'Notifications',
+            'icon' => 'bi-bell',
+            'children' => [
+                ['label' => 'All Notifications', 'route' => 'notifications.index'],
+                ['label' => 'Preferences', 'route' => 'notifications.preferences'],
             ],
         ],
     ],
@@ -464,6 +490,39 @@ return [
             'label' => 'Support Tickets',
             'icon' => 'bi-headset',
             'route' => 'panel.customer.tickets',
+        ],
+    ],
+
+    'card_distributor' => [
+        [
+            'key' => 'dashboard',
+            'label' => 'Dashboard',
+            'icon' => 'bi-speedometer2',
+            'route' => 'panel.card-distributor.dashboard',
+        ],
+        [
+            'key' => 'cards',
+            'label' => 'Recharge Cards',
+            'icon' => 'bi-credit-card-2-front',
+            'route' => 'panel.card-distributor.cards',
+        ],
+        [
+            'key' => 'sales',
+            'label' => 'Sales History',
+            'icon' => 'bi-cart-check',
+            'route' => 'panel.card-distributor.sales',
+        ],
+        [
+            'key' => 'commissions',
+            'label' => 'My Commissions',
+            'icon' => 'bi-currency-dollar',
+            'route' => 'panel.card-distributor.commissions',
+        ],
+        [
+            'key' => 'balance',
+            'label' => 'Balance',
+            'icon' => 'bi-wallet2',
+            'route' => 'panel.card-distributor.balance',
         ],
     ],
 

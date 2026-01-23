@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'billing_cycle')) {
+            if (! Schema::hasColumn('users', 'billing_cycle')) {
                 $table->string('billing_cycle', 50)->default('monthly')->after('email');
             }
-            if (!Schema::hasColumn('users', 'billing_day_of_month')) {
+            if (! Schema::hasColumn('users', 'billing_day_of_month')) {
                 $table->integer('billing_day_of_month')->default(1)->after('billing_cycle');
             }
-            if (!Schema::hasColumn('users', 'payment_type')) {
+            if (! Schema::hasColumn('users', 'payment_type')) {
                 $table->enum('payment_type', ['prepaid', 'postpaid'])->default('postpaid')->after('billing_day_of_month');
             }
-            if (!Schema::hasColumn('users', 'wallet_balance')) {
+            if (! Schema::hasColumn('users', 'wallet_balance')) {
                 $table->decimal('wallet_balance', 10, 2)->default(0)->after('payment_type');
             }
-            if (!Schema::hasColumn('users', 'sms_balance')) {
+            if (! Schema::hasColumn('users', 'sms_balance')) {
                 $table->integer('sms_balance')->default(0)->after('wallet_balance');
             }
         });

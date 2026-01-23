@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class BandwidthUsage extends Model
 {
     use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *

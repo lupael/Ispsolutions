@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Package extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'tenant_id',
         'operator_id',
@@ -77,7 +78,7 @@ class Package extends Model
     {
         return $query->where(function ($q) use ($operatorId) {
             $q->where('is_global', true)
-              ->orWhere('operator_id', $operatorId);
+                ->orWhere('operator_id', $operatorId);
         });
     }
 }

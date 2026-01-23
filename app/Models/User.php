@@ -59,13 +59,21 @@ class User extends Authenticatable
      * Operator level constants
      */
     public const OPERATOR_LEVEL_DEVELOPER = 0;
+
     public const OPERATOR_LEVEL_SUPER_ADMIN = 10;
+
     public const OPERATOR_LEVEL_ADMIN = 20;
+
     public const OPERATOR_LEVEL_OPERATOR = 30;
+
     public const OPERATOR_LEVEL_SUB_OPERATOR = 40;
+
     public const OPERATOR_LEVEL_MANAGER = 50;
+
     public const OPERATOR_LEVEL_ACCOUNTANT = 70;
+
     public const OPERATOR_LEVEL_STAFF = 80;
+
     public const OPERATOR_LEVEL_CUSTOMER = 100;
 
     /**
@@ -204,7 +212,7 @@ class User extends Authenticatable
     public function assignRole(string $roleSlug): void
     {
         $role = Role::where('slug', $roleSlug)->first();
-        
+
         if (! $role) {
             throw new \InvalidArgumentException("Role '{$roleSlug}' not found.");
         }

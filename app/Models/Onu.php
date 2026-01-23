@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Onu extends Model
 {
     use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *

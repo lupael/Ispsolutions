@@ -121,10 +121,10 @@ class OperatorController extends Controller
     public function complaints(): View
     {
         $user = auth()->user();
-        
+
         // Get customer IDs for this operator (own customers + sub-operator customers)
         $customerIds = $user->subordinates()->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->pluck('id');
-        
+
         // Get tickets for these customers
         $complaints = Ticket::whereIn('customer_id', $customerIds)
             ->with(['customer', 'assignedTo', 'creator'])

@@ -110,7 +110,7 @@ class SuperAdminController extends Controller
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => !empty($validated['password']) ? bcrypt($validated['password']) : $user->password,
+            'password' => ! empty($validated['password']) ? bcrypt($validated['password']) : $user->password,
         ]);
 
         $user->roles()->sync([$validated['role_id']]);
@@ -125,7 +125,7 @@ class SuperAdminController extends Controller
     public function usersDestroy($id): RedirectResponse
     {
         $user = User::findOrFail($id);
-        
+
         // Prevent deletion of users with developer role
         if ($user->hasRole('developer')) {
             return redirect()->route('panel.super-admin.users')

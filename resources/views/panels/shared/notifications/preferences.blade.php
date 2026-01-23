@@ -1,4 +1,4 @@
-@extends('layouts.panel')
+@extends('panels.layouts.app')
 
 @section('title', 'Notification Preferences')
 

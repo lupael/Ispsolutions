@@ -542,7 +542,7 @@ class DeveloperController extends Controller
         $admin->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => !empty($validated['password']) ? bcrypt($validated['password']) : $admin->password,
+            'password' => ! empty($validated['password']) ? bcrypt($validated['password']) : $admin->password,
         ]);
 
         return redirect()->route('panel.developer.super-admins.index')

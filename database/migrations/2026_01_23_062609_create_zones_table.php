@@ -32,7 +32,7 @@ return new class extends Migration
 
             $table->index(['tenant_id', 'is_active']);
             $table->index('parent_id');
-            
+
             // Zone code should be unique per tenant, not globally
             $table->unique(['tenant_id', 'code'], 'zones_tenant_code_unique');
         });

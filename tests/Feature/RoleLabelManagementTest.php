@@ -14,6 +14,7 @@ class RoleLabelManagementTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Tenant $tenant;
 
     protected function setUp(): void
@@ -34,7 +35,7 @@ class RoleLabelManagementTest extends TestCase
         $this->admin->roles()->attach($adminRole);
 
         // Ensure operator and sub-operator roles exist
-        if (!Role::where('slug', 'operator')->exists()) {
+        if (! Role::where('slug', 'operator')->exists()) {
             Role::create([
                 'slug' => 'operator',
                 'name' => 'Operator',
@@ -43,7 +44,7 @@ class RoleLabelManagementTest extends TestCase
             ]);
         }
 
-        if (!Role::where('slug', 'sub-operator')->exists()) {
+        if (! Role::where('slug', 'sub-operator')->exists()) {
             Role::create([
                 'slug' => 'sub-operator',
                 'name' => 'Sub-Operator',

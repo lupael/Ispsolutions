@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('packages', function (Blueprint $table) {
-            if (!Schema::hasColumn('packages', 'operator_id')) {
+            if (! Schema::hasColumn('packages', 'operator_id')) {
                 $table->foreignId('operator_id')->nullable()->after('tenant_id')->constrained('users')->onDelete('cascade');
             }
-            if (!Schema::hasColumn('packages', 'is_global')) {
+            if (! Schema::hasColumn('packages', 'is_global')) {
                 $table->boolean('is_global')->default(true)->after('operator_id');
             }
         });
