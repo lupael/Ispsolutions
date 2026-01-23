@@ -15,6 +15,10 @@ use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Models\NetworkUser;
 use App\Models\Olt;
+use App\Models\OperatorPackageRate;
+use App\Models\OperatorSmsRate;
+use App\Models\OperatorWalletTransaction;
+use App\Models\Package;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
 use App\Models\ServicePackage;
@@ -1622,7 +1626,7 @@ class AdminController extends Controller
             $operator->update(['wallet_balance' => $balanceAfter]);
 
             // Record transaction
-            \App\Models\OperatorWalletTransaction::create([
+            OperatorWalletTransaction::create([
                 'operator_id' => $operator->id,
                 'transaction_type' => 'credit',
                 'amount' => $validated['amount'],
@@ -1674,7 +1678,7 @@ class AdminController extends Controller
             $operator->update(['wallet_balance' => $balanceAfter]);
 
             // Record transaction
-            \App\Models\OperatorWalletTransaction::create([
+            OperatorWalletTransaction::create([
                 'operator_id' => $operator->id,
                 'transaction_type' => 'debit',
                 'amount' => $validated['amount'],
@@ -1699,7 +1703,7 @@ class AdminController extends Controller
      */
     public function operatorWalletHistory(User $operator): View
     {
-        $transactions = \App\Models\OperatorWalletTransaction::where('operator_id', $operator->id)
+        $transactions = OperatorWalletTransaction::where('operator_id', $operator->id)
             ->with('creator')
             ->latest()
             ->paginate(50);
@@ -1725,7 +1729,7 @@ class AdminController extends Controller
     public function assignOperatorPackageRate(User $operator): View
     {
         $packages = Package::where('is_global', true)->orWhere('operator_id', $operator->id)->get();
-        $existingRates = \App\Models\OperatorPackageRate::where('operator_id', $operator->id)
+        $existingRates = OperatorPackageRate::where('operator_id', $operator->id)
             ->pluck('package_id')
             ->toArray();
 
@@ -1745,7 +1749,7 @@ class AdminController extends Controller
 
         $validated['operator_id'] = $operator->id;
 
-        \App\Models\OperatorPackageRate::updateOrCreate(
+        OperatorPackageRate::updateOrCreate(
             [
                 'operator_id' => $operator->id,
                 'package_id' => $validated['package_id'],
@@ -1762,7 +1766,7 @@ class AdminController extends Controller
      */
     public function deleteOperatorPackageRate(User $operator, $packageId)
     {
-        \App\Models\OperatorPackageRate::where('operator_id', $operator->id)
+        OperatorPackageRate::where('operator_id', $operator->id)
             ->where('package_id', $packageId)
             ->delete();
 
@@ -1787,7 +1791,7 @@ class AdminController extends Controller
      */
     public function assignOperatorSmsRate(User $operator): View
     {
-        $smsRate = \App\Models\OperatorSmsRate::where('operator_id', $operator->id)->first();
+        $smsRate = OperatorSmsRate::where('operator_id', $operator->id)->first();
 
         return view('panels.admin.operators.assign-sms-rate', compact('operator', 'smsRate'));
     }
@@ -1805,7 +1809,7 @@ class AdminController extends Controller
 
         $validated['operator_id'] = $operator->id;
 
-        \App\Models\OperatorSmsRate::updateOrCreate(
+        OperatorSmsRate::updateOrCreate(
             ['operator_id' => $operator->id],
             $validated
         );
@@ -1819,7 +1823,7 @@ class AdminController extends Controller
      */
     public function deleteOperatorSmsRate(User $operator)
     {
-        \App\Models\OperatorSmsRate::where('operator_id', $operator->id)->delete();
+        OperatorSmsRate::where('operator_id', $operator->id)->delete();
 
         return redirect()->route('panel.admin.operators.sms-rates')
             ->with('success', 'SMS rate removed successfully.');
