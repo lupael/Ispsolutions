@@ -6,6 +6,91 @@ This project is an ISP (Internet Service Provider) management system built with 
 
 **Goal**: Provide a complete ISP management solution with RADIUS authentication, MikroTik router integration, and IP address management (IPAM), all wrapped in a modern Tailwind CSS interface based on the Metronic design system.
 
+## Tech Stack
+
+- **Laravel**: 12.x (Latest)
+- **PHP**: 8.2+
+- **Database**: MySQL 8.0 (Application + RADIUS databases)
+- **Redis**: Latest (Caching and Queue management)
+- **Tailwind CSS**: 4.x
+- **Vite**: 7.x for asset building
+- **Docker**: Containerized development environment
+- **Node.js**: Latest LTS version
+
+## Documentation
+
+### Getting Started
+- **[Installation Guide](INSTALLATION.md)** ⭐ - Complete automated installation guide
+- **[Documentation Index](docs/INDEX.md)** - Complete documentation catalog
+- **[Quick Start](README.md#getting-started)** - Get up and running quickly
+
+### User Guides by Role
+Choose the guide for your role:
+- **[Developer Guide](docs/guides/DEVELOPER_GUIDE.md)** - Level 0: System development and administration
+- **[Super Admin Guide](docs/guides/SUPERADMIN_GUIDE.md)** - Level 10: Tenant management
+- **[Admin Guide](docs/guides/ADMIN_GUIDE.md)** - Level 20: ISP owner operations
+- **[Operator Guide](docs/guides/OPERATOR_GUIDE.md)** - Level 30: Area/zone management
+- **[Sub-Operator Guide](docs/guides/SUBOPERATOR_GUIDE.md)** - Level 40: Local customer management
+- **[Manager Guide](docs/guides/MANAGER_GUIDE.md)** - Level 50: Oversight and reporting
+- **[Staff Guide](docs/guides/STAFF_GUIDE.md)** - Level 80: Administrative support
+- **[Customer Guide](docs/guides/CUSTOMER_GUIDE.md)** - Level 100: End user self-service
+
+### Core Documentation
+- **[Roles & Permissions Guide](docs/ROLES_AND_PERMISSIONS.md)** - Complete role hierarchy, permissions, and data isolation
+- **[API Documentation](docs/API.md)** - Complete REST API reference with authentication and examples
+- **[Testing Guide](docs/TESTING.md)** - How to run and write tests
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
+- **[Implementation Checklist](docs/TODO_REIMPLEMENT.md)** - Detailed development roadmap
+
+### Feature Specifications
+- **[Network Services Guide](docs/NETWORK_SERVICES.md)** - RADIUS, MikroTik, IPAM, and session monitoring
+- **[OLT Service Guide](docs/OLT_SERVICE_GUIDE.md)** - OLT/ONU management and provisioning
+- **[TODO Features A-Z](TODO_FEATURES_A2Z.md)** - Complete feature list and specifications
+- **[Panel Specifications](PANELS_SPECIFICATION.md)** - Detailed panel-specific documentation
+- **[Multi-Tenancy Isolation](MULTI_TENANCY_ISOLATION.md)** - Multi-tenancy architecture overview
+
+### MikroTik Integration
+- **[MikroTik Quick Start](MIKROTIK_QUICKSTART.md)** - Quick start guide for MikroTik integration
+- **[MikroTik Advanced Features](MIKROTIK_ADVANCED_FEATURES.md)** - Advanced MikroTik features and configuration
+
+## Multi-Tenancy Role System
+
+The system now includes a comprehensive 12-role hierarchy with strict data isolation:
+
+| Level | Role | Data Access |
+|-------|------|-------------|
+| 0 | Developer | All tenants (supreme authority) |
+| 10 | Super Admin | Only OWN tenants |
+| 20 | Admin | Own ISP data within tenancy |
+| 30 | Operator | Own + sub-operator customers |
+| 40 | Sub-Operator | Only own customers |
+| 50-80 | Manager/Staff/Accountant | Permission-based |
+| 100 | Customer | Self-service only |
+
+### Quick Start with Roles
+
+```php
+// Check user role
+if (auth()->user()->isDeveloper()) { ... }
+if (auth()->user()->isAdmin()) { ... }
+
+// Get accessible customers (auto-scoped by role)
+$customers = auth()->user()->accessibleCustomers()->paginate(50);
+
+// Check hierarchy
+if (auth()->user()->canManage($otherUser)) { ... }
+```
+
+### Seed Roles
+```bash
+php artisan db:seed --class=RoleSeeder
+```
+
+**Documentation:**
+- [SUMMARY.md](SUMMARY.md) - Executive summary (12.4 KB)
+- [DATA_ISOLATION.md](DATA_ISOLATION.md) - Complete guide (15.5 KB)
+- [ROLE_SYSTEM_QUICK_REFERENCE.md](ROLE_SYSTEM_QUICK_REFERENCE.md) - Quick reference (10.6 KB)
+
 ## Features
 
 ### Network Services
@@ -19,80 +104,6 @@ This project is an ISP (Internet Service Provider) management system built with 
 - Responsive design for desktop and mobile devices
 - Real-time session monitoring dashboard
 - Interactive IP allocation management
-
-## Tech Stack
-
-- **Laravel**: 12.x (Latest)
-- **PHP**: 8.2+
-- **Database**: MySQL 8.0 (Application + RADIUS databases)
-- **Redis**: Latest (Caching and Queue management)
-- **Tailwind CSS**: 4.x
-- **Vite**: 7.x for asset building
-- **Docker**: Containerized development environment
-- **Node.js**: Latest LTS version
-
-## Project Structure
-
-```
-app/Http/Controllers/
-├── Demo1Controller.php
-├── Demo2Controller.php
-├── ...
-└── Demo10Controller.php
-
-resources/views/
-├── layouts/
-│   ├── partials/
-│   │   ├── head.blade.php
-│   │   └── scripts.blade.php
-│   ├── demo1/
-│   │   ├── base.blade.php
-│   │   └── partials/
-│   ├── demo2/
-│   │   ├── base.blade.php
-│   │   └── partials/
-│   └── ... (demo3-demo10)
-├── pages/
-│   ├── demo1/
-│   │   └── index.blade.php
-│   ├── demo2/
-│   │   └── index.blade.php
-│   └── ... (demo3-demo10)
-└── components/
-    ├── demo1/
-    ├── demo2/
-    ├── ... (demo3-demo10)
-    └── shared/
-
-public/assets/
-├── css/
-│   └── styles.css
-├── js/
-│   ├── core.bundle.js
-│   └── layouts/
-│       ├── demo1.js
-│       ├── demo2.js
-│       └── ... (demo3-demo10.js)
-├── media/
-└── vendors/
-```
-
-## Demo Layouts
-
-This integration includes 10 complete demo layouts, each showcasing different UI patterns:
-
-- **Demo 1**: Sidebar Layout - Traditional admin dashboard with sidebar navigation
-- **Demo 2**: Header Layout - Modern dashboard with top navigation
-- **Demo 3**: Minimal Layout - Clean, minimalist design approach
-- **Demo 4**: Creative Layout - Creative and artistic dashboard design
-- **Demo 5**: Modern Layout - Contemporary UI with modern elements
-- **Demo 6**: Professional Layout - Business-focused professional design
-- **Demo 7**: Corporate Layout - Enterprise-grade corporate dashboard
-- **Demo 8**: Executive Layout - Executive-level dashboard interface
-- **Demo 9**: Premium Layout - Premium design with advanced components
-- **Demo 10**: Ultimate Layout - Most comprehensive layout with all features
-
-## Features
 
 ### Multi-Tenant Role Management
 
@@ -207,7 +218,45 @@ This installs everything you need (PHP, MySQL, Redis, Nginx, RADIUS, etc.) and c
 - Docker and Docker Compose (for Docker setup)
 - Git
 
-### Quick Start with Docker
+## Production Deployment
+
+### Build for Production
+```bash
+# Build optimized assets
+npm run build
+
+# Optimize Laravel
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Optimize Composer autoloader
+composer install --optimize-autoloader --no-dev
+```
+
+### Environment Configuration
+
+For production, update these critical settings in `.env`:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://yourdomain.com
+
+# Use strong database passwords
+DB_PASSWORD=strong_random_password
+RADIUS_DB_PASSWORD=strong_random_password
+
+# Configure real MikroTik router
+MIKROTIK_HOST=your_router_ip
+MIKROTIK_USERNAME=admin
+MIKROTIK_PASSWORD=your_secure_password
+
+# Enable HTTPS
+SESSION_SECURE_COOKIE=true
+```
+
+## Quick Start with Docker
 
 1. **Clone the repository**
 ```bash
@@ -532,45 +581,7 @@ If authentication fails:
 3. Sync a test user: `php artisan radius:sync-user 1`
 4. Verify radcheck table has entries
 
-## Production Deployment
 
-## Production Deployment
-
-### Build for Production
-```bash
-# Build optimized assets
-npm run build
-
-# Optimize Laravel
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Optimize Composer autoloader
-composer install --optimize-autoloader --no-dev
-```
-
-### Environment Configuration
-
-For production, update these critical settings in `.env`:
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://yourdomain.com
-
-# Use strong database passwords
-DB_PASSWORD=strong_random_password
-RADIUS_DB_PASSWORD=strong_random_password
-
-# Configure real MikroTik router
-MIKROTIK_HOST=your_router_ip
-MIKROTIK_USERNAME=admin
-MIKROTIK_PASSWORD=your_secure_password
-
-# Enable HTTPS
-SESSION_SECURE_COOKIE=true
-```
 
 ## Contributing
 
@@ -599,79 +610,6 @@ All pull requests are automatically tested using GitHub Actions:
 
 See workflow files in `.github/workflows/` for details.
 
-## Documentation
-
-### Getting Started
-- **[Installation Guide](INSTALLATION.md)** ⭐ - Complete automated installation guide
-- **[Documentation Index](docs/INDEX.md)** - Complete documentation catalog
-- **[Quick Start](README.md#getting-started)** - Get up and running quickly
-
-### User Guides by Role
-Choose the guide for your role:
-- **[Developer Guide](docs/guides/DEVELOPER_GUIDE.md)** - Level 0: System development and administration
-- **[Super Admin Guide](docs/guides/SUPERADMIN_GUIDE.md)** - Level 10: Tenant management
-- **[Admin Guide](docs/guides/ADMIN_GUIDE.md)** - Level 20: ISP owner operations
-- **[Operator Guide](docs/guides/OPERATOR_GUIDE.md)** - Level 30: Area/zone management
-- **[Sub-Operator Guide](docs/guides/SUBOPERATOR_GUIDE.md)** - Level 40: Local customer management
-- **[Manager Guide](docs/guides/MANAGER_GUIDE.md)** - Level 50: Oversight and reporting
-- **[Staff Guide](docs/guides/STAFF_GUIDE.md)** - Level 80: Administrative support
-- **[Customer Guide](docs/guides/CUSTOMER_GUIDE.md)** - Level 100: End user self-service
-
-### Core Documentation
-- **[Roles & Permissions Guide](docs/ROLES_AND_PERMISSIONS.md)** - Complete role hierarchy, permissions, and data isolation
-- **[API Documentation](docs/API.md)** - Complete REST API reference with authentication and examples
-- **[Testing Guide](docs/TESTING.md)** - How to run and write tests
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
-- **[Implementation Checklist](docs/TODO_REIMPLEMENT.md)** - Detailed development roadmap
-
-### Feature Specifications
-- **[Network Services Guide](docs/NETWORK_SERVICES.md)** - RADIUS, MikroTik, IPAM, and session monitoring
-- **[OLT Service Guide](docs/OLT_SERVICE_GUIDE.md)** - OLT/ONU management and provisioning
-- **[TODO Features A-Z](TODO_FEATURES_A2Z.md)** - Complete feature list and specifications
-- **[Panel Specifications](PANELS_SPECIFICATION.md)** - Detailed panel-specific documentation
-- **[Multi-Tenancy Isolation](MULTI_TENANCY_ISOLATION.md)** - Multi-tenancy architecture overview
-
-### MikroTik Integration
-- **[MikroTik Quick Start](MIKROTIK_QUICKSTART.md)** - Quick start guide for MikroTik integration
-- **[MikroTik Advanced Features](MIKROTIK_ADVANCED_FEATURES.md)** - Advanced MikroTik features and configuration
-
-## Multi-Tenancy Role System
-
-The system now includes a comprehensive 12-role hierarchy with strict data isolation:
-
-| Level | Role | Data Access |
-|-------|------|-------------|
-| 0 | Developer | All tenants (supreme authority) |
-| 10 | Super Admin | Only OWN tenants |
-| 20 | Admin | Own ISP data within tenancy |
-| 30 | Operator | Own + sub-operator customers |
-| 40 | Sub-Operator | Only own customers |
-| 50-80 | Manager/Staff/Accountant | Permission-based |
-| 100 | Customer | Self-service only |
-
-### Quick Start with Roles
-
-```php
-// Check user role
-if (auth()->user()->isDeveloper()) { ... }
-if (auth()->user()->isAdmin()) { ... }
-
-// Get accessible customers (auto-scoped by role)
-$customers = auth()->user()->accessibleCustomers()->paginate(50);
-
-// Check hierarchy
-if (auth()->user()->canManage($otherUser)) { ... }
-```
-
-### Seed Roles
-```bash
-php artisan db:seed --class=RoleSeeder
-```
-
-**Documentation:**
-- [SUMMARY.md](SUMMARY.md) - Executive summary (12.4 KB)
-- [DATA_ISOLATION.md](DATA_ISOLATION.md) - Complete guide (15.5 KB)
-- [ROLE_SYSTEM_QUICK_REFERENCE.md](ROLE_SYSTEM_QUICK_REFERENCE.md) - Quick reference (10.6 KB)
 
 ## License
 
