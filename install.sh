@@ -197,8 +197,8 @@ setup_app() {
     N_APP_PASS=$(openssl rand -base64 12 | tr -d '=+/')
     N_RAD_PASS=$(openssl rand -base64 15 | tr -d '=+/')
 
-    # Update MySQL Root
-    $MYSQL_CONN -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${N_ROOT_PASS}';"
+    # Update MySQL Root (after fresh install, root has no password)
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${N_ROOT_PASS}';"
     F_CONN="mysql -u root -p${N_ROOT_PASS}"
 
     # Databases
