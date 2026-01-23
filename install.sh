@@ -33,11 +33,11 @@ NC='\033[0m' # No Color
 DOMAIN_NAME=${DOMAIN_NAME:-"localhost"}
 DB_NAME=${DB_NAME:-"ispsolution"}
 DB_USER=${DB_USER:-"ispsolution"}
-DB_PASSWORD=${DB_PASSWORD:-"$(openssl rand -base64 12)"}
-DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-"$(openssl rand -base64 12)"}
+DB_PASSWORD=${DB_PASSWORD:-"$(openssl rand -base64 18 | tr -d '=+/' | cut -c1-16)"}
+DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-"$(openssl rand -base64 18 | tr -d '=+/' | cut -c1-16)"}
 RADIUS_DB_NAME=${RADIUS_DB_NAME:-"radius"}
 RADIUS_DB_USER=${RADIUS_DB_USER:-"radius"}
-RADIUS_DB_PASSWORD=${RADIUS_DB_PASSWORD:-"$(openssl rand -base64 12)"}
+RADIUS_DB_PASSWORD=${RADIUS_DB_PASSWORD:-"$(openssl rand -base64 18 | tr -d '=+/' | cut -c1-16)"}
 INSTALL_DIR="/var/www/ispsolution"
 INSTALL_OPENVPN=${INSTALL_OPENVPN:-"no"}
 
@@ -163,6 +163,8 @@ install_mysql() {
     print_info "Installing MySQL 8.0..."
     
     # Set root password before installation
+    # Note: This method exposes password briefly in process list
+    # For production, consider using mysql_config_editor or environment variables
     debconf-set-selections <<< "mysql-server mysql-server/root_password password ${DB_ROOT_PASSWORD}"
     debconf-set-selections <<< "mysql-server mysql-server/root_password_again password ${DB_ROOT_PASSWORD}"
     
@@ -172,7 +174,13 @@ install_mysql() {
     systemctl start mysql
     
     # Secure MySQL installation
-    mysql -uroot -p"${DB_ROOT_PASSWORD}" <<MYSQL_SCRIPT
+    # Note: Using heredoc to avoid password in command line. Still visible in process briefly.
+    mysql --defaults-extra-file=<(cat <<EOF
+[client]
+user=root
+password=${DB_ROOT_PASSWORD}
+EOF
+) <<MYSQL_SCRIPT
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DROP DATABASE IF EXISTS test;
@@ -241,7 +249,7 @@ clone_repository() {
         mv "$INSTALL_DIR" "${INSTALL_DIR}.backup.$(date +%Y%m%d_%H%M%S)"
     fi
     
-    mkdir -p "$(dirname $INSTALL_DIR)"
+    mkdir -p "$(dirname "$INSTALL_DIR")"
     git clone https://github.com/i4edubd/ispsolution.git "$INSTALL_DIR"
     cd "$INSTALL_DIR"
     
@@ -252,8 +260,17 @@ clone_repository() {
 setup_databases() {
     print_info "Setting up databases..."
     
+    # Create MySQL credentials file for secure access
+    MYSQL_CREDS=$(mktemp)
+    cat > "$MYSQL_CREDS" <<EOF
+[client]
+user=root
+password=${DB_ROOT_PASSWORD}
+EOF
+    chmod 600 "$MYSQL_CREDS"
+    
     # Create application database
-    mysql -uroot -p"${DB_ROOT_PASSWORD}" <<MYSQL_SCRIPT
+    mysql --defaults-extra-file="$MYSQL_CREDS" <<MYSQL_SCRIPT
 CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
@@ -261,12 +278,15 @@ FLUSH PRIVILEGES;
 MYSQL_SCRIPT
     
     # Create RADIUS database
-    mysql -uroot -p"${DB_ROOT_PASSWORD}" <<MYSQL_SCRIPT
+    mysql --defaults-extra-file="$MYSQL_CREDS" <<MYSQL_SCRIPT
 CREATE DATABASE IF NOT EXISTS ${RADIUS_DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${RADIUS_DB_USER}'@'localhost' IDENTIFIED BY '${RADIUS_DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${RADIUS_DB_NAME}.* TO '${RADIUS_DB_USER}'@'localhost';
 FLUSH PRIVILEGES;
 MYSQL_SCRIPT
+    
+    # Clean up credentials file
+    rm -f "$MYSQL_CREDS"
     
     print_success "Databases created"
 }
@@ -500,7 +520,7 @@ display_summary() {
     echo -e "${GREEN}For documentation, visit: ${INSTALL_DIR}/docs/${NC}"
     echo ""
     
-    # Save credentials to file
+    # Save credentials to file with secure permissions
     cat > /root/ispsolution-credentials.txt <<CREDENTIALS
 ISP Solution Installation Credentials
 ======================================
@@ -533,7 +553,11 @@ Customer: customer@ispbills.com
 IMPORTANT: Keep this file secure and delete after saving credentials elsewhere!
 CREDENTIALS
     
-    print_success "Credentials saved to /root/ispsolution-credentials.txt"
+    # Set secure permissions on credentials file
+    chmod 600 /root/ispsolution-credentials.txt
+    
+    print_success "Credentials saved to /root/ispsolution-credentials.txt (secure permissions applied)"
+    print_warning "IMPORTANT: Copy these credentials to a secure location and delete this file!"
 }
 
 # Main execution
