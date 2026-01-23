@@ -21,6 +21,7 @@ use App\Models\OperatorWalletTransaction;
 use App\Models\Package;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
+use App\Models\Role;
 use App\Models\ServicePackage;
 use App\Models\User;
 use App\Services\ExcelExportService;
@@ -109,7 +110,8 @@ class AdminController extends Controller
         ]);
 
         // Assign role
-        $user->roles()->attach(\App\Models\Role::where('slug', $validated['role'])->first());
+        $role = Role::where('slug', $validated['role'])->firstOrFail();
+        $user->roles()->attach($role->id);
 
         return redirect()->route('panel.admin.users')
             ->with('success', 'User created successfully.');
@@ -138,7 +140,7 @@ class AdminController extends Controller
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|exists:roles,slug',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
         // Update user data
@@ -146,7 +148,7 @@ class AdminController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
+            'is_active' => $request->has('is_active') ? (bool) $request->input('is_active') : false,
         ];
 
         // Only update password if provided
@@ -157,7 +159,8 @@ class AdminController extends Controller
         $user->update($updateData);
 
         // Update role
-        $user->roles()->sync([\App\Models\Role::where('slug', $validated['role'])->first()->id]);
+        $role = Role::where('slug', $validated['role'])->firstOrFail();
+        $user->roles()->sync([$role->id]);
 
         return redirect()->route('panel.admin.users')
             ->with('success', 'User updated successfully.');
@@ -667,7 +670,8 @@ class AdminController extends Controller
         ]);
 
         // Assign operator role
-        $user->roles()->attach(\App\Models\Role::where('slug', 'operator')->first());
+        $role = Role::where('slug', 'operator')->firstOrFail();
+        $user->roles()->attach($role->id);
 
         return redirect()->route('panel.admin.operators')
             ->with('success', 'Operator created successfully.');
