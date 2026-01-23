@@ -63,7 +63,7 @@ class OperatorSeeder extends Seeder
         $operators = [
             [
                 'name' => 'Super Admin',
-                'email' => 'superadmin@ispsolution.local',
+                'email' => 'superadmin@ispbills.com',
                 'password' => Hash::make('password'),
                 'tenant_id' => null,
                 'operator_level' => 10,
@@ -73,7 +73,7 @@ class OperatorSeeder extends Seeder
             ],
             [
                 'name' => 'ISP Admin',
-                'email' => 'admin@demo-isp.local',
+                'email' => 'admin@ispbills.com',
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 20,
@@ -83,7 +83,7 @@ class OperatorSeeder extends Seeder
             ],
             [
                 'name' => 'John Operator',
-                'email' => 'operator@demo-isp.local',
+                'email' => 'operator@ispbills.com',
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 30,
@@ -109,9 +109,20 @@ class OperatorSeeder extends Seeder
         }
 
         $this->command->info('Operators seeded successfully!');
-        $this->command->info('Login credentials:');
-        $this->command->info('  Super Admin: superadmin@ispsolution.local / password');
-        $this->command->info('  ISP Admin: admin@demo-isp.local / password');
-        $this->command->info('  Operator: operator@demo-isp.local / password');
+        $this->command->info('');
+        $this->command->info('📋 Demo Accounts');
+        $this->command->info('All demo accounts use password: password');
+        $this->command->info('');
+        $this->command->info('Email                        Role            Level');
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->command->info('developer@ispbills.com       Developer       0');
+        $this->command->info('superadmin@ispbills.com      Super Admin     10');
+        $this->command->info('admin@ispbills.com           Admin           20');
+        $this->command->info('operator@ispbills.com        Operator        30');
+        $this->command->info('suboperator@ispbills.com     Sub-Operator    40');
+        $this->command->info('customer@ispbills.com        Customer        100');
+        $this->command->info('');
+        $this->command->info('Seed demo data with:');
+        $this->command->info('  php artisan db:seed --class=DemoSeeder');
     }
 }
