@@ -1060,19 +1060,21 @@ class AdminController extends Controller
         $ciscoQuery = CiscoDevice::select('id', 'name', DB::raw('ip_address as host'), 'status', 'created_at')
             ->addSelect(DB::raw("'cisco' as device_type"));
 
-        // Execute a single query using UNION ALL and order results in the database
+        // Execute paginated query using UNION ALL
         $devices = $routerQuery
             ->unionAll($oltQuery)
             ->unionAll($ciscoQuery)
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(20);
 
         $stats = [
-            'total' => $devices->count(),
+            'total' => MikrotikRouter::count() + Olt::count() + CiscoDevice::count(),
             'routers' => MikrotikRouter::count(),
             'olts' => Olt::count(),
             'switches' => CiscoDevice::count(),
-            'online' => $devices->where('status', 'active')->count(),
+            'online' => MikrotikRouter::where('status', 'active')->count() + 
+                        Olt::where('status', 'active')->count() + 
+                        CiscoDevice::where('status', 'active')->count(),
         ];
 
         return view('panels.admin.network.devices', compact('devices', 'stats'));

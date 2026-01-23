@@ -241,7 +241,7 @@ function configTemplates() {
                     vendor: 'huawei',
                     model: 'MA5800',
                     description: 'Standard ONU provisioning template',
-                    template_content: 'interface gpon 0/{{slot}}\nonu {{onu_id}} type {{onu_type}} sn {{serial_number}}',
+                    template_content: 'interface gpon 0/@{{slot}}\nonu @{{onu_id}} type @{{onu_type}} sn @{{serial_number}}',
                     is_active: true
                 },
                 {
@@ -250,7 +250,7 @@ function configTemplates() {
                     vendor: 'zte',
                     model: 'C320',
                     description: 'Quality of Service configuration',
-                    template_content: 'traffic-profile {{profile_name}}\nbandwidth {{bandwidth}}',
+                    template_content: 'traffic-profile @{{profile_name}}\nbandwidth @{{bandwidth}}',
                     is_active: true
                 }
             ];
