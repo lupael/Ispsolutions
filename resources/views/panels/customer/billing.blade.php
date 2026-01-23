@@ -13,7 +13,7 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">View your payment history and invoices</p>
                 </div>
                 <div>
-                    <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <a href="{{ route('payments.show', ['invoice' => $invoices->first()->id ?? '#']) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 {{ empty($invoices->first()) ? 'opacity-50 cursor-not-allowed' : '' }}" {{ empty($invoices->first()) ? 'onclick="return false;"' : '' }}>
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -104,9 +104,9 @@
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Current Subscription</h2>
-                <a href="#" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
-                    Change Package
-                </a>
+                <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                    Contact support to change package
+                </span>
             </div>
             <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div class="flex justify-between items-center">
@@ -184,8 +184,8 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View</a>
-                                    <a href="#" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Download</a>
+                                    <a href="{{ route('panel.customer.invoice.view', $invoice->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View</a>
+                                    <a href="{{ route('panel.customer.invoice.pdf', $invoice->id) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Download</a>
                                 </td>
                             </tr>
                         @empty
@@ -217,9 +217,9 @@
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Payment Methods</h2>
-                <a href="#" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
-                    Add Method
-                </a>
+                <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                    Managed by admin
+                </span>
             </div>
             <div class="space-y-3">
                 <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4">
