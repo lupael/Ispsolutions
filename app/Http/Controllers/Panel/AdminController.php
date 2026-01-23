@@ -79,6 +79,110 @@ class AdminController extends Controller
     }
 
     /**
+     * Show create user form.
+     */
+    public function usersCreate(): View
+    {
+        return view('panels.admin.users.create');
+    }
+
+    /**
+     * Store a newly created user.
+     */
+    public function usersStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|exists:roles,slug',
+        ]);
+
+        // Create the user
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => bcrypt($validated['password']),
+            'is_active' => true,
+        ]);
+
+        // Assign role
+        $user->roles()->attach(\App\Models\Role::where('slug', $validated['role'])->first());
+
+        return redirect()->route('panel.admin.users')
+            ->with('success', 'User created successfully.');
+    }
+
+    /**
+     * Show edit user form.
+     */
+    public function usersEdit($id): View
+    {
+        $user = User::with('roles')->findOrFail($id);
+
+        return view('panels.admin.users.edit', compact('user'));
+    }
+
+    /**
+     * Update the specified user.
+     */
+    public function usersUpdate(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$id,
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8|confirmed',
+            'role' => 'required|exists:roles,slug',
+            'is_active' => 'boolean',
+        ]);
+
+        // Update user data
+        $updateData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
+        ];
+
+        // Only update password if provided
+        if (!empty($validated['password'])) {
+            $updateData['password'] = bcrypt($validated['password']);
+        }
+
+        $user->update($updateData);
+
+        // Update role
+        $user->roles()->sync([\App\Models\Role::where('slug', $validated['role'])->first()->id]);
+
+        return redirect()->route('panel.admin.users')
+            ->with('success', 'User updated successfully.');
+    }
+
+    /**
+     * Remove the specified user.
+     */
+    public function usersDestroy($id)
+    {
+        $user = User::findOrFail($id);
+        
+        // Prevent deleting own account
+        if ($user->id === auth()->id()) {
+            return redirect()->route('panel.admin.users')
+                ->with('error', 'You cannot delete your own account.');
+        }
+
+        $user->delete();
+
+        return redirect()->route('panel.admin.users')
+            ->with('success', 'User deleted successfully.');
+    }
+
+    /**
      * Display network users listing.
      */
     public function networkUsers(): View
@@ -535,6 +639,101 @@ class AdminController extends Controller
     }
 
     /**
+     * Store a newly created operator.
+     */
+    public function operatorsStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|string|min:8|confirmed',
+            'operator_type' => 'nullable|string',
+            'employee_id' => 'nullable|string|max:50',
+            'supervisor_id' => 'nullable|exists:users,id',
+            'joining_date' => 'nullable|date',
+        ]);
+
+        // Create the user
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => bcrypt($validated['password']),
+            'employee_id' => $validated['employee_id'] ?? null,
+            'supervisor_id' => $validated['supervisor_id'] ?? null,
+            'joining_date' => $validated['joining_date'] ?? null,
+            'is_active' => true,
+        ]);
+
+        // Assign operator role
+        $user->roles()->attach(\App\Models\Role::where('slug', 'operator')->first());
+
+        return redirect()->route('panel.admin.operators')
+            ->with('success', 'Operator created successfully.');
+    }
+
+    /**
+     * Update the specified operator.
+     */
+    public function operatorsUpdate(Request $request, $id)
+    {
+        $operator = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$id,
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8|confirmed',
+            'operator_type' => 'nullable|string',
+            'employee_id' => 'nullable|string|max:50',
+            'supervisor_id' => 'nullable|exists:users,id',
+            'joining_date' => 'nullable|date',
+            'is_active' => 'boolean',
+        ]);
+
+        // Update user data
+        $updateData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'employee_id' => $validated['employee_id'] ?? null,
+            'supervisor_id' => $validated['supervisor_id'] ?? null,
+            'joining_date' => $validated['joining_date'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
+        ];
+
+        // Only update password if provided
+        if (!empty($validated['password'])) {
+            $updateData['password'] = bcrypt($validated['password']);
+        }
+
+        $operator->update($updateData);
+
+        return redirect()->route('panel.admin.operators')
+            ->with('success', 'Operator updated successfully.');
+    }
+
+    /**
+     * Remove the specified operator.
+     */
+    public function operatorsDestroy($id)
+    {
+        $operator = User::findOrFail($id);
+        
+        // Prevent deleting own account
+        if ($operator->id === auth()->id()) {
+            return redirect()->route('panel.admin.operators')
+                ->with('error', 'You cannot delete your own account.');
+        }
+
+        $operator->delete();
+
+        return redirect()->route('panel.admin.operators')
+            ->with('success', 'Operator deleted successfully.');
+    }
+
+    /**
      * Display sub-operators hierarchy.
      */
     public function subOperators(): View
@@ -687,6 +886,77 @@ class AdminController extends Controller
     public function routersCreate(): View
     {
         return view('panels.admin.network.routers-create');
+    }
+
+    /**
+     * Store a newly created router.
+     */
+    public function routersStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'ip_address' => 'required|ip|unique:mikrotik_routers,ip_address',
+            'username' => 'required|string|max:100',
+            'password' => 'required|string',
+            'api_port' => 'nullable|integer|min:1|max:65535',
+            'status' => 'required|in:online,offline,maintenance',
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        MikrotikRouter::create($validated);
+
+        return redirect()->route('panel.admin.network.routers')
+            ->with('success', 'Router created successfully.');
+    }
+
+    /**
+     * Show edit router form.
+     */
+    public function routersEdit($id): View
+    {
+        $router = MikrotikRouter::findOrFail($id);
+
+        return view('panels.admin.network.routers-edit', compact('router'));
+    }
+
+    /**
+     * Update the specified router.
+     */
+    public function routersUpdate(Request $request, $id)
+    {
+        $router = MikrotikRouter::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'ip_address' => 'required|ip|unique:mikrotik_routers,ip_address,'.$id,
+            'username' => 'required|string|max:100',
+            'password' => 'nullable|string',
+            'api_port' => 'nullable|integer|min:1|max:65535',
+            'status' => 'required|in:online,offline,maintenance',
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        // Don't update password if not provided
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        }
+
+        $router->update($validated);
+
+        return redirect()->route('panel.admin.network.routers')
+            ->with('success', 'Router updated successfully.');
+    }
+
+    /**
+     * Remove the specified router.
+     */
+    public function routersDestroy($id)
+    {
+        $router = MikrotikRouter::findOrFail($id);
+        $router->delete();
+
+        return redirect()->route('panel.admin.network.routers')
+            ->with('success', 'Router deleted successfully.');
     }
 
     /**
@@ -873,6 +1143,80 @@ class AdminController extends Controller
     }
 
     /**
+     * Show create IPv4 pool form.
+     */
+    public function ipv4PoolsCreate(): View
+    {
+        return view('panels.admin.network.ipv4-pools-create');
+    }
+
+    /**
+     * Store a newly created IPv4 pool.
+     */
+    public function ipv4PoolsStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'start_ip' => 'required|ip',
+            'end_ip' => 'required|ip',
+            'subnet_mask' => 'required|string|max:18',
+            'gateway' => 'nullable|ip',
+            'dns_primary' => 'nullable|ip',
+            'dns_secondary' => 'nullable|ip',
+        ]);
+
+        IpPool::create($validated);
+
+        return redirect()->route('panel.admin.network.ipv4-pools')
+            ->with('success', 'IPv4 pool created successfully.');
+    }
+
+    /**
+     * Show edit IPv4 pool form.
+     */
+    public function ipv4PoolsEdit($id): View
+    {
+        $pool = IpPool::findOrFail($id);
+
+        return view('panels.admin.network.ipv4-pools-edit', compact('pool'));
+    }
+
+    /**
+     * Update the specified IPv4 pool.
+     */
+    public function ipv4PoolsUpdate(Request $request, $id)
+    {
+        $pool = IpPool::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'start_ip' => 'required|ip',
+            'end_ip' => 'required|ip',
+            'subnet_mask' => 'required|string|max:18',
+            'gateway' => 'nullable|ip',
+            'dns_primary' => 'nullable|ip',
+            'dns_secondary' => 'nullable|ip',
+        ]);
+
+        $pool->update($validated);
+
+        return redirect()->route('panel.admin.network.ipv4-pools')
+            ->with('success', 'IPv4 pool updated successfully.');
+    }
+
+    /**
+     * Remove the specified IPv4 pool.
+     */
+    public function ipv4PoolsDestroy($id)
+    {
+        $pool = IpPool::findOrFail($id);
+        $pool->delete();
+
+        return redirect()->route('panel.admin.network.ipv4-pools')
+            ->with('success', 'IPv4 pool deleted successfully.');
+    }
+
+    /**
      * Display IPv6 pools management.
      */
     public function ipv6Pools(): View
@@ -887,6 +1231,80 @@ class AdminController extends Controller
         ];
 
         return view('panels.admin.network.ipv6-pools', compact('pools', 'stats'));
+    }
+
+    /**
+     * Show create IPv6 pool form.
+     */
+    public function ipv6PoolsCreate(): View
+    {
+        return view('panels.admin.network.ipv6-pools-create');
+    }
+
+    /**
+     * Store a newly created IPv6 pool.
+     */
+    public function ipv6PoolsStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'start_ip' => 'required|string', // IPv6 format
+            'end_ip' => 'required|string', // IPv6 format
+            'subnet_mask' => 'required|string|max:128',
+            'gateway' => 'nullable|string',
+            'dns_primary' => 'nullable|string',
+            'dns_secondary' => 'nullable|string',
+        ]);
+
+        IpPool::create($validated);
+
+        return redirect()->route('panel.admin.network.ipv6-pools')
+            ->with('success', 'IPv6 pool created successfully.');
+    }
+
+    /**
+     * Show edit IPv6 pool form.
+     */
+    public function ipv6PoolsEdit($id): View
+    {
+        $pool = IpPool::findOrFail($id);
+
+        return view('panels.admin.network.ipv6-pools-edit', compact('pool'));
+    }
+
+    /**
+     * Update the specified IPv6 pool.
+     */
+    public function ipv6PoolsUpdate(Request $request, $id)
+    {
+        $pool = IpPool::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'start_ip' => 'required|string', // IPv6 format
+            'end_ip' => 'required|string', // IPv6 format
+            'subnet_mask' => 'required|string|max:128',
+            'gateway' => 'nullable|string',
+            'dns_primary' => 'nullable|string',
+            'dns_secondary' => 'nullable|string',
+        ]);
+
+        $pool->update($validated);
+
+        return redirect()->route('panel.admin.network.ipv6-pools')
+            ->with('success', 'IPv6 pool updated successfully.');
+    }
+
+    /**
+     * Remove the specified IPv6 pool.
+     */
+    public function ipv6PoolsDestroy($id)
+    {
+        $pool = IpPool::findOrFail($id);
+        $pool->delete();
+
+        return redirect()->route('panel.admin.network.ipv6-pools')
+            ->with('success', 'IPv6 pool deleted successfully.');
     }
 
     /**
