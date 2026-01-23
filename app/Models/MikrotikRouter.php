@@ -42,6 +42,12 @@ class MikrotikRouter extends Model
         return $this->hasMany(MikrotikPppoeUser::class, 'router_id');
     }
 
+    // Alias for backward compatibility - some views use networkUsers instead of pppoeUsers
+    public function networkUsers(): HasMany
+    {
+        return $this->pppoeUsers();
+    }
+
     public function profiles(): HasMany
     {
         return $this->hasMany(MikrotikProfile::class, 'router_id');

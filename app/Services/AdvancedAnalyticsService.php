@@ -40,16 +40,16 @@ class AdvancedAnalyticsService
     {
         // Total revenue
         $totalRevenue = Payment::where('tenant_id', $tenantId)
-            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->whereBetween('paid_at', [$startDate, $endDate])
             ->where('status', 'completed')
             ->sum('amount');
 
         // Revenue by day
         $dailyRevenue = Payment::where('tenant_id', $tenantId)
-            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->whereBetween('paid_at', [$startDate, $endDate])
             ->where('status', 'completed')
             ->select(
-                DB::raw('DATE(payment_date) as date'),
+                DB::raw('DATE(paid_at) as date'),
                 DB::raw('SUM(amount) as revenue'),
                 DB::raw('COUNT(*) as transaction_count')
             )
@@ -59,7 +59,7 @@ class AdvancedAnalyticsService
 
         // Revenue by payment method
         $revenueByMethod = Payment::where('tenant_id', $tenantId)
-            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->whereBetween('paid_at', [$startDate, $endDate])
             ->where('status', 'completed')
             ->select(
                 'payment_method',
@@ -147,7 +147,7 @@ class AdvancedAnalyticsService
         // Service package distribution
         $packageDistribution = NetworkUser::where('tenant_id', $tenantId)
             ->join('packages', 'network_users.package_id', '=', 'packages.id')
-            ->where('network_users.is_active', true)
+            ->where('network_users.status', 'active')
             ->select(
                 'packages.name',
                 'packages.price',
@@ -210,7 +210,7 @@ class AdvancedAnalyticsService
             [$startDate, $endDate] = $dates;
 
             $revenue = Payment::where('tenant_id', $tenantId)
-                ->whereBetween('payment_date', [$startDate, $endDate])
+                ->whereBetween('paid_at', [$startDate, $endDate])
                 ->where('status', 'completed')
                 ->sum('amount');
 
@@ -251,7 +251,7 @@ class AdvancedAnalyticsService
             ->sum('total_amount');
 
         $collectedAmount = Payment::where('tenant_id', $tenantId)
-            ->whereBetween('payment_date', [$today->copy()->subDays(30), $today])
+            ->whereBetween('paid_at', [$today->copy()->subDays(30), $today])
             ->where('status', 'completed')
             ->sum('amount');
 
@@ -319,7 +319,7 @@ class AdvancedAnalyticsService
         $previousEnd = $endDate->copy()->subDays($duration);
 
         return Payment::where('tenant_id', $tenantId)
-            ->whereBetween('payment_date', [$previousStart, $previousEnd])
+            ->whereBetween('paid_at', [$previousStart, $previousEnd])
             ->where('status', 'completed')
             ->sum('amount');
     }
@@ -327,8 +327,8 @@ class AdvancedAnalyticsService
     private function getMonthRevenue(Carbon $month, int $tenantId): float
     {
         return Payment::where('tenant_id', $tenantId)
-            ->whereYear('payment_date', $month->year)
-            ->whereMonth('payment_date', $month->month)
+            ->whereYear('paid_at', $month->year)
+            ->whereMonth('paid_at', $month->month)
             ->where('status', 'completed')
             ->sum('amount');
     }
@@ -387,10 +387,10 @@ class AdvancedAnalyticsService
 
         $paymentsQuery = Payment::where('tenant_id', $tenantId)
             ->where('status', 'completed')
-            ->whereBetween('payment_date', [$startDate, $endDate]);
+            ->whereBetween('paid_at', [$startDate, $endDate]);
 
         $last3MonthsRevenue = $paymentsQuery->sum('amount');
-        $firstPaymentDate = $paymentsQuery->min('payment_date');
+        $firstPaymentDate = $paymentsQuery->min('paid_at');
 
         if ($firstPaymentDate === null) {
             // No payment data in the last 3 months; default to zero revenue forecast.
@@ -407,7 +407,7 @@ class AdvancedAnalyticsService
         $previousPeriodStart = (clone $startDate)->subMonths(3);
         $previousPeriodRevenue = Payment::where('tenant_id', $tenantId)
             ->where('status', 'completed')
-            ->whereBetween('payment_date', [$previousPeriodStart, $startDate])
+            ->whereBetween('paid_at', [$previousPeriodStart, $startDate])
             ->sum('amount');
 
         $growthRate = $previousPeriodRevenue > 0

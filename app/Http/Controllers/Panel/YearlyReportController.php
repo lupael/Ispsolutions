@@ -93,17 +93,17 @@ class YearlyReportController extends Controller
         $tenantId = auth()->user()->tenant_id;
         
         // Single query to get all monthly income data
-        $paymentData = Payment::whereYear('payment_date', $year)
+        $paymentData = Payment::whereYear('paid_at', $year)
             ->when($tenantId, function ($query) use ($tenantId) {
                 return $query->where('tenant_id', $tenantId);
             })
             ->select(
-                DB::raw('MONTH(payment_date) as month'),
+                DB::raw('MONTH(paid_at) as month'),
                 'payment_method',
                 DB::raw('SUM(amount) as total_amount'),
                 DB::raw('COUNT(*) as payment_count')
             )
-            ->groupBy(DB::raw('MONTH(payment_date)'), 'payment_method')
+            ->groupBy(DB::raw('MONTH(paid_at)'), 'payment_method')
             ->get();
 
         // Build monthly income structure
@@ -224,14 +224,14 @@ class YearlyReportController extends Controller
         $operatorIds = $operators->pluck('id');
 
         // Single query for all payment collections
-        $paymentsData = Payment::whereYear('payment_date', $year)
+        $paymentsData = Payment::whereYear('paid_at', $year)
             ->whereIn('collected_by', $operatorIds)
             ->select(
                 'collected_by as operator_id',
-                DB::raw('MONTH(payment_date) as month'),
+                DB::raw('MONTH(paid_at) as month'),
                 DB::raw('SUM(amount) as total_amount')
             )
-            ->groupBy('collected_by', DB::raw('MONTH(payment_date)'))
+            ->groupBy('collected_by', DB::raw('MONTH(paid_at)'))
             ->get();
 
         // Single query for all commissions

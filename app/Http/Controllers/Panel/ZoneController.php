@@ -334,7 +334,7 @@ class ZoneController extends Controller
             'total_customers' => $zone->customers()->count(),
             'active_customers' => $zone->customers()->where('is_active', true)->count(),
             'total_network_users' => $zone->networkUsers()->count(),
-            'active_network_users' => $zone->networkUsers()->where('is_active', true)->count(),
+            'active_network_users' => $zone->networkUsers()->where('status', 'active')->count(),
             'child_zones' => $zone->children()->count(),
         ];
 
