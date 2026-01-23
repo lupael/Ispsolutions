@@ -19,6 +19,11 @@ return new class extends Migration
                 $table->foreignId('tenant_id')->nullable()->after('user_id')->constrained()->cascadeOnDelete();
                 $table->index('tenant_id');
             }
+            
+            // Add email column if it doesn't exist
+            if (!Schema::hasColumn('network_users', 'email')) {
+                $table->string('email')->nullable()->after('password');
+            }
         });
     }
 
@@ -33,6 +38,10 @@ return new class extends Migration
                 $table->dropForeign(['tenant_id']);
                 $table->dropIndex(['tenant_id']);
                 $table->dropColumn('tenant_id');
+            }
+            
+            if (Schema::hasColumn('network_users', 'email')) {
+                $table->dropColumn('email');
             }
         });
     }

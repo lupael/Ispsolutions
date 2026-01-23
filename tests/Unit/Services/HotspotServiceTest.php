@@ -52,7 +52,7 @@ class HotspotServiceTest extends TestCase
         ]);
 
         $data = [
-            'mobile' => '01712345678',
+            'phone_number' => '01712345678',
             'password' => 'password123',
             'package_id' => $package->id,
             'tenant_id' => $this->tenant->id,
@@ -61,7 +61,7 @@ class HotspotServiceTest extends TestCase
         $hotspotUser = $this->hotspotService->createHotspotUser($data);
 
         $this->assertInstanceOf(HotspotUser::class, $hotspotUser);
-        $this->assertEquals('01712345678', $hotspotUser->mobile);
+        $this->assertEquals('01712345678', $hotspotUser->phone_number);
         $this->assertEquals($package->id, $hotspotUser->package_id);
         $this->assertEquals('active', $hotspotUser->status);
     }
@@ -104,14 +104,14 @@ class HotspotServiceTest extends TestCase
         $hotspotUser = HotspotUser::factory()->create([
             'tenant_id' => $this->tenant->id,
             'package_id' => $package->id,
-            'expired_at' => now()->subDays(5),
+            'expires_at' => now()->subDays(5),
         ]);
 
         $result = $this->hotspotService->renewSubscription($hotspotUser->id, $package->id);
 
         $this->assertTrue($result);
         $hotspotUser->refresh();
-        $this->assertTrue($hotspotUser->expired_at->greaterThan(now()));
+        $this->assertTrue($hotspotUser->expires_at->greaterThan(now()));
     }
 
     public function test_can_get_expired_users()
@@ -120,14 +120,14 @@ class HotspotServiceTest extends TestCase
         HotspotUser::factory()->create([
             'tenant_id' => $this->tenant->id,
             'status' => 'active',
-            'expired_at' => now()->subDays(1),
+            'expires_at' => now()->subDays(1),
         ]);
 
         // Create active user
         HotspotUser::factory()->create([
             'tenant_id' => $this->tenant->id,
             'status' => 'active',
-            'expired_at' => now()->addDays(30),
+            'expires_at' => now()->addDays(30),
         ]);
 
         $expiredUsers = $this->hotspotService->getExpiredUsers();

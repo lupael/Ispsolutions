@@ -21,7 +21,10 @@ class PaymentGatewayServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->paymentGatewayService = new PaymentGatewayService;
+        
+        // Mock BillingService
+        $billingService = $this->createMock(\App\Services\BillingService::class);
+        $this->paymentGatewayService = new PaymentGatewayService($billingService);
 
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();

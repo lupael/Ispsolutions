@@ -40,7 +40,8 @@ class MonitoringServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->mikrotikService->method('getResources')
+        $this->mikrotikService->expects($this->once())
+            ->method('getResources')
             ->willReturn([
                 'cpu-load' => 25.5,
                 'free-memory' => 512000000,
@@ -66,7 +67,8 @@ class MonitoringServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->mikrotikService->method('getResources')
+        $this->mikrotikService->expects($this->once())
+            ->method('getResources')
             ->willThrowException(new \Exception('Connection failed'));
 
         $metrics = $this->service->monitorDevice('router', $router->id);
