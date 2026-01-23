@@ -147,11 +147,4 @@ interface MikrotikServiceInterface
      * @return array<int, array<string, mixed>>
      */
     public function getFirewallRules(int $routerId): array;
-
-    /**
-     * Get system resources from MikroTik
-     *
-     * @return array<string, mixed>
-     */
-    public function getResources(int $routerId): array;
 }

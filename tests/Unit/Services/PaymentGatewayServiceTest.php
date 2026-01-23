@@ -21,10 +21,7 @@ class PaymentGatewayServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
-        // Mock BillingService
-        $billingService = $this->createMock(\App\Services\BillingService::class);
-        $this->paymentGatewayService = new PaymentGatewayService($billingService);
+        $this->paymentGatewayService = new PaymentGatewayService;
 
         // Create a test tenant
         $this->tenant = Tenant::factory()->create();
@@ -45,8 +42,10 @@ class PaymentGatewayServiceTest extends TestCase
             'total_amount' => 1000,
         ]);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        $this->paymentGatewayService->initiatePayment($invoice, 'bkash');
+        $result = $this->paymentGatewayService->initiatePayment('bkash', $invoice, 1000);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
     }
 
     public function test_can_initiate_nagad_payment()
@@ -61,8 +60,10 @@ class PaymentGatewayServiceTest extends TestCase
             'total_amount' => 1000,
         ]);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        $this->paymentGatewayService->initiatePayment($invoice, 'nagad');
+        $result = $this->paymentGatewayService->initiatePayment('nagad', $invoice, 1000);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
     }
 
     public function test_can_initiate_sslcommerz_payment()
@@ -77,8 +78,10 @@ class PaymentGatewayServiceTest extends TestCase
             'total_amount' => 1000,
         ]);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        $this->paymentGatewayService->initiatePayment($invoice, 'sslcommerz');
+        $result = $this->paymentGatewayService->initiatePayment('sslcommerz', $invoice, 1000);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
     }
 
     public function test_can_initiate_stripe_payment()
@@ -93,8 +96,10 @@ class PaymentGatewayServiceTest extends TestCase
             'total_amount' => 1000,
         ]);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        $this->paymentGatewayService->initiatePayment($invoice, 'stripe');
+        $result = $this->paymentGatewayService->initiatePayment('stripe', $invoice, 1000);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
     }
 
     public function test_handles_unsupported_gateway()
@@ -109,14 +114,19 @@ class PaymentGatewayServiceTest extends TestCase
             'total_amount' => 1000,
         ]);
 
-        $this->expectException(\Exception::class);
-        $this->paymentGatewayService->initiatePayment($invoice, 'unsupported');
+        $result = $this->paymentGatewayService->initiatePayment('unsupported', $invoice, 1000);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
+        $this->assertFalse($result['success']);
     }
 
     public function test_can_verify_payment()
     {
-        $this->expectException(\Exception::class);
-        $this->paymentGatewayService->verifyPayment('test-transaction-id', 'bkash', $this->tenant->id);
+        $result = $this->paymentGatewayService->verifyPayment('bkash', 'test-transaction-id');
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
     }
 
     public function test_can_process_webhook()
@@ -129,6 +139,7 @@ class PaymentGatewayServiceTest extends TestCase
 
         $result = $this->paymentGatewayService->processWebhook('bkash', $webhookData);
 
-        $this->assertIsBool($result);
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
     }
 }

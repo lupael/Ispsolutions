@@ -30,7 +30,6 @@ class InvoiceFactory extends Factory
             'due_date' => $this->faker->dateTimeBetween('+5 days', '+15 days'),
             'paid_at' => null,
             'notes' => $this->faker->optional()->sentence(),
-            'network_user_id' => null,
         ];
     }
 
