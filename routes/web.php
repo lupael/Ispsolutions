@@ -250,6 +250,16 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/payment-gateways', [AdminController::class, 'paymentGateways'])->name('payment-gateways');
     Route::get('/payment-gateways/create', [AdminController::class, 'paymentGatewaysCreate'])->name('payment-gateways.create');
 
+    // Package Profile Mappings
+    Route::prefix('packages/{package}/mappings')->name('packages.mappings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'store'])->name('store');
+        Route::get('/{mapping}/edit', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'edit'])->name('edit');
+        Route::put('/{mapping}', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'update'])->name('update');
+        Route::delete('/{mapping}', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'destroy'])->name('destroy');
+    });
+
     // Network Devices Management
     Route::get('/network/routers', [AdminController::class, 'routers'])->name('network.routers');
     Route::get('/network/routers/create', [AdminController::class, 'routersCreate'])->name('network.routers.create');

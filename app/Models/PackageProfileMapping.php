@@ -14,6 +14,7 @@ class PackageProfileMapping extends Model
         'router_id',
         'profile_name',
         'speed_control_method',
+        'ip_pool_id',
     ];
 
     protected $casts = [
@@ -31,5 +32,10 @@ class PackageProfileMapping extends Model
     public function router(): BelongsTo
     {
         return $this->belongsTo(MikrotikRouter::class, 'router_id');
+    }
+
+    public function ipPool(): BelongsTo
+    {
+        return $this->belongsTo(IpPool::class, 'ip_pool_id');
     }
 }
