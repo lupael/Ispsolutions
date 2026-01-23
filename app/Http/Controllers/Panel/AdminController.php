@@ -241,7 +241,10 @@ class AdminController extends Controller
 
         // Push the password to the actual router via MikrotikService
         if ($validated['service_type'] === 'pppoe') {
-            $router = MikrotikRouter::where('status', 'active')->first();
+            // Select router with explicit ordering for consistency
+            $router = MikrotikRouter::where('status', 'active')
+                ->orderBy('id')
+                ->first();
 
             if ($router) {
                 try {
@@ -257,7 +260,7 @@ class AdminController extends Controller
                     ]);
                 } catch (\Exception $e) {
                     // Log the error but don't fail the user creation
-                    \Log::warning('Failed to sync network user to router', [
+                    Log::warning('Failed to sync network user to router', [
                         'username' => $validated['username'],
                         'error' => $e->getMessage(),
                     ]);
@@ -331,7 +334,7 @@ class AdminController extends Controller
                 ]);
             } catch (\Exception $e) {
                 // Log the error but don't fail the update
-                \Log::warning('Failed to sync password update to router', [
+                Log::warning('Failed to sync password update to router', [
                     'username' => $validated['username'],
                     'error' => $e->getMessage(),
                 ]);
