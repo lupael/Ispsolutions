@@ -161,7 +161,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         // OTP Timer
         let expiresAt = {{ $expires_at }};
         let timerInterval;

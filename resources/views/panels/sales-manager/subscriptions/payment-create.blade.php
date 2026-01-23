@@ -78,7 +78,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ csp_nonce() }}">
 function updateInvoices(clientId) {
     const clientSelect = document.getElementById('client_id');
     const invoiceSelect = document.getElementById('invoice_id');

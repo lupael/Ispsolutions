@@ -157,7 +157,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         function copyToClipboard(text, type) {
             navigator.clipboard.writeText(text).then(() => {
                 // Show success message
