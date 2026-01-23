@@ -42,6 +42,14 @@ class MikrotikRouter extends Model
         return $this->hasMany(MikrotikPppoeUser::class, 'router_id');
     }
 
+    // Alias for backward compatibility - returns PPPoE users (MikrotikPppoeUser models)
+    // Note: This does NOT return NetworkUser models. NetworkUsers are indirectly related through PackageProfileMapping
+    // If you need NetworkUser models, query through packageMappings relationship
+    public function networkUsers(): HasMany
+    {
+        return $this->pppoeUsers();
+    }
+
     public function profiles(): HasMany
     {
         return $this->hasMany(MikrotikProfile::class, 'router_id');
