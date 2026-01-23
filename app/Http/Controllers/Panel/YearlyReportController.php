@@ -424,5 +424,4 @@ class YearlyReportController extends Controller
         return redirect()->route('panel.admin.reports.yearly.index', ['year' => $request->input('year')])
             ->with('info', 'PDF export functionality is planned for future release. Please use Excel export or print the report page.');
     }
-    }
 }

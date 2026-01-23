@@ -707,3 +707,13 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->gr
     Route::post('/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
     Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
 });
+
+// Ticket Management (Shared across roles)
+Route::prefix('panel/tickets')->name('panel.tickets.')->middleware(['auth'])->group(function () {
+    Route::get('/', [TicketController::class, 'index'])->name('index');
+    Route::get('/create', [TicketController::class, 'create'])->name('create');
+    Route::post('/', [TicketController::class, 'store'])->name('store');
+    Route::get('/{ticket}', [TicketController::class, 'show'])->name('show');
+    Route::patch('/{ticket}', [TicketController::class, 'update'])->name('update');
+    Route::delete('/{ticket}', [TicketController::class, 'destroy'])->name('destroy');
+});

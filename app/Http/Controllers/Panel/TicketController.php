@@ -12,6 +12,94 @@ use Illuminate\View\View;
 class TicketController extends Controller
 {
     /**
+     * Display a listing of tickets.
+     */
+    public function index(Request $request): View
+    {
+        $user = auth()->user();
+        $query = Ticket::query()->with(['customer', 'assignedTo', 'resolver']);
+
+        // Cache customerIds for Operators/Sub-Operators to avoid duplicate queries
+        $customerIds = null;
+        
+        // Filter tickets based on user role
+        if ($user->isCustomer()) {
+            $query->where('customer_id', $user->id);
+        } elseif ($user->isStaff()) {
+            // Staff can see tickets assigned to them or unassigned tickets
+            $query->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhereNull('assigned_to');
+            });
+        } elseif ($user->isOperatorRole() || $user->isSubOperator()) {
+            // Operators (level 30) and Sub-Operators (level 40) can see tickets from their customers
+            $customerIds = $user->subordinates()
+                ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->pluck('id');
+            $query->whereIn('customer_id', $customerIds);
+        }
+        // Admins, Super Admins, and Developers can see all tickets in their tenant
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                  ->orWhere('message', 'like', "%{$search}%");
+            });
+        }
+
+        $tickets = $query->latest()->paginate(20);
+
+        // Get statistics (role-based) - reuse cached customerIds
+        $statsQuery = Ticket::query();
+        
+        if ($user->isCustomer()) {
+            $statsQuery->where('customer_id', $user->id);
+        } elseif ($user->isStaff()) {
+            $statsQuery->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhereNull('assigned_to');
+            });
+        } elseif ($user->isOperatorRole() || $user->isSubOperator()) {
+            // Reuse cached customerIds from above to avoid duplicate query
+            $statsQuery->whereIn('customer_id', $customerIds);
+        }
+        
+        $stats = [
+            'total' => $statsQuery->count(),
+            'open' => (clone $statsQuery)->where('status', Ticket::STATUS_OPEN)->count(),
+            'in_progress' => (clone $statsQuery)->where('status', Ticket::STATUS_IN_PROGRESS)->count(),
+            'resolved' => (clone $statsQuery)->where('status', Ticket::STATUS_RESOLVED)->count(),
+        ];
+
+        return view('panels.shared.tickets.index', compact('tickets', 'stats'));
+    }
+
+    /**
+     * Show the form for creating a new ticket.
+     */
+    public function create(): View
+    {
+        $priorities = Ticket::getPriorities();
+        $categories = Ticket::getCategories();
+        
+        return view('panels.shared.tickets.create', compact('priorities', 'categories'));
+    }
+
+    /**
      * Store a newly created ticket in storage.
      */
     public function store(Request $request): RedirectResponse
@@ -34,7 +122,8 @@ class TicketController extends Controller
             'created_by' => auth()->user()->id,
         ]);
 
-        return redirect()->back()->with('success', 'Ticket created successfully. Ticket #' . $ticket->id);
+        return redirect()->route('panel.tickets.show', $ticket)
+            ->with('success', 'Ticket created successfully. Ticket #' . $ticket->id);
     }
 
     /**
