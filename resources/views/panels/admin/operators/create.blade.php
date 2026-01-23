@@ -73,10 +73,6 @@
                 </div>
 
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Additional Information</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">                </div>
-
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Status</h3>
                     <div class="space-y-4">
                         <div class="flex items-center">

@@ -1283,11 +1283,11 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'start_ip' => ['required', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'end_ip' => ['required', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'gateway' => ['nullable', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'dns_primary' => ['nullable', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'dns_secondary' => ['nullable', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
+            'start_ip' => 'required|ipv6',
+            'end_ip' => 'required|ipv6',
+            'gateway' => 'nullable|ipv6',
+            'dns_primary' => 'nullable|ipv6',
+            'dns_secondary' => 'nullable|ipv6',
             'description' => 'nullable|string',
         ]);
 
@@ -1333,11 +1333,11 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'start_ip' => ['required', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'end_ip' => ['required', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'gateway' => ['nullable', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'dns_primary' => ['nullable', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
-            'dns_secondary' => ['nullable', 'string', 'regex:/^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/'],
+            'start_ip' => 'required|ipv6',
+            'end_ip' => 'required|ipv6',
+            'gateway' => 'nullable|ipv6',
+            'dns_primary' => 'nullable|ipv6',
+            'dns_secondary' => 'nullable|ipv6',
             'description' => 'nullable|string',
         ]);
 
