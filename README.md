@@ -87,9 +87,9 @@ php artisan db:seed --class=RoleSeeder
 ```
 
 **Documentation:**
-- [SUMMARY.md](SUMMARY.md) - Executive summary (12.4 KB)
-- [DATA_ISOLATION.md](DATA_ISOLATION.md) - Complete guide (15.5 KB)
-- [ROLE_SYSTEM_QUICK_REFERENCE.md](ROLE_SYSTEM_QUICK_REFERENCE.md) - Quick reference (10.6 KB)
+- [docs/technical/ROLE_SYSTEM.md](docs/technical/ROLE_SYSTEM.md) - Complete role system specification
+- [docs/technical/DATA_ISOLATION.md](docs/technical/DATA_ISOLATION.md) - Data isolation guide
+- [docs/ROLES_AND_PERMISSIONS.md](docs/ROLES_AND_PERMISSIONS.md) - Detailed permissions guide
 
 ## Features
 
