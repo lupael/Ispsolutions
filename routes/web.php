@@ -194,6 +194,11 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/network-users', [AdminController::class, 'networkUsers'])->name('network-users');
     Route::get('/packages', [AdminController::class, 'packages'])->name('packages');
+    Route::get('/packages/create', [AdminController::class, 'packagesCreate'])->name('packages.create');
+    Route::post('/packages', [AdminController::class, 'packagesStore'])->name('packages.store');
+    Route::get('/packages/{id}/edit', [AdminController::class, 'packagesEdit'])->name('packages.edit');
+    Route::put('/packages/{id}', [AdminController::class, 'packagesUpdate'])->name('packages.update');
+    Route::delete('/packages/{id}', [AdminController::class, 'packagesDestroy'])->name('packages.destroy');
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
 
     // Role Label Settings

@@ -189,7 +189,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Template Content</label>
                             <textarea x-model="formData.template_content" rows="12" class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm" placeholder="Enter configuration commands..."></textarea>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Use @{{ '{{' }}variable_name@{{ '}}' }} for template variables</p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Use @{{ "{{variable_name}}" }} for template variables</p>
                         </div>
                         <div class="flex items-center">
                             <input type="checkbox" x-model="formData.is_active" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">

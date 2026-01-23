@@ -65,7 +65,6 @@
                     ['label' => 'MikroTik Routers', 'route' => 'panel.admin.mikrotik'],
                     ['label' => 'NAS Devices', 'route' => 'panel.admin.nas'],
                     ['label' => 'Cisco Devices', 'route' => 'panel.admin.cisco'],
-                    ['label' => 'OLT Devices', 'route' => 'panel.admin.olt'],
                     ['label' => 'All Devices', 'route' => 'panel.admin.network.devices'],
                     ['label' => 'Device Monitors', 'route' => 'panel.admin.network.device-monitors'],
                     ['label' => 'Devices Map', 'route' => 'panel.admin.network.devices.map'],
@@ -75,8 +74,6 @@
                 'label' => 'Network',
                 'icon' => 'network',
                 'children' => [
-                    ['label' => 'Routers', 'route' => 'panel.admin.network.routers'],
-                    ['label' => 'OLT', 'route' => 'panel.admin.network.olt'],
                     ['label' => 'IPv4 Pools', 'route' => 'panel.admin.network.ipv4-pools'],
                     ['label' => 'IPv6 Pools', 'route' => 'panel.admin.network.ipv6-pools'],
                     ['label' => 'PPPoE Profiles', 'route' => 'panel.admin.network.pppoe-profiles'],
@@ -87,6 +84,7 @@
                 'label' => 'OLT Management',
                 'icon' => 'lightning',
                 'children' => [
+                    ['label' => 'OLT Devices', 'route' => 'panel.admin.olt'],
                     ['label' => 'OLT Dashboard', 'route' => 'panel.admin.olt.dashboard'],
                     ['label' => 'Templates', 'route' => 'panel.admin.olt.templates'],
                     ['label' => 'SNMP Traps', 'route' => 'panel.admin.olt.snmp-traps'],
