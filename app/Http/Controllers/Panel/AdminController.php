@@ -56,6 +56,13 @@ class AdminController extends Controller
             'total_nas' => Nas::count(),
             'total_cisco' => CiscoDevice::count(),
             'total_olt' => Olt::count(),
+            // Billing statistics
+            'billed_customers' => Invoice::distinct('user_id')->count('user_id'),
+            'total_invoices' => Invoice::count(),
+            'total_billed_amount' => Invoice::sum('total_amount'),
+            'paid_invoices' => Invoice::where('status', 'paid')->count(),
+            'unpaid_invoices' => Invoice::where('status', 'unpaid')->count(),
+            'overdue_invoices' => Invoice::where('status', 'overdue')->count(),
         ];
 
         return view('panels.admin.dashboard', compact('stats'));
