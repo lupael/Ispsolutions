@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('commissions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            // Note: reseller_id column name kept for backward compatibility, refers to operator_id
             $table->foreignId('reseller_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('payment_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('invoice_id')->nullable()->constrained()->nullOnDelete();

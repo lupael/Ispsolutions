@@ -20,6 +20,7 @@ class CommissionFactory extends Factory
 
         return [
             'tenant_id' => 1,
+            // Note: reseller_id field name kept for backward compatibility, refers to operator_id
             'reseller_id' => User::factory(),
             'payment_id' => Payment::factory(),
             'invoice_id' => Invoice::factory(),
