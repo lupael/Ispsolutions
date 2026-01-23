@@ -15,6 +15,10 @@ use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Models\NetworkUser;
 use App\Models\Olt;
+use App\Models\OperatorPackageRate;
+use App\Models\OperatorSmsRate;
+use App\Models\OperatorWalletTransaction;
+use App\Models\Package;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
 use App\Models\ServicePackage;
@@ -1581,5 +1585,267 @@ class AdminController extends Controller
         
         return redirect()->route('panel.admin.dashboard')
             ->with('success', 'You are now logged back in as admin.');
+    }
+
+    /**
+     * Display operator wallet management page.
+     */
+    public function operatorWallets(): View
+    {
+        $operators = User::whereHas('roles', function ($query) {
+            $query->where('slug', 'operator');
+        })->latest()->paginate(20);
+
+        return view('panels.admin.operators.wallets', compact('operators'));
+    }
+
+    /**
+     * Show form to add funds to operator wallet.
+     */
+    public function addOperatorFunds(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        return view('panels.admin.operators.add-funds', compact('operator'));
+    }
+
+    /**
+     * Process adding funds to operator wallet.
+     */
+    public function storeOperatorFunds(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $balanceBefore = $operator->wallet_balance ?? 0;
+            $balanceAfter = $balanceBefore + $validated['amount'];
+
+            // Update operator wallet balance
+            $operator->update(['wallet_balance' => $balanceAfter]);
+
+            // Record transaction
+            OperatorWalletTransaction::create([
+                'operator_id' => $operator->id,
+                'transaction_type' => 'credit',
+                'amount' => $validated['amount'],
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'description' => $validated['description'] ?? 'Manual fund addition by admin',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.operators.wallets')
+                ->with('success', 'Funds added successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to add funds: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show form to deduct funds from operator wallet.
+     */
+    public function deductOperatorFunds(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        return view('panels.admin.operators.deduct-funds', compact('operator'));
+    }
+
+    /**
+     * Process deducting funds from operator wallet.
+     */
+    public function processDeductOperatorFunds(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . ($operator->wallet_balance ?? 0),
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $balanceBefore = $operator->wallet_balance ?? 0;
+            $balanceAfter = $balanceBefore - $validated['amount'];
+
+            // Update operator wallet balance
+            $operator->update(['wallet_balance' => $balanceAfter]);
+
+            // Record transaction
+            OperatorWalletTransaction::create([
+                'operator_id' => $operator->id,
+                'transaction_type' => 'debit',
+                'amount' => $validated['amount'],
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'description' => $validated['description'] ?? 'Manual fund deduction by admin',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.operators.wallets')
+                ->with('success', 'Funds deducted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to deduct funds: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display operator wallet transaction history.
+     */
+    public function operatorWalletHistory(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        $transactions = OperatorWalletTransaction::where('operator_id', $operator->id)
+            ->with('creator')
+            ->latest()
+            ->paginate(50);
+
+        return view('panels.admin.operators.wallet-history', compact('operator', 'transactions'));
+    }
+
+    /**
+     * Display operator package rates.
+     */
+    public function operatorPackageRates(): View
+    {
+        $operators = User::whereHas('roles', function ($query) {
+            $query->where('slug', 'operator');
+        })->with('packageRates.package')->latest()->paginate(20);
+
+        return view('panels.admin.operators.package-rates', compact('operators'));
+    }
+
+    /**
+     * Show form to assign package rates to operator.
+     */
+    public function assignOperatorPackageRate(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        $packages = Package::where(function ($query) use ($operator) {
+            $query->where('is_global', true)
+                  ->orWhere('operator_id', $operator->id);
+        })->get();
+        $existingRates = OperatorPackageRate::where('operator_id', $operator->id)
+            ->pluck('package_id')
+            ->toArray();
+
+        return view('panels.admin.operators.assign-package-rate', compact('operator', 'packages', 'existingRates'));
+    }
+
+    /**
+     * Store operator package rate assignment.
+     */
+    public function storeOperatorPackageRate(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        $validated = $request->validate([
+            'package_id' => 'required|exists:packages,id',
+            'custom_price' => 'required|numeric|min:0',
+            'commission_percentage' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        $validated['operator_id'] = $operator->id;
+
+        OperatorPackageRate::updateOrCreate(
+            [
+                'operator_id' => $operator->id,
+                'package_id' => $validated['package_id'],
+            ],
+            $validated
+        );
+
+        return redirect()->route('panel.admin.operators.package-rates')
+            ->with('success', 'Package rate assigned successfully.');
+    }
+
+    /**
+     * Delete operator package rate.
+     */
+    public function deleteOperatorPackageRate(User $operator, $package)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        OperatorPackageRate::where('operator_id', $operator->id)
+            ->where('package_id', $package)
+            ->delete();
+
+        return redirect()->route('panel.admin.operators.package-rates')
+            ->with('success', 'Package rate removed successfully.');
+    }
+
+    /**
+     * Display operator SMS rates.
+     */
+    public function operatorSmsRates(): View
+    {
+        $operators = User::whereHas('roles', function ($query) {
+            $query->where('slug', 'operator');
+        })->with('smsRate')->latest()->paginate(20);
+
+        return view('panels.admin.operators.sms-rates', compact('operators'));
+    }
+
+    /**
+     * Show form to assign SMS rate to operator.
+     */
+    public function assignOperatorSmsRate(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        $smsRate = OperatorSmsRate::where('operator_id', $operator->id)->first();
+
+        return view('panels.admin.operators.assign-sms-rate', compact('operator', 'smsRate'));
+    }
+
+    /**
+     * Store operator SMS rate assignment.
+     */
+    public function storeOperatorSmsRate(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        $validated = $request->validate([
+            'rate_per_sms' => 'required|numeric|min:0',
+            'bulk_rate_threshold' => 'required_with:bulk_rate_per_sms|nullable|integer|min:1',
+            'bulk_rate_per_sms' => 'required_with:bulk_rate_threshold|nullable|numeric|min:0',
+        ]);
+
+        $validated['operator_id'] = $operator->id;
+
+        OperatorSmsRate::updateOrCreate(
+            ['operator_id' => $operator->id],
+            $validated
+        );
+
+        return redirect()->route('panel.admin.operators.sms-rates')
+            ->with('success', 'SMS rate assigned successfully.');
+    }
+
+    /**
+     * Delete operator SMS rate.
+     */
+    public function deleteOperatorSmsRate(User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+        
+        OperatorSmsRate::where('operator_id', $operator->id)->delete();
+
+        return redirect()->route('panel.admin.operators.sms-rates')
+            ->with('success', 'SMS rate removed successfully.');
     }
 }

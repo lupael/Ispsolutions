@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -649,5 +650,29 @@ class User extends Authenticatable
     public function hasTwoFactorEnabled(): bool
     {
         return ! empty($this->two_factor_secret);
+    }
+
+    /**
+     * Get operator wallet transactions.
+     */
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(OperatorWalletTransaction::class, 'operator_id');
+    }
+
+    /**
+     * Get operator package rates.
+     */
+    public function packageRates(): HasMany
+    {
+        return $this->hasMany(OperatorPackageRate::class, 'operator_id');
+    }
+
+    /**
+     * Get operator SMS rate.
+     */
+    public function smsRate(): HasOne
+    {
+        return $this->hasOne(OperatorSmsRate::class, 'operator_id');
     }
 }
