@@ -81,8 +81,38 @@ class SmsGatewayController extends Controller
             'rate_per_sms' => 'required|numeric|min:0',
         ]);
 
+        // Normalize boolean flags explicitly (unchecked checkboxes are not sent)
+        $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_default'] = $request->boolean('is_default');
+
+        // Merge configuration updates so that blank/missing secrets don't wipe existing ones
+        if (array_key_exists('configuration', $validated) && is_array($validated['configuration'])) {
+            $existingConfiguration = $gateway->configuration ?? [];
+            $incomingConfiguration = $validated['configuration'];
+
+            // Filter incoming config: do not overwrite api_secret with empty, and avoid persisting empty strings/nulls
+            foreach ($incomingConfiguration as $key => $value) {
+                if ($key === 'api_secret' && ($value === null || $value === '')) {
+                    unset($incomingConfiguration[$key]);
+                    continue;
+                }
+
+                if ($value === null || $value === '') {
+                    unset($incomingConfiguration[$key]);
+                }
+            }
+
+            $validated['configuration'] = array_merge(
+                is_array($existingConfiguration) ? $existingConfiguration : [],
+                $incomingConfiguration
+            );
+        } else {
+            // If configuration was not provided at all, do not touch existing configuration
+            unset($validated['configuration']);
+        }
+
         // If setting as default, unset other defaults
-        if ($request->boolean('is_default') && !$gateway->is_default) {
+        if ($validated['is_default'] && !$gateway->is_default) {
             SmsGateway::where('is_default', true)->update(['is_default' => false]);
         }
 

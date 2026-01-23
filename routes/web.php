@@ -244,14 +244,19 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     
     // Operator Impersonation
     Route::post('/operators/{operatorId}/login-as', [AdminController::class, 'loginAsOperator'])->name('operators.login-as');
-    Route::post('/stop-impersonating', [AdminController::class, 'stopImpersonating'])->name('stop-impersonating');
+    
+    // Stop impersonating - accessible from impersonated sessions
+    Route::post('/stop-impersonating', [AdminController::class, 'stopImpersonating'])
+        ->name('stop-impersonating')
+        ->withoutMiddleware('role:admin')
+        ->middleware('auth');
 
     // Payment Gateway Management
     Route::get('/payment-gateways', [AdminController::class, 'paymentGateways'])->name('payment-gateways');
     Route::get('/payment-gateways/create', [AdminController::class, 'paymentGatewaysCreate'])->name('payment-gateways.create');
 
     // Package Profile Mappings
-    Route::prefix('packages/{package}/mappings')->name('packages.mappings.')->group(function () {
+    Route::prefix('packages/{package}/mappings')->name('packages.mappings.')->scopeBindings()->group(function () {
         Route::get('/', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Panel\PackageProfileMappingController::class, 'store'])->name('store');

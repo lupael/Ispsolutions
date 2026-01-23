@@ -1470,29 +1470,37 @@ class AdminController extends Controller
      */
     public function loginAsOperator(Request $request, int $operatorId)
     {
-        $operator = User::findOrFail($operatorId);
+        $currentUser = auth()->user();
         
         // Only allow super-admins and admins to impersonate
-        if (!auth()->user()->hasRole(['super-admin', 'admin'])) {
+        if (!$currentUser->hasRole(['super-admin', 'admin'])) {
             abort(403, 'Unauthorized to impersonate users.');
         }
         
+        // Scope query to current tenant and ensure target is an operator
+        $operator = User::where('id', $operatorId)
+            ->where('tenant_id', $currentUser->tenant_id)
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('slug', ['operator', 'sub-operator', 'manager', 'staff']);
+            })
+            ->firstOrFail();
+        
         // Store original admin ID in session
-        session(['impersonate_by' => auth()->id()]);
+        session(['impersonate_by' => $currentUser->id]);
         session(['impersonate_at' => now()]);
         
         // Log audit if AuditLog model exists
         try {
             \App\Models\AuditLog::create([
-                'user_id' => auth()->id(),
-                'tenant_id' => auth()->user()->tenant_id,
+                'user_id' => $currentUser->id,
+                'tenant_id' => $currentUser->tenant_id,
                 'event' => 'login_as_operator',
                 'auditable_type' => User::class,
                 'auditable_id' => $operatorId,
-                'new_values' => json_encode([
+                'new_values' => [
                     'operator_id' => $operatorId,
                     'operator_name' => $operator->name,
-                ]),
+                ],
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -1504,13 +1512,37 @@ class AdminController extends Controller
         // Login as operator
         auth()->loginUsingId($operatorId);
         
-        // Determine redirect route based on operator role - use admin dashboard as fallback
+        // Determine redirect route based on impersonated user's role
+        $redirectRoute = null;
+
+        if (method_exists($operator, 'hasRole')) {
+            // Keep admins / super-admins on the admin dashboard
+            if ($operator->hasRole(['super-admin', 'admin'])) {
+                $redirectRoute = 'panel.admin.dashboard';
+            // Send operators to their own dashboard if route exists
+            } elseif ($operator->hasRole('operator')) {
+                $redirectRoute = \Illuminate\Support\Facades\Route::has('panel.operator.dashboard') 
+                    ? 'panel.operator.dashboard' 
+                    : 'panel.admin.dashboard';
+            }
+        }
+
         try {
-            return redirect()->route('panel.admin.dashboard')
-                ->with('success', 'You are now logged in as ' . $operator->name);
+            if ($redirectRoute !== null) {
+                return redirect()->route($redirectRoute)
+                    ->with('success', 'You are now logged in as ' . $operator->name)
+                    ->with('impersonating', true);
+            }
+
+            // Fallback to a generic panel path if no role-specific route is available
+            return redirect('/panel')
+                ->with('success', 'You are now logged in as ' . $operator->name)
+                ->with('impersonating', true);
         } catch (\Exception $e) {
-            return redirect('/panel/admin')
-                ->with('success', 'You are now logged in as ' . $operator->name);
+            // If the named route or redirect fails, use the generic panel path
+            return redirect('/panel')
+                ->with('success', 'You are now logged in as ' . $operator->name)
+                ->with('impersonating', true);
         }
     }
 
@@ -1525,10 +1557,27 @@ class AdminController extends Controller
             return redirect()->route('panel.admin.dashboard')
                 ->with('error', 'No active impersonation session.');
         }
+
+        // Sanity check: ensure the original admin still exists and is allowed
+        $admin = User::find($adminId);
+        $currentUser = auth()->user();
+
+        if (
+            !$admin ||
+            !$admin->hasRole(['super-admin', 'admin']) ||
+            ($currentUser && property_exists($currentUser, 'tenant_id') && $admin->tenant_id !== $currentUser->tenant_id)
+        ) {
+            // Clear impersonation data and do not restore an invalid or unauthorized admin account
+            session()->forget(['impersonate_by', 'impersonate_at']);
+
+            return redirect()->route('panel.admin.dashboard')
+                ->with('error', 'Unable to restore the original admin account.');
+        }
         
+        // Clear impersonation session data before switching back
         session()->forget(['impersonate_by', 'impersonate_at']);
         
-        auth()->loginUsingId($adminId);
+        auth()->loginUsingId($admin->id);
         
         return redirect()->route('panel.admin.dashboard')
             ->with('success', 'You are now logged back in as admin.');

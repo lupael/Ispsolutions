@@ -93,7 +93,7 @@
                             </div>
                             <div>
                                 <label for="config_api_secret" class="block text-sm text-gray-600 dark:text-gray-400">API Secret</label>
-                                <input type="password" name="configuration[api_secret]" id="config_api_secret" value="{{ old('configuration.api_secret', $gateway->configuration['api_secret'] ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <input type="password" name="configuration[api_secret]" id="config_api_secret" value="{{ old('configuration.api_secret') }}" placeholder="Leave blank to keep existing value" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <p class="mt-1 text-xs text-gray-500">Leave blank to keep existing value</p>
                             </div>
                             <div>
