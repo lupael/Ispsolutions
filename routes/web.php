@@ -192,6 +192,11 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
 Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
+    Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('users.create');
+    Route::post('/users', [AdminController::class, 'usersStore'])->name('users.store');
+    Route::get('/users/{id}/edit', [AdminController::class, 'usersEdit'])->name('users.edit');
+    Route::put('/users/{id}', [AdminController::class, 'usersUpdate'])->name('users.update');
+    Route::delete('/users/{id}', [AdminController::class, 'usersDestroy'])->name('users.destroy');
     Route::get('/network-users', [AdminController::class, 'networkUsers'])->name('network-users');
     Route::get('/packages', [AdminController::class, 'packages'])->name('packages');
     Route::get('/packages/create', [AdminController::class, 'packagesCreate'])->name('packages.create');
@@ -256,7 +261,10 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     // Operators Management
     Route::get('/operators', [AdminController::class, 'operators'])->name('operators');
     Route::get('/operators/create', [AdminController::class, 'operatorsCreate'])->name('operators.create');
+    Route::post('/operators', [AdminController::class, 'operatorsStore'])->name('operators.store');
     Route::get('/operators/{id}/edit', [AdminController::class, 'operatorsEdit'])->name('operators.edit');
+    Route::put('/operators/{id}', [AdminController::class, 'operatorsUpdate'])->name('operators.update');
+    Route::delete('/operators/{id}', [AdminController::class, 'operatorsDestroy'])->name('operators.destroy');
     Route::get('/operators/sub-operators', [AdminController::class, 'subOperators'])->name('operators.sub-operators');
     Route::get('/operators/staff', [AdminController::class, 'staff'])->name('operators.staff');
     Route::get('/operators/{id}/profile', [AdminController::class, 'operatorProfile'])->name('operators.profile');
@@ -309,6 +317,10 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     // Network Devices Management
     Route::get('/network/routers', [AdminController::class, 'routers'])->name('network.routers');
     Route::get('/network/routers/create', [AdminController::class, 'routersCreate'])->name('network.routers.create');
+    Route::post('/network/routers', [AdminController::class, 'routersStore'])->name('network.routers.store');
+    Route::get('/network/routers/{id}/edit', [AdminController::class, 'routersEdit'])->name('network.routers.edit');
+    Route::put('/network/routers/{id}', [AdminController::class, 'routersUpdate'])->name('network.routers.update');
+    Route::delete('/network/routers/{id}', [AdminController::class, 'routersDestroy'])->name('network.routers.destroy');
     Route::get('/network/olt', [AdminController::class, 'oltList'])->name('network.olt');
     Route::get('/network/olt/create', [AdminController::class, 'oltCreate'])->name('network.olt.create');
     Route::get('/olt/dashboard', [AdminController::class, 'oltDashboard'])->name('olt.dashboard');
@@ -322,7 +334,17 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/network/device-monitors', [AdminController::class, 'deviceMonitors'])->name('network.device-monitors');
     Route::get('/network/devices-map', [AdminController::class, 'devicesMap'])->name('network.devices.map');
     Route::get('/network/ipv4-pools', [AdminController::class, 'ipv4Pools'])->name('network.ipv4-pools');
+    Route::get('/network/ipv4-pools/create', [AdminController::class, 'ipv4PoolsCreate'])->name('network.ipv4-pools.create');
+    Route::post('/network/ipv4-pools', [AdminController::class, 'ipv4PoolsStore'])->name('network.ipv4-pools.store');
+    Route::get('/network/ipv4-pools/{id}/edit', [AdminController::class, 'ipv4PoolsEdit'])->name('network.ipv4-pools.edit');
+    Route::put('/network/ipv4-pools/{id}', [AdminController::class, 'ipv4PoolsUpdate'])->name('network.ipv4-pools.update');
+    Route::delete('/network/ipv4-pools/{id}', [AdminController::class, 'ipv4PoolsDestroy'])->name('network.ipv4-pools.destroy');
     Route::get('/network/ipv6-pools', [AdminController::class, 'ipv6Pools'])->name('network.ipv6-pools');
+    Route::get('/network/ipv6-pools/create', [AdminController::class, 'ipv6PoolsCreate'])->name('network.ipv6-pools.create');
+    Route::post('/network/ipv6-pools', [AdminController::class, 'ipv6PoolsStore'])->name('network.ipv6-pools.store');
+    Route::get('/network/ipv6-pools/{id}/edit', [AdminController::class, 'ipv6PoolsEdit'])->name('network.ipv6-pools.edit');
+    Route::put('/network/ipv6-pools/{id}', [AdminController::class, 'ipv6PoolsUpdate'])->name('network.ipv6-pools.update');
+    Route::delete('/network/ipv6-pools/{id}', [AdminController::class, 'ipv6PoolsDestroy'])->name('network.ipv6-pools.destroy');
     Route::get('/network/pppoe-profiles', [AdminController::class, 'pppoeProfiles'])->name('network.pppoe-profiles');
     Route::get('/network/package-fup-edit/{id}', [AdminController::class, 'packageFupEdit'])->name('network.package-fup-edit');
     Route::get('/network/ping-test', [AdminController::class, 'pingTest'])->name('network.ping-test');
