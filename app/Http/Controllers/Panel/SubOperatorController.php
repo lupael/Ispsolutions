@@ -155,13 +155,13 @@ class SubOperatorController extends Controller
 
         // Get commission transactions for this sub-operator
         // Note: reseller_id column name retained for backward compatibility (refers to operator_id)
-        $transactions = \App\Models\Commission::where('reseller_id', $user->id)
+        $transactions = \App\Models\Commission::where('reseller_id', $user->id) // reseller_id column kept for backward compatibility (refers to operator_id)
             ->latest()
             ->paginate(20);
 
         // Get commission summary
         $summary = [
-            'total_earned' => \App\Models\Commission::where('reseller_id', $user->id)->sum('commission_amount'),
+            'total_earned' => \App\Models\Commission::where('reseller_id', $user->id)->sum('commission_amount'), // reseller_id refers to operator_id
             'pending' => \App\Models\Commission::where('reseller_id', $user->id)->where('status', 'pending')->sum('commission_amount'),
             'paid' => \App\Models\Commission::where('reseller_id', $user->id)->where('status', 'paid')->sum('commission_amount'),
         ];

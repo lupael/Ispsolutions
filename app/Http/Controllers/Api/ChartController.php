@@ -192,7 +192,7 @@ class ChartController extends Controller
     public function getCommissionChart(Request $request): JsonResponse
     {
         $user = auth()->user();
-        $requestedOperatorId = $request->get('reseller_id'); // TODO: Rename parameter to operator_id
+        $requestedOperatorId = $request->get('reseller_id'); // Parameter name kept for backward compatibility (refers to operator_id)
 
         // Authorization: Only allow viewing own commissions unless user is Admin or higher
         if ($requestedOperatorId && $requestedOperatorId != $user->id) {
@@ -217,7 +217,7 @@ class ChartController extends Controller
         $data = [];
         for ($i = $months - 1; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $earnings = \App\Models\Commission::where('reseller_id', $operatorId) // Column name kept for backward compatibility
+            $earnings = \App\Models\Commission::where('reseller_id', $operatorId) // reseller_id column name kept for backward compatibility (refers to operator_id)
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->sum('commission_amount');

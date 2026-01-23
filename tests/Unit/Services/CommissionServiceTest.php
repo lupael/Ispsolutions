@@ -164,7 +164,7 @@ class CommissionServiceTest extends TestCase
             'status' => 'paid',
         ]);
 
-        $summary = $this->commissionService->getResellerCommissionSummary($this->operator);
+        $summary = $this->commissionService->getOperatorCommissionSummary($this->operator);
 
         $this->assertIsArray($summary);
         $this->assertEquals(400.00, $summary['total_earned']); // 300 + 100
