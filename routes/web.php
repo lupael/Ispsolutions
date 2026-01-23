@@ -219,6 +219,17 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/customers/pppoe-import', [AdminController::class, 'pppoeCustomerImport'])->name('customers.pppoe-import');
     Route::get('/customers/bulk-update', [AdminController::class, 'bulkUpdateUsers'])->name('customers.bulk-update');
 
+    // Zone Management
+    Route::get('/zones', [\App\Http\Controllers\Panel\ZoneController::class, 'index'])->name('zones.index');
+    Route::get('/zones/create', [\App\Http\Controllers\Panel\ZoneController::class, 'create'])->name('zones.create');
+    Route::post('/zones', [\App\Http\Controllers\Panel\ZoneController::class, 'store'])->name('zones.store');
+    Route::get('/zones/{zone}', [\App\Http\Controllers\Panel\ZoneController::class, 'show'])->name('zones.show');
+    Route::get('/zones/{zone}/edit', [\App\Http\Controllers\Panel\ZoneController::class, 'edit'])->name('zones.edit');
+    Route::put('/zones/{zone}', [\App\Http\Controllers\Panel\ZoneController::class, 'update'])->name('zones.update');
+    Route::delete('/zones/{zone}', [\App\Http\Controllers\Panel\ZoneController::class, 'destroy'])->name('zones.destroy');
+    Route::get('/zones-report', [\App\Http\Controllers\Panel\ZoneController::class, 'report'])->name('zones.report');
+    Route::post('/zones/bulk-assign', [\App\Http\Controllers\Panel\ZoneController::class, 'bulkAssign'])->name('zones.bulk-assign');
+
     // Accounting & Finance
     Route::get('/accounting/transactions', [AdminController::class, 'accountTransactions'])->name('accounting.transactions');
     Route::get('/accounting/payment-gateway-transactions', [AdminController::class, 'paymentGatewayTransactions'])->name('accounting.payment-gateway-transactions');
