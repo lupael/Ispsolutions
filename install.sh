@@ -103,7 +103,11 @@ setup_swap() {
     fi
     
     # Create swap file
-    fallocate -l "$SWAP_SIZE" /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=$(echo "$SWAP_SIZE" | sed 's/G/*1024/; s/M//') 2>/dev/null
+    if ! fallocate -l "$SWAP_SIZE" /swapfile 2>/dev/null; then
+        print_info "fallocate failed, using dd instead..."
+        SWAP_MB=$(echo "$SWAP_SIZE" | sed 's/G/*1024/g; s/M//g' | bc)
+        dd if=/dev/zero of=/swapfile bs=1M count="$SWAP_MB" status=progress
+    fi
     chmod 600 /swapfile
     mkswap /swapfile
     swapon /swapfile
@@ -114,9 +118,11 @@ setup_swap() {
     fi
     
     # Optimize swap settings
-    echo "vm.swappiness=10" >> /etc/sysctl.conf
-    echo "vm.vfs_cache_pressure=50" >> /etc/sysctl.conf
-    sysctl -p
+    if ! grep -q "vm.swappiness" /etc/sysctl.conf; then
+        echo "vm.swappiness=10" >> /etc/sysctl.conf
+        echo "vm.vfs_cache_pressure=50" >> /etc/sysctl.conf
+        sysctl -p
+    fi
     
     print_success "Swap memory configured: $(free -h | grep Swap | awk '{print $2}')"
 }
@@ -295,14 +301,40 @@ EOF
         # Build CA and server certificates
         source vars
         ./clean-all 2>/dev/null || true
-        ./build-ca --batch 2>/dev/null || true
-        ./build-key-server --batch server 2>/dev/null || true
-        ./build-dh 2>/dev/null || true
-        openvpn --genkey --secret keys/ta.key 2>/dev/null || true
+        
+        print_info "Generating CA certificate..."
+        ./build-ca --batch 2>&1 | grep -v "^Generating" || {
+            print_error "Failed to generate CA certificate"
+            return 1
+        }
+        
+        print_info "Generating server certificate..."
+        ./build-key-server --batch server 2>&1 | grep -v "^Generating" || {
+            print_error "Failed to generate server certificate"
+            return 1
+        }
+        
+        print_info "Generating Diffie-Hellman parameters (this may take a while)..."
+        ./build-dh 2>&1 | tail -1 || {
+            print_error "Failed to generate DH parameters"
+            return 1
+        }
+        
+        print_info "Generating TLS auth key..."
+        openvpn --genkey --secret keys/ta.key || {
+            print_error "Failed to generate TLS auth key"
+            return 1
+        }
         
         # Copy certificates to OpenVPN directory
         cd ~/openvpn-ca/keys
-        cp ca.crt server.crt server.key ta.key dh2048.pem /etc/openvpn/ 2>/dev/null || true
+        if [ -f ca.crt ] && [ -f server.crt ] && [ -f server.key ] && [ -f ta.key ]; then
+            cp ca.crt server.crt server.key ta.key dh2048.pem /etc/openvpn/
+            print_success "OpenVPN certificates generated and installed"
+        else
+            print_error "OpenVPN certificate generation incomplete"
+            return 1
+        fi
         
         # Create server configuration
         cat > /etc/openvpn/server.conf <<EOF
@@ -675,7 +707,13 @@ echo "Subdomain ${FULL_DOMAIN} created successfully"
 
 # If SSL is enabled, obtain certificate for subdomain
 if [ -f /usr/bin/certbot ] && [ "${BASE_DOMAIN}" != "localhost" ]; then
-    certbot --nginx -d "${FULL_DOMAIN}" --non-interactive --agree-tos --email "${EMAIL:-admin@${BASE_DOMAIN}}" --redirect 2>/dev/null || true
+    echo "Obtaining SSL certificate for ${FULL_DOMAIN}..."
+    if certbot --nginx -d "${FULL_DOMAIN}" --non-interactive --agree-tos --email "${EMAIL:-admin@${BASE_DOMAIN}}" --redirect 2>/dev/null; then
+        echo "SSL certificate obtained successfully"
+    else
+        echo "Warning: Failed to obtain SSL certificate for ${FULL_DOMAIN}"
+        echo "You can manually obtain it later with: certbot --nginx -d ${FULL_DOMAIN}"
+    fi
 fi
 SUBDOMAIN_SCRIPT
 

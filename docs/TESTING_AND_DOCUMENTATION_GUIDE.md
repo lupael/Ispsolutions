@@ -14,7 +14,8 @@ This guide covers testing the installation script and creating additional docume
 
 2. **Run Installation**
    ```bash
-   wget https://raw.githubusercontent.com/i4edubd/ispsolution/copilot/generate-installation-script-docs/install.sh
+   # Download from main branch once merged
+   wget https://raw.githubusercontent.com/i4edubd/ispsolution/main/install.sh
    chmod +x install.sh
    
    # Test basic installation
