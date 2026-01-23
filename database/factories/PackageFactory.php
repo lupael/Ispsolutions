@@ -24,7 +24,6 @@ class PackageFactory extends Factory
             'validity_days' => $this->faker->randomElement([1, 7, 15, 30, 90, 365]),
             'bandwidth_up' => $this->faker->randomElement([512, 1024, 2048, 5120, 10240]),
             'bandwidth_down' => $this->faker->randomElement([1024, 2048, 5120, 10240, 20480]),
-            'data_limit' => $this->faker->optional()->randomElement([5, 10, 25, 50, 100]), // in GB
             'is_active' => true,
         ];
     }
