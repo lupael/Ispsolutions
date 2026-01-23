@@ -40,6 +40,7 @@ Choose the guide for your role:
 - **[API Documentation](docs/API.md)** - Complete REST API reference with authentication and examples
 - **[Testing Guide](docs/TESTING.md)** - How to run and write tests
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
+- **[Post-Deployment Steps](POST_DEPLOYMENT_STEPS.md)** ⭐ - Essential steps after deployment
 - **[Implementation Checklist](docs/TODO_REIMPLEMENT.md)** - Detailed development roadmap
 
 ### Feature Specifications
