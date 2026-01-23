@@ -349,8 +349,9 @@ class AdminController extends Controller
                     // Find or create customer if auto_create_customers is enabled
                     $customerId = null;
                     if ($validated['auto_create_customers'] ?? false) {
+                        $emailDomain = config('app.imported_user_domain', 'imported.local');
                         $customer = User::firstOrCreate(
-                            ['email' => $secret['name'] . '@imported.local'],
+                            ['email' => $secret['name'] . '@' . $emailDomain],
                             [
                                 'name' => $secret['name'],
                                 'password' => bcrypt($secret['password'] ?? 'password'),
