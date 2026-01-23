@@ -24,7 +24,8 @@
 
     <!-- Router Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <form class="p-6 space-y-6">
+        <form action="{{ route('panel.admin.network.routers.store') }}" method="POST" class="p-6 space-y-6">
+            @csrf
             <!-- Basic Information -->
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Basic Information</h3>
