@@ -81,7 +81,7 @@ trait HasOnlineStatus
     /**
      * Scope to filter only online customers.
      */
-    public function scopeOnline($query)
+    public function scopeOnline($query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereIn('username', function ($subQuery) {
             $subQuery->select('username')
@@ -93,7 +93,7 @@ trait HasOnlineStatus
     /**
      * Scope to filter only offline customers.
      */
-    public function scopeOffline($query)
+    public function scopeOffline($query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereNotIn('username', function ($subQuery) {
             $subQuery->select('username')

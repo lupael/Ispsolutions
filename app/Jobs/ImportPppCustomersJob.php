@@ -65,7 +65,7 @@ class ImportPppCustomersJob implements ShouldQueue
             'total_count' => 0,
             'success_count' => 0,
             'failed_count' => 0,
-            'options' => json_encode($this->options),
+            'options' => $this->options,
         ]);
 
         try {
@@ -120,7 +120,7 @@ class ImportPppCustomersJob implements ShouldQueue
                 'status' => 'completed',
                 'success_count' => $successCount,
                 'failed_count' => $failedCount,
-                'errors' => json_encode($errors),
+                'errors' => $errors,
                 'completed_at' => now(),
             ]);
 
@@ -134,7 +134,7 @@ class ImportPppCustomersJob implements ShouldQueue
         } catch (\Exception $e) {
             $import->update([
                 'status' => 'failed',
-                'errors' => json_encode([['error' => $e->getMessage()]]),
+                'errors' => [['error' => $e->getMessage()]],
                 'completed_at' => now(),
             ]);
 

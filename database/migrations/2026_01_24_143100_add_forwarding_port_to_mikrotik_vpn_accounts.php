@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::table('mikrotik_vpn_accounts', function (Blueprint $table) {
             if (!Schema::hasColumn('mikrotik_vpn_accounts', 'forwarding_port')) {
-                $table->integer('forwarding_port')->nullable()->after('is_active');
+                // Add column at the end if is_active doesn't exist
+                $hasIsActive = Schema::hasColumn('mikrotik_vpn_accounts', 'is_active');
+                if ($hasIsActive) {
+                    $table->integer('forwarding_port')->nullable()->after('is_active');
+                } else {
+                    $table->integer('forwarding_port')->nullable();
+                }
                 $table->index('forwarding_port');
             }
         });
