@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('customer_volume_limits', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->unsignedBigInteger('monthly_limit_mb')->nullable(); // Monthly data cap in MB
             $table->unsignedBigInteger('daily_limit_mb')->nullable(); // Daily data cap in MB
@@ -24,6 +25,8 @@ return new class extends Migration
             $table->boolean('rollover_enabled')->default(false);
             $table->unsignedBigInteger('rollover_balance_mb')->default(0);
             $table->timestamps();
+            
+            $table->index('tenant_id');
         });
     }
 

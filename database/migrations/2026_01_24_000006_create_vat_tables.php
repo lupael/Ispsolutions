@@ -13,16 +13,20 @@ return new class extends Migration
     {
         Schema::create('vat_profiles', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->string('name'); // e.g., Standard, Reduced, Zero
             $table->decimal('rate', 5, 2); // VAT rate percentage (e.g., 15.00, 5.00, 0.00)
             $table->text('description')->nullable();
             $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            
+            $table->index('tenant_id');
         });
 
         Schema::create('vat_collections', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('invoice_id')->nullable()->constrained('invoices')->cascadeOnDelete();
             $table->foreignId('payment_id')->nullable()->constrained('payments')->cascadeOnDelete();
             $table->foreignId('vat_profile_id')->constrained('vat_profiles')->cascadeOnDelete();
@@ -34,6 +38,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->index(['tax_period', 'vat_profile_id']);
+            $table->index('tenant_id');
         });
     }
 

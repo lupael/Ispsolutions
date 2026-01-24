@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('customer_mac_addresses', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('mac_address', 17)->index();
             $table->string('device_name')->nullable();
@@ -25,6 +26,7 @@ return new class extends Migration
             
             // Ensure MAC address is unique per customer
             $table->unique(['user_id', 'mac_address']);
+            $table->index('tenant_id');
         });
     }
 

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('advance_payments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->decimal('amount', 10, 2);
             $table->decimal('remaining_balance', 10, 2);
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->index(['user_id', 'remaining_balance']);
+            $table->index('tenant_id');
         });
     }
 

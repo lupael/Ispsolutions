@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('customer_time_limits', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->unsignedInteger('daily_minutes_limit')->nullable(); // Daily time limit in minutes
             $table->unsignedInteger('monthly_minutes_limit')->nullable(); // Monthly time limit in minutes
@@ -25,6 +26,8 @@ return new class extends Migration
             $table->date('day_reset_date')->nullable();
             $table->date('month_reset_date')->nullable();
             $table->timestamps();
+            
+            $table->index('tenant_id');
         });
     }
 

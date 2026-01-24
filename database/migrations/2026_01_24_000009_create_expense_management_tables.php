@@ -13,24 +13,31 @@ return new class extends Migration
     {
         Schema::create('expense_categories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('color')->default('#3B82F6'); // For UI display
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            
+            $table->index('tenant_id');
         });
 
         Schema::create('expense_subcategories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('expense_category_id')->constrained('expense_categories')->cascadeOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            
+            $table->index('tenant_id');
         });
 
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('expense_category_id')->constrained('expense_categories')->cascadeOnDelete();
             $table->foreignId('expense_subcategory_id')->nullable()->constrained('expense_subcategories')->nullOnDelete();
             $table->string('title');
@@ -45,6 +52,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->index(['expense_date', 'expense_category_id']);
+            $table->index('tenant_id');
         });
     }
 

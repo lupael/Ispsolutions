@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('custom_prices', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('package_id')->nullable()->constrained('packages')->cascadeOnDelete();
             $table->decimal('custom_price', 10, 2);
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->unique(['user_id', 'package_id']);
+            $table->index('tenant_id');
         });
     }
 

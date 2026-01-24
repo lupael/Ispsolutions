@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('sms_broadcast_jobs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->string('title');
             $table->text('message');
             $table->string('recipient_type'); // all, customers, operators, specific_zone, etc.
@@ -26,6 +27,8 @@ return new class extends Migration
             $table->timestamp('completed_at')->nullable();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
+            
+            $table->index('tenant_id');
         });
     }
 

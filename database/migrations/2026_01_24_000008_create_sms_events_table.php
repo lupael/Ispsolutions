@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('sms_events', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
             $table->string('event_name'); // bill_generated, payment_received, package_expired, etc.
             $table->string('event_label'); // Human-readable label
             $table->text('message_template');
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->unique('event_name');
+            $table->index('tenant_id');
         });
     }
 
