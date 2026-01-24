@@ -857,8 +857,11 @@ class AdminController extends Controller
     public function customersShow($id): View
     {
         $customer = NetworkUser::with('package', 'sessions')->findOrFail($id);
+        
+        // Load ONU information if exists
+        $onu = \App\Models\Onu::where('network_user_id', $id)->with('olt')->first();
 
-        return view('panels.admin.customers.show', compact('customer'));
+        return view('panels.admin.customers.show', compact('customer', 'onu'));
     }
 
     /**

@@ -161,6 +161,76 @@
             </div>
         </div>
 
+        <!-- ONU Information (if fiber/OLT customer) -->
+        @if($onu)
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">ONU Details</h2>
+                    <a href="{{ route('panel.admin.network.onu.show', $onu) }}" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                        View Full Details →
+                    </a>
+                </div>
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <dl class="space-y-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Serial Number</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $onu->serial_number }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">OLT Device</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $onu->olt?->name ?? 'N/A' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">PON Port / ONU ID</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $onu->pon_port }} / {{ $onu->onu_id }}</dd>
+                        </div>
+                        @if($onu->mac_address)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ONU MAC Address</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $onu->mac_address }}</dd>
+                        </div>
+                        @endif
+                    </dl>
+                    <dl class="space-y-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                            <dd class="mt-1">
+                                @if($onu->status === 'online')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Online
+                                    </span>
+                                @else
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Offline
+                                    </span>
+                                @endif
+                            </dd>
+                        </div>
+                        @if($onu->signal_rx)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Rx Power</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $onu->signal_rx }} dBm</dd>
+                        </div>
+                        @endif
+                        @if($onu->signal_tx)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Tx Power</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $onu->signal_tx }} dBm</dd>
+                        </div>
+                        @endif
+                        @if($onu->distance)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Distance</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $onu->distance }} meters</dd>
+                        </div>
+                        @endif
+                    </dl>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Usage Stats -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
