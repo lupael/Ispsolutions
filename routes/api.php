@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\DataController;
+use App\Http\Controllers\Api\V1\GraphController;
 use App\Http\Controllers\Api\V1\IpamController;
 use App\Http\Controllers\Api\V1\MikrotikController;
 use App\Http\Controllers\Api\V1\MonitoringController;
@@ -177,6 +178,14 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
         Route::put('/{id}', [NetworkUserController::class, 'update'])->name('api.network-users.update');
         Route::delete('/{id}', [NetworkUserController::class, 'destroy'])->name('api.network-users.destroy');
         Route::post('/{id}/sync-radius', [NetworkUserController::class, 'syncToRadius'])->name('api.network-users.sync-radius');
+    });
+
+    // Bandwidth Graph Routes
+    Route::prefix('customers')->middleware(['auth', 'rate_limit:api'])->group(function () {
+        Route::get('/{id}/graphs/hourly', [GraphController::class, 'hourly'])->name('api.customers.graphs.hourly');
+        Route::get('/{id}/graphs/daily', [GraphController::class, 'daily'])->name('api.customers.graphs.daily');
+        Route::get('/{id}/graphs/weekly', [GraphController::class, 'weekly'])->name('api.customers.graphs.weekly');
+        Route::get('/{id}/graphs/monthly', [GraphController::class, 'monthly'])->name('api.customers.graphs.monthly');
     });
 
     // Monitoring Routes

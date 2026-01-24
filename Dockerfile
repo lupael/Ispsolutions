@@ -12,11 +12,17 @@ RUN apk add --no-cache \
     zip \
     unzip \
     nodejs \
-    npm
+    npm \
+    rrdtool-dev \
+    rrdtool
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql zip gd
+
+# Install RRD PHP extension
+RUN pecl install rrd \
+    && docker-php-ext-enable rrd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -49,7 +55,8 @@ RUN apk add --no-cache \
     mysql-client \
     nodejs \
     npm \
-    bash
+    bash \
+    rrdtool
 
 # Copy compiled PHP extensions from builder instead of recompiling
 COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
@@ -64,6 +71,8 @@ COPY --from=builder --chown=www-data:www-data /var/www /var/www
 # Create storage directories and set permissions
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
     && mkdir -p storage/logs \
+    && mkdir -p storage/app/rrd \
+    && mkdir -p storage/app/graphs \
     && mkdir -p bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 

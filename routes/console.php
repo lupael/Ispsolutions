@@ -41,3 +41,9 @@ Schedule::command('notifications:overdue --force')->daily()->at('09:00');
 
 // Schedule hotspot commands
 Schedule::command('hotspot:deactivate-expired --force')->daily()->at('00:45');
+
+// Schedule bandwidth collection
+Schedule::job(new \App\Jobs\CollectBandwidthDataJob)->everyFiveMinutes();
+
+// Schedule temp customer cleanup
+Schedule::job(new \App\Jobs\CleanupExpiredTempCustomersJob)->daily()->at('02:30');

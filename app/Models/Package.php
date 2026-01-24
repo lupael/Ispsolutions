@@ -17,6 +17,8 @@ class Package extends Model
     protected $fillable = [
         'tenant_id',
         'operator_id',
+        'master_package_id',
+        'operator_package_rate_id',
         'name',
         'description',
         'price',
@@ -34,6 +36,8 @@ class Package extends Model
         'bandwidth_download' => 'integer',
         'validity_days' => 'integer',
         'is_global' => 'boolean',
+        'master_package_id' => 'integer',
+        'operator_package_rate_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -46,6 +50,16 @@ class Package extends Model
     public function operator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'operator_id');
+    }
+
+    public function masterPackage(): BelongsTo
+    {
+        return $this->belongsTo(MasterPackage::class, 'master_package_id');
+    }
+
+    public function operatorPackageRate(): BelongsTo
+    {
+        return $this->belongsTo(OperatorPackageRate::class, 'operator_package_rate_id');
     }
 
     public function profileMappings(): HasMany

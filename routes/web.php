@@ -8,6 +8,9 @@ use App\Http\Controllers\Panel\CardDistributorController;
 use App\Http\Controllers\Panel\CustomerController;
 use App\Http\Controllers\Panel\DeveloperController;
 use App\Http\Controllers\Panel\ManagerController;
+use App\Http\Controllers\Panel\MasterPackageController;
+use App\Http\Controllers\Panel\OperatorPackageController;
+use App\Http\Controllers\Panel\RouterProvisioningController;
 use App\Http\Controllers\Panel\StaffController;
 use App\Http\Controllers\Panel\SuperAdminController;
 use App\Http\Controllers\Panel\TicketController;
@@ -88,12 +91,21 @@ Route::prefix('hotspot/login')->name('hotspot.login')->group(function () {
     
     Route::get('/device-conflict', [HotspotLoginController::class, 'showDeviceConflict'])->name('.device-conflict');
     Route::post('/force-login', [HotspotLoginController::class, 'forceLogin'])->name('.force-login');
+    
+    // Scenario 8: Link login (public access)
+    Route::get('/link/{token}', [HotspotLoginController::class, 'processLinkLogin'])->name('.link-login');
+    
+    // Scenario 10: Federated login
+    Route::post('/federated', [HotspotLoginController::class, 'federatedLogin'])->name('.federated');
 });
 
 // Hotspot user dashboard and logout (requires hotspot session)
 Route::prefix('hotspot')->name('hotspot.')->middleware(['hotspot.auth'])->group(function () {
     Route::get('/dashboard', [HotspotLoginController::class, 'showDashboard'])->name('dashboard');
     Route::post('/logout', [HotspotLoginController::class, 'logout'])->name('logout');
+    
+    // Scenario 8: Link login dashboard
+    Route::get('/link-dashboard', [HotspotLoginController::class, 'showLinkDashboard'])->name('link-dashboard');
 });
 
 // Admin hotspot management routes
@@ -108,6 +120,9 @@ Route::prefix('hotspot')->name('hotspot.')->middleware(['auth'])->group(function
     Route::post('{hotspotUser}/suspend', [HotspotController::class, 'suspend'])->name('suspend');
     Route::post('{hotspotUser}/reactivate', [HotspotController::class, 'reactivate'])->name('reactivate');
     Route::post('{hotspotUser}/renew', [HotspotController::class, 'renew'])->name('renew');
+    
+    // Scenario 8: Generate link login (admin only)
+    Route::post('/generate-link', [HotspotLoginController::class, 'generateLinkLogin'])->name('generate-link');
 });
 
 /*
@@ -270,6 +285,12 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/customers-online', [AdminController::class, 'onlineCustomers'])->name('customers.online');
     Route::get('/customers-offline', [AdminController::class, 'offlineCustomers'])->name('customers.offline');
 
+    // Customer Wizard
+    Route::get('/customers/wizard/start', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'start'])->name('customers.wizard.start');
+    Route::get('/customers/wizard/step/{step}', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'show'])->name('customers.wizard.step');
+    Route::post('/customers/wizard/step/{step}', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'store'])->name('customers.wizard.store');
+    Route::post('/customers/wizard/cancel', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'cancel'])->name('customers.wizard.cancel');
+
     // Zone Management
     Route::get('/zones', [\App\Http\Controllers\Panel\ZoneController::class, 'index'])->name('zones.index');
     Route::get('/zones/create', [\App\Http\Controllers\Panel\ZoneController::class, 'create'])->name('zones.create');
@@ -324,11 +345,23 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::post('/operators/{operator}/deduct-funds', [AdminController::class, 'processDeductOperatorFunds'])->name('operators.process-deduct-funds');
     Route::get('/operators/{operator}/wallet-history', [AdminController::class, 'operatorWalletHistory'])->name('operators.wallet-history');
 
-    // Operator Package Rates
+    // Operator Package Rates (Legacy - keeping for backward compatibility)
     Route::get('/operators/package-rates', [AdminController::class, 'operatorPackageRates'])->name('operators.package-rates');
     Route::get('/operators/{operator}/assign-package-rate', [AdminController::class, 'assignOperatorPackageRate'])->name('operators.assign-package-rate');
     Route::post('/operators/{operator}/assign-package-rate', [AdminController::class, 'storeOperatorPackageRate'])->name('operators.store-package-rate');
     Route::delete('/operators/{operator}/package-rate/{package}', [AdminController::class, 'deleteOperatorPackageRate'])->name('operators.delete-package-rate');
+
+    // Operator Package Management (3-tier hierarchy)
+    Route::prefix('operator-packages')->name('operator-packages.')->group(function () {
+        Route::get('/', [OperatorPackageController::class, 'index'])->name('index');
+        Route::get('/create', [OperatorPackageController::class, 'create'])->name('create');
+        Route::post('/', [OperatorPackageController::class, 'store'])->name('store');
+        Route::get('/{operatorRate}/edit', [OperatorPackageController::class, 'edit'])->name('edit');
+        Route::put('/{operatorRate}', [OperatorPackageController::class, 'update'])->name('update');
+        Route::delete('/{operatorRate}', [OperatorPackageController::class, 'destroy'])->name('destroy');
+        Route::get('/suggested-price', [OperatorPackageController::class, 'getSuggestedPrice'])->name('suggested-price');
+        Route::post('/{operatorRate}/assign-sub-operator', [OperatorPackageController::class, 'assignToSubOperator'])->name('assign-sub-operator');
+    });
 
     // Operator SMS Rates
     Route::get('/operators/sms-rates', [AdminController::class, 'operatorSmsRates'])->name('operators.sms-rates');
@@ -357,6 +390,26 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/network/routers/{id}/edit', [AdminController::class, 'routersEdit'])->name('network.routers.edit');
     Route::put('/network/routers/{id}', [AdminController::class, 'routersUpdate'])->name('network.routers.update');
     Route::delete('/network/routers/{id}', [AdminController::class, 'routersDestroy'])->middleware('password.confirm')->name('network.routers.destroy');
+    
+    // Router Provisioning Routes
+    Route::prefix('routers/provision')->name('routers.provision.')->group(function () {
+        Route::get('/', [RouterProvisioningController::class, 'index'])->name('index');
+        Route::get('/{routerId}', [RouterProvisioningController::class, 'show'])->name('show');
+        Route::post('/preview', [RouterProvisioningController::class, 'preview'])->name('preview');
+        Route::post('/execute', [RouterProvisioningController::class, 'provision'])->name('execute');
+        Route::post('/test-connection', [RouterProvisioningController::class, 'testConnection'])->name('test-connection');
+        Route::post('/backup', [RouterProvisioningController::class, 'backup'])->name('backup');
+        Route::post('/rollback', [RouterProvisioningController::class, 'rollback'])->name('rollback');
+        Route::get('/{routerId}/logs', [RouterProvisioningController::class, 'logs'])->name('logs');
+        Route::get('/{routerId}/backups', [RouterProvisioningController::class, 'backups'])->name('backups');
+        
+        // Template Management
+        Route::get('/templates/manage', [RouterProvisioningController::class, 'templates'])->name('templates');
+        Route::get('/templates/create', [RouterProvisioningController::class, 'createTemplate'])->name('templates.create');
+        Route::post('/templates', [RouterProvisioningController::class, 'storeTemplate'])->name('templates.store');
+        Route::get('/templates/{templateId}', [RouterProvisioningController::class, 'getTemplate'])->name('templates.show');
+    });
+    
     Route::get('/network/olt', [AdminController::class, 'oltList'])->name('network.olt');
     Route::get('/network/olt/create', [AdminController::class, 'oltCreate'])->name('network.olt.create');
     Route::get('/olt/dashboard', [AdminController::class, 'oltDashboard'])->name('olt.dashboard');
@@ -691,6 +744,13 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     // System Tools
     Route::get('/settings', [DeveloperController::class, 'settings'])->name('settings');
     Route::get('/debug', [DeveloperController::class, 'debug'])->name('debug');
+
+    // Master Packages (3-tier hierarchy)
+    Route::resource('master-packages', MasterPackageController::class);
+    Route::get('/master-packages/{masterPackage}/assign', [MasterPackageController::class, 'assignToOperators'])->name('master-packages.assign');
+    Route::post('/master-packages/{masterPackage}/assign', [MasterPackageController::class, 'storeOperatorAssignment'])->name('master-packages.store-assignment');
+    Route::delete('/master-packages/{masterPackage}/operators/{operatorRate}', [MasterPackageController::class, 'removeOperatorAssignment'])->name('master-packages.remove-operator');
+    Route::get('/master-packages/{masterPackage}/stats', [MasterPackageController::class, 'stats'])->name('master-packages.stats');
 });
 
 /*

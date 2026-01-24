@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\HotspotLoginLog;
 use App\Models\NetworkUser;
+use App\Models\RadAcct;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class HotspotScenarioDetectionService
 {
@@ -377,5 +380,371 @@ class HotspotScenarioDetectionService
             ->value('value');
 
         return $setting === '1' || $setting === 'true';
+    }
+
+    /**
+     * Scenario 8: Generate temporary link token for public access.
+     * 
+     * @param int|null $tenantId Tenant ID for isolation
+     * @param int $durationMinutes Link validity duration (default: 60 minutes)
+     * @param array $metadata Additional metadata for the link
+     * @return array Link login details
+     */
+    public function generateLinkLogin(?int $tenantId = null, int $durationMinutes = 60, array $metadata = []): array
+    {
+        // Generate unique link token
+        $linkToken = Str::random(64);
+        $expiresAt = now()->addMinutes($durationMinutes);
+        $sessionId = Str::uuid()->toString();
+
+        // Create login log entry
+        $loginLog = HotspotLoginLog::create([
+            'tenant_id' => $tenantId,
+            'session_id' => $sessionId,
+            'login_type' => HotspotLoginLog::TYPE_LINK,
+            'scenario' => 'link_login',
+            'link_token' => $linkToken,
+            'link_expires_at' => $expiresAt,
+            'is_link_login' => true,
+            'status' => HotspotLoginLog::STATUS_ACTIVE,
+            'metadata' => $metadata,
+        ]);
+
+        $loginUrl = route('hotspot.link-login', ['token' => $linkToken]);
+
+        return [
+            'scenario' => 'link_login',
+            'link_token' => $linkToken,
+            'session_id' => $sessionId,
+            'expires_at' => $expiresAt,
+            'duration_minutes' => $durationMinutes,
+            'login_url' => $loginUrl,
+            'login_log_id' => $loginLog->id,
+            'message' => 'Temporary access link generated successfully',
+        ];
+    }
+
+    /**
+     * Scenario 8: Verify and process link login.
+     * 
+     * @param string $linkToken The temporary link token
+     * @param string $macAddress Client MAC address
+     * @param string|null $ipAddress Client IP address
+     * @return array Login verification result
+     */
+    public function verifyLinkLogin(string $linkToken, string $macAddress, ?string $ipAddress = null): array
+    {
+        // Find login log by token
+        $loginLog = HotspotLoginLog::where('link_token', $linkToken)
+            ->where('is_link_login', true)
+            ->first();
+
+        if (!$loginLog) {
+            return [
+                'scenario' => 'link_login_invalid',
+                'allow_login' => false,
+                'message' => 'Invalid or expired link token',
+                'action' => 'contact_support',
+            ];
+        }
+
+        // Check if token is expired
+        if ($loginLog->isLinkExpired()) {
+            $loginLog->update(['status' => HotspotLoginLog::STATUS_EXPIRED]);
+            
+            return [
+                'scenario' => 'link_login_expired',
+                'allow_login' => false,
+                'message' => 'This access link has expired',
+                'action' => 'request_new_link',
+                'expired_at' => $loginLog->link_expires_at,
+            ];
+        }
+
+        // Update login log with device info
+        $loginLog->update([
+            'mac_address' => $macAddress,
+            'ip_address' => $ipAddress,
+            'login_at' => now(),
+        ]);
+
+        return [
+            'scenario' => 'link_login_success',
+            'allow_login' => true,
+            'login_log' => $loginLog,
+            'session_id' => $loginLog->session_id,
+            'expires_at' => $loginLog->link_expires_at,
+            'message' => 'Public access granted',
+            'action' => 'allow',
+        ];
+    }
+
+    /**
+     * Scenario 9: Handle logout and update tracking.
+     * 
+     * @param string $sessionId Session ID to logout
+     * @param string $username Username (for RADIUS lookup)
+     * @param array $sessionData Additional session data
+     * @return array Logout result
+     */
+    public function handleLogout(string $sessionId, ?string $username = null, array $sessionData = []): array
+    {
+        // Find active login log
+        $loginLog = HotspotLoginLog::where('session_id', $sessionId)
+            ->active()
+            ->first();
+
+        if (!$loginLog) {
+            return [
+                'scenario' => 'logout_session_not_found',
+                'success' => false,
+                'message' => 'Active session not found',
+            ];
+        }
+
+        // Mark session as logged out
+        $loginLog->markAsLoggedOut();
+
+        // Update radacct if username provided
+        if ($username) {
+            $this->updateRadacctOnLogout($username, $sessionData);
+        }
+
+        // Clear hotspot user session if exists
+        if ($loginLog->hotspot_user_id) {
+            $hotspotUser = $loginLog->hotspotUser;
+            if ($hotspotUser && $hotspotUser->active_session_id === $sessionId) {
+                $hotspotUser->clearSession();
+            }
+        }
+
+        Log::info('User logged out', [
+            'session_id' => $sessionId,
+            'username' => $username,
+            'duration' => $loginLog->session_duration,
+        ]);
+
+        return [
+            'scenario' => 'logout_success',
+            'success' => true,
+            'session_id' => $sessionId,
+            'login_at' => $loginLog->login_at,
+            'logout_at' => $loginLog->logout_at,
+            'duration' => $loginLog->session_duration,
+            'message' => 'Logout successful',
+        ];
+    }
+
+    /**
+     * Update RADIUS accounting on logout.
+     * 
+     * @param string $username Username to update
+     * @param array $sessionData Session data (bytes in/out, terminate cause, etc.)
+     */
+    private function updateRadacctOnLogout(string $username, array $sessionData = []): void
+    {
+        try {
+            // Find active session in radacct
+            $radacct = RadAcct::where('username', $username)
+                ->whereNull('acctstoptime')
+                ->orderBy('acctstarttime', 'desc')
+                ->first();
+
+            if ($radacct) {
+                $stopTime = now();
+                $sessionTime = $radacct->acctstarttime ? 
+                    $stopTime->diffInSeconds($radacct->acctstarttime) : 0;
+
+                $radacct->update([
+                    'acctstoptime' => $stopTime,
+                    'acctsessiontime' => $sessionTime,
+                    'acctterminatecause' => $sessionData['terminate_cause'] ?? 'User-Request',
+                    'acctinputoctets' => $sessionData['input_octets'] ?? $radacct->acctinputoctets ?? 0,
+                    'acctoutputoctets' => $sessionData['output_octets'] ?? $radacct->acctoutputoctets ?? 0,
+                ]);
+
+                Log::info('RadAcct updated on logout', [
+                    'username' => $username,
+                    'session_time' => $sessionTime,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to update radacct on logout', [
+                'username' => $username,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Scenario 10: Cross-radius server lookup for federated authentication.
+     * 
+     * @param string $username Username to lookup
+     * @param int|null $tenantId Current tenant ID
+     * @return array Lookup result with home operator info
+     */
+    public function crossRadiusLookup(string $username, ?int $tenantId = null): array
+    {
+        // Extract realm from username if exists (user@realm format)
+        $parts = explode('@', $username);
+        $localUsername = $parts[0];
+        $realm = $parts[1] ?? null;
+
+        // Check if user exists in current tenant
+        $localUser = $this->findCustomerByUsername($localUsername, $tenantId);
+
+        if ($localUser) {
+            // User found locally
+            return [
+                'scenario' => 'local_authentication',
+                'allow_login' => true,
+                'federated' => false,
+                'customer' => $localUser,
+                'message' => 'User authenticated locally',
+                'action' => 'allow',
+            ];
+        }
+
+        // If realm is specified, attempt federated lookup
+        if ($realm) {
+            $homeOperator = $this->findHomeOperator($realm);
+
+            if ($homeOperator) {
+                // Redirect to home operator
+                return [
+                    'scenario' => 'federated_authentication',
+                    'allow_login' => false,
+                    'federated' => true,
+                    'home_operator' => $homeOperator,
+                    'realm' => $realm,
+                    'username' => $username,
+                    'redirect_url' => $this->buildFederatedRedirectUrl($homeOperator, $username),
+                    'message' => 'User belongs to another operator. Redirecting to home operator.',
+                    'action' => 'redirect',
+                ];
+            }
+        }
+
+        // User not found locally or in federation
+        return [
+            'scenario' => 'user_not_found',
+            'allow_login' => false,
+            'federated' => false,
+            'username' => $username,
+            'message' => 'User not found in local or federated systems',
+            'action' => 'contact_support',
+        ];
+    }
+
+    /**
+     * Find customer by username.
+     */
+    private function findCustomerByUsername(string $username, ?int $tenantId): ?NetworkUser
+    {
+        $query = NetworkUser::where('username', $username);
+        
+        if ($tenantId) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        return $query->first();
+    }
+
+    /**
+     * Find home operator by realm.
+     */
+    private function findHomeOperator(string $realm): ?array
+    {
+        // Query central registry for operator by realm
+        // In a real multi-operator setup, this would query a central database
+        $operator = DB::table('operator_registry')
+            ->where('realm', $realm)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$operator) {
+            return null;
+        }
+
+        return [
+            'id' => $operator->id,
+            'name' => $operator->name,
+            'realm' => $operator->realm,
+            'portal_url' => $operator->portal_url,
+            'radius_server' => $operator->radius_server ?? null,
+        ];
+    }
+
+    /**
+     * Build federated redirect URL.
+     * 
+     * @throws \InvalidArgumentException If the base URL is invalid
+     */
+    private function buildFederatedRedirectUrl(array $homeOperator, string $username): string
+    {
+        $baseUrl = rtrim($homeOperator['portal_url'] ?? '', '/');
+        
+        // Validate base URL
+        if (empty($baseUrl)) {
+            throw new \InvalidArgumentException('Home operator portal URL is missing');
+        }
+        
+        // Parse existing URL to preserve any existing query parameters
+        $parsedUrl = parse_url($baseUrl);
+        
+        // Validate required URL components
+        if (!isset($parsedUrl['host']) || empty($parsedUrl['host'])) {
+            throw new \InvalidArgumentException("Invalid home operator portal URL: {$baseUrl}");
+        }
+        
+        $path = ($parsedUrl['path'] ?? '') . '/hotspot/login';
+        
+        // Build query parameters
+        $params = [
+            'username' => $username,
+            'realm' => $homeOperator['realm'],
+            'federated' => 'true',
+        ];
+        
+        // Merge with existing query parameters if any
+        if (!empty($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $existingParams);
+            $params = array_merge($existingParams, $params);
+        }
+        
+        // Reconstruct URL
+        $scheme = $parsedUrl['scheme'] ?? 'https';
+        $host = $parsedUrl['host'];
+        $port = !empty($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
+        
+        return $scheme . '://' . $host . $port . $path . '?' . http_build_query($params);
+    }
+
+    /**
+     * Log federated login attempt.
+     */
+    public function logFederatedLogin(
+        string $username,
+        array $homeOperator,
+        string $macAddress,
+        ?string $ipAddress,
+        ?int $tenantId
+    ): HotspotLoginLog {
+        return HotspotLoginLog::create([
+            'tenant_id' => $tenantId,
+            'username' => $username,
+            'mac_address' => $macAddress,
+            'ip_address' => $ipAddress,
+            'session_id' => Str::uuid()->toString(),
+            'login_type' => HotspotLoginLog::TYPE_FEDERATED,
+            'scenario' => 'federated_authentication',
+            'home_operator_id' => $homeOperator['id'] ?? null,
+            'federated_login' => true,
+            'redirect_url' => $homeOperator['portal_url'] ?? null,
+            'status' => HotspotLoginLog::STATUS_ACTIVE,
+            'metadata' => [
+                'home_operator' => $homeOperator,
+            ],
+        ]);
     }
 }
