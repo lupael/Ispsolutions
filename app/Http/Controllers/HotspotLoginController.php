@@ -462,6 +462,7 @@ class HotspotLoginController extends Controller
         return view('hotspot-login.link-dashboard', [
             'session_id' => $authData['session_id'],
             'expires_at' => $authData['expires_at'],
+            'logged_in_at' => $authData['logged_in_at'],
         ]);
     }
 
@@ -621,8 +622,8 @@ class HotspotLoginController extends Controller
     protected function sendLoginSuccessSms(HotspotUser $user, string $macAddress): void
     {
         try {
-            // MAC address in standard format is 17 characters (XX:XX:XX:XX:XX:XX)
-            $macDisplay = substr($macAddress, 0, 17);
+            // Format MAC address for display (handle various formats)
+            $macDisplay = $this->formatMacForDisplay($macAddress);
             
             $message = sprintf(
                 'Login successful! Your device (%s) is now connected. Welcome back!',
@@ -646,6 +647,24 @@ class HotspotLoginController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Format MAC address for display in SMS.
+     * Handles various formats and ensures consistent output.
+     */
+    protected function formatMacForDisplay(string $mac): string
+    {
+        // Remove any separators
+        $cleaned = strtoupper(str_replace([':', '-', '.'], '', $mac));
+        
+        // Validate length (should be 12 hex characters)
+        if (strlen($cleaned) !== 12 || !ctype_xdigit($cleaned)) {
+            return 'Unknown Device';
+        }
+        
+        // Format as XX:XX:XX:XX:XX:XX
+        return implode(':', str_split($cleaned, 2));
     }
 
     /**

@@ -677,13 +677,26 @@ class HotspotScenarioDetectionService
 
     /**
      * Build federated redirect URL.
+     * 
+     * @throws \InvalidArgumentException If the base URL is invalid
      */
     private function buildFederatedRedirectUrl(array $homeOperator, string $username): string
     {
         $baseUrl = rtrim($homeOperator['portal_url'] ?? '', '/');
         
+        // Validate base URL
+        if (empty($baseUrl)) {
+            throw new \InvalidArgumentException('Home operator portal URL is missing');
+        }
+        
         // Parse existing URL to preserve any existing query parameters
         $parsedUrl = parse_url($baseUrl);
+        
+        // Validate required URL components
+        if (!isset($parsedUrl['host']) || empty($parsedUrl['host'])) {
+            throw new \InvalidArgumentException("Invalid home operator portal URL: {$baseUrl}");
+        }
+        
         $path = ($parsedUrl['path'] ?? '') . '/hotspot/login';
         
         // Build query parameters
@@ -701,7 +714,7 @@ class HotspotScenarioDetectionService
         
         // Reconstruct URL
         $scheme = $parsedUrl['scheme'] ?? 'https';
-        $host = $parsedUrl['host'] ?? '';
+        $host = $parsedUrl['host'];
         $port = !empty($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
         
         return $scheme . '://' . $host . $port . $path . '?' . http_build_query($params);

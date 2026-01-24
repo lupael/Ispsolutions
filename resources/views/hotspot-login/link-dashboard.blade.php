@@ -160,7 +160,7 @@
 <script>
     // Calculate and update time remaining
     const expiresAt = {{ $expires_at }};
-    const startTime = Date.now() / 1000;
+    const startTime = {{ $logged_in_at }}; // Use actual login time from session
     
     function updateTimeRemaining() {
         const now = Date.now() / 1000;
@@ -193,13 +193,13 @@
         
         document.getElementById('time-remaining').textContent = timeString;
         
-        // Update progress bar
+        // Update progress bar (calculate based on actual login time)
         const totalDuration = expiresAt - startTime;
         
         // Avoid division by zero
         if (totalDuration > 0) {
             const elapsed = now - startTime;
-            const progress = (elapsed / totalDuration) * 100;
+            const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
             
             document.getElementById('progress-bar').style.width = progress + '%';
             document.getElementById('progress-percent').textContent = Math.round(progress) + '%';
