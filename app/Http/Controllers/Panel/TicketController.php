@@ -103,7 +103,7 @@ class TicketController extends Controller
         $customer = null;
         if ($customerId) {
             $user = auth()->user();
-            // Only allow admins, super admins, developers, operators, and sub-operators to create tickets for other users
+            // Only allow non-customer users (operator level < 100) to create tickets for other users
             if ($user->operator_level < 100) {
                 $customer = User::find($customerId);
             }
@@ -130,7 +130,7 @@ class TicketController extends Controller
         // Determine the customer_id for the ticket
         $customerId = auth()->user()->id;
         
-        // If customer_id is provided and user is authorized (not a customer), use it
+        // If customer_id is provided and user is not a customer (operator level < 100), use it
         if (isset($validated['customer_id']) && $user->operator_level < 100) {
             $customerId = $validated['customer_id'];
         }
