@@ -1328,31 +1328,32 @@ php artisan test --filter=IpPoolMigrationTest
 
 ---
 
-### 13. Router-to-RADIUS Migration Tool
+### 13. Router-to-RADIUS Migration Tool ✅ COMPLETE
 **Effort:** 2-3 days  
 **Impact:** Medium  
 **Complexity:** Low
+**Status:** ✅ Complete - Full implementation with console command and service
 
 **Tasks:**
-- [ ] Create migration command
-  - [ ] php artisan mikrotik:migrate-to-radius {router_id}
-  - [ ] Interactive prompts for confirmation
-- [ ] Implement migration steps
-  - [ ] Step 1: Verify RADIUS server connectivity
-  - [ ] Step 2: Backup current PPP secrets
-  - [ ] Step 3: Disable local PPP secrets on router
-  - [ ] Step 4: Force disconnect active sessions
-  - [ ] Step 5: Enable RADIUS authentication
-  - [ ] Step 6: Test with sample login
-  - [ ] Step 7: Monitor for issues
-- [ ] Add rollback capability
-  - [ ] Restore PPP secrets from backup
-  - [ ] Re-enable local authentication
-  - [ ] Disable RADIUS
-- [ ] Add safety checks
-  - [ ] Require --force flag for production
-  - [ ] Create backup automatically
-  - [ ] Validate each step before proceeding
+- [x] Create migration command
+  - [x] php artisan mikrotik:migrate-to-radius {router_id}
+  - [x] Interactive prompts for confirmation
+- [x] Implement migration steps
+  - [x] Step 1: Verify RADIUS server connectivity
+  - [x] Step 2: Backup current PPP secrets
+  - [x] Step 3: Disable local PPP secrets on router
+  - [x] Step 4: Force disconnect active sessions
+  - [x] Step 5: Enable RADIUS authentication
+  - [x] Step 6: Test with sample login
+  - [x] Step 7: Monitor for issues
+- [x] Add rollback capability
+  - [x] Restore PPP secrets from backup
+  - [x] Re-enable local authentication
+  - [x] Disable RADIUS
+- [x] Add safety checks
+  - [x] Require --force flag for production
+  - [x] Create backup automatically
+  - [x] Validate each step before proceeding
 
 **Files to Create/Modify:**
 ```
