@@ -24,6 +24,8 @@ All delete/destroy operations are currently unprotected and can be performed wit
 
 **File**: `bootstrap/app.php`
 
+Add the password confirmation middleware alias:
+
 ```php
 $middleware->alias([
     'role' => \App\Http\Middleware\CheckRole::class,
@@ -34,6 +36,8 @@ $middleware->alias([
     'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class, // ADD THIS
 ]);
 ```
+
+**Note**: Verify this middleware class exists in your Laravel version. For Laravel 12, this is the standard password confirmation middleware.
 
 #### Step 2: Protect Critical Routes
 
@@ -129,8 +133,8 @@ Create separate controllers for destructive operations following this pattern:
 
 **Current**:
 ```php
-// All in UserController
-class AdminController {
+// Current structure uses role-specific controllers
+class SuperAdminController {
     public function usersIndex() { /* ... */ }
     public function usersCreate() { /* ... */ }
     public function usersStore() { /* ... */ }
@@ -141,15 +145,15 @@ class AdminController {
 **Recommended**:
 ```php
 // Main controller
-class AdminController {
+class SuperAdminController {
     public function usersIndex() { /* ... */ }
     public function usersCreate() { /* ... */ }
     public function usersStore() { /* ... */ }
     // No destroy method here
 }
 
-// Separate destruction controller
-class UserDestroyController {
+// Separate destruction controller  
+class SuperAdminUserDestroyController {
     public function create($id) {
         // Show confirmation page with warnings
     }
@@ -249,7 +253,7 @@ Or use custom rate limiter:
 ```php
 // app/Providers/RouteServiceProvider.php
 RateLimiter::for('critical-operations', function (Request $request) {
-    return Limit::perUser(5)->per(60); // 5 per hour per user
+    return Limit::perUser(5)->per(60); // 5 per 60 minutes per user
 });
 
 // In routes

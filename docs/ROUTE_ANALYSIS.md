@@ -428,8 +428,8 @@ The external system has some good security patterns (password confirmation, sepa
 
 ## References
 
-- [Current Role System Documentation](./ROLES_AND_PERMISSIONS.md)
-- [Technical Role System Specification](./technical/ROLE_SYSTEM.md)
-- [Data Isolation Guide](./technical/DATA_ISOLATION.md)
+- [Current Role System Documentation](ROLES_AND_PERMISSIONS.md)
+- [Technical Role System Specification](technical/ROLE_SYSTEM.md)
+- [Data Isolation Guide](technical/DATA_ISOLATION.md)
 - [Laravel Security Best Practices](https://laravel.com/docs/security)
 - [Laravel Authorization](https://laravel.com/docs/authorization)
