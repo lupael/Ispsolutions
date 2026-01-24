@@ -25,6 +25,8 @@ use App\Models\PaymentGateway;
 use App\Models\Role;
 use App\Models\ServicePackage;
 use App\Models\User;
+use App\Services\CustomerCacheService;
+use App\Services\CustomerFilterService;
 use App\Services\ExcelExportService;
 use App\Services\MikrotikService;
 use App\Services\PdfExportService;
@@ -652,21 +654,87 @@ class AdminController extends Controller
     }
 
     /**
-     * Display customers listing.
+     * Display customers listing with advanced filtering and caching.
      */
-    public function customers(): View
+    public function customers(Request $request): View
     {
-        $customers = NetworkUser::with('package')->latest()->paginate(20);
-        $packages = ServicePackage::all();
+        $tenantId = auth()->user()->tenant_id;
+        $roleId = auth()->user()->role_id;
+        $refresh = $request->boolean('refresh', false);
+        $perPage = $request->input('per_page', session('customers_per_page', 25));
+        
+        // Save pagination preference
+        if ($request->has('per_page')) {
+            session(['customers_per_page' => $perPage]);
+        }
+
+        // Initialize services
+        $cacheService = app(CustomerCacheService::class);
+        $filterService = app(CustomerFilterService::class);
+
+        // Get cached customers
+        $allCustomers = $cacheService->getCustomers($tenantId, $roleId, $refresh);
+
+        // Attach online status
+        $allCustomers = $cacheService->attachOnlineStatus($allCustomers, $refresh);
+
+        // Apply filters
+        $filters = $request->only([
+            'connection_type',
+            'billing_type',
+            'status',
+            'payment_status',
+            'zone_id',
+            'package_id',
+            'device_type',
+            'expiry_date_from',
+            'expiry_date_to',
+            'registration_date_from',
+            'registration_date_to',
+            'last_payment_date_from',
+            'last_payment_date_to',
+            'balance_min',
+            'balance_max',
+            'online_status',
+            'search',
+        ]);
+
+        $filteredCustomers = $filterService->applyFilters($allCustomers, $filters);
+
+        // Manual pagination
+        $page = $request->input('page', 1);
+        $offset = ($page - 1) * $perPage;
+        $total = $filteredCustomers->count();
+        $customers = new \Illuminate\Pagination\LengthAwarePaginator(
+            $filteredCustomers->slice($offset, $perPage)->values(),
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Get filter options
+        $filterOptions = $filterService->getFilterOptions($tenantId);
+        $packages = ServicePackage::where('tenant_id', $tenantId)->get();
+        $zones = \App\Models\Zone::where('tenant_id', $tenantId)->get();
 
         $stats = [
-            'total' => NetworkUser::count(),
-            'active' => NetworkUser::where('status', 'active')->count(),
-            'online' => 0,
-            'offline' => NetworkUser::count(),
+            'total' => $allCustomers->count(),
+            'active' => $allCustomers->where('status', 'active')->count(),
+            'online' => $allCustomers->where('online_status', true)->count(),
+            'offline' => $allCustomers->where('online_status', false)->count(),
+            'filtered' => $total,
         ];
 
-        return view('panels.admin.customers.index', compact('customers', 'packages', 'stats'));
+        return view('panels.admin.customers.index', compact(
+            'customers',
+            'packages',
+            'zones',
+            'stats',
+            'filters',
+            'filterOptions',
+            'perPage'
+        ));
     }
 
     /**

@@ -20,6 +20,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register event listeners
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\ImportPppCustomersRequested::class,
+            \App\Listeners\ImportPppCustomersListener::class
+        );
+
         // Register policies
         Gate::policy(\App\Models\MikrotikRouter::class, \App\Policies\NetworkDevicePolicy::class);
         Gate::policy(\App\Models\MikrotikPppoeUser::class, \App\Policies\NetworkDevicePolicy::class);
