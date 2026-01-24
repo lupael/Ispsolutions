@@ -214,7 +214,7 @@
 </div>
 
 @push('styles')
-<style nonce="{{ csp_nonce() }}">
+<style nonce="{{ $cspNonce }}">
     .apexcharts-tooltip {
         background: rgba(0, 0, 0, 0.8) !important;
         color: white !important;
@@ -226,7 +226,7 @@
 @endpush
 
 @push('scripts')
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
     // Initialize analytics data from server
     const analyticsData = @json($analytics);
     

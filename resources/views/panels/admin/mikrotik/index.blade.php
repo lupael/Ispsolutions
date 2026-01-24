@@ -97,8 +97,9 @@
 <script nonce="{{ $cspNonce }}">
 // Test router connection
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('test-router-btn')) {
-        const routerId = e.target.getAttribute('data-test-router');
+    const testBtn = e.target.closest('.test-router-btn');
+    if (testBtn) {
+        const routerId = testBtn.getAttribute('data-test-router');
         testConnection(routerId);
     }
 });

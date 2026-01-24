@@ -71,7 +71,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
     // Character counter
     document.getElementById('message').addEventListener('input', function() {
         document.getElementById('char_count').textContent = this.value.length;

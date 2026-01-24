@@ -132,7 +132,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 function updateOriginalPrice() {
     const select = document.getElementById('package_id');
     const selectedOption = select.options[select.selectedIndex];

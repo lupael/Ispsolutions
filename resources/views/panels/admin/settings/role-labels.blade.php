@@ -144,10 +144,16 @@
 <script nonce="{{ $cspNonce }}">
 // Handle reset to default button
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('reset-label-btn')) {
+    const resetButton = e.target.closest('.reset-label-btn');
+    if (resetButton) {
         e.preventDefault();
-        const formId = e.target.getAttribute('data-reset-form');
-        document.getElementById(formId).submit();
+        const formId = resetButton.getAttribute('data-reset-form');
+        if (formId) {
+            const form = document.getElementById(formId);
+            if (form) {
+                form.submit();
+            }
+        }
     }
 });
 </script>

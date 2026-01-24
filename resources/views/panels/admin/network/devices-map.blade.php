@@ -132,7 +132,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 // Leaflet.js Map Initialization (when library is included)
 /*
 document.addEventListener('DOMContentLoaded', function() {

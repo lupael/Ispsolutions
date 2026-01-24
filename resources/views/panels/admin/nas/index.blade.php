@@ -102,8 +102,9 @@
 <script nonce="{{ $cspNonce }}">
 // Test NAS connection
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('test-nas-btn')) {
-        const nasId = e.target.getAttribute('data-test-nas');
+    const button = e.target.closest('.test-nas-btn');
+    if (button) {
+        const nasId = button.getAttribute('data-test-nas');
         testNasConnection(nasId);
     }
 });

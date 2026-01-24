@@ -102,8 +102,9 @@
 <script nonce="{{ $cspNonce }}">
 // Test OLT connection
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('test-olt-btn')) {
-        const oltId = e.target.getAttribute('data-test-olt');
+    const button = e.target.closest('.test-olt-btn');
+    if (button) {
+        const oltId = button.getAttribute('data-test-olt');
         testOltConnection(oltId);
     }
 });

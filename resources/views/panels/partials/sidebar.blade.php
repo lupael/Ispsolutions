@@ -469,7 +469,7 @@
 <!-- Sidebar Overlay (Mobile) -->
 <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden"></div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
     document.addEventListener('DOMContentLoaded', function() {
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');

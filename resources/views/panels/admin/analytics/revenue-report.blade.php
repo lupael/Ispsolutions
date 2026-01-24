@@ -154,7 +154,7 @@
 </div>
 
 @push('scripts')
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
     const analyticsData = @json($analytics);
     
     // Revenue Trend Chart

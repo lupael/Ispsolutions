@@ -261,7 +261,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 function performanceMetrics(oltId) {
     return {
         oltId: oltId,

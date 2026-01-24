@@ -254,8 +254,9 @@
 <script nonce="{{ $cspNonce }}">
 // Insert variable into textarea
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('insert-variable-btn')) {
-        const variable = e.target.getAttribute('data-variable');
+    const button = e.target.closest('.insert-variable-btn');
+    if (button) {
+        const variable = button.getAttribute('data-variable');
         const textarea = document.getElementById('broadcastMessage');
         const cursorPos = textarea.selectionStart;
         const textBefore = textarea.value.substring(0, cursorPos);

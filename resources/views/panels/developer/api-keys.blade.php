@@ -74,7 +74,11 @@
                                         <td>{{ $apiKey->last_used_at ? $apiKey->last_used_at->diffForHumans() : 'Never' }}</td>
                                         <td>{{ $apiKey->expires_at ? $apiKey->expires_at->format('Y-m-d') : 'Never' }}</td>
                                         <td>
-                                            <button class="btn btn-sm btn-danger revoke-api-key-btn" data-message="Revoke this API key?">Revoke</button>
+                                            <form action="{{ route('panel.api-keys.destroy', $apiKey) }}" method="POST" class="inline revoke-api-key-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @empty
@@ -95,21 +99,22 @@
 
 @push('scripts')
 <script nonce="{{ $cspNonce }}">
-// Handle coming soon and revoke buttons
+// Handle coming soon buttons
 document.addEventListener('click', function(e) {
-    if (e.target.closest('.coming-soon-btn')) {
-        const button = e.target.closest('.coming-soon-btn');
+    const button = e.target.closest('.coming-soon-btn');
+    if (button) {
         const message = button.getAttribute('data-message');
         alert(message);
     }
-    if (e.target.closest('.revoke-api-key-btn')) {
-        const button = e.target.closest('.revoke-api-key-btn');
-        const message = button.getAttribute('data-message');
-        if (confirm(message)) {
-            // Handle revoke action here
-            alert('API key revocation would be handled here');
+});
+
+// Confirm API key revocation
+document.querySelectorAll('.revoke-api-key-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+            e.preventDefault();
         }
-    }
+    });
 });
 </script>
 @endpush

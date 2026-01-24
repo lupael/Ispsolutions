@@ -254,7 +254,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 function onuMonitor(oltId) {
     return {
         oltId: oltId,
@@ -415,7 +415,7 @@ function onuMonitor(oltId) {
 }
 </script>
 
-<style nonce="{{ csp_nonce() }}">
+<style nonce="{{ $cspNonce }}">
 [x-cloak] { display: none !important; }
 </style>
 @endsection
