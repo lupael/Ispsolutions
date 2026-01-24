@@ -11,6 +11,16 @@
 
 This document provides a prioritized, actionable TODO list for implementing features identified from the reference ISP billing system analysis. Each item includes effort estimates, priority levels, and implementation notes.
 
+### Document Sections
+- [Phase 1: High-Impact Quick Wins](#phase-1-high-impact-quick-wins-weeks-1-2)
+- [Phase 2: Automation & Intelligence](#phase-2-automation--intelligence-weeks-3-5)
+- [Phase 3: Advanced Features](#phase-3-advanced-features-weeks-6-9)
+- [Phase 4: Nice-to-Have Enhancements](#phase-4-nice-to-have-enhancements-weeks-10-12)
+- [Generate Views and Add to Panels](#generate-views-and-add-to-panels) ⭐ **NEW**
+- [Implementation Guidelines](#implementation-guidelines)
+- [Progress Tracking](#progress-tracking)
+- [Success Metrics](#success-metrics)
+
 ---
 
 ## Phase 1: High-Impact Quick Wins (Weeks 1-2)
@@ -893,6 +903,374 @@ Track these metrics as features are implemented:
 
 ---
 
+## Generate Views and Add to Panels
+
+This section provides comprehensive guidance on creating and adding views to the role-based panel system.
+
+### Current View Implementation Status
+
+**Total Views:** 251 Blade templates  
+**Last Updated:** January 24, 2026
+
+#### Views by Role Panel
+
+| Role Panel | View Count | Status |
+|------------|------------|--------|
+| Admin | 119 | ✅ Complete |
+| Developer | 25 | ✅ Complete |
+| Super Admin | 15 | ✅ Complete |
+| Sales Manager | 11 | ✅ Complete |
+| Accountant | 9 | ✅ Complete |
+| Operator | 9 | ✅ Complete |
+| Manager | 7 | ✅ Complete |
+| Staff | 7 | ✅ Complete |
+| Customer | 6 | ✅ Complete |
+| Card Distributor | 5 | ✅ Complete |
+| Sub-Operator | 5 | ✅ Complete |
+| Shared Components | 27 | ✅ Complete |
+| Partials | 5 | ✅ Complete |
+| Layouts | 1 | ✅ Complete |
+
+### View Directory Structure
+
+```
+resources/views/panels/
+├── layouts/
+│   └── app.blade.php              # Main layout template
+├── partials/
+│   ├── sidebar.blade.php          # Dynamic sidebar menu
+│   ├── navigation.blade.php       # Top navigation bar
+│   ├── pagination.blade.php       # Pagination component
+│   └── [other partials]
+├── shared/
+│   ├── components/                # Reusable UI components
+│   ├── widgets/                   # Dashboard widgets
+│   ├── customers/                 # Shared customer views
+│   ├── analytics/                 # Analytics views
+│   ├── tickets/                   # Ticket system views
+│   └── [other shared views]
+├── [role-name]/                   # Role-specific panels
+│   ├── dashboard.blade.php        # Role dashboard
+│   ├── [module]/                  # Module-specific views
+│   │   ├── index.blade.php        # List view
+│   │   ├── create.blade.php       # Create form
+│   │   ├── edit.blade.php         # Edit form
+│   │   └── show.blade.php         # Detail view
+│   └── [other role views]
+```
+
+### Step-by-Step: Creating New Panel Views
+
+#### 1. Determine the Appropriate Location
+
+**For role-specific features:**
+```
+resources/views/panels/{role-name}/{module}/{view-name}.blade.php
+```
+
+**For shared components across roles:**
+```
+resources/views/panels/shared/{component-type}/{view-name}.blade.php
+```
+
+**Examples:**
+- Admin customer list: `resources/views/panels/admin/customers/index.blade.php`
+- Operator billing: `resources/views/panels/operator/bills/index.blade.php`
+- Shared widget: `resources/views/panels/shared/widgets/sales-chart.blade.php`
+
+#### 2. Create the Blade Template
+
+All panel views follow this standard structure:
+
+```blade
+@extends('panels.layouts.app')
+
+@section('title', 'Page Title')
+
+@section('content')
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Page Title</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">Page description</p>
+                </div>
+                <div class="flex space-x-2">
+                    <!-- Action Buttons -->
+                    <a href="{{ route('route.name') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add New
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="p-6">
+            <!-- Your content here -->
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+    <!-- Optional: Page-specific JavaScript -->
+@endpush
+```
+
+#### 3. Common View Patterns
+
+##### Dashboard View Pattern
+```blade
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Icon SVG path -->
+                    </svg>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Metric Name</dt>
+                        <dd class="text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ $stats['value'] }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+##### List/Index View Pattern
+```blade
+<!-- Search and Filter -->
+<div class="mb-4 flex flex-col sm:flex-row gap-4">
+    <input type="text" placeholder="Search..." 
+           class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+    <!-- Filter dropdowns -->
+</div>
+
+<!-- Data Table -->
+<div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Column Name
+                </th>
+                <!-- More columns -->
+            </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            @forelse($items as $item)
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {{ $item->field }}
+                    </td>
+                    <!-- More cells -->
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        No items found.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="mt-4">
+    {{ $items->links() }}
+</div>
+```
+
+##### Form View Pattern (Create/Edit)
+```blade
+<form method="POST" action="{{ route('route.name', $item ?? null) }}" class="space-y-6">
+    @csrf
+    @if(isset($item))
+        @method('PUT')
+    @endif
+
+    <!-- Form Field -->
+    <div>
+        <label for="field_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Field Label
+        </label>
+        <input type="text" name="field_name" id="field_name" 
+               value="{{ old('field_name', $item->field_name ?? '') }}"
+               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+        @error('field_name')
+            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end">
+        <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
+            {{ isset($item) ? 'Update' : 'Create' }}
+        </button>
+    </div>
+</form>
+```
+
+#### 4. Add Route for the View
+
+In `routes/web.php`, add the route within the appropriate role group:
+
+```php
+Route::prefix('panel/{role-name}')->name('panel.{role-name}.')
+    ->middleware(['auth', 'role:{role-name}'])
+    ->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [RoleController::class, 'dashboard'])->name('dashboard');
+        
+        // Resource routes
+        Route::resource('module-name', ModuleController::class);
+        
+        // Custom routes
+        Route::get('/custom-action', [RoleController::class, 'customAction'])->name('custom-action');
+    });
+```
+
+#### 5. Implement Controller Method
+
+Create or update the controller to pass data to the view:
+
+```php
+<?php
+
+namespace App\Http\Controllers\Panel;
+
+use App\Http\Controllers\Controller;
+use Illuminate\View\View;
+
+class RoleController extends Controller
+{
+    public function viewMethod(): View
+    {
+        // Fetch data with proper tenant isolation
+        $data = Model::where('tenant_id', auth()->user()->tenant_id)
+            ->paginate(20);
+        
+        $stats = [
+            'metric1' => 0,
+            'metric2' => 0,
+        ];
+
+        return view('panels.role-name.module.view-name', compact('data', 'stats'));
+    }
+}
+```
+
+#### 6. Update Sidebar Navigation (Optional)
+
+If the new view needs a menu item, update `resources/views/panels/partials/sidebar.blade.php`:
+
+```php
+@php
+$menus = [
+    [
+        'label' => 'Module Name',
+        'icon' => 'icon-name',
+        'route' => 'panel.role.module.index',
+        'active' => request()->routeIs('panel.role.module.*'),
+    ],
+    // Or with sub-menu
+    [
+        'label' => 'Management',
+        'icon' => 'users',
+        'children' => [
+            ['label' => 'Customers', 'route' => 'panel.role.customers.index'],
+            ['label' => 'Packages', 'route' => 'panel.role.packages.index'],
+        ]
+    ],
+];
+@endphp
+```
+
+### Design Standards
+
+#### Tailwind CSS Classes
+- **Container**: `space-y-6` for vertical spacing
+- **Cards**: `bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg`
+- **Text**: `text-gray-900 dark:text-gray-100` for primary text
+- **Buttons**: `bg-indigo-600 hover:bg-indigo-700` for primary actions
+- **Forms**: `rounded-md border-gray-300 dark:border-gray-700`
+
+#### Dark Mode Support
+Always include dark mode variants:
+```blade
+class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+```
+
+#### Responsive Design
+Use responsive prefixes:
+```blade
+class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+```
+
+### Testing Your Views
+
+1. **Access Control Test:**
+   ```bash
+   # Login as different roles and verify access
+   ```
+
+2. **Data Display Test:**
+   ```bash
+   # Verify data is displayed correctly with proper tenant isolation
+   ```
+
+3. **Responsive Test:**
+   ```bash
+   # Test on mobile, tablet, and desktop viewports
+   ```
+
+4. **Dark Mode Test:**
+   ```bash
+   # Toggle dark mode and verify all elements are visible
+   ```
+
+### Related Documentation
+
+- **Panel Implementation Guide**: [PANEL_IMPLEMENTATION_GUIDE.md](PANEL_IMPLEMENTATION_GUIDE.md)
+- **Panel Specification**: [PANELS_SPECIFICATION.md](PANELS_SPECIFICATION.md)
+- **Panel Development Summary**: [PANEL_README.md](PANEL_README.md)
+- **Routing Guide**: [ROUTING_TROUBLESHOOTING_GUIDE.md](ROUTING_TROUBLESHOOTING_GUIDE.md)
+- **Role System**: [docs/technical/ROLE_SYSTEM.md](docs/technical/ROLE_SYSTEM.md)
+
+### Quick Reference Commands
+
+```bash
+# Create a new view directory
+mkdir -p resources/views/panels/{role-name}/{module}
+
+# Create a new view file
+touch resources/views/panels/{role-name}/{module}/{view-name}.blade.php
+
+# Find all views for a specific role
+find resources/views/panels/{role-name} -name "*.blade.php"
+
+# Count views per role
+for dir in resources/views/panels/*/; do 
+    echo "$(basename $dir): $(find $dir -name '*.blade.php' 2>/dev/null | wc -l)"; 
+done
+```
+
+---
+
 ## Notes
 
 - This TODO list is derived from analyzing 24 controller files from a reference ISP billing system
@@ -900,6 +1278,9 @@ Track these metrics as features are implemented:
 - Do not break existing functionality while implementing new features
 - Prioritize features based on business needs and available resources
 - Update this document as features are completed
+- View generation should follow established patterns for consistency
+- Always implement tenant isolation in views and controllers
+- Maintain dark mode support across all new views
 
 ---
 
