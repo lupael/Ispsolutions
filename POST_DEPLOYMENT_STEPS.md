@@ -163,6 +163,8 @@ Try exporting reports from these pages:
 
 ### If RADIUS errors persist:
 
+**UPDATE**: As of the latest fix, the PPP and Hotspot logs pages now handle missing RADIUS tables gracefully. You can now access these pages safely even if RADIUS is not configured - they will show an informational message and empty data instead of crashing with a 500 error.
+
 The RADIUS database connection errors are **infrastructure issues**, not code issues:
 
 ```bash
@@ -177,9 +179,24 @@ netstat -tlnp | grep 3307
 mysql -h 127.0.0.1 -P 3307 -u radius_user -p
 ```
 
-**Temporary workaround** if RADIUS is not needed:
-- Avoid accessing /panel/admin/logs/hotspot
-- Avoid accessing /panel/admin/logs/ppp
+**To properly setup RADIUS database**:
+1. Ensure RADIUS database is created and accessible
+2. Run RADIUS-specific migrations:
+   ```bash
+   # Run migrations for RADIUS database
+   php artisan migrate --database=radius --path=database/migrations/radius
+   ```
+3. Configure .env with correct RADIUS database credentials:
+   ```env
+   RADIUS_DB_CONNECTION=mysql
+   RADIUS_DB_HOST=127.0.0.1
+   RADIUS_DB_PORT=3306  # or 3307 if using separate instance
+   RADIUS_DB_DATABASE=radius
+   RADIUS_DB_USERNAME=radius
+   RADIUS_DB_PASSWORD=your_password
+   ```
+
+**Note**: The /panel/admin/logs/hotspot and /panel/admin/logs/ppp pages are now accessible even without RADIUS configuration. They will display a user-friendly message if the database is not set up.
 
 ### If tenant isolation issues occur:
 
