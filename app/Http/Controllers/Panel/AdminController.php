@@ -1325,6 +1325,44 @@ class AdminController extends Controller
     }
 
     /**
+     * Store payment gateway.
+     */
+    public function paymentGatewaysStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|in:bkash,nagad,rocket,ssl_commerz,aamarpay,stripe,paypal',
+            'environment' => 'required|string|in:sandbox,production',
+            'status' => 'required|string|in:active,inactive,testing,maintenance',
+            'merchant_id' => 'required|string|max:255',
+            'api_key' => 'required|string|max:255',
+            'api_secret' => 'nullable|string|max:255',
+            'webhook_url' => 'nullable|url|max:255',
+        ]);
+
+        // Build configuration array
+        $configuration = [
+            'merchant_id' => $validated['merchant_id'],
+            'api_key' => $validated['api_key'],
+            'api_secret' => $validated['api_secret'] ?? null,
+            'webhook_url' => $validated['webhook_url'] ?? null,
+            'environment' => $validated['environment'],
+        ];
+
+        PaymentGateway::create([
+            'tenant_id' => getCurrentTenantId(),
+            'name' => $validated['name'],
+            'slug' => $validated['type'],
+            'is_active' => $validated['status'] === 'active',
+            'test_mode' => $validated['environment'] === 'sandbox',
+            'configuration' => $configuration,
+        ]);
+
+        return redirect()->route('panel.admin.payment-gateways')
+            ->with('success', 'Payment gateway configured successfully.');
+    }
+
+    /**
      * Display network routers listing.
      */
     public function routers(): View

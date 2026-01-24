@@ -381,6 +381,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     // Payment Gateway Management
     Route::get('/payment-gateways', [AdminController::class, 'paymentGateways'])->name('payment-gateways');
     Route::get('/payment-gateways/create', [AdminController::class, 'paymentGatewaysCreate'])->name('payment-gateways.create');
+    Route::post('/payment-gateways', [AdminController::class, 'paymentGatewaysStore'])->name('payment-gateways.store');
 
     // Package Profile Mappings
     Route::prefix('packages/{package}/mappings')->name('packages.mappings.')->scopeBindings()->group(function () {

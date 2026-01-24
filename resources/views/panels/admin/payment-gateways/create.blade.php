@@ -24,8 +24,8 @@
         </div>
     </div>
 
-    <!-- Note: Form action is placeholder - actual store functionality needs to be implemented -->
-    <form action="#" method="POST" class="space-y-6">
+    <!-- Note: Payment gateway configuration form -->
+    <form action="{{ route('panel.admin.payment-gateways.store') }}" method="POST" class="space-y-6">
         @csrf
         
         <!-- Gateway Basic Information -->
