@@ -21,7 +21,7 @@ return new class extends Migration
             $table->json('available_variables')->nullable(); // Variables that can be used in template
             $table->timestamps();
             
-            $table->unique('event_name');
+            $table->unique(['tenant_id', 'event_name']);
             $table->index('tenant_id');
         });
     }
