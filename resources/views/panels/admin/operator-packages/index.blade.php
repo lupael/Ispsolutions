@@ -59,10 +59,10 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                                     <a href="{{ route('panel.admin.operator-packages.edit', $rate) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
-                                    <form action="{{ route('panel.admin.operator-packages.destroy', $rate) }}" method="POST" class="inline">
+                                    <form action="{{ route('panel.admin.operator-packages.destroy', $rate) }}" method="POST" class="inline delete-operator-rate-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Delete this rate?')">Delete</button>
+                                        <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
                                     </form>
                                 </td>
                             </tr>
@@ -121,3 +121,16 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script nonce="{{ $cspNonce }}">
+// Confirm delete for operator rates
+document.querySelectorAll('.delete-operator-rate-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Delete this rate?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+@endpush

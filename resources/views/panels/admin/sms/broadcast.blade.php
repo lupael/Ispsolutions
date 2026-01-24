@@ -163,10 +163,10 @@
                             </div>
                         </div>
                         <div class="mt-2 flex flex-wrap gap-2">
-                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200" onclick="insertVariable('{name}')">{name}</span>
-                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200" onclick="insertVariable('{username}')">{username}</span>
-                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200" onclick="insertVariable('{package}')">{package}</span>
-                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200" onclick="insertVariable('{balance}')">{balance}</span>
+                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200 insert-variable-btn" data-variable="{name}">{name}</span>
+                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200 insert-variable-btn" data-variable="{username}">{username}</span>
+                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200 insert-variable-btn" data-variable="{package}">{package}</span>
+                            <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded cursor-pointer hover:bg-gray-200 insert-variable-btn" data-variable="{balance}">{balance}</span>
                         </div>
                     </div>
 
@@ -250,17 +250,22 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
-function insertVariable(variable) {
-    const textarea = document.getElementById('broadcastMessage');
-    const cursorPos = textarea.selectionStart;
-    const textBefore = textarea.value.substring(0, cursorPos);
-    const textAfter = textarea.value.substring(cursorPos);
-    textarea.value = textBefore + variable + textAfter;
-    textarea.focus();
-    textarea.selectionStart = textarea.selectionEnd = cursorPos + variable.length;
-    textarea.dispatchEvent(new Event('input'));
-}
+@push('scripts')
+<script nonce="{{ $cspNonce }}">
+// Insert variable into textarea
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('insert-variable-btn')) {
+        const variable = e.target.getAttribute('data-variable');
+        const textarea = document.getElementById('broadcastMessage');
+        const cursorPos = textarea.selectionStart;
+        const textBefore = textarea.value.substring(0, cursorPos);
+        const textAfter = textarea.value.substring(cursorPos);
+        textarea.value = textBefore + variable + textAfter;
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = cursorPos + variable.length;
+        textarea.dispatchEvent(new Event('input'));
+    }
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     const broadcastRadios = document.querySelectorAll('input[name="broadcast_type"]');
@@ -312,4 +317,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endpush
 @endsection
