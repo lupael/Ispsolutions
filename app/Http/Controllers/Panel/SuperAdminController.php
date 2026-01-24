@@ -40,10 +40,16 @@ class SuperAdminController extends Controller
 
     /**
      * Display users listing.
+     * Excludes developers as super-admin should not see or manage developer accounts.
      */
     public function users(): View
     {
-        $users = User::with('roles')->latest()->paginate(20);
+        $users = User::with('roles')
+            ->whereDoesntHave('roles', function ($query) {
+                $query->where('slug', 'developer');
+            })
+            ->latest()
+            ->paginate(20);
 
         return view('panels.super-admin.users.index', compact('users'));
     }
