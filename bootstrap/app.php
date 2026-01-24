@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => \App\Http\Middleware\ResolveTenant::class,
             '2fa' => \App\Http\Middleware\TwoFactorAuthentication::class,
             'rate_limit' => \App\Http\Middleware\RateLimitMiddleware::class,
+            'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         ]);
 
         // Add global middleware

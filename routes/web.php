@@ -85,7 +85,7 @@ Route::prefix('hotspot')->name('hotspot.')->middleware(['auth'])->group(function
     Route::get('{hotspotUser}', [HotspotController::class, 'show'])->name('show');
     Route::get('{hotspotUser}/edit', [HotspotController::class, 'edit'])->name('edit');
     Route::put('{hotspotUser}', [HotspotController::class, 'update'])->name('update');
-    Route::delete('{hotspotUser}', [HotspotController::class, 'destroy'])->name('destroy');
+    Route::delete('{hotspotUser}', [HotspotController::class, 'destroy'])->middleware('password.confirm')->name('destroy');
     Route::post('{hotspotUser}/suspend', [HotspotController::class, 'suspend'])->name('suspend');
     Route::post('{hotspotUser}/reactivate', [HotspotController::class, 'reactivate'])->name('reactivate');
     Route::post('{hotspotUser}/renew', [HotspotController::class, 'renew'])->name('renew');
@@ -165,7 +165,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
     Route::post('/users', [SuperAdminController::class, 'usersStore'])->name('users.store');
     Route::get('/users/{id}/edit', [SuperAdminController::class, 'usersEdit'])->name('users.edit');
     Route::put('/users/{id}', [SuperAdminController::class, 'usersUpdate'])->name('users.update');
-    Route::delete('/users/{id}', [SuperAdminController::class, 'usersDestroy'])->name('users.destroy');
+    Route::delete('/users/{id}', [SuperAdminController::class, 'usersDestroy'])->middleware('password.confirm')->name('users.destroy');
     Route::get('/roles', [SuperAdminController::class, 'roles'])->name('roles');
 
     // ISP/Admin Management
@@ -202,7 +202,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::post('/users', [AdminController::class, 'usersStore'])->name('users.store');
     Route::get('/users/{id}/edit', [AdminController::class, 'usersEdit'])->name('users.edit');
     Route::put('/users/{id}', [AdminController::class, 'usersUpdate'])->name('users.update');
-    Route::delete('/users/{id}', [AdminController::class, 'usersDestroy'])->name('users.destroy');
+    Route::delete('/users/{id}', [AdminController::class, 'usersDestroy'])->middleware('password.confirm')->name('users.destroy');
     Route::get('/network-users', [AdminController::class, 'networkUsers'])->name('network-users');
     Route::get('/network-users/create', [AdminController::class, 'networkUsersCreate'])->name('network-users.create');
     Route::post('/network-users', [AdminController::class, 'networkUsersStore'])->name('network-users.store');
@@ -211,7 +211,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/network-users/{id}', [AdminController::class, 'networkUsersShow'])->name('network-users.show');
     Route::get('/network-users/{id}/edit', [AdminController::class, 'networkUsersEdit'])->name('network-users.edit');
     Route::put('/network-users/{id}', [AdminController::class, 'networkUsersUpdate'])->name('network-users.update');
-    Route::delete('/network-users/{id}', [AdminController::class, 'networkUsersDestroy'])->name('network-users.destroy');
+    Route::delete('/network-users/{id}', [AdminController::class, 'networkUsersDestroy'])->middleware('password.confirm')->name('network-users.destroy');
     Route::get('/packages', [AdminController::class, 'packages'])->name('packages');
     Route::get('/packages/create', [AdminController::class, 'packagesCreate'])->name('packages.create');
     Route::post('/packages', [AdminController::class, 'packagesStore'])->name('packages.store');
@@ -223,7 +223,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     // Role Label Settings
     Route::get('/settings/role-labels', [\App\Http\Controllers\Panel\RoleLabelSettingController::class, 'index'])->name('settings.role-labels');
     Route::put('/settings/role-labels', [\App\Http\Controllers\Panel\RoleLabelSettingController::class, 'update'])->name('settings.role-labels.update');
-    Route::delete('/settings/role-labels/{roleSlug}', [\App\Http\Controllers\Panel\RoleLabelSettingController::class, 'destroy'])->name('settings.role-labels.destroy');
+    Route::delete('/settings/role-labels/{roleSlug}', [\App\Http\Controllers\Panel\RoleLabelSettingController::class, 'destroy'])->middleware('password.confirm')->name('settings.role-labels.destroy');
 
     // Network Device Management - Legacy routes (kept for backward compatibility)
     // These redirect to the more organized /network/* routes
@@ -245,7 +245,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/customers/bulk-update', [AdminController::class, 'bulkUpdateUsers'])->name('customers.bulk-update');
     Route::get('/customers/{id}/edit', [AdminController::class, 'customersEdit'])->name('customers.edit');
     Route::put('/customers/{id}', [AdminController::class, 'customersUpdate'])->name('customers.update');
-    Route::delete('/customers/{id}', [AdminController::class, 'customersDestroy'])->name('customers.destroy');
+    Route::delete('/customers/{id}', [AdminController::class, 'customersDestroy'])->middleware('password.confirm')->name('customers.destroy');
     Route::get('/customers/{id}', [AdminController::class, 'customersShow'])->name('customers.show');
     Route::get('/customers-deleted', [AdminController::class, 'deletedCustomers'])->name('customers.deleted');
     Route::get('/customers-online', [AdminController::class, 'onlineCustomers'])->name('customers.online');
@@ -281,7 +281,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::post('/operators', [AdminController::class, 'operatorsStore'])->name('operators.store');
     Route::get('/operators/{id}/edit', [AdminController::class, 'operatorsEdit'])->name('operators.edit');
     Route::put('/operators/{id}', [AdminController::class, 'operatorsUpdate'])->name('operators.update');
-    Route::delete('/operators/{id}', [AdminController::class, 'operatorsDestroy'])->name('operators.destroy');
+    Route::delete('/operators/{id}', [AdminController::class, 'operatorsDestroy'])->middleware('password.confirm')->name('operators.destroy');
     Route::get('/operators/sub-operators', [AdminController::class, 'subOperators'])->name('operators.sub-operators');
     Route::get('/operators/staff', [AdminController::class, 'staff'])->name('operators.staff');
     Route::get('/operators/{id}/profile', [AdminController::class, 'operatorProfile'])->name('operators.profile');
@@ -337,7 +337,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::post('/network/routers', [AdminController::class, 'routersStore'])->name('network.routers.store');
     Route::get('/network/routers/{id}/edit', [AdminController::class, 'routersEdit'])->name('network.routers.edit');
     Route::put('/network/routers/{id}', [AdminController::class, 'routersUpdate'])->name('network.routers.update');
-    Route::delete('/network/routers/{id}', [AdminController::class, 'routersDestroy'])->name('network.routers.destroy');
+    Route::delete('/network/routers/{id}', [AdminController::class, 'routersDestroy'])->middleware('password.confirm')->name('network.routers.destroy');
     Route::get('/network/olt', [AdminController::class, 'oltList'])->name('network.olt');
     Route::get('/network/olt/create', [AdminController::class, 'oltCreate'])->name('network.olt.create');
     Route::get('/olt/dashboard', [AdminController::class, 'oltDashboard'])->name('olt.dashboard');
@@ -364,7 +364,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::delete('/network/ipv6-pools/{id}', [AdminController::class, 'ipv6PoolsDestroy'])->name('network.ipv6-pools.destroy');
     Route::get('/network/pppoe-profiles', [AdminController::class, 'pppoeProfiles'])->name('network.pppoe-profiles');
     Route::post('/network/pppoe-profiles', [AdminController::class, 'pppoeProfilesStore'])->name('network.pppoe-profiles.store');
-    Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->name('network.pppoe-profiles.destroy');
+    Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->middleware('password.confirm')->name('network.pppoe-profiles.destroy');
     Route::get('/network/package-fup-edit/{id}', [AdminController::class, 'packageFupEdit'])->name('network.package-fup-edit');
     Route::get('/network/ping-test', [AdminController::class, 'pingTest'])->name('network.ping-test');
 
@@ -699,7 +699,7 @@ Route::prefix('2fa')->name('2fa.')->middleware(['auth'])->group(function () {
     Route::post('/verify', [TwoFactorAuthController::class, 'verify'])->name('verify');
     Route::get('/recovery-codes', [TwoFactorAuthController::class, 'recoveryCodes'])->name('recovery-codes');
     Route::post('/regenerate-codes', [TwoFactorAuthController::class, 'regenerateRecoveryCodes'])->name('regenerate-codes');
-    Route::delete('/disable', [TwoFactorAuthController::class, 'disable'])->name('disable');
+    Route::delete('/disable', [TwoFactorAuthController::class, 'disable'])->middleware('password.confirm')->name('disable');
 });
 
 // API Key Management
@@ -710,7 +710,7 @@ Route::prefix('api-keys')->name('api-keys.')->middleware(['auth', 'can:manage-ap
     Route::get('/{apiKey}', [ApiKeyController::class, 'show'])->name('show');
     Route::get('/{apiKey}/edit', [ApiKeyController::class, 'edit'])->name('edit');
     Route::put('/{apiKey}', [ApiKeyController::class, 'update'])->name('update');
-    Route::delete('/{apiKey}', [ApiKeyController::class, 'destroy'])->name('destroy');
+    Route::delete('/{apiKey}', [ApiKeyController::class, 'destroy'])->middleware('password.confirm')->name('destroy');
 });
 
 // Analytics Dashboard
