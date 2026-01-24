@@ -91,12 +91,25 @@ class TicketController extends Controller
     /**
      * Show the form for creating a new ticket.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $priorities = Ticket::getPriorities();
         $categories = Ticket::getCategories();
+        
+        // Pass customer_id if provided (for admins creating tickets on behalf of customers)
+        $customerId = $request->query('customer_id');
+        
+        // Validate that the customer exists and user has permission to create ticket for them
+        $customer = null;
+        if ($customerId) {
+            $user = auth()->user();
+            // Only allow admins, super admins, developers, operators, and sub-operators to create tickets for other users
+            if ($user->operator_level < 100) {
+                $customer = User::find($customerId);
+            }
+        }
 
-        return view('panels.shared.tickets.create', compact('priorities', 'categories'));
+        return view('panels.shared.tickets.create', compact('priorities', 'categories', 'customer'));
     }
 
     /**
@@ -109,11 +122,22 @@ class TicketController extends Controller
             'message' => 'required|string',
             'priority' => 'required|in:low,medium,high,urgent',
             'category' => 'required|in:technical,billing,general,complaint,feature_request',
+            'customer_id' => 'nullable|exists:users,id',
         ]);
+
+        $user = auth()->user();
+        
+        // Determine the customer_id for the ticket
+        $customerId = auth()->user()->id;
+        
+        // If customer_id is provided and user is authorized (not a customer), use it
+        if (isset($validated['customer_id']) && $user->operator_level < 100) {
+            $customerId = $validated['customer_id'];
+        }
 
         $ticket = Ticket::create([
             'tenant_id' => auth()->user()->tenant_id,
-            'customer_id' => auth()->user()->id,
+            'customer_id' => $customerId,
             'subject' => $validated['subject'],
             'message' => $validated['message'],
             'priority' => $validated['priority'],

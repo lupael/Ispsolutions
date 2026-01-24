@@ -29,6 +29,23 @@
         <div class="p-6">
             <form action="{{ route('panel.tickets.store') }}" method="POST" class="space-y-6">
                 @csrf
+                
+                @if(isset($customer))
+                    <!-- Hidden field for customer_id when creating ticket on behalf of customer -->
+                    <input type="hidden" name="customer_id" value="{{ $customer->id }}">
+                    
+                    <!-- Display customer info -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-sm text-blue-800 dark:text-blue-200">
+                                Creating ticket on behalf of customer: <strong>{{ $customer->name }}</strong> ({{ $customer->email }})
+                            </span>
+                        </div>
+                    </div>
+                @endif
 
                 <div>
                     <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
