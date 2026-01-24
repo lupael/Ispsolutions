@@ -71,6 +71,7 @@ class CableTvBillingService
                 'transaction_id' => $paymentData['transaction_id'] ?? null,
                 'payment_date' => now(),
                 'status' => 'completed',
+                'collected_by' => $paymentData['collected_by'] ?? auth()->id(),
                 'notes' => "Cable TV renewal - Subscriber: {$subscription->subscriber_id}",
             ]);
 

@@ -462,6 +462,7 @@ class CustomerWizardController extends Controller
                     'payment_reference' => $allData['payment_reference'] ?? null,
                     'status' => 'completed',
                     'paid_at' => now(),
+                    'collected_by' => $allData['collected_by'] ?? auth()->id(),
                     'notes' => $allData['payment_notes'] ?? 'Initial payment via wizard',
                 ]);
 

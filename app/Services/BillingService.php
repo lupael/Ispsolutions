@@ -65,8 +65,9 @@ class BillingService
                 'transaction_id' => $paymentData['transaction_id'] ?? null,
                 'status' => $paymentData['status'] ?? 'completed',
                 'payment_method' => $paymentData['method'] ?? 'cash',
-                'payment_data' => $paymentData['data'] ?? null,
+                'payment_data' => $paymentData['data'] ?? ($paymentData['gateway_response'] ?? null),
                 'paid_at' => now(),
+                'collected_by' => $paymentData['collected_by'] ?? auth()->id(),
                 'notes' => $paymentData['notes'] ?? null,
             ]);
 
