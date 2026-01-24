@@ -259,6 +259,10 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::put('/settings/role-labels', [\App\Http\Controllers\Panel\RoleLabelSettingController::class, 'update'])->name('settings.role-labels.update');
     Route::delete('/settings/role-labels/{roleSlug}', [\App\Http\Controllers\Panel\RoleLabelSettingController::class, 'destroy'])->middleware('password.confirm')->name('settings.role-labels.destroy');
 
+    // Custom Fields Management
+    Route::resource('custom-fields', \App\Http\Controllers\Panel\CustomerCustomFieldController::class);
+    Route::post('/custom-fields/reorder', [\App\Http\Controllers\Panel\CustomerCustomFieldController::class, 'reorder'])->name('custom-fields.reorder');
+
     // Network Device Management - Legacy routes (kept for backward compatibility)
     // These redirect to the more organized /network/* routes
     Route::get('/mikrotik', function () {
