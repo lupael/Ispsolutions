@@ -85,7 +85,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 function copyKey() {
     const input = document.getElementById('apiKeyValue');
     const value = input ? input.value : '';

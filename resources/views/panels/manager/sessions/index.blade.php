@@ -245,7 +245,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
     // Auto-refresh every 30 seconds
     let autoRefresh = false;
     let refreshInterval;

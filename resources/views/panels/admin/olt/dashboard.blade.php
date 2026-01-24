@@ -166,7 +166,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 function oltDashboard() {
     return {
         olts: [],

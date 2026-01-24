@@ -269,7 +269,7 @@
 @endsection
 
 @push('scripts')
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
     document.addEventListener('DOMContentLoaded', function() {
         // Handle action buttons for features not yet implemented
         document.querySelectorAll('.action-button').forEach(button => {

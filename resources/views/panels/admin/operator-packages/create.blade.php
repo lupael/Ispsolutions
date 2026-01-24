@@ -72,7 +72,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const priceInput = document.getElementById('operator_price');
     const marginInfo = document.getElementById('margin-info');

@@ -121,17 +121,17 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{{ route('panel.admin.cable-tv.edit', $subscription) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">Edit</a>
                                     @if($subscription->status === 'active')
-                                        <button onclick="confirmAction('suspend', {{ $subscription->id }})" class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300 mr-3">Suspend</button>
+                                        <button data-action="suspend" data-id="{{ $subscription->id }}" data-url="{{ route('panel.admin.cable-tv.suspend', $subscription) }}" class="confirm-action-btn text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300 mr-3">Suspend</button>
                                     @elseif($subscription->status === 'suspended')
                                         <form action="{{ route('panel.admin.cable-tv.reactivate', $subscription) }}" method="POST" class="inline">
                                             @csrf
                                             <button type="submit" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Reactivate</button>
                                         </form>
                                     @endif
-                                    <form action="{{ route('panel.admin.cable-tv.destroy', $subscription) }}" method="POST" class="inline">
+                                    <form action="{{ route('panel.admin.cable-tv.destroy', $subscription) }}" method="POST" class="inline delete-cable-tv-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" onclick="return confirm('Are you sure?')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
+                                        <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
                                     </form>
                                 </td>
                             </tr>
@@ -153,3 +153,72 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script nonce="{{ $cspNonce }}">
+// Confirm action for suspend
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('.confirm-action-btn');
+    if (target) {
+        const action = target.getAttribute('data-action');
+        const id = target.getAttribute('data-id');
+        
+        if (action === 'suspend') {
+            // Collect suspension reason
+            const reason = window.prompt('Please provide a reason for suspending this subscription:');
+            if (reason === null) {
+                // User cancelled the prompt
+                return;
+            }
+            if (reason.trim() === '') {
+                alert('Suspension reason is required.');
+                return;
+            }
+
+            // Get the suspend URL
+            const actionUrl = target.getAttribute('data-url');
+            if (!actionUrl) {
+                console.error('No suspend URL provided on the suspend button.');
+                alert('Unable to perform suspend action: no target URL configured.');
+                return;
+            }
+
+            // Get CSRF token from meta tag
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : null;
+
+            // Build and submit a POST form with the required reason parameter
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = actionUrl;
+
+            if (csrfToken) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_token';
+                tokenInput.value = csrfToken;
+                form.appendChild(tokenInput);
+            }
+
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason;
+            form.appendChild(reasonInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+});
+
+// Confirm delete
+document.querySelectorAll('.delete-cable-tv-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Are you sure?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+@endpush

@@ -43,7 +43,7 @@
     </div>
 </nav>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
     // Connect mobile menu button to sidebar toggle
     document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');

@@ -127,7 +127,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
 function updateWidgetContent(widgetName, data) {
     // This would ideally re-render the widget with new data
     // For now, we'll reload the page as a simple solution

@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 function copyCodes() {
     const codes = @json($recoveryCodes);
     const text = codes.join('\n');

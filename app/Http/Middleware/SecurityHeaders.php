@@ -13,6 +13,14 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Content Security Policy
+        // Generate a nonce for inline scripts and styles
+        $nonce = base64_encode(random_bytes(16));
+        $request->attributes->set('csp_nonce', $nonce);
+        
+        // Make nonce available to views
+        view()->share('cspNonce', $nonce);
+        
         $response = $next($request);
 
         // Prevent clickjacking attacks
@@ -26,11 +34,6 @@ class SecurityHeaders
 
         // Referrer policy
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-        // Content Security Policy
-        // Generate a nonce for inline scripts and styles
-        $nonce = base64_encode(random_bytes(16));
-        $request->attributes->set('csp_nonce', $nonce);
 
         // Note: 'unsafe-eval' is required for Alpine.js to evaluate expressions in attributes like x-data, x-show, @click, etc.
         // Alpine.js uses Function() constructor which requires eval. While this slightly weakens CSP,

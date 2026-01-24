@@ -234,7 +234,7 @@
                     </svg>
                     <span class="ml-3 text-gray-700 dark:text-gray-300 font-medium">Troubleshooting</span>
                 </a>
-                <button onclick="alert('Feature coming soon: Restart FreeRadius service')" class="flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-left">
+                <button data-message="Feature coming soon: Restart FreeRadius service" class="coming-soon-btn flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-left">
                     <svg class="h-8 w-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -246,7 +246,7 @@
                     </svg>
                     <span class="ml-3 text-gray-700 dark:text-gray-300 font-medium">Manage Tenancies</span>
                 </a>
-                <button onclick="alert('Feature coming soon: Branding customization')" class="flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-left">
+                <button data-message="Feature coming soon: Branding customization" class="coming-soon-btn flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-left">
                     <svg class="h-8 w-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                     </svg>
@@ -257,3 +257,16 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script nonce="{{ $cspNonce }}">
+// Handle coming soon buttons
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.coming-soon-btn')) {
+        const button = e.target.closest('.coming-soon-btn');
+        const message = button.getAttribute('data-message');
+        alert(message);
+    }
+});
+</script>
+@endpush

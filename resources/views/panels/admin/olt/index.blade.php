@@ -59,8 +59,8 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ route('panel.admin.network.olt.show', $device->id) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">View</a>
                                     <a href="{{ route('panel.admin.network.olt.edit', $device->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">Edit</a>
-                                    <button onclick="testOltConnection({{ $device->id }})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Test</button>
-                                    <form action="{{ route('panel.admin.network.olt.destroy', $device->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this OLT device?');">
+                                    <button data-test-olt="{{ $device->id }}" class="test-olt-btn text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Test</button>
+                                    <form action="{{ route('panel.admin.network.olt.destroy', $device->id) }}" method="POST" class="inline delete-olt-form">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
@@ -99,7 +99,25 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
+// Test OLT connection
+document.addEventListener('click', function(e) {
+    const button = e.target.closest('.test-olt-btn');
+    if (button) {
+        const oltId = button.getAttribute('data-test-olt');
+        testOltConnection(oltId);
+    }
+});
+
+// Confirm delete
+document.querySelectorAll('.delete-olt-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to delete this OLT device?')) {
+            e.preventDefault();
+        }
+    });
+});
+
 function testOltConnection(oltId) {
     fetch(`/panel/admin/network/olt/${oltId}/test-connection`, {
         method: 'POST',

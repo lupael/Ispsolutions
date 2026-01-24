@@ -45,7 +45,7 @@
                                             </td>
                                             <td>{{ $tenancy->users->count() }}</td>
                                             <td>
-                                                <button class="btn btn-sm btn-primary" onclick="alert('Access panel functionality coming soon')">
+                                                <button class="btn btn-sm btn-primary coming-soon-btn" data-message="Access panel functionality coming soon">
                                                     Access Panel
                                                 </button>
                                             </td>
@@ -65,3 +65,16 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script nonce="{{ $cspNonce }}">
+// Handle coming soon buttons
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.coming-soon-btn')) {
+        const button = e.target.closest('.coming-soon-btn');
+        const message = button.getAttribute('data-message');
+        alert(message);
+    }
+});
+</script>
+@endpush

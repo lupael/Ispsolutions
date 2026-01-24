@@ -152,7 +152,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('migration-form');
     const validateBtn = document.getElementById('validate-btn');

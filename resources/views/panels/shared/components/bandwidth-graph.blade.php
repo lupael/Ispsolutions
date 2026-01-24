@@ -95,7 +95,7 @@
     }
 </style>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 (function() {
     const customerId = @json($customerId);
     const autoRefresh = @json((bool) $autoRefresh);

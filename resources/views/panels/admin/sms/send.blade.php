@@ -219,7 +219,7 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const recipientRadios = document.querySelectorAll('input[name="recipient_type"]');
     const individualSelection = document.getElementById('individual_selection');

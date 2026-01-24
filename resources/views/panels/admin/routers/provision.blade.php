@@ -247,7 +247,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const routerSelect = document.getElementById('router-select');
     const testConnectionBtn = document.getElementById('test-connection');

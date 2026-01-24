@@ -145,7 +145,7 @@
     @endif
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 document.getElementById('importForm')?.addEventListener('submit', function(e) {
     const routerId = document.getElementById('router_id').value;
     if (!routerId) {

@@ -39,7 +39,7 @@
                 <div class="card-header">
                     <h3 class="card-title">API Keys</h3>
                     <div class="card-toolbar">
-                        <button class="btn btn-primary btn-sm" onclick="alert('Create API key functionality coming soon')">
+                        <button class="btn btn-primary btn-sm coming-soon-btn" data-message="Create API key functionality coming soon">
                             <i class="fas fa-plus"></i> Create API Key
                         </button>
                     </div>
@@ -74,7 +74,11 @@
                                         <td>{{ $apiKey->last_used_at ? $apiKey->last_used_at->diffForHumans() : 'Never' }}</td>
                                         <td>{{ $apiKey->expires_at ? $apiKey->expires_at->format('Y-m-d') : 'Never' }}</td>
                                         <td>
-                                            <button class="btn btn-sm btn-danger" onclick="confirm('Revoke this API key?')">Revoke</button>
+                                            <form action="{{ route('panel.api-keys.destroy', $apiKey) }}" method="POST" class="inline revoke-api-key-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @empty
@@ -92,3 +96,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script nonce="{{ $cspNonce }}">
+// Handle coming soon buttons
+document.addEventListener('click', function(e) {
+    const button = e.target.closest('.coming-soon-btn');
+    if (button) {
+        const message = button.getAttribute('data-message');
+        alert(message);
+    }
+});
+
+// Confirm API key revocation
+document.querySelectorAll('.revoke-api-key-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+@endpush

@@ -54,8 +54,8 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ route('panel.admin.network.routers.edit', $router->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">Edit</a>
-                                    <button onclick="testConnection({{ $router->id }})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Test</button>
-                                    <form action="{{ route('panel.admin.network.routers.destroy', $router->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this router?');">
+                                    <button data-test-router="{{ $router->id }}" class="test-router-btn text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Test</button>
+                                    <form action="{{ route('panel.admin.network.routers.destroy', $router->id) }}" method="POST" class="inline delete-router-form">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
@@ -94,7 +94,25 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
+// Test router connection
+document.addEventListener('click', function(e) {
+    const testBtn = e.target.closest('.test-router-btn');
+    if (testBtn) {
+        const routerId = testBtn.getAttribute('data-test-router');
+        testConnection(routerId);
+    }
+});
+
+// Confirm delete
+document.querySelectorAll('.delete-router-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to delete this router?')) {
+            e.preventDefault();
+        }
+    });
+});
+
 function testConnection(routerId) {
     fetch(`/panel/admin/network/routers/${routerId}/test-connection`, {
         method: 'POST',
