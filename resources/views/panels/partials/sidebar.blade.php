@@ -50,12 +50,14 @@
                 'children' => [
                     ['label' => 'All Customers', 'route' => 'panel.admin.customers'],
                     ['label' => 'Add Customer', 'route' => 'panel.admin.customers.create'],
+                    ['label' => 'Customer Wizard', 'route' => 'panel.admin.customers.wizard.start'],
                     ['label' => 'Online Customers', 'route' => 'panel.admin.customers.online'],
                     ['label' => 'Offline Customers', 'route' => 'panel.admin.customers.offline'],
                     ['label' => 'Deleted Customers', 'route' => 'panel.admin.customers.deleted'],
                     ['label' => 'Import Requests', 'route' => 'panel.admin.customers.import-requests'],
                     ['label' => 'PPPoE Import', 'route' => 'panel.admin.customers.pppoe-import'],
                     ['label' => 'Bulk Update', 'route' => 'panel.admin.customers.bulk-update'],
+                    ['label' => 'Custom Fields', 'route' => 'panel.admin.custom-fields.index'],
                 ]
             ],
             [
@@ -63,6 +65,7 @@
                 'icon' => 'server',
                 'children' => [
                     ['label' => 'MikroTik Routers', 'route' => 'panel.admin.mikrotik'],
+                    ['label' => 'Router Provisioning', 'route' => 'panel.admin.routers.provision.index'],
                     ['label' => 'NAS Devices', 'route' => 'panel.admin.nas'],
                     ['label' => 'Cisco Devices', 'route' => 'panel.admin.cisco'],
                     ['label' => 'All Devices', 'route' => 'panel.admin.network.devices'],
@@ -76,6 +79,7 @@
                 'children' => [
                     ['label' => 'IPv4 Pools', 'route' => 'panel.admin.network.ipv4-pools'],
                     ['label' => 'IPv6 Pools', 'route' => 'panel.admin.network.ipv6-pools'],
+                    ['label' => 'IP Pool Migration', 'route' => 'panel.admin.ip-pools.migrate'],
                     ['label' => 'PPPoE Profiles', 'route' => 'panel.admin.network.pppoe-profiles'],
                     ['label' => 'Ping Test', 'route' => 'panel.admin.network.ping-test'],
                 ]
