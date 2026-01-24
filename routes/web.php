@@ -738,3 +738,116 @@ Route::prefix('panel/tickets')->name('panel.tickets.')->middleware(['auth'])->gr
     Route::patch('/{ticket}', [TicketController::class, 'update'])->name('update');
     Route::delete('/{ticket}', [TicketController::class, 'destroy'])->name('destroy');
 });
+
+// Customer MAC Address Binding
+Route::prefix('panel/customers/{customer}/mac-binding')->name('panel.customers.mac-binding.')->middleware(['auth', 'can:manage-customers'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\CustomerMacBindController::class, 'index'])->name('index');
+    Route::post('/', [\App\Http\Controllers\Panel\CustomerMacBindController::class, 'store'])->name('store');
+    Route::put('/{macAddress}', [\App\Http\Controllers\Panel\CustomerMacBindController::class, 'update'])->name('update');
+    Route::delete('/{macAddress}', [\App\Http\Controllers\Panel\CustomerMacBindController::class, 'destroy'])->name('destroy');
+    Route::post('/bulk-import', [\App\Http\Controllers\Panel\CustomerMacBindController::class, 'bulkImport'])->name('bulk-import');
+});
+
+// Customer Volume Limits
+Route::prefix('panel/customers/{customer}/volume-limit')->name('panel.customers.volume-limit.')->middleware(['auth', 'can:manage-customers'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\CustomerVolumeLimitController::class, 'show'])->name('show');
+    Route::put('/', [\App\Http\Controllers\Panel\CustomerVolumeLimitController::class, 'update'])->name('update');
+    Route::post('/reset', [\App\Http\Controllers\Panel\CustomerVolumeLimitController::class, 'reset'])->name('reset');
+    Route::delete('/', [\App\Http\Controllers\Panel\CustomerVolumeLimitController::class, 'destroy'])->name('destroy');
+});
+
+// Customer Time Limits
+Route::prefix('panel/customers/{customer}/time-limit')->name('panel.customers.time-limit.')->middleware(['auth', 'can:manage-customers'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\CustomerTimeLimitController::class, 'show'])->name('show');
+    Route::put('/', [\App\Http\Controllers\Panel\CustomerTimeLimitController::class, 'update'])->name('update');
+    Route::post('/reset', [\App\Http\Controllers\Panel\CustomerTimeLimitController::class, 'reset'])->name('reset');
+    Route::delete('/', [\App\Http\Controllers\Panel\CustomerTimeLimitController::class, 'destroy'])->name('destroy');
+});
+
+// Advance Payments
+Route::prefix('panel/customers/{customer}/advance-payments')->name('panel.customers.advance-payments.')->middleware(['auth', 'can:manage-payments'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'store'])->name('store');
+    Route::get('/{advancePayment}', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'show'])->name('show');
+});
+
+// Custom Prices
+Route::prefix('panel/customers/{customer}/custom-prices')->name('panel.customers.custom-prices.')->middleware(['auth', 'can:manage-pricing'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\CustomPriceController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Panel\CustomPriceController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Panel\CustomPriceController::class, 'store'])->name('store');
+    Route::get('/{customPrice}/edit', [\App\Http\Controllers\Panel\CustomPriceController::class, 'edit'])->name('edit');
+    Route::put('/{customPrice}', [\App\Http\Controllers\Panel\CustomPriceController::class, 'update'])->name('update');
+    Route::delete('/{customPrice}', [\App\Http\Controllers\Panel\CustomPriceController::class, 'destroy'])->name('destroy');
+});
+
+// VAT Management
+Route::prefix('panel/vat')->name('panel.vat.')->middleware(['auth', 'can:manage-vat'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\VatManagementController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Panel\VatManagementController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Panel\VatManagementController::class, 'store'])->name('store');
+    Route::get('/{vatProfile}/edit', [\App\Http\Controllers\Panel\VatManagementController::class, 'edit'])->name('edit');
+    Route::put('/{vatProfile}', [\App\Http\Controllers\Panel\VatManagementController::class, 'update'])->name('update');
+    Route::delete('/{vatProfile}', [\App\Http\Controllers\Panel\VatManagementController::class, 'destroy'])->name('destroy');
+    Route::get('/collections', [\App\Http\Controllers\Panel\VatManagementController::class, 'collections'])->name('collections');
+    Route::get('/collections/export', [\App\Http\Controllers\Panel\VatManagementController::class, 'exportCollections'])->name('collections.export');
+});
+
+// SMS Broadcast
+Route::prefix('panel/sms/broadcast')->name('panel.sms.broadcast.')->middleware(['auth', 'can:manage-sms'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\SmsBroadcastController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Panel\SmsBroadcastController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Panel\SmsBroadcastController::class, 'store'])->name('store');
+    Route::get('/{broadcast}', [\App\Http\Controllers\Panel\SmsBroadcastController::class, 'show'])->name('show');
+    Route::post('/{broadcast}/cancel', [\App\Http\Controllers\Panel\SmsBroadcastController::class, 'cancel'])->name('cancel');
+});
+
+// SMS Events
+Route::prefix('panel/sms/events')->name('panel.sms.events.')->middleware(['auth', 'can:manage-sms'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\SmsEventController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Panel\SmsEventController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Panel\SmsEventController::class, 'store'])->name('store');
+    Route::get('/{event}/edit', [\App\Http\Controllers\Panel\SmsEventController::class, 'edit'])->name('edit');
+    Route::put('/{event}', [\App\Http\Controllers\Panel\SmsEventController::class, 'update'])->name('update');
+    Route::delete('/{event}', [\App\Http\Controllers\Panel\SmsEventController::class, 'destroy'])->name('destroy');
+});
+
+// SMS History
+Route::prefix('panel/sms/history')->name('panel.sms.history.')->middleware(['auth', 'can:view-sms-history'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\SmsHistoryController::class, 'index'])->name('index');
+    Route::get('/customer/{customer}', [\App\Http\Controllers\Panel\SmsHistoryController::class, 'customer'])->name('customer');
+    Route::get('/{smsLog}', [\App\Http\Controllers\Panel\SmsHistoryController::class, 'show'])->name('show');
+});
+
+// Expense Management
+Route::prefix('panel/expenses')->name('panel.expenses.')->middleware(['auth', 'can:manage-expenses'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'store'])->name('store');
+    Route::get('/{expense}', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'show'])->name('show');
+    Route::get('/{expense}/edit', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'edit'])->name('edit');
+    Route::put('/{expense}', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'update'])->name('update');
+    Route::delete('/{expense}', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'destroy'])->name('destroy');
+    Route::get('/categories/{category}/subcategories', [\App\Http\Controllers\Panel\ExpenseManagementController::class, 'getSubcategories'])->name('subcategories');
+});
+
+// Expense Categories
+Route::prefix('panel/expenses/categories')->name('panel.expenses.categories.')->middleware(['auth', 'can:manage-expenses'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\ExpenseCategoryController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Panel\ExpenseCategoryController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Panel\ExpenseCategoryController::class, 'store'])->name('store');
+    Route::get('/{category}/edit', [\App\Http\Controllers\Panel\ExpenseCategoryController::class, 'edit'])->name('edit');
+    Route::put('/{category}', [\App\Http\Controllers\Panel\ExpenseCategoryController::class, 'update'])->name('update');
+    Route::delete('/{category}', [\App\Http\Controllers\Panel\ExpenseCategoryController::class, 'destroy'])->name('destroy');
+    
+    // Subcategories
+    Route::prefix('{category}/subcategories')->name('subcategories.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Panel\ExpenseSubcategoryController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Panel\ExpenseSubcategoryController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Panel\ExpenseSubcategoryController::class, 'store'])->name('store');
+        Route::get('/{subcategory}/edit', [\App\Http\Controllers\Panel\ExpenseSubcategoryController::class, 'edit'])->name('edit');
+        Route::put('/{subcategory}', [\App\Http\Controllers\Panel\ExpenseSubcategoryController::class, 'update'])->name('update');
+        Route::delete('/{subcategory}', [\App\Http\Controllers\Panel\ExpenseSubcategoryController::class, 'destroy'])->name('destroy');
+    });
+});

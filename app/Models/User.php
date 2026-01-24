@@ -713,4 +713,44 @@ class User extends Authenticatable
     {
         return $this->hasOne(OperatorSmsRate::class, 'operator_id');
     }
+
+    /**
+     * Get customer MAC addresses.
+     */
+    public function macAddresses(): HasMany
+    {
+        return $this->hasMany(CustomerMacAddress::class);
+    }
+
+    /**
+     * Get customer volume limit.
+     */
+    public function volumeLimit(): HasOne
+    {
+        return $this->hasOne(CustomerVolumeLimit::class);
+    }
+
+    /**
+     * Get customer time limit.
+     */
+    public function timeLimit(): HasOne
+    {
+        return $this->hasOne(CustomerTimeLimit::class);
+    }
+
+    /**
+     * Get customer advance payments.
+     */
+    public function advancePayments(): HasMany
+    {
+        return $this->hasMany(AdvancePayment::class);
+    }
+
+    /**
+     * Get customer custom prices.
+     */
+    public function customPrices(): HasMany
+    {
+        return $this->hasMany(CustomPrice::class);
+    }
 }

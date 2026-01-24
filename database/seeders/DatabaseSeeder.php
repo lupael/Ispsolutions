@@ -27,6 +27,13 @@ class DatabaseSeeder extends Seeder
             IpSubnetSeeder::class,
         ]);
 
+        // Seed new feature data
+        $this->call([
+            VatProfileSeeder::class,
+            SmsEventSeeder::class,
+            ExpenseCategorySeeder::class,
+        ]);
+
         // Create test user
         User::factory()->create([
             'name' => 'Test User',
