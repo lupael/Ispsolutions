@@ -263,6 +263,10 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::resource('custom-fields', \App\Http\Controllers\Panel\CustomerCustomFieldController::class);
     Route::post('/custom-fields/reorder', [\App\Http\Controllers\Panel\CustomerCustomFieldController::class, 'reorder'])->name('custom-fields.reorder');
 
+    // IP Pool Migration
+    Route::get('/ip-pools/migrate', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'index'])->name('ip-pools.migrate');
+    Route::get('/ip-pools/migration-progress/{migrationId}', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'index'])->name('ip-pools.migration-progress');
+
     // Network Device Management - Legacy routes (kept for backward compatibility)
     // These redirect to the more organized /network/* routes
     Route::get('/mikrotik', function () {

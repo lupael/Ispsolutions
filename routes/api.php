@@ -226,3 +226,11 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
         Route::post('/onu/bulk-operations', [OltController::class, 'bulkOnuOperations'])->name('api.olt.onu.bulk-operations');
     });
 });
+
+// IP Pool Migration API Routes
+Route::prefix('v1/migrations')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('/validate', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'validate']);
+    Route::post('/start', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'start']);
+    Route::get('/{migrationId}/progress', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'progress']);
+    Route::post('/{migrationId}/rollback', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'rollback']);
+});
