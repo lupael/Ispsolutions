@@ -43,7 +43,15 @@
             ['label' => 'Dashboard', 'route' => 'panel.admin.dashboard', 'icon' => 'home'],
             // Removed 'Users' menu - operators managed through Operators Management menu
             // Removed 'Network Users' - customers now managed through customer menu
-            ['label' => 'Packages', 'route' => 'panel.admin.packages', 'icon' => 'box'],
+            [
+                'label' => 'Packages',
+                'icon' => 'box',
+                'children' => [
+                    ['label' => 'All Packages', 'route' => 'panel.admin.packages'],
+                    ['label' => 'Create Package', 'route' => 'panel.admin.packages.create'],
+                    ['label' => 'Package Profile Mapping', 'route' => 'panel.admin.packages.profile-mappings'],
+                ]
+            ],
             [
                 'label' => 'Customers',
                 'icon' => 'user-group',
@@ -121,12 +129,14 @@
                     ['label' => 'Add Operator', 'route' => 'panel.admin.operators.create'],
                     ['label' => 'Sub Operators', 'route' => 'panel.admin.operators.sub-operators'],
                     ['label' => 'Staff', 'route' => 'panel.admin.operators.staff'],
+                    ['label' => 'Manage Operator Funds', 'route' => 'panel.admin.operators.funds'],
                 ]
             ],
             [
                 'label' => 'SMS Management',
                 'icon' => 'chat',
                 'children' => [
+                    ['label' => 'SMS Gateways', 'route' => 'panel.admin.sms.gateways.index'],
                     ['label' => 'Send SMS', 'route' => 'panel.admin.sms.send'],
                     ['label' => 'Broadcast SMS', 'route' => 'panel.admin.sms.broadcast'],
                     ['label' => 'SMS History', 'route' => 'panel.admin.sms.histories'],
@@ -229,6 +239,30 @@
             ['label' => 'Billing History', 'route' => 'panel.customer.billing', 'icon' => 'receipt'],
             ['label' => 'Usage Statistics', 'route' => 'panel.customer.usage', 'icon' => 'chart'],
             ['label' => 'Support Tickets', 'route' => 'panel.customer.tickets', 'icon' => 'ticket'],
+        ];
+    } elseif ($userRole === 'card-distributor') {
+        $menus = [
+            ['label' => 'Dashboard', 'route' => 'panel.card-distributor.dashboard', 'icon' => 'home'],
+            [
+                'label' => 'Recharge Cards',
+                'icon' => 'card',
+                'children' => [
+                    ['label' => 'All Cards', 'route' => 'panel.card-distributor.cards'],
+                    ['label' => 'Generate Cards', 'route' => 'panel.card-distributor.cards.generate'],
+                    ['label' => 'Download Cards', 'route' => 'panel.card-distributor.cards.download'],
+                    ['label' => 'Used Cards', 'route' => 'panel.card-distributor.cards.used'],
+                    ['label' => 'Available Cards', 'route' => 'panel.card-distributor.cards.available'],
+                ]
+            ],
+            [
+                'label' => 'Sales',
+                'icon' => 'shopping',
+                'children' => [
+                    ['label' => 'Sales Report', 'route' => 'panel.card-distributor.sales'],
+                    ['label' => 'Commission', 'route' => 'panel.card-distributor.commission'],
+                ]
+            ],
+            ['label' => 'Settings', 'route' => 'panel.card-distributor.settings', 'icon' => 'cog'],
         ];
     } elseif ($userRole === 'developer') {
         $menus = [
