@@ -217,15 +217,16 @@ class RrdGraphService
             $options = $this->getGraphOptions($rrdPath, $graphPath, $timeframe);
             
             try {
-                $result = @rrd_graph($graphPath, $options);
+                $result = rrd_graph($graphPath, $options);
                 
                 // rrd_graph returns false on error, but PHPStan thinks it's always array
                 // @phpstan-ignore-next-line
                 if ($result === false || empty($result)) {
+                    $error = rrd_error();
                     Log::error('Failed to generate RRD graph', [
                         'customer_id' => $customerId,
                         'timeframe' => $timeframe,
-                        'error' => rrd_error(),
+                        'error' => $error ?: 'Unknown RRD error',
                     ]);
                     return $this->generateFallbackGraph($timeframe);
                 }

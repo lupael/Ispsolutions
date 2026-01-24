@@ -97,9 +97,9 @@
 
 <script>
 (function() {
-    const customerId = {{ $customerId }};
-    const autoRefresh = {{ $autoRefresh ? 'true' : 'false' }};
-    const refreshInterval = {{ $refreshInterval }};
+    const customerId = @json($customerId);
+    const autoRefresh = @json((bool) $autoRefresh);
+    const refreshInterval = @json((int) $refreshInterval);
     let currentTimeframe = 'hourly';
     let refreshTimer = null;
     let autoRefreshEnabled = autoRefresh;
