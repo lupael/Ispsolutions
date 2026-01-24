@@ -19,7 +19,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-/public/build
+/public/build/*
 # Docker
 /docker/data
 docker-compose.override.yml
