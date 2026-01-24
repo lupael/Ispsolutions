@@ -151,7 +151,11 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($onu->networkUser)
-                                    <div class="text-sm text-gray-900 dark:text-gray-100">{{ $onu->networkUser->username }}</div>
+                                    <div class="text-sm text-gray-900 dark:text-gray-100">
+                                        <a href="{{ route('panel.admin.customers.show', $onu->networkUser->id) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline">
+                                            {{ $onu->networkUser->username }}
+                                        </a>
+                                    </div>
                                 @else
                                     <span class="text-sm text-gray-400 dark:text-gray-500">Not assigned</span>
                                 @endif
