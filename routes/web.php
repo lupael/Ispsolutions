@@ -88,12 +88,21 @@ Route::prefix('hotspot/login')->name('hotspot.login')->group(function () {
     
     Route::get('/device-conflict', [HotspotLoginController::class, 'showDeviceConflict'])->name('.device-conflict');
     Route::post('/force-login', [HotspotLoginController::class, 'forceLogin'])->name('.force-login');
+    
+    // Scenario 8: Link login (public access)
+    Route::get('/link/{token}', [HotspotLoginController::class, 'processLinkLogin'])->name('.link-login');
+    
+    // Scenario 10: Federated login
+    Route::post('/federated', [HotspotLoginController::class, 'federatedLogin'])->name('.federated');
 });
 
 // Hotspot user dashboard and logout (requires hotspot session)
 Route::prefix('hotspot')->name('hotspot.')->middleware(['hotspot.auth'])->group(function () {
     Route::get('/dashboard', [HotspotLoginController::class, 'showDashboard'])->name('dashboard');
     Route::post('/logout', [HotspotLoginController::class, 'logout'])->name('logout');
+    
+    // Scenario 8: Link login dashboard
+    Route::get('/link-dashboard', [HotspotLoginController::class, 'showLinkDashboard'])->name('link-dashboard');
 });
 
 // Admin hotspot management routes
@@ -108,6 +117,9 @@ Route::prefix('hotspot')->name('hotspot.')->middleware(['auth'])->group(function
     Route::post('{hotspotUser}/suspend', [HotspotController::class, 'suspend'])->name('suspend');
     Route::post('{hotspotUser}/reactivate', [HotspotController::class, 'reactivate'])->name('reactivate');
     Route::post('{hotspotUser}/renew', [HotspotController::class, 'renew'])->name('renew');
+    
+    // Scenario 8: Generate link login (admin only)
+    Route::post('/generate-link', [HotspotLoginController::class, 'generateLinkLogin'])->name('generate-link');
 });
 
 /*

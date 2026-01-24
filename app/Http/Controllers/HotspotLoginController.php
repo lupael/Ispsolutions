@@ -6,8 +6,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\HotspotLogin\RequestLoginOtpRequest;
 use App\Http\Requests\HotspotLogin\VerifyLoginOtpRequest;
+use App\Models\HotspotLoginLog;
 use App\Models\HotspotUser;
+use App\Services\HotspotScenarioDetectionService;
 use App\Services\OtpService;
+use App\Services\SmsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,10 +22,17 @@ use Illuminate\Support\Str;
 class HotspotLoginController extends Controller
 {
     protected OtpService $otpService;
+    protected HotspotScenarioDetectionService $scenarioService;
+    protected SmsService $smsService;
 
-    public function __construct(OtpService $otpService)
-    {
+    public function __construct(
+        OtpService $otpService,
+        HotspotScenarioDetectionService $scenarioService,
+        SmsService $smsService
+    ) {
         $this->otpService = $otpService;
+        $this->scenarioService = $scenarioService;
+        $this->smsService = $smsService;
     }
 
     /**
@@ -316,6 +326,17 @@ class HotspotLoginController extends Controller
         $hotspotUser = $this->getAuthenticatedUser($request);
 
         if ($hotspotUser) {
+            $sessionId = session('hotspot_auth.session_id');
+            
+            // Use scenario service to handle logout (Scenario 9)
+            if ($sessionId) {
+                $this->scenarioService->handleLogout(
+                    $sessionId,
+                    $hotspotUser->username,
+                    []
+                );
+            }
+            
             // Clear session in database
             $hotspotUser->clearSession();
 
@@ -332,6 +353,296 @@ class HotspotLoginController extends Controller
         return redirect()
             ->route('hotspot.login')
             ->with('success', 'You have been logged out successfully.');
+    }
+
+    /**
+     * Scenario 8: Generate link login (public access).
+     */
+    public function generateLinkLogin(Request $request): JsonResponse
+    {
+        $request->validate([
+            'duration_minutes' => 'nullable|integer|min:1|max:1440',
+            'metadata' => 'nullable|array',
+        ]);
+
+        try {
+            $tenantId = auth()->user()?->tenant_id;
+            $durationMinutes = $request->input('duration_minutes', 60);
+            $metadata = $request->input('metadata', []);
+
+            $result = $this->scenarioService->generateLinkLogin(
+                $tenantId,
+                $durationMinutes,
+                $metadata
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $result,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to generate link login', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate access link',
+            ], 500);
+        }
+    }
+
+    /**
+     * Scenario 8: Process link login.
+     */
+    public function processLinkLogin(string $token, Request $request): View|RedirectResponse
+    {
+        try {
+            $macAddress = $this->getMacAddress($request);
+            $ipAddress = $request->ip();
+
+            $result = $this->scenarioService->verifyLinkLogin($token, $macAddress, $ipAddress);
+
+            if (!$result['allow_login']) {
+                return redirect()
+                    ->route('hotspot.login')
+                    ->withErrors(['error' => $result['message']]);
+            }
+
+            // Store session for link login
+            session([
+                'hotspot_auth' => [
+                    'session_id' => $result['session_id'],
+                    'mac_address' => $macAddress,
+                    'logged_in_at' => now()->timestamp,
+                    'is_link_login' => true,
+                    'expires_at' => $result['expires_at']->timestamp,
+                ],
+            ]);
+
+            return redirect()
+                ->route('hotspot.link-dashboard')
+                ->with('success', $result['message']);
+
+        } catch (\Exception $e) {
+            Log::error('Link login failed', [
+                'token' => $token,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('hotspot.login')
+                ->withErrors(['error' => 'Invalid or expired access link']);
+        }
+    }
+
+    /**
+     * Scenario 8: Show dashboard for link login users.
+     */
+    public function showLinkDashboard(Request $request): View|RedirectResponse
+    {
+        $authData = session('hotspot_auth');
+
+        if (!$authData || !($authData['is_link_login'] ?? false)) {
+            return redirect()
+                ->route('hotspot.login')
+                ->withErrors(['error' => 'Please login to access the dashboard.']);
+        }
+
+        // Check if link has expired
+        if (isset($authData['expires_at']) && now()->timestamp > $authData['expires_at']) {
+            session()->forget('hotspot_auth');
+            
+            return redirect()
+                ->route('hotspot.login')
+                ->withErrors(['error' => 'Your access link has expired.']);
+        }
+
+        return view('hotspot-login.link-dashboard', [
+            'session_id' => $authData['session_id'],
+            'expires_at' => $authData['expires_at'],
+        ]);
+    }
+
+    /**
+     * Scenario 10: Handle federated login.
+     */
+    public function federatedLogin(Request $request): View|RedirectResponse|JsonResponse
+    {
+        $request->validate([
+            'username' => 'required|string',
+        ]);
+
+        try {
+            $username = $request->input('username');
+            $tenantId = auth()->user()?->tenant_id;
+            $macAddress = $this->getMacAddress($request);
+            $ipAddress = $request->ip();
+
+            // Perform cross-radius lookup (Scenario 10)
+            $result = $this->scenarioService->crossRadiusLookup($username, $tenantId);
+
+            if ($result['federated'] ?? false) {
+                // Log federated login attempt
+                $this->scenarioService->logFederatedLogin(
+                    $username,
+                    $result['home_operator'],
+                    $macAddress,
+                    $ipAddress,
+                    $tenantId
+                );
+
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'federated' => true,
+                        'redirect_url' => $result['redirect_url'],
+                        'message' => $result['message'],
+                    ]);
+                }
+
+                return redirect()->away($result['redirect_url']);
+            }
+
+            // Local authentication
+            if ($result['allow_login']) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'federated' => false,
+                        'message' => $result['message'],
+                    ]);
+                }
+
+                return redirect()
+                    ->route('hotspot.login')
+                    ->with('success', $result['message']);
+            }
+
+            // User not found
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                ], 404);
+            }
+
+            return back()
+                ->withErrors(['username' => $result['message']])
+                ->withInput();
+
+        } catch (\Exception $e) {
+            Log::error('Federated login failed', [
+                'username' => $request->input('username'),
+                'error' => $e->getMessage(),
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Federated authentication failed',
+                ], 500);
+            }
+
+            return back()
+                ->withErrors(['error' => 'Federated authentication failed'])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Send SMS notification for device change.
+     */
+    protected function sendDeviceChangeSms(HotspotUser $user, string $oldMac, string $newMac): void
+    {
+        try {
+            $message = sprintf(
+                'Security Alert: Your device MAC address has changed from %s to %s. If this was not you, please contact support immediately.',
+                $oldMac,
+                $newMac
+            );
+
+            $this->smsService->sendSms(
+                $user->phone_number,
+                $message,
+                null,
+                null,
+                $user->tenant_id
+            );
+
+            Log::info('Device change SMS sent', [
+                'user_id' => $user->id,
+                'old_mac' => $oldMac,
+                'new_mac' => $newMac,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send device change SMS', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Send SMS notification for account suspension.
+     */
+    protected function sendSuspensionSms(HotspotUser $user, string $reason): void
+    {
+        try {
+            $message = sprintf(
+                'Your account has been suspended. Reason: %s. Please contact support for assistance.',
+                $reason
+            );
+
+            $this->smsService->sendSms(
+                $user->phone_number,
+                $message,
+                null,
+                null,
+                $user->tenant_id
+            );
+
+            Log::info('Suspension SMS sent', [
+                'user_id' => $user->id,
+                'reason' => $reason,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send suspension SMS', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Send SMS notification for successful login.
+     */
+    protected function sendLoginSuccessSms(HotspotUser $user, string $macAddress): void
+    {
+        try {
+            $message = sprintf(
+                'Login successful! Your device (%s) is now connected. Welcome back!',
+                substr($macAddress, 0, 17)
+            );
+
+            $this->smsService->sendSms(
+                $user->phone_number,
+                $message,
+                null,
+                null,
+                $user->tenant_id
+            );
+
+            Log::info('Login success SMS sent', [
+                'user_id' => $user->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send login success SMS', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
