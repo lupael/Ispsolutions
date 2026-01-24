@@ -148,7 +148,7 @@
             </div>
 
             <!-- Confirmation Form -->
-            <form action="{{ route('panel.customers.wizard.store', ['step' => 7]) }}" method="POST">
+            <form action="{{ route('panel.admin.customers.wizard.store', ['step' => 7]) }}" method="POST">
                 @csrf
                 
                 <div class="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg mb-6">
@@ -179,7 +179,7 @@
 
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between">
-                    <a href="{{ route('panel.customers.wizard.step', ['step' => 6]) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                    <a href="{{ route('panel.admin.customers.wizard.step', ['step' => 6]) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>

@@ -5,7 +5,7 @@
     <div class="p-6">
         <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Initial Payment</h2>
         
-        <form action="{{ route('panel.customers.wizard.store', ['step' => 6]) }}" method="POST">
+        <form action="{{ route('panel.admin.customers.wizard.store', ['step' => 6]) }}" method="POST">
             @csrf
             
             <div class="space-y-6">
@@ -113,7 +113,7 @@
 
             <!-- Navigation Buttons -->
             <div class="mt-8 flex justify-between">
-                <a href="{{ route('panel.customers.wizard.step', ['step' => 5]) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                <a href="{{ route('panel.admin.customers.wizard.step', ['step' => 5]) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>

@@ -13,7 +13,7 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Step {{ $currentStep }} of {{ $totalSteps }}</p>
                 </div>
                 <div class="flex space-x-2">
-                    <form action="{{ route('panel.customers.wizard.cancel') }}" method="POST">
+                    <form action="{{ route('panel.admin.customers.wizard.cancel') }}" method="POST">
                         @csrf
                         <button type="submit" onclick="return confirm('Are you sure? All entered data will be lost.')" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
                             Cancel

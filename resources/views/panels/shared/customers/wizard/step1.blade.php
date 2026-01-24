@@ -5,7 +5,7 @@
     <div class="p-6">
         <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Basic Information</h2>
         
-        <form action="{{ route('panel.customers.wizard.store', ['step' => 1]) }}" method="POST">
+        <form action="{{ route('panel.admin.customers.wizard.store', ['step' => 1]) }}" method="POST">
             @csrf
             
             <div class="space-y-6">
