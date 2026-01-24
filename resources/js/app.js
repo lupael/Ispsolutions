@@ -39,7 +39,7 @@ function initDrawers() {
             toggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 drawer.classList.toggle('hidden');
-                drawer.classList.toggle('block');
+                drawer.classList.toggle('flex');
             });
         });
     });
