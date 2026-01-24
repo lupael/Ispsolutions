@@ -285,6 +285,12 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/customers-online', [AdminController::class, 'onlineCustomers'])->name('customers.online');
     Route::get('/customers-offline', [AdminController::class, 'offlineCustomers'])->name('customers.offline');
 
+    // Customer Wizard
+    Route::get('/customers/wizard/start', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'start'])->name('customers.wizard.start');
+    Route::get('/customers/wizard/step/{step}', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'show'])->name('customers.wizard.step');
+    Route::post('/customers/wizard/step/{step}', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'store'])->name('customers.wizard.store');
+    Route::post('/customers/wizard/cancel', [\App\Http\Controllers\Panel\CustomerWizardController::class, 'cancel'])->name('customers.wizard.cancel');
+
     // Zone Management
     Route::get('/zones', [\App\Http\Controllers\Panel\ZoneController::class, 'index'])->name('zones.index');
     Route::get('/zones/create', [\App\Http\Controllers\Panel\ZoneController::class, 'create'])->name('zones.create');
