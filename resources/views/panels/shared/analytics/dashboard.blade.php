@@ -5,8 +5,11 @@
 @section('content')
 <div class="container-fluid">
     <div class="card mb-4">
-        <div class="card-header">
-            <h3 class="card-title">Analytics Dashboard</h3>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">Analytics Dashboard</h3>
+            <button class="btn btn-sm btn-primary" onclick="refreshAllWidgets()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh All
+            </button>
         </div>
         <div class="card-body">
             <!-- Date Range Filter -->
@@ -26,6 +29,21 @@
                     </div>
                 </div>
             </form>
+
+            <!-- Widgets Section -->
+            @if(isset($widgets))
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        @include('panels.shared.widgets.suspension-forecast')
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        @include('panels.shared.widgets.collection-target')
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        @include('panels.shared.widgets.sms-usage')
+                    </div>
+                </div>
+            @endif
 
             <!-- Revenue Summary -->
             <div class="row mb-4">
@@ -107,4 +125,87 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function refreshWidget(widgetName) {
+    const widgetElement = document.getElementById(`${widgetName}-widget`);
+    if (!widgetElement) return;
+    
+    // Add loading state
+    const originalContent = widgetElement.innerHTML;
+    const cardBody = widgetElement.querySelector('.card-body');
+    if (cardBody) {
+        cardBody.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fs-2"></i><p class="mt-2">Refreshing...</p></div>';
+    }
+    
+    fetch(`/api/v1/widgets/refresh`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ widgets: [widgetName] })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show updated widget data
+            window.location.href = window.location.pathname + '?refresh=1';
+        } else {
+            throw new Error('Failed to refresh widget');
+        }
+    })
+    .catch(error => {
+        console.error('Error refreshing widget:', error);
+        if (cardBody) {
+            cardBody.innerHTML = '<div class="alert alert-danger">Failed to refresh widget. Please try again.</div>';
+        }
+        // Restore original content after 2 seconds
+        setTimeout(() => {
+            widgetElement.innerHTML = originalContent;
+        }, 2000);
+    });
+}
+
+function refreshAllWidgets() {
+    // Show loading state
+    const widgets = ['suspension_forecast', 'collection_target', 'sms_usage'];
+    widgets.forEach(widgetName => {
+        const widgetElement = document.getElementById(`${widgetName}-widget`);
+        if (widgetElement) {
+            const cardBody = widgetElement.querySelector('.card-body');
+            if (cardBody) {
+                cardBody.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fs-2"></i><p class="mt-2">Refreshing...</p></div>';
+            }
+        }
+    });
+    
+    fetch(`/api/v1/widgets/refresh`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show updated widget data
+            window.location.href = window.location.pathname + '?refresh=1';
+        } else {
+            throw new Error('Failed to refresh widgets');
+        }
+    })
+    .catch(error => {
+        console.error('Error refreshing widgets:', error);
+        alert('Failed to refresh widgets. Please try again.');
+        window.location.reload();
+    });
+}
+</script>
+@endpush
 @endsection

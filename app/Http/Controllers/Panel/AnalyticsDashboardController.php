@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Services\AdvancedAnalyticsService;
+use App\Services\WidgetCacheService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -11,10 +12,14 @@ use Illuminate\View\View;
 class AnalyticsDashboardController extends Controller
 {
     protected AdvancedAnalyticsService $analyticsService;
+    protected WidgetCacheService $widgetCacheService;
 
-    public function __construct(AdvancedAnalyticsService $analyticsService)
-    {
+    public function __construct(
+        AdvancedAnalyticsService $analyticsService,
+        WidgetCacheService $widgetCacheService
+    ) {
         $this->analyticsService = $analyticsService;
+        $this->widgetCacheService = $widgetCacheService;
     }
 
     /**
@@ -31,6 +36,7 @@ class AnalyticsDashboardController extends Controller
             : now();
 
         $tenantId = auth()->user()->tenant_id;
+        $refresh = $request->boolean('refresh', false);
 
         try {
             $analytics = $this->analyticsService->getDashboardAnalytics($startDate, $endDate);
@@ -44,7 +50,14 @@ class AnalyticsDashboardController extends Controller
             ];
         }
 
-        return view('panels.shared.analytics.dashboard', compact('analytics', 'startDate', 'endDate'));
+        // Get widget data with caching
+        $widgets = [
+            'suspension_forecast' => $this->widgetCacheService->getSuspensionForecast($tenantId, $refresh),
+            'collection_target' => $this->widgetCacheService->getCollectionTarget($tenantId, $refresh),
+            'sms_usage' => $this->widgetCacheService->getSmsUsage($tenantId, $refresh),
+        ];
+
+        return view('panels.shared.analytics.dashboard', compact('analytics', 'widgets', 'startDate', 'endDate'));
     }
 
     /**

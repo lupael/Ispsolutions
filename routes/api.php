@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\MonitoringController;
 use App\Http\Controllers\Api\V1\NetworkUserController;
 use App\Http\Controllers\Api\V1\OltController;
 use App\Http\Controllers\Api\V1\RadiusController;
+use App\Http\Controllers\Api\V1\WidgetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,6 +44,14 @@ Route::middleware(['auth:sanctum', 'rate_limit:api'])->prefix('charts')->group(f
     Route::get('/package-distribution', [\App\Http\Controllers\Api\ChartController::class, 'getPackageDistributionChart'])->name('api.charts.package-distribution');
     Route::get('/commission', [\App\Http\Controllers\Api\ChartController::class, 'getCommissionChart'])->name('api.charts.commission');
     Route::get('/dashboard', [\App\Http\Controllers\Api\ChartController::class, 'getDashboardCharts'])->name('api.charts.dashboard');
+});
+
+// Widget API Routes (for dashboard widgets)
+Route::middleware(['auth:sanctum', 'rate_limit:api'])->prefix('v1/widgets')->group(function () {
+    Route::post('/refresh', [WidgetController::class, 'refresh'])->name('api.v1.widgets.refresh');
+    Route::get('/suspension-forecast', [WidgetController::class, 'suspensionForecast'])->name('api.v1.widgets.suspension-forecast');
+    Route::get('/collection-target', [WidgetController::class, 'collectionTarget'])->name('api.v1.widgets.collection-target');
+    Route::get('/sms-usage', [WidgetController::class, 'smsUsage'])->name('api.v1.widgets.sms-usage');
 });
 
 Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
