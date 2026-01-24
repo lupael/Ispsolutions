@@ -8,7 +8,6 @@ use App\Jobs\ReAllocateIPv4ForProfileJob;
 use App\Models\IpPool;
 use App\Models\NetworkUser;
 use App\Models\RadReply;
-use App\Models\User;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
@@ -55,7 +54,7 @@ class IpPoolMigrationService
         } catch (\Exception $e) {
             return [
                 'valid' => false,
-                'message' => 'Validation failed: '.$e->getMessage(),
+                'message' => 'Validation failed: ' . $e->getMessage(),
             ];
         }
     }

@@ -7,7 +7,6 @@ namespace App\Jobs;
 use App\Models\IpPool;
 use App\Models\NetworkUser;
 use App\Models\RadReply;
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -95,7 +94,7 @@ class ReAllocateIPv4ForProfileJob implements ShouldQueue
                     $failed[] = $networkUser->username;
                 }
             } catch (\Exception $e) {
-                Log::error("Failed to migrate IP for {$networkUser->username}: ".$e->getMessage());
+                Log::error("Failed to migrate IP for {$networkUser->username}: " . $e->getMessage());
                 $failed[] = $networkUser->username;
             }
 
