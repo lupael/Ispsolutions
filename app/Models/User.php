@@ -265,18 +265,20 @@ class User extends Authenticatable
 
     /**
      * Get the supervisor (manager) of this user.
+     * Note: This uses created_by as the supervisor relationship.
      */
     public function supervisor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'supervisor_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**
      * Get subordinates reporting to this user.
+     * Note: This uses created_by to find users created by this user.
      */
     public function subordinates(): HasMany
     {
-        return $this->hasMany(User::class, 'supervisor_id');
+        return $this->hasMany(User::class, 'created_by');
     }
 
     /**
