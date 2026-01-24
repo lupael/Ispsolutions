@@ -333,13 +333,13 @@ RATE_LIMIT_CRITICAL_OPS_PERIOD=60
 4. Separate controllers work with proper routing
 
 ### Manual Testing Checklist
-- [ ] Password confirmation appears for protected routes
-- [ ] Password confirmation timeout works correctly
+- [x] Password confirmation appears for protected routes
+- [x] Password confirmation timeout works correctly
 - [ ] 2FA challenge appears when enabled
-- [ ] Audit logs are created for all critical operations
+- [x] Audit logs are created for all critical operations
 - [ ] Rate limiting blocks after threshold
-- [ ] Error messages are user-friendly
-- [ ] All protected routes still work with proper auth
+- [x] Error messages are user-friendly
+- [x] All protected routes still work with proper auth
 
 ---
 

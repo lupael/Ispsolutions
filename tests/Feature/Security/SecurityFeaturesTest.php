@@ -119,4 +119,55 @@ class SecurityFeaturesTest extends TestCase
         $this->assertCount(8, $codes);
         $this->assertNotNull($user->fresh()->two_factor_recovery_codes);
     }
+
+    public function test_password_confirmation_middleware_is_registered(): void
+    {
+        // Verify password confirmation middleware alias exists in Laravel 11+
+        // The middleware is registered in bootstrap/app.php
+        $this->assertTrue(
+            class_exists(\Illuminate\Auth\Middleware\RequirePassword::class),
+            'RequirePassword middleware class should exist'
+        );
+
+        // Verify the bootstrap/app.php file contains the password.confirm alias
+        $bootstrapContent = file_get_contents(base_path('bootstrap/app.php'));
+        $this->assertStringContainsString(
+            'password.confirm',
+            $bootstrapContent,
+            'password.confirm middleware alias should be registered in bootstrap/app.php'
+        );
+    }
+
+    public function test_password_confirmation_view_exists(): void
+    {
+        // Verify the password confirmation view file exists
+        $viewPath = resource_path('views/auth/confirm-password.blade.php');
+        $this->assertFileExists($viewPath);
+    }
+
+    public function test_critical_delete_routes_are_protected(): void
+    {
+        // Test that critical delete routes have password.confirm middleware applied
+        // by checking the routes file content
+        $routesContent = file_get_contents(base_path('routes/web.php'));
+
+        // List of critical routes that should be protected - check for exact matches
+        $protectedRoutes = [
+            "Route::delete('/users/{id}', [SuperAdminController::class, 'usersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/users/{id}', [AdminController::class, 'usersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/customers/{id}', [AdminController::class, 'customersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/operators/{id}', [AdminController::class, 'operatorsDestroy'])->middleware('password.confirm')",
+            "Route::delete('/network/routers/{id}', [AdminController::class, 'routersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->middleware('password.confirm')",
+            "Route::delete('/disable', [TwoFactorAuthController::class, 'disable'])->middleware('password.confirm')",
+        ];
+
+        foreach ($protectedRoutes as $routeDef) {
+            $this->assertStringContainsString(
+                $routeDef,
+                $routesContent,
+                "Critical delete route should be protected: {$routeDef}"
+            );
+        }
+    }
 }
