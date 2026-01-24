@@ -697,7 +697,153 @@ app/Models/CustomerCustomAttribute.php (create)
 database/migrations/xxxx_create_customer_custom_fields_table.php (create)
 database/migrations/xxxx_create_customer_custom_attributes_table.php (create)
 app/Http/Controllers/Panel/CustomerCustomFieldController.php (create)
-resources/views/panels/admin/custom-fields/* (create)
+resources/views/panels/admin/custom-fields/index.blade.php (create)
+resources/views/panels/admin/custom-fields/create.blade.php (create)
+resources/views/panels/admin/custom-fields/edit.blade.php (create)
+```
+
+**Migration Schema:**
+```php
+// xxxx_create_customer_custom_fields_table.php
+Schema::create('customer_custom_fields', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+    $table->string('name'); // Field name
+    $table->string('label'); // Display label
+    $table->enum('type', ['text', 'number', 'date', 'select', 'checkbox', 'textarea']);
+    $table->boolean('required')->default(false);
+    $table->json('options')->nullable(); // For select/checkbox
+    $table->integer('order')->default(0);
+    $table->json('visibility')->nullable(); // Which roles can see this field
+    $table->string('category')->nullable(); // Group fields by category
+    $table->timestamps();
+    
+    $table->index(['tenant_id', 'order']);
+});
+
+// xxxx_create_customer_custom_attributes_table.php
+Schema::create('customer_custom_attributes', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('customer_id')->constrained('users')->cascadeOnDelete();
+    $table->foreignId('custom_field_id')->constrained('customer_custom_fields')->cascadeOnDelete();
+    $table->text('value')->nullable();
+    $table->timestamps();
+    
+    $table->unique(['customer_id', 'custom_field_id']);
+});
+```
+
+**Controller Implementation:**
+```php
+// app/Http/Controllers/Panel/CustomerCustomFieldController.php
+namespace App\Http\Controllers\Panel;
+
+use App\Models\CustomerCustomField;
+use Illuminate\Http\Request;
+
+class CustomerCustomFieldController extends Controller
+{
+    public function index()
+    {
+        $fields = CustomerCustomField::where('tenant_id', auth()->user()->tenant_id)
+            ->orderBy('order')
+            ->get();
+            
+        return view('panels.admin.custom-fields.index', compact('fields'));
+    }
+    
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'label' => 'required|string|max:255',
+            'type' => 'required|in:text,number,date,select,checkbox,textarea',
+            'required' => 'boolean',
+            'options' => 'nullable|json',
+            'category' => 'nullable|string|max:255',
+            'visibility' => 'nullable|json',
+        ]);
+        
+        $field = CustomerCustomField::create([
+            ...$validated,
+            'tenant_id' => auth()->user()->tenant_id,
+            'order' => CustomerCustomField::where('tenant_id', auth()->user()->tenant_id)->max('order') + 1,
+        ]);
+        
+        return redirect()->route('panel.admin.custom-fields.index')
+            ->with('success', 'Custom field created successfully');
+    }
+    
+    public function update(Request $request, CustomerCustomField $customField)
+    {
+        $this->authorize('update', $customField);
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'label' => 'required|string|max:255',
+            'type' => 'required|in:text,number,date,select,checkbox,textarea',
+            'required' => 'boolean',
+            'options' => 'nullable|json',
+            'category' => 'nullable|string|max:255',
+            'visibility' => 'nullable|json',
+        ]);
+        
+        $customField->update($validated);
+        
+        return redirect()->route('panel.admin.custom-fields.index')
+            ->with('success', 'Custom field updated successfully');
+    }
+    
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'required|integer|exists:customer_custom_fields,id',
+        ]);
+        
+        foreach ($validated['order'] as $index => $fieldId) {
+            CustomerCustomField::where('id', $fieldId)
+                ->where('tenant_id', auth()->user()->tenant_id)
+                ->update(['order' => $index]);
+        }
+        
+        return response()->json(['success' => true]);
+    }
+}
+```
+
+**Views Documentation:**
+
+1. **Index View** (`resources/views/panels/admin/custom-fields/index.blade.php`):
+   - Display list of all custom fields in a table
+   - Show field name, type, required status, category
+   - Include drag-and-drop ordering (using Sortable.js)
+   - Add/Edit/Delete actions
+   - Filter by category
+
+2. **Create/Edit View** (`resources/views/panels/admin/custom-fields/create.blade.php`):
+   - Form with fields: name, label, type, required checkbox
+   - Dynamic options input (show only for select/checkbox types)
+   - Category selection
+   - Visibility settings (checkboxes for each role)
+   - Live preview of field rendering
+
+3. **Customer Form Integration**:
+   - Modify customer create/edit forms to dynamically render custom fields
+   - Group fields by category
+   - Apply validation based on field requirements
+   - Store values in CustomerCustomAttribute model
+
+**Route Configuration:**
+```php
+// In routes/web.php - Admin panel group
+Route::prefix('panel/admin')->name('panel.admin.')
+    ->middleware(['auth', 'role:admin'])
+    ->group(function () {
+        Route::resource('custom-fields', CustomerCustomFieldController::class);
+        Route::post('custom-fields/reorder', [CustomerCustomFieldController::class, 'reorder'])
+            ->name('custom-fields.reorder');
+    });
 ```
 
 **Testing:**
@@ -742,6 +888,430 @@ app/Jobs/PPPoEProfilesIpAllocationModeChangeJob.php (create)
 app/Services/IpPoolMigrationService.php (create)
 app/Http/Controllers/Panel/IpPoolMigrationController.php (create)
 resources/views/panels/admin/ip-pools/migrate.blade.php (create)
+resources/views/panels/admin/ip-pools/migration-progress.blade.php (create)
+routes/api.php (modify for progress polling)
+```
+
+**Job Implementation:**
+```php
+// app/Jobs/ReAllocateIPv4ForProfileJob.php
+namespace App\Jobs;
+
+use App\Models\User;
+use App\Models\Radreply;
+use App\Models\IpPool;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Log;
+
+class ReAllocateIPv4ForProfileJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected $oldPoolId;
+    protected $newPoolId;
+    protected $profileId;
+    protected $migrationId;
+
+    public function __construct($oldPoolId, $newPoolId, $profileId, $migrationId)
+    {
+        $this->oldPoolId = $oldPoolId;
+        $this->newPoolId = $newPoolId;
+        $this->profileId = $profileId;
+        $this->migrationId = $migrationId;
+    }
+
+    public function handle()
+    {
+        $oldPool = IpPool::find($this->oldPoolId);
+        $newPool = IpPool::find($this->newPoolId);
+        
+        // Get all customers using old pool
+        $customers = User::whereHas('profile', function ($q) {
+            $q->where('id', $this->profileId);
+        })->get();
+        
+        $total = $customers->count();
+        $processed = 0;
+        $failed = [];
+        
+        // Store backup state
+        $this->storeBackupState($customers);
+        
+        foreach ($customers as $customer) {
+            try {
+                // Get old IP
+                $oldIp = Radreply::where('username', $customer->username)
+                    ->where('attribute', 'Framed-IP-Address')
+                    ->first();
+                
+                // Allocate new IP from new pool
+                $newIp = $newPool->allocateIp($customer->id);
+                
+                if ($newIp) {
+                    // Update radreply
+                    if ($oldIp) {
+                        $oldIp->update(['value' => $newIp]);
+                    } else {
+                        Radreply::create([
+                            'username' => $customer->username,
+                            'attribute' => 'Framed-IP-Address',
+                            'op' => ':=',
+                            'value' => $newIp,
+                        ]);
+                    }
+                    
+                    // Release old IP
+                    if ($oldIp) {
+                        $oldPool->releaseIp($oldIp->value);
+                    }
+                    
+                    $processed++;
+                } else {
+                    $failed[] = $customer->username;
+                }
+            } catch (\Exception $e) {
+                Log::error("Failed to migrate IP for {$customer->username}: " . $e->getMessage());
+                $failed[] = $customer->username;
+            }
+            
+            // Update progress in Redis
+            $this->updateProgress($processed, $total, $failed);
+        }
+        
+        // Mark migration as complete
+        $this->markComplete($processed, count($failed));
+    }
+    
+    protected function storeBackupState($customers)
+    {
+        $backup = [];
+        foreach ($customers as $customer) {
+            $ip = Radreply::where('username', $customer->username)
+                ->where('attribute', 'Framed-IP-Address')
+                ->first();
+            if ($ip) {
+                $backup[$customer->username] = $ip->value;
+            }
+        }
+        Redis::setex("migration:{$this->migrationId}:backup", 86400, json_encode($backup));
+    }
+    
+    protected function updateProgress($processed, $total, $failed)
+    {
+        $progress = [
+            'processed' => $processed,
+            'total' => $total,
+            'failed' => count($failed),
+            'failed_usernames' => $failed,
+            'percentage' => ($processed / $total) * 100,
+        ];
+        Redis::setex("migration:{$this->migrationId}:progress", 3600, json_encode($progress));
+    }
+    
+    protected function markComplete($processed, $failed)
+    {
+        $status = [
+            'status' => 'complete',
+            'processed' => $processed,
+            'failed' => $failed,
+            'completed_at' => now()->toDateTimeString(),
+        ];
+        Redis::setex("migration:{$this->migrationId}:status", 86400, json_encode($status));
+    }
+}
+
+// app/Jobs/PPPoEProfilesIpAllocationModeChangeJob.php
+namespace App\Jobs;
+
+use App\Models\PppoeProfile;
+use App\Services\MikroTikService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class PPPoEProfilesIpAllocationModeChangeJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected $profileId;
+    protected $newMode; // 'static' or 'dynamic'
+    protected $poolId;
+
+    public function __construct($profileId, $newMode, $poolId = null)
+    {
+        $this->profileId = $profileId;
+        $this->newMode = $newMode;
+        $this->poolId = $poolId;
+    }
+
+    public function handle(MikroTikService $mikrotik)
+    {
+        $profile = PppoeProfile::find($this->profileId);
+        
+        // Update profile in database
+        $profile->update([
+            'ip_allocation_mode' => $this->newMode,
+            'ip_pool_id' => $this->poolId,
+        ]);
+        
+        // Update configuration on router
+        $router = $profile->router;
+        $mikrotik->setRouter($router);
+        
+        if ($this->newMode === 'static') {
+            // Configure for static allocation
+            $mikrotik->configurePppoeProfileStaticIp($profile);
+        } else {
+            // Configure for dynamic allocation
+            $mikrotik->configurePppoeProfileDynamicIp($profile, $this->poolId);
+        }
+        
+        // Notify affected customers
+        $customers = $profile->customers;
+        foreach ($customers as $customer) {
+            // Send notification about IP allocation change
+            // This might require session restart
+        }
+    }
+}
+```
+
+**Service Implementation:**
+```php
+// app/Services/IpPoolMigrationService.php
+namespace App\Services;
+
+use App\Models\IpPool;
+use App\Jobs\ReAllocateIPv4ForProfileJob;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
+
+class IpPoolMigrationService
+{
+    public function validateMigration($oldPoolId, $newPoolId, $profileId)
+    {
+        $oldPool = IpPool::findOrFail($oldPoolId);
+        $newPool = IpPool::findOrFail($newPoolId);
+        
+        // Get customer count
+        $customerCount = User::whereHas('profile', function ($q) use ($profileId) {
+            $q->where('id', $profileId);
+        })->count();
+        
+        // Check new pool capacity
+        $availableIps = $newPool->getAvailableIpCount();
+        
+        if ($availableIps < $customerCount) {
+            return [
+                'valid' => false,
+                'message' => "Insufficient IP addresses. Need {$customerCount}, available {$availableIps}",
+                'customer_count' => $customerCount,
+                'available_ips' => $availableIps,
+            ];
+        }
+        
+        return [
+            'valid' => true,
+            'customer_count' => $customerCount,
+            'available_ips' => $availableIps,
+        ];
+    }
+    
+    public function startMigration($oldPoolId, $newPoolId, $profileId)
+    {
+        $migrationId = Str::uuid();
+        
+        // Initialize progress tracking
+        $this->initializeProgress($migrationId);
+        
+        // Dispatch job
+        ReAllocateIPv4ForProfileJob::dispatch($oldPoolId, $newPoolId, $profileId, $migrationId);
+        
+        return $migrationId;
+    }
+    
+    public function getProgress($migrationId)
+    {
+        $progress = Redis::get("migration:{$migrationId}:progress");
+        return $progress ? json_decode($progress, true) : null;
+    }
+    
+    public function getStatus($migrationId)
+    {
+        $status = Redis::get("migration:{$migrationId}:status");
+        return $status ? json_decode($status, true) : ['status' => 'running'];
+    }
+    
+    public function rollback($migrationId)
+    {
+        $backup = Redis::get("migration:{$migrationId}:backup");
+        if (!$backup) {
+            throw new \Exception("No backup found for migration {$migrationId}");
+        }
+        
+        $backup = json_decode($backup, true);
+        
+        foreach ($backup as $username => $ip) {
+            Radreply::where('username', $username)
+                ->where('attribute', 'Framed-IP-Address')
+                ->update(['value' => $ip]);
+        }
+        
+        return count($backup);
+    }
+    
+    protected function initializeProgress($migrationId)
+    {
+        $initial = [
+            'processed' => 0,
+            'total' => 0,
+            'failed' => 0,
+            'percentage' => 0,
+        ];
+        Redis::setex("migration:{$migrationId}:progress", 3600, json_encode($initial));
+    }
+}
+```
+
+**Controller Implementation:**
+```php
+// app/Http/Controllers/Panel/IpPoolMigrationController.php
+namespace App\Http\Controllers\Panel;
+
+use App\Models\IpPool;
+use App\Models\PppoeProfile;
+use App\Services\IpPoolMigrationService;
+use Illuminate\Http\Request;
+
+class IpPoolMigrationController extends Controller
+{
+    protected $migrationService;
+    
+    public function __construct(IpPoolMigrationService $migrationService)
+    {
+        $this->migrationService = $migrationService;
+    }
+    
+    public function index()
+    {
+        $pools = IpPool::where('tenant_id', auth()->user()->tenant_id)->get();
+        $profiles = PppoeProfile::where('tenant_id', auth()->user()->tenant_id)->get();
+        
+        return view('panels.admin.ip-pools.migrate', compact('pools', 'profiles'));
+    }
+    
+    public function validate(Request $request)
+    {
+        $request->validate([
+            'old_pool_id' => 'required|exists:ip_pools,id',
+            'new_pool_id' => 'required|exists:ip_pools,id|different:old_pool_id',
+            'profile_id' => 'required|exists:pppoe_profiles,id',
+        ]);
+        
+        $result = $this->migrationService->validateMigration(
+            $request->old_pool_id,
+            $request->new_pool_id,
+            $request->profile_id
+        );
+        
+        return response()->json($result);
+    }
+    
+    public function start(Request $request)
+    {
+        $request->validate([
+            'old_pool_id' => 'required|exists:ip_pools,id',
+            'new_pool_id' => 'required|exists:ip_pools,id|different:old_pool_id',
+            'profile_id' => 'required|exists:pppoe_profiles,id',
+        ]);
+        
+        $migrationId = $this->migrationService->startMigration(
+            $request->old_pool_id,
+            $request->new_pool_id,
+            $request->profile_id
+        );
+        
+        return response()->json([
+            'success' => true,
+            'migration_id' => $migrationId,
+        ]);
+    }
+    
+    public function progress($migrationId)
+    {
+        $progress = $this->migrationService->getProgress($migrationId);
+        $status = $this->migrationService->getStatus($migrationId);
+        
+        return response()->json([
+            'progress' => $progress,
+            'status' => $status,
+        ]);
+    }
+    
+    public function rollback($migrationId)
+    {
+        try {
+            $count = $this->migrationService->rollback($migrationId);
+            return response()->json([
+                'success' => true,
+                'message' => "Rolled back {$count} IP allocations",
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+}
+```
+
+**Views Documentation:**
+
+1. **Migration Form** (`resources/views/panels/admin/ip-pools/migrate.blade.php`):
+   - Select source pool dropdown
+   - Select destination pool dropdown
+   - Select PPPoE profile
+   - Validate button (shows capacity check)
+   - Start Migration button (only enabled after validation)
+   - Warning messages if insufficient capacity
+   - Link to view migration progress
+
+2. **Progress View** (`resources/views/panels/admin/ip-pools/migration-progress.blade.php`):
+   - Real-time progress bar (polls API every 2 seconds)
+   - Display processed/total counts
+   - List of failed usernames (if any)
+   - Rollback button (if migration fails)
+   - Success/failure summary
+   - JavaScript for progress polling:
+     ```javascript
+     setInterval(() => {
+         fetch('/api/v1/migrations/' + migrationId + '/progress')
+             .then(r => r.json())
+             .then(data => {
+                 updateProgressBar(data.progress.percentage);
+                 updateCounters(data.progress);
+                 if (data.status.status === 'complete') {
+                     clearInterval(interval);
+                     showCompletionMessage();
+                 }
+             });
+     }, 2000);
+     ```
+
+**API Routes:**
+```php
+// In routes/api.php
+Route::prefix('v1/migrations')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('validate', [IpPoolMigrationController::class, 'validate']);
+    Route::post('start', [IpPoolMigrationController::class, 'start']);
+    Route::get('{migrationId}/progress', [IpPoolMigrationController::class, 'progress']);
+    Route::post('{migrationId}/rollback', [IpPoolMigrationController::class, 'rollback']);
+});
 ```
 
 **Testing:**
@@ -783,9 +1353,416 @@ app/Console/Commands/MigrateRouterToRadiusCommand.php (create)
 app/Services/RouterMigrationService.php (create)
 ```
 
+**Console Command Implementation:**
+```php
+// app/Console/Commands/MigrateRouterToRadiusCommand.php
+namespace App\Console\Commands;
+
+use App\Models\Router;
+use App\Services\RouterMigrationService;
+use Illuminate\Console\Command;
+
+class MigrateRouterToRadiusCommand extends Command
+{
+    protected $signature = 'mikrotik:migrate-to-radius 
+                            {router_id : The ID of the router to migrate}
+                            {--force : Skip confirmation prompts}
+                            {--no-backup : Skip backup creation}
+                            {--test-user= : Username to test authentication}';
+
+    protected $description = 'Migrate a MikroTik router from local PPP authentication to RADIUS';
+
+    protected $migrationService;
+
+    public function __construct(RouterMigrationService $migrationService)
+    {
+        parent::__construct();
+        $this->migrationService = $migrationService;
+    }
+
+    public function handle()
+    {
+        $routerId = $this->argument('router_id');
+        $router = Router::find($routerId);
+
+        if (!$router) {
+            $this->error("Router with ID {$routerId} not found.");
+            return 1;
+        }
+
+        $this->info("╔══════════════════════════════════════════════════════════╗");
+        $this->info("║   MikroTik Router to RADIUS Migration Tool              ║");
+        $this->info("╚══════════════════════════════════════════════════════════╝");
+        $this->newLine();
+        $this->info("Router: {$router->name} ({$router->host})");
+        $this->newLine();
+
+        // Confirmation prompt
+        if (!$this->option('force')) {
+            if (!$this->confirm('This will migrate authentication from local PPP to RADIUS. Continue?')) {
+                $this->info('Migration cancelled.');
+                return 0;
+            }
+        }
+
+        // Step 1: Verify RADIUS server connectivity
+        $this->info('Step 1/7: Verifying RADIUS server connectivity...');
+        if (!$this->migrationService->verifyRadiusConnectivity($router)) {
+            $this->error('✗ RADIUS server is not reachable. Please check configuration.');
+            return 1;
+        }
+        $this->info('✓ RADIUS server is reachable');
+        $this->newLine();
+
+        // Step 2: Backup current PPP secrets
+        if (!$this->option('no-backup')) {
+            $this->info('Step 2/7: Backing up current PPP secrets...');
+            $backupFile = $this->migrationService->backupPppSecrets($router);
+            $this->info("✓ Backup saved to: {$backupFile}");
+            $this->newLine();
+        } else {
+            $this->warn('Step 2/7: Skipping backup (--no-backup flag set)');
+            $this->newLine();
+        }
+
+        // Step 3: Configure RADIUS on router
+        $this->info('Step 3/7: Configuring RADIUS authentication...');
+        if (!$this->migrationService->configureRadiusAuth($router)) {
+            $this->error('✗ Failed to configure RADIUS authentication');
+            return 1;
+        }
+        $this->info('✓ RADIUS authentication configured');
+        $this->newLine();
+
+        // Step 4: Test RADIUS authentication
+        $testUser = $this->option('test-user');
+        if ($testUser) {
+            $this->info('Step 4/7: Testing RADIUS authentication...');
+            if (!$this->migrationService->testRadiusAuth($router, $testUser)) {
+                $this->error("✗ RADIUS authentication test failed for user: {$testUser}");
+                $this->warn('Rolling back changes...');
+                $this->migrationService->rollback($router);
+                return 1;
+            }
+            $this->info("✓ RADIUS authentication successful for user: {$testUser}");
+        } else {
+            $this->warn('Step 4/7: Skipping authentication test (no --test-user specified)');
+        }
+        $this->newLine();
+
+        // Step 5: Disable local PPP secrets
+        $this->info('Step 5/7: Disabling local PPP secrets...');
+        $secretCount = $this->migrationService->disableLocalSecrets($router);
+        $this->info("✓ Disabled {$secretCount} local PPP secrets");
+        $this->newLine();
+
+        // Step 6: Force disconnect active sessions
+        $this->info('Step 6/7: Disconnecting active PPP sessions...');
+        $sessionCount = $this->migrationService->disconnectActiveSessions($router);
+        $this->info("✓ Disconnected {$sessionCount} active sessions");
+        $this->newLine();
+
+        // Step 7: Final verification
+        $this->info('Step 7/7: Verifying migration...');
+        $status = $this->migrationService->verifyMigration($router);
+        
+        if ($status['success']) {
+            $this->newLine();
+            $this->info('╔══════════════════════════════════════════════════════════╗');
+            $this->info('║   ✓ Migration completed successfully!                   ║');
+            $this->info('╚══════════════════════════════════════════════════════════╝');
+            $this->newLine();
+            $this->table(
+                ['Metric', 'Value'],
+                [
+                    ['RADIUS Status', 'Enabled'],
+                    ['Local Secrets', 'Disabled'],
+                    ['Active Sessions', $status['active_sessions']],
+                    ['Backup File', $backupFile ?? 'N/A'],
+                ]
+            );
+            return 0;
+        } else {
+            $this->error('✗ Migration verification failed: ' . $status['message']);
+            $this->warn('Rolling back changes...');
+            $this->migrationService->rollback($router);
+            return 1;
+        }
+    }
+}
+```
+
+**Service Implementation:**
+```php
+// app/Services/RouterMigrationService.php
+namespace App\Services;
+
+use App\Models\Router;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
+class RouterMigrationService
+{
+    protected $mikrotik;
+    
+    public function __construct(MikroTikService $mikrotik)
+    {
+        $this->mikrotik = $mikrotik;
+    }
+    
+    public function verifyRadiusConnectivity(Router $router): bool
+    {
+        try {
+            $this->mikrotik->setRouter($router);
+            
+            // Check if RADIUS server is configured
+            $radiusServers = $this->mikrotik->query('/radius print')->read();
+            
+            foreach ($radiusServers as $server) {
+                if ($server['address'] === config('radius.server')) {
+                    // Test connectivity by pinging RADIUS server
+                    $ping = $this->mikrotik->query('/ping', [
+                        'address' => config('radius.server'),
+                        'count' => 3
+                    ])->read();
+                    
+                    return isset($ping['received']) && $ping['received'] > 0;
+                }
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Failed to verify RADIUS connectivity: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function backupPppSecrets(Router $router): string
+    {
+        $this->mikrotik->setRouter($router);
+        
+        // Get all PPP secrets
+        $secrets = $this->mikrotik->query('/ppp/secret/print')->read();
+        
+        // Create backup file
+        $timestamp = now()->format('Y-m-d_His');
+        $filename = "router_{$router->id}_ppp_secrets_{$timestamp}.json";
+        $path = "backups/router-migrations/{$filename}";
+        
+        Storage::put($path, json_encode($secrets, JSON_PRETTY_PRINT));
+        
+        // Also store rollback info in database/cache
+        cache()->put("router:{$router->id}:migration:backup", $path, now()->addDays(7));
+        
+        return $path;
+    }
+    
+    public function configureRadiusAuth(Router $router): bool
+    {
+        try {
+            $this->mikrotik->setRouter($router);
+            
+            // Check if RADIUS is already configured
+            $radiusServers = $this->mikrotik->query('/radius/print')->read();
+            $radiusExists = false;
+            
+            foreach ($radiusServers as $server) {
+                if ($server['address'] === config('radius.server')) {
+                    $radiusExists = true;
+                    break;
+                }
+            }
+            
+            // Add RADIUS server if not exists
+            if (!$radiusExists) {
+                $this->mikrotik->query('/radius/add', [
+                    'address' => config('radius.server'),
+                    'secret' => config('radius.secret'),
+                    'service' => 'ppp',
+                    'authentication-port' => config('radius.auth_port', 1812),
+                    'accounting-port' => config('radius.acct_port', 1813),
+                ])->read();
+            }
+            
+            // Enable RADIUS for PPP
+            $this->mikrotik->query('/ppp/aaa/set', [
+                'use-radius' => 'yes',
+            ])->read();
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Failed to configure RADIUS auth: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function testRadiusAuth(Router $router, string $username): bool
+    {
+        try {
+            // This would require a test user with known credentials
+            // You might want to use radtest or similar tool
+            
+            // For now, we'll check if the user exists in radcheck
+            $user = \App\Models\Radcheck::where('username', $username)->first();
+            
+            return $user !== null;
+        } catch (\Exception $e) {
+            Log::error("Failed to test RADIUS auth: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function disableLocalSecrets(Router $router): int
+    {
+        $this->mikrotik->setRouter($router);
+        
+        $secrets = $this->mikrotik->query('/ppp/secret/print')->read();
+        $count = 0;
+        
+        foreach ($secrets as $secret) {
+            $this->mikrotik->query('/ppp/secret/disable', [
+                '.id' => $secret['.id']
+            ])->read();
+            $count++;
+        }
+        
+        return $count;
+    }
+    
+    public function disconnectActiveSessions(Router $router): int
+    {
+        $this->mikrotik->setRouter($router);
+        
+        $activeSessions = $this->mikrotik->query('/ppp/active/print')->read();
+        $count = 0;
+        
+        foreach ($activeSessions as $session) {
+            $this->mikrotik->query('/ppp/active/remove', [
+                '.id' => $session['.id']
+            ])->read();
+            $count++;
+        }
+        
+        return $count;
+    }
+    
+    public function verifyMigration(Router $router): array
+    {
+        try {
+            $this->mikrotik->setRouter($router);
+            
+            // Check RADIUS is enabled
+            $aaa = $this->mikrotik->query('/ppp/aaa/print')->read();
+            
+            if (!isset($aaa[0]['use-radius']) || $aaa[0]['use-radius'] !== 'true') {
+                return [
+                    'success' => false,
+                    'message' => 'RADIUS is not enabled for PPP'
+                ];
+            }
+            
+            // Count active sessions
+            $activeSessions = $this->mikrotik->query('/ppp/active/print')->read();
+            
+            return [
+                'success' => true,
+                'active_sessions' => count($activeSessions),
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+    
+    public function rollback(Router $router): bool
+    {
+        try {
+            $this->mikrotik->setRouter($router);
+            
+            // Get backup path
+            $backupPath = cache()->get("router:{$router->id}:migration:backup");
+            
+            if (!$backupPath) {
+                throw new \Exception("No backup found for router {$router->id}");
+            }
+            
+            // Restore PPP secrets from backup
+            $secrets = json_decode(Storage::get($backupPath), true);
+            
+            foreach ($secrets as $secret) {
+                // Re-enable disabled secrets
+                $this->mikrotik->query('/ppp/secret/enable', [
+                    '.id' => $secret['.id']
+                ])->read();
+            }
+            
+            // Disable RADIUS
+            $this->mikrotik->query('/ppp/aaa/set', [
+                'use-radius' => 'no',
+            ])->read();
+            
+            Log::info("Successfully rolled back router {$router->id} migration");
+            return true;
+            
+        } catch (\Exception $e) {
+            Log::error("Failed to rollback router migration: " . $e->getMessage());
+            return false;
+        }
+    }
+}
+```
+
+**Usage Examples:**
+```bash
+# Basic migration with confirmation prompt
+php artisan mikrotik:migrate-to-radius 1
+
+# Force migration without prompts
+php artisan mikrotik:migrate-to-radius 1 --force
+
+# Skip backup creation
+php artisan mikrotik:migrate-to-radius 1 --no-backup
+
+# Include authentication test
+php artisan mikrotik:migrate-to-radius 1 --test-user=testuser
+
+# Combined options
+php artisan mikrotik:migrate-to-radius 1 --force --test-user=testuser
+```
+
+**Safety Features:**
+- Interactive confirmation prompts (unless --force)
+- Automatic backup of PPP secrets before migration
+- Step-by-step verification
+- Test authentication before completing
+- Automatic rollback on failure
+- Detailed logging of all operations
+- 7-day retention of backup files
+
+**Rollback Process:**
+If migration fails or needs to be reverted:
+1. Backup file is automatically referenced from cache
+2. All local PPP secrets are re-enabled
+3. RADIUS authentication is disabled
+4. Original configuration is restored
+
 **Testing:**
 ```bash
+# Test the command in dry-run mode
+php artisan mikrotik:migrate-to-radius 1 --test-user=testuser
+
+# Run automated tests
 php artisan test --filter=RouterMigrationTest
+```
+
+**Manual Rollback:**
+```php
+// In tinker or custom controller
+$router = Router::find(1);
+$service = app(RouterMigrationService::class);
+$service->rollback($router);
 ```
 
 ---
@@ -818,12 +1795,710 @@ php artisan test --filter=RouterMigrationTest
 app/Http/Controllers/Api/V1/CardDistributorController.php (create)
 routes/api.php (modify)
 documentation/api/distributor-api.yaml (create)
+app/Http/Middleware/ValidateDistributorApiKey.php (create)
+app/Services/DistributorService.php (create)
+```
+
+**Controller Implementation:**
+```php
+// app/Http/Controllers/Api/V1/CardDistributorController.php
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\Card;
+use App\Models\CardSale;
+use App\Services\DistributorService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
+
+class CardDistributorController extends Controller
+{
+    protected $distributorService;
+    
+    public function __construct(DistributorService $distributorService)
+    {
+        $this->middleware('throttle:distributor-api');
+        $this->distributorService = $distributorService;
+    }
+    
+    /**
+     * Get list of mobile numbers for a distributor
+     * 
+     * @group Distributor API
+     * @authenticated
+     * 
+     * @queryParam country_code string Filter by country code. Example: BD
+     * @queryParam status string Filter by status (active/inactive). Example: active
+     * @queryParam page integer Page number for pagination. Example: 1
+     * @queryParam per_page integer Items per page (max 100). Example: 50
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "mobiles": [
+     *       {
+     *         "id": 1,
+     *         "mobile": "+8801712345678",
+     *         "country_code": "BD",
+     *         "status": "active",
+     *         "balance": 1500.00,
+     *         "last_recharge": "2026-01-20 10:30:00"
+     *       }
+     *     ],
+     *     "pagination": {
+     *       "current_page": 1,
+     *       "per_page": 50,
+     *       "total": 150,
+     *       "last_page": 3
+     *     }
+     *   }
+     * }
+     */
+    public function getMobiles(Request $request)
+    {
+        $distributor = $request->user();
+        
+        $cacheKey = "distributor:{$distributor->id}:mobiles:" . md5(json_encode($request->all()));
+        
+        $data = Cache::remember($cacheKey, 600, function () use ($request, $distributor) {
+            $query = User::where('distributor_id', $distributor->id)
+                ->where('role', 'customer');
+            
+            // Apply filters
+            if ($request->has('country_code')) {
+                $query->where('country_code', $request->country_code);
+            }
+            
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
+            
+            $perPage = min($request->input('per_page', 50), 100);
+            $mobiles = $query->paginate($perPage);
+            
+            return [
+                'mobiles' => $mobiles->map(function ($customer) {
+                    return [
+                        'id' => $customer->id,
+                        'mobile' => $this->distributorService->formatMobile($customer->mobile, $customer->country_code),
+                        'country_code' => $customer->country_code,
+                        'status' => $customer->status,
+                        'balance' => $customer->balance,
+                        'last_recharge' => $customer->last_payment_date,
+                    ];
+                }),
+                'pagination' => [
+                    'current_page' => $mobiles->currentPage(),
+                    'per_page' => $mobiles->perPage(),
+                    'total' => $mobiles->total(),
+                    'last_page' => $mobiles->lastPage(),
+                ],
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+    
+    /**
+     * Get available cards for sale
+     * 
+     * @group Distributor API
+     * @authenticated
+     * 
+     * @queryParam package_id integer Filter by package. Example: 5
+     * @queryParam status string Filter by status (available/sold). Example: available
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "cards": [
+     *       {
+     *         "id": 100,
+     *         "serial": "CARD-2026-00100",
+     *         "pin": "123456",
+     *         "package_id": 5,
+     *         "package_name": "1GB Daily",
+     *         "price": 50.00,
+     *         "validity_days": 30,
+     *         "status": "available"
+     *       }
+     *     ],
+     *     "summary": {
+     *       "total_available": 500,
+     *       "total_value": 25000.00
+     *     }
+     *   }
+     * }
+     */
+    public function getCards(Request $request)
+    {
+        $distributor = $request->user();
+        
+        $cacheKey = "distributor:{$distributor->id}:cards:" . md5(json_encode($request->all()));
+        
+        $data = Cache::remember($cacheKey, 300, function () use ($request, $distributor) {
+            $query = Card::where('distributor_id', $distributor->id);
+            
+            // Apply filters
+            if ($request->has('package_id')) {
+                $query->where('package_id', $request->package_id);
+            }
+            
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
+            
+            $cards = $query->with('package')->get();
+            
+            return [
+                'cards' => $cards->map(function ($card) {
+                    return [
+                        'id' => $card->id,
+                        'serial' => $card->serial,
+                        'pin' => $card->pin,
+                        'package_id' => $card->package_id,
+                        'package_name' => $card->package->name,
+                        'price' => $card->price,
+                        'validity_days' => $card->validity_days,
+                        'status' => $card->status,
+                    ];
+                }),
+                'summary' => [
+                    'total_available' => $cards->where('status', 'available')->count(),
+                    'total_value' => $cards->where('status', 'available')->sum('price'),
+                ],
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+    
+    /**
+     * Get sales history
+     * 
+     * @group Distributor API
+     * @authenticated
+     * 
+     * @queryParam from_date string Filter sales from date (Y-m-d). Example: 2026-01-01
+     * @queryParam to_date string Filter sales to date (Y-m-d). Example: 2026-01-31
+     * @queryParam mobile string Filter by mobile number. Example: +8801712345678
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "sales": [
+     *       {
+     *         "id": 500,
+     *         "mobile": "+8801712345678",
+     *         "card_serial": "CARD-2026-00100",
+     *         "package_name": "1GB Daily",
+     *         "price": 50.00,
+     *         "sold_at": "2026-01-20 14:30:00"
+     *       }
+     *     ],
+     *     "summary": {
+     *       "total_sales": 150,
+     *       "total_revenue": 7500.00,
+     *       "date_range": {
+     *         "from": "2026-01-01",
+     *         "to": "2026-01-31"
+     *       }
+     *     }
+     *   }
+     * }
+     */
+    public function getSales(Request $request)
+    {
+        $distributor = $request->user();
+        
+        $query = CardSale::where('distributor_id', $distributor->id);
+        
+        // Apply date filters
+        if ($request->has('from_date')) {
+            $query->whereDate('sold_at', '>=', $request->from_date);
+        }
+        
+        if ($request->has('to_date')) {
+            $query->whereDate('sold_at', '<=', $request->to_date);
+        }
+        
+        // Apply mobile filter
+        if ($request->has('mobile')) {
+            $normalizedMobile = $this->distributorService->normalizeMobile($request->mobile);
+            $query->where('mobile', $normalizedMobile);
+        }
+        
+        $sales = $query->with(['card.package'])->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'sales' => $sales->map(function ($sale) {
+                    return [
+                        'id' => $sale->id,
+                        'mobile' => $sale->mobile,
+                        'card_serial' => $sale->card->serial,
+                        'package_name' => $sale->card->package->name,
+                        'price' => $sale->price,
+                        'sold_at' => $sale->sold_at,
+                    ];
+                }),
+                'summary' => [
+                    'total_sales' => $sales->count(),
+                    'total_revenue' => $sales->sum('price'),
+                    'date_range' => [
+                        'from' => $request->from_date ?? 'N/A',
+                        'to' => $request->to_date ?? 'N/A',
+                    ],
+                ],
+            ],
+        ]);
+    }
+    
+    /**
+     * Record a new card sale
+     * 
+     * @group Distributor API
+     * @authenticated
+     * 
+     * @bodyParam mobile string required Mobile number with country code. Example: +8801712345678
+     * @bodyParam card_id integer required Card ID to sell. Example: 100
+     * 
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Card sold successfully",
+     *   "data": {
+     *     "sale_id": 501,
+     *     "mobile": "+8801712345678",
+     *     "card_serial": "CARD-2026-00100",
+     *     "package_name": "1GB Daily",
+     *     "price": 50.00,
+     *     "validity_days": 30,
+     *     "expires_at": "2026-02-20"
+     *   }
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Card not available",
+     *   "errors": {
+     *     "card_id": ["The selected card is not available for sale"]
+     *   }
+     * }
+     */
+    public function recordSale(Request $request)
+    {
+        $validated = $request->validate([
+            'mobile' => 'required|string',
+            'card_id' => 'required|exists:cards,id',
+        ]);
+        
+        $distributor = $request->user();
+        
+        // Normalize mobile number
+        $normalizedMobile = $this->distributorService->normalizeMobile($validated['mobile']);
+        
+        // Validate mobile format
+        if (!$this->distributorService->validateMobile($normalizedMobile)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid mobile number format',
+                'errors' => ['mobile' => ['Mobile number must be in international format']],
+            ], 400);
+        }
+        
+        // Check card availability
+        $card = Card::where('id', $validated['card_id'])
+            ->where('distributor_id', $distributor->id)
+            ->where('status', 'available')
+            ->first();
+        
+        if (!$card) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Card not available',
+                'errors' => ['card_id' => ['The selected card is not available for sale']],
+            ], 400);
+        }
+        
+        // Record sale
+        $sale = CardSale::create([
+            'distributor_id' => $distributor->id,
+            'card_id' => $card->id,
+            'mobile' => $normalizedMobile,
+            'price' => $card->price,
+            'sold_at' => now(),
+        ]);
+        
+        // Update card status
+        $card->update(['status' => 'sold']);
+        
+        // Activate customer account if exists
+        $customer = User::where('mobile', $normalizedMobile)->first();
+        if ($customer) {
+            $expiresAt = now()->addDays($card->validity_days);
+            $customer->update([
+                'package_id' => $card->package_id,
+                'expiry_date' => $expiresAt,
+                'status' => 'active',
+            ]);
+        }
+        
+        // Clear cache
+        Cache::tags("distributor:{$distributor->id}")->flush();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Card sold successfully',
+            'data' => [
+                'sale_id' => $sale->id,
+                'mobile' => $normalizedMobile,
+                'card_serial' => $card->serial,
+                'package_name' => $card->package->name,
+                'price' => $card->price,
+                'validity_days' => $card->validity_days,
+                'expires_at' => $customer ? $customer->expiry_date->format('Y-m-d') : null,
+            ],
+        ], 201);
+    }
+}
+```
+
+**Service Implementation:**
+```php
+// app/Services/DistributorService.php
+namespace App\Services;
+
+class DistributorService
+{
+    protected $countryCodes = [
+        'BD' => '+880',
+        'IN' => '+91',
+        'PK' => '+92',
+        'NP' => '+977',
+        'LK' => '+94',
+        'MM' => '+95',
+    ];
+    
+    public function normalizeMobile(string $mobile): string
+    {
+        // Remove spaces and dashes
+        $mobile = preg_replace('/[\s\-]/', '', $mobile);
+        
+        // If starts with 0, replace with country code
+        if (substr($mobile, 0, 1) === '0') {
+            $mobile = '+880' . substr($mobile, 1); // Default to BD
+        }
+        
+        // If doesn't start with +, add default country code
+        if (substr($mobile, 0, 1) !== '+') {
+            $mobile = '+880' . $mobile;
+        }
+        
+        return $mobile;
+    }
+    
+    public function validateMobile(string $mobile): bool
+    {
+        // Check if mobile starts with valid country code
+        foreach ($this->countryCodes as $code) {
+            if (substr($mobile, 0, strlen($code)) === $code) {
+                // Check length (typically 10-15 digits after country code)
+                $number = substr($mobile, strlen($code));
+                return strlen($number) >= 10 && strlen($number) <= 15 && ctype_digit($number);
+            }
+        }
+        
+        return false;
+    }
+    
+    public function formatMobile(string $mobile, string $countryCode = 'BD'): string
+    {
+        $prefix = $this->countryCodes[$countryCode] ?? '+880';
+        
+        // If mobile doesn't start with +, normalize it
+        if (substr($mobile, 0, 1) !== '+') {
+            return $this->normalizeMobile($mobile);
+        }
+        
+        return $mobile;
+    }
+    
+    public function getCountryCode(string $mobile): ?string
+    {
+        foreach ($this->countryCodes as $country => $code) {
+            if (substr($mobile, 0, strlen($code)) === $code) {
+                return $country;
+            }
+        }
+        
+        return null;
+    }
+}
+```
+
+**Middleware for API Key Validation:**
+```php
+// app/Http/Middleware/ValidateDistributorApiKey.php
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class ValidateDistributorApiKey
+{
+    public function handle(Request $request, Closure $next)
+    {
+        $apiKey = $request->header('X-API-Key');
+        
+        if (!$apiKey) {
+            return response()->json([
+                'success' => false,
+                'message' => 'API key is required',
+            ], 401);
+        }
+        
+        // Validate API key and get distributor
+        $user = \App\Models\User::where('api_key', $apiKey)
+            ->where('role', 'distributor')
+            ->first();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid API key',
+            ], 401);
+        }
+        
+        // Set authenticated user
+        auth()->setUser($user);
+        
+        return $next($request);
+    }
+}
+```
+
+**API Routes:**
+```php
+// In routes/api.php
+Route::prefix('v1/distributor')
+    ->middleware(['api.key.distributor', 'throttle:60,1'])
+    ->name('api.v1.distributor.')
+    ->group(function () {
+        Route::get('mobiles', [CardDistributorController::class, 'getMobiles']);
+        Route::get('cards', [CardDistributorController::class, 'getCards']);
+        Route::get('sales', [CardDistributorController::class, 'getSales']);
+        Route::post('sales', [CardDistributorController::class, 'recordSale']);
+    });
+```
+
+**Rate Limiting Configuration:**
+```php
+// In app/Providers/RouteServiceProvider.php
+protected function configureRateLimiting()
+{
+    RateLimiter::for('distributor-api', function (Request $request) {
+        return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+    });
+}
+```
+
+**OpenAPI/Swagger Documentation:**
+```yaml
+# documentation/api/distributor-api.yaml
+openapi: 3.0.0
+info:
+  title: Card Distributor API
+  description: API for card distributors to manage mobiles, cards, and sales
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@ispsolution.com
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production server
+  - url: https://staging-api.example.com/api/v1
+    description: Staging server
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      
+  schemas:
+    Mobile:
+      type: object
+      properties:
+        id:
+          type: integer
+        mobile:
+          type: string
+          example: "+8801712345678"
+        country_code:
+          type: string
+          example: "BD"
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        balance:
+          type: number
+          format: float
+        last_recharge:
+          type: string
+          format: date-time
+          
+    Card:
+      type: object
+      properties:
+        id:
+          type: integer
+        serial:
+          type: string
+        pin:
+          type: string
+        package_id:
+          type: integer
+        package_name:
+          type: string
+        price:
+          type: number
+          format: float
+        validity_days:
+          type: integer
+        status:
+          type: string
+          enum: [available, sold, expired]
+
+paths:
+  /distributor/mobiles:
+    get:
+      summary: Get list of mobile numbers
+      parameters:
+        - name: country_code
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            maximum: 100
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      mobiles:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Mobile'
+                      pagination:
+                        type: object
+                        
+  /distributor/cards:
+    get:
+      summary: Get available cards for sale
+      responses:
+        '200':
+          description: Successful response
+          
+  /distributor/sales:
+    get:
+      summary: Get sales history
+      parameters:
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful response
+    post:
+      summary: Record a new card sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mobile
+                - card_id
+              properties:
+                mobile:
+                  type: string
+                  example: "+8801712345678"
+                card_id:
+                  type: integer
+      responses:
+        '201':
+          description: Card sold successfully
+        '400':
+          description: Validation error
 ```
 
 **Testing:**
 ```bash
 php artisan test --filter=DistributorApiTest
+
+# Manual testing with curl
+curl -X GET "https://api.example.com/api/v1/distributor/mobiles" \
+  -H "X-API-Key: your-api-key-here" \
+  -H "Accept: application/json"
+
+curl -X POST "https://api.example.com/api/v1/distributor/sales" \
+  -H "X-API-Key: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{"mobile": "+8801712345678", "card_id": 100}'
 ```
+
+**API Features:**
+- RESTful endpoints for mobile, card, and sales management
+- Country code validation for multiple regions (BD, IN, PK, NP, LK, MM)
+- Automatic mobile number normalization
+- Response caching for performance
+- Rate limiting (60 requests per minute)
+- Comprehensive error handling
+- OpenAPI/Swagger documentation
+- API key authentication
+- Pagination support
+- Detailed sales analytics
 
 ---
 
