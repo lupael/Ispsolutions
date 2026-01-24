@@ -39,6 +39,8 @@ Choose the guide for your role:
 - **[Roles & Permissions Guide](docs/ROLES_AND_PERMISSIONS.md)** - Complete role hierarchy, permissions, and data isolation
 - **[Route Analysis](docs/ROUTE_ANALYSIS.md)** ⭐ NEW - Comparison with other ISP billing systems and role architecture
 - **[Controller Feature Analysis](docs/CONTROLLER_FEATURE_ANALYSIS.md)** ⭐ NEW - Detailed feature-by-feature comparison and recommendations
+- **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)** ⭐ NEW - All missing features implementation summary
+- **[New Features Guide](docs/NEW_FEATURES_GUIDE.md)** ⭐ NEW - Comprehensive guide for all newly implemented features
 - **[API Documentation](docs/API.md)** - Complete REST API reference with authentication and examples
 - **[Testing Guide](docs/TESTING.md)** - How to run and write tests
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
