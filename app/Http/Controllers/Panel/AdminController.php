@@ -2159,33 +2159,53 @@ class AdminController extends Controller
         $user = auth()->user();
         $userRole = $user->roles->first()?->slug ?? '';
 
-        // Base query for PPP sessions from RADIUS accounting
-        $query = \App\Models\RadAcct::where('username', 'LIKE', '%ppp%')
-            ->orWhere('nasporttype', 'PPP');
+        try {
+            // Base query for PPP sessions from RADIUS accounting
+            $query = \App\Models\RadAcct::where('username', 'LIKE', '%ppp%')
+                ->orWhere('nasporttype', 'PPP');
 
-        // Filter by ownership for non-admin roles
-        if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
-            // For operators and staff, show only their assigned customers
-            if ($userRole === 'operator' || $userRole === 'staff') {
-                $customerIds = $user->customers()->pluck('id')->toArray();
-                $query->whereHas('user', function ($q) use ($customerIds) {
-                    $q->whereIn('id', $customerIds);
-                });
+            // Filter by ownership for non-admin roles
+            if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+                // For operators and staff, show only their assigned customers
+                if ($userRole === 'operator' || $userRole === 'staff') {
+                    $customerIds = $user->customers()->pluck('id')->toArray();
+                    $query->whereHas('user', function ($q) use ($customerIds) {
+                        $q->whereIn('id', $customerIds);
+                    });
+                }
+                // For customers, show only their own logs
+                elseif ($userRole === 'customer') {
+                    $query->where('username', $user->username);
+                }
             }
-            // For customers, show only their own logs
-            elseif ($userRole === 'customer') {
-                $query->where('username', $user->username);
-            }
+
+            $logs = $query->latest('acctstarttime')->paginate(50);
+
+            $stats = [
+                'total' => $query->count(),
+                'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
+                'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
+                'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
+            ];
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle case where radacct table doesn't exist
+            $logs = new \Illuminate\Pagination\LengthAwarePaginator(
+                [],
+                0,
+                50,
+                1,
+                ['path' => request()->url()]
+            );
+            $stats = [
+                'total' => 0,
+                'today' => 0,
+                'active_sessions' => 0,
+                'total_bandwidth' => 0,
+            ];
+            
+            // Flash an informational message
+            session()->flash('error', 'RADIUS database table not found. Please ensure RADIUS is properly configured and migrations have been run.');
         }
-
-        $logs = $query->latest('acctstarttime')->paginate(50);
-
-        $stats = [
-            'total' => $query->count(),
-            'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
-            'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
-            'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
-        ];
 
         return view('panels.admin.logs.ppp', compact('logs', 'stats'));
     }
@@ -2198,37 +2218,57 @@ class AdminController extends Controller
         $user = auth()->user();
         $userRole = $user->roles->first()?->slug ?? '';
 
-        // Base query for Hotspot sessions from RADIUS accounting
-        $query = \App\Models\RadAcct::where('username', 'NOT LIKE', '%ppp%')
-            ->where(function ($q) {
-                $q->where('nasporttype', 'Wireless-802.11')
-                    ->orWhere('nasporttype', 'Ethernet')
-                    ->orWhereNull('nasporttype');
-            });
-
-        // Filter by ownership for non-admin roles
-        if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
-            // For operators and staff, show only their assigned customers
-            if ($userRole === 'operator' || $userRole === 'staff') {
-                $customerIds = $user->customers()->pluck('id')->toArray();
-                $query->whereHas('user', function ($q) use ($customerIds) {
-                    $q->whereIn('id', $customerIds);
+        try {
+            // Base query for Hotspot sessions from RADIUS accounting
+            $query = \App\Models\RadAcct::where('username', 'NOT LIKE', '%ppp%')
+                ->where(function ($q) {
+                    $q->where('nasporttype', 'Wireless-802.11')
+                        ->orWhere('nasporttype', 'Ethernet')
+                        ->orWhereNull('nasporttype');
                 });
+
+            // Filter by ownership for non-admin roles
+            if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+                // For operators and staff, show only their assigned customers
+                if ($userRole === 'operator' || $userRole === 'staff') {
+                    $customerIds = $user->customers()->pluck('id')->toArray();
+                    $query->whereHas('user', function ($q) use ($customerIds) {
+                        $q->whereIn('id', $customerIds);
+                    });
+                }
+                // For customers, show only their own logs
+                elseif ($userRole === 'customer') {
+                    $query->where('username', $user->username);
+                }
             }
-            // For customers, show only their own logs
-            elseif ($userRole === 'customer') {
-                $query->where('username', $user->username);
-            }
+
+            $logs = $query->latest('acctstarttime')->paginate(50);
+
+            $stats = [
+                'total' => $query->count(),
+                'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
+                'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
+                'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
+            ];
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle case where radacct table doesn't exist
+            $logs = new \Illuminate\Pagination\LengthAwarePaginator(
+                [],
+                0,
+                50,
+                1,
+                ['path' => request()->url()]
+            );
+            $stats = [
+                'total' => 0,
+                'today' => 0,
+                'active_sessions' => 0,
+                'total_bandwidth' => 0,
+            ];
+            
+            // Flash an informational message
+            session()->flash('error', 'RADIUS database table not found. Please ensure RADIUS is properly configured and migrations have been run.');
         }
-
-        $logs = $query->latest('acctstarttime')->paginate(50);
-
-        $stats = [
-            'total' => $query->count(),
-            'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
-            'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
-            'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
-        ];
 
         return view('panels.admin.logs.hotspot', compact('logs', 'stats'));
     }
