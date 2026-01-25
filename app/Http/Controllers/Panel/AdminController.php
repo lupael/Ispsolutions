@@ -1445,9 +1445,7 @@ class AdminController extends Controller
     {
         $router = MikrotikRouter::findOrFail($id);
 
-        // Return to list since edit view doesn't exist yet
-        return redirect()->route('panel.admin.network.routers')
-            ->with('info', 'Router edit view is not yet implemented. Please use the router management interface.');
+        return view('panels.admin.network.routers-edit', compact('router'));
     }
 
     /**
@@ -1688,9 +1686,7 @@ class AdminController extends Controller
      */
     public function ipv4PoolsCreate(): View
     {
-        // Redirect to list since create view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv4-pools')
-            ->with('info', 'IPv4 pool creation view is not yet implemented.');
+        return view('panels.admin.network.ipv4-pools-create');
     }
 
     /**
@@ -1736,9 +1732,7 @@ class AdminController extends Controller
     {
         $pool = IpPool::findOrFail($id);
 
-        // Redirect to list since edit view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv4-pools')
-            ->with('info', 'IPv4 pool edit view is not yet implemented.');
+        return view('panels.admin.network.ipv4-pools-edit', compact('pool'));
     }
 
     /**
@@ -1811,9 +1805,7 @@ class AdminController extends Controller
      */
     public function ipv6PoolsCreate(): View
     {
-        // Redirect to list since create view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv6-pools')
-            ->with('info', 'IPv6 pool creation view is not yet implemented.');
+        return view('panels.admin.network.ipv6-pools-create');
     }
 
     /**
@@ -1859,9 +1851,7 @@ class AdminController extends Controller
     {
         $pool = IpPool::findOrFail($id);
 
-        // Redirect to list since edit view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv6-pools')
-            ->with('info', 'IPv6 pool edit view is not yet implemented.');
+        return view('panels.admin.network.ipv6-pools-edit', compact('pool'));
     }
 
     /**
