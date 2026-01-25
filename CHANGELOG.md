@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Features
 
+- Implement prepaid card management UI ([9884e5c](../../commit/9884e5c181d61050ce152a3d07724ce187285307))
 - **changelog**: auto-update changelog on every commit ([4aba036](../../commit/4aba0363655c77b2d09925902487718074bac892))
 - **changelog**: implement automated changelog generation system ([bbde231](../../commit/bbde2312121e0252e3b9721f566e0ae92b0c5467))
 - implement production-ready payment gateway integrations ([edb9588](../../commit/edb9588fb6380bb6c89407fd5ee89612d456483e))
@@ -24,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- Address security and validation issues from code review ([70d9ee3](../../commit/70d9ee3ad4654e65d52db75658cb04ca59650ef8))
+- Add missing CRUD views for Router, OLT, and IP Pool management ([273567a](../../commit/273567a773adb75f8e8fd660a57ce99cc2181ecc))
 - address code review feedback for payment gateways ([92faa43](../../commit/92faa435383e536f15443915f414015232b6362e))
 - Correct order of constraint drops in down() method ([3a88b9f](../../commit/3a88b9f40f62e5e34f10da21979b1e74fa979998))
 - Add tenant_id to packages table in migration ([6fec5ae](../../commit/6fec5aee57da03ce66d2577908bcb52348f36e1c))
@@ -35,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 📚 Documentation
 
+- Add comprehensive UI feature implementation analysis ([ce213cf](../../commit/ce213cfca82d66af5af3499ca769e27318f62674))
 - **changelog**: add implementation summary ([9f1f118](../../commit/9f1f118d8135c100b9326d5f94cc9c7d859a3f6d))
 - **changelog**: add comprehensive documentation and quick reference ([23f7c11](../../commit/23f7c113e25529a7eb0d9edc38a37f8021f26cc6))
 - add final payment gateway implementation report ([7a970c8](../../commit/7a970c88774c65ba31020a58c7445ee2e5b8f1c0))
