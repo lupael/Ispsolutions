@@ -91,6 +91,29 @@
         </div>
     </div>
 
+    <!-- Owner Information -->
+    @if($owner)
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">ISP Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">ISP Name</p>
+                    <p class="text-gray-900 dark:text-gray-100 font-semibold">{{ $owner->company_name ?? $owner->name }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Address</p>
+                    <p class="text-gray-900 dark:text-gray-100">{{ $owner->company_address ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Helpline</p>
+                    <p class="text-gray-900 dark:text-gray-100 font-semibold">{{ $owner->company_phone ?? $owner->email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Quick Actions -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">

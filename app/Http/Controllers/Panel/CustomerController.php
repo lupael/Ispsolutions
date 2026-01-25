@@ -8,9 +8,16 @@ use App\Models\NetworkUser;
 use App\Models\NetworkUserSession;
 use App\Models\Payment;
 use App\Models\Ticket;
+use App\Models\RadAcct;
+use App\Models\Package;
+use App\Models\PackageChangeRequest;
+use App\Models\DocumentVerification;
 use App\Services\PdfService;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerController extends Controller
 {
@@ -40,7 +47,10 @@ class CustomerController extends Controller
             'billing_due' => $nextInvoice?->total_amount ?? 0,
         ];
 
-        return view('panels.customer.dashboard', compact('stats', 'networkUser'));
+        // Get owner information (created_by user)
+        $owner = $user->createdBy()->select('id', 'name', 'company_name', 'company_address', 'company_phone', 'email')->first();
+
+        return view('panels.customer.dashboard', compact('stats', 'networkUser', 'owner'));
     }
 
     /**
@@ -76,7 +86,7 @@ class CustomerController extends Controller
     }
 
     /**
-     * Display usage statistics.
+     * Display usage statistics with bandwidth graphs.
      */
     public function usage(): View
     {
@@ -84,13 +94,69 @@ class CustomerController extends Controller
         $networkUser = NetworkUser::where('user_id', $user->id)->first();
 
         $sessions = [];
+        $bandwidthData = [
+            'daily' => [],
+            'weekly' => [],
+            'monthly' => [],
+        ];
+
         if ($networkUser) {
             $sessions = NetworkUserSession::where('user_id', $networkUser->id)
                 ->latest()
                 ->paginate(20);
+
+            // Get bandwidth data from RadAcct for graphs
+            $bandwidthData = $this->getBandwidthData($networkUser->username);
         }
 
-        return view('panels.customer.usage', compact('sessions'));
+        return view('panels.customer.usage', compact('sessions', 'networkUser', 'bandwidthData'));
+    }
+
+    /**
+     * Get bandwidth data from RADIUS accounting.
+     */
+    private function getBandwidthData(string $username): array
+    {
+        $now = now();
+        
+        // Last 24 hours (hourly)
+        $daily = RadAcct::where('username', $username)
+            ->where('acctstarttime', '>=', $now->copy()->subDay())
+            ->orderBy('acctstarttime')
+            ->get()
+            ->groupBy(fn($session) => $session->acctstarttime->format('H:00'))
+            ->map(fn($group) => [
+                'upload' => $group->sum('acctinputoctets') / (1024 * 1024), // Convert to MB
+                'download' => $group->sum('acctoutputoctets') / (1024 * 1024),
+            ]);
+
+        // Last 7 days (daily)
+        $weekly = RadAcct::where('username', $username)
+            ->where('acctstarttime', '>=', $now->copy()->subDays(7))
+            ->orderBy('acctstarttime')
+            ->get()
+            ->groupBy(fn($session) => $session->acctstarttime->format('Y-m-d'))
+            ->map(fn($group) => [
+                'upload' => $group->sum('acctinputoctets') / (1024 * 1024),
+                'download' => $group->sum('acctoutputoctets') / (1024 * 1024),
+            ]);
+
+        // Last 30 days (daily)
+        $monthly = RadAcct::where('username', $username)
+            ->where('acctstarttime', '>=', $now->copy()->subDays(30))
+            ->orderBy('acctstarttime')
+            ->get()
+            ->groupBy(fn($session) => $session->acctstarttime->format('Y-m-d'))
+            ->map(fn($group) => [
+                'upload' => $group->sum('acctinputoctets') / (1024 * 1024),
+                'download' => $group->sum('acctoutputoctets') / (1024 * 1024),
+            ]);
+
+        return [
+            'daily' => $daily,
+            'weekly' => $weekly,
+            'monthly' => $monthly,
+        ];
     }
 
     /**
@@ -188,5 +254,159 @@ class CustomerController extends Controller
         );
 
         return $pdf->download('statement-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * View available packages.
+     */
+    public function viewPackages(): View
+    {
+        $user = auth()->user();
+        $currentPackage = $user->currentPackage();
+        
+        $packages = Package::where('tenant_id', $user->tenant_id)
+            ->where('is_active', true)
+            ->orderBy('price')
+            ->get();
+
+        $pendingRequest = PackageChangeRequest::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->with(['requestedPackage'])
+            ->first();
+
+        return view('panels.customer.packages.index', compact('currentPackage', 'packages', 'pendingRequest'));
+    }
+
+    /**
+     * Request package upgrade.
+     */
+    public function requestUpgrade(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'package_id' => 'required|exists:packages,id',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $user = auth()->user();
+        $currentPackage = $user->currentPackage();
+        $requestedPackage = Package::findOrFail($request->package_id);
+
+        if (!$currentPackage) {
+            return back()->with('error', 'You do not have a current package.');
+        }
+
+        if ($requestedPackage->price <= $currentPackage->price) {
+            return back()->with('error', 'Selected package is not an upgrade.');
+        }
+
+        PackageChangeRequest::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'current_package_id' => $currentPackage->id,
+            'requested_package_id' => $request->package_id,
+            'request_type' => 'upgrade',
+            'reason' => $request->reason,
+        ]);
+
+        return back()->with('success', 'Upgrade request submitted successfully.');
+    }
+
+    /**
+     * Request package downgrade.
+     */
+    public function requestDowngrade(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'package_id' => 'required|exists:packages,id',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $user = auth()->user();
+        $currentPackage = $user->currentPackage();
+        $requestedPackage = Package::findOrFail($request->package_id);
+
+        if (!$currentPackage) {
+            return back()->with('error', 'You do not have a current package.');
+        }
+
+        if ($requestedPackage->price >= $currentPackage->price) {
+            return back()->with('error', 'Selected package is not a downgrade.');
+        }
+
+        PackageChangeRequest::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'current_package_id' => $currentPackage->id,
+            'requested_package_id' => $request->package_id,
+            'request_type' => 'downgrade',
+            'reason' => $request->reason,
+        ]);
+
+        return back()->with('success', 'Downgrade request submitted successfully.');
+    }
+
+    /**
+     * Update customer profile.
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        $user = auth()->user();
+        $user->update($request->only(['name', 'email']));
+
+        // Update additional fields if they exist in users table
+        if ($request->has('phone')) {
+            $user->company_phone = $request->phone;
+        }
+        if ($request->has('address')) {
+            $user->company_address = $request->address;
+        }
+        $user->save();
+
+        return back()->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Submit document for verification.
+     */
+    public function submitDocumentVerification(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'document_type' => 'required|in:nid,passport,driving_license',
+            'document_number' => 'nullable|string|max:100',
+            'document_front' => 'required|image|max:2048',
+            'document_back' => 'nullable|image|max:2048',
+            'selfie' => 'nullable|image|max:2048',
+        ]);
+
+        $user = auth()->user();
+
+        // Store documents
+        $frontPath = $request->file('document_front')->store('documents/' . $user->id, 'public');
+        $backPath = $request->hasFile('document_back') 
+            ? $request->file('document_back')->store('documents/' . $user->id, 'public') 
+            : null;
+        $selfiePath = $request->hasFile('selfie')
+            ? $request->file('selfie')->store('documents/' . $user->id, 'public')
+            : null;
+
+        DocumentVerification::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'document_type' => $request->document_type,
+            'document_number' => $request->document_number,
+            'document_front_path' => $frontPath,
+            'document_back_path' => $backPath,
+            'selfie_path' => $selfiePath,
+            'status' => 'pending',
+        ]);
+
+        return back()->with('success', 'Document submitted for verification.');
     }
 }
