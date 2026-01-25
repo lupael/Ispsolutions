@@ -53,6 +53,11 @@
         </div>
     </div>
     
+    <!-- Global Modals (Feature 1.5: Enhanced Modal System) -->
+    <x-ajax-modal id="fupModal" title="Fair Usage Policy" size="modal-lg" />
+    <x-ajax-modal id="billingProfileModal" title="Billing Profile" size="modal-lg" />
+    <x-ajax-modal id="quickActionModal" title="Quick Action" size="modal-md" />
+    
     <!-- Scripts -->
     @stack('scripts')
 </body>
