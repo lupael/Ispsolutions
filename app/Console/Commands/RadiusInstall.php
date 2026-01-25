@@ -61,9 +61,11 @@ class RadiusInstall extends Command
             $this->newLine();
             $this->warn('Please create the RADIUS database first:');
             $this->line('  mysql -u root -p');
-            $this->line('  CREATE DATABASE '.config('database.connections.radius.database').' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;');
-            $this->line('  GRANT ALL PRIVILEGES ON '.config('database.connections.radius.database').'.* TO \''.config('database.connections.radius.username').'\'@\''.config('database.connections.radius.host').'\';');
+            $this->line('  CREATE DATABASE <database_name> CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;');
+            $this->line('  GRANT ALL PRIVILEGES ON <database_name>.* TO \'<username>\'@\'<host>\';');
             $this->line('  FLUSH PRIVILEGES;');
+            $this->newLine();
+            $this->info('Replace <database_name>, <username>, and <host> with your actual values from .env');
             $this->newLine();
 
             return self::FAILURE;
@@ -117,7 +119,7 @@ class RadiusInstall extends Command
             DB::connection('radius')->getPdo();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\PDOException|\Illuminate\Database\QueryException $e) {
             return false;
         }
     }
@@ -131,7 +133,7 @@ class RadiusInstall extends Command
             DB::connection('radius')->select('SELECT 1');
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\PDOException|\Illuminate\Database\QueryException $e) {
             return false;
         }
     }
@@ -145,7 +147,7 @@ class RadiusInstall extends Command
             return Schema::connection('radius')->hasTable('radcheck')
                 && Schema::connection('radius')->hasTable('radreply')
                 && Schema::connection('radius')->hasTable('radacct');
-        } catch (\Exception $e) {
+        } catch (\PDOException|\Illuminate\Database\QueryException $e) {
             return false;
         }
     }
@@ -209,7 +211,7 @@ class RadiusInstall extends Command
             $this->line("  radacct: {$radacctCount} records");
 
             return self::SUCCESS;
-        } catch (\Exception $e) {
+        } catch (\PDOException|\Illuminate\Database\QueryException $e) {
             $this->newLine();
             $this->error('Error querying RADIUS tables: '.$e->getMessage());
 

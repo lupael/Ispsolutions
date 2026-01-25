@@ -2072,7 +2072,7 @@ class AdminController extends Controller
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle missing RADIUS tables gracefully
-            session()->flash('error', 'RADIUS database table not found. Please ensure RADIUS is properly configured and migrations have been run. See RADIUS_SETUP_GUIDE.md for instructions.');
+            session()->flash('error', 'RADIUS database table not found. Please run: php artisan radius:install --check for details.');
 
             // Return empty data
             $logs = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50);
