@@ -2,6 +2,45 @@
 
 This guide explains how to configure and troubleshoot RADIUS database connectivity for PPP and Hotspot logging.
 
+## Quick Start
+
+### Installation in 3 Steps
+
+1. **Configure Environment Variables**
+   
+   Add these to your `.env` file:
+   ```env
+   RADIUS_DB_CONNECTION=mysql
+   RADIUS_DB_HOST=127.0.0.1
+   RADIUS_DB_PORT=3306
+   RADIUS_DB_DATABASE=radius
+   RADIUS_DB_USERNAME=radius
+   RADIUS_DB_PASSWORD=your_secure_password
+   ```
+
+2. **Create RADIUS Database**
+   
+   ```bash
+   mysql -u root -p
+   CREATE DATABASE radius CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE USER 'radius'@'localhost' IDENTIFIED BY 'your_secure_password';
+   GRANT ALL PRIVILEGES ON radius.* TO 'radius'@'localhost';
+   FLUSH PRIVILEGES;
+   EXIT;
+   ```
+
+3. **Install RADIUS Tables**
+   
+   ```bash
+   # Install RADIUS tables
+   php artisan radius:install
+   
+   # Verify installation
+   php artisan radius:install --check
+   ```
+
+That's it! RADIUS is now ready to use.
+
 ## Overview
 
 The ISP Solution uses a separate RADIUS database to store accounting data for PPP (PPPoE) and Hotspot connections. This separation allows:
@@ -48,6 +87,19 @@ EXIT;
 
 ### 3. Run RADIUS Migrations
 
+**Recommended Method (using the new artisan command):**
+```bash
+# Install RADIUS tables
+php artisan radius:install
+
+# Check if everything is configured properly
+php artisan radius:install --check
+
+# Force reinstall if needed
+php artisan radius:install --force
+```
+
+**Alternative Method (manual migration):**
 ```bash
 # Run migrations specifically for the RADIUS database
 php artisan migrate --database=radius --path=database/migrations/radius
@@ -72,7 +124,12 @@ This means you can:
 
 ### Error: Table 'radius.radacct' doesn't exist
 
-**Solution 1**: Run the RADIUS migrations
+**Solution 1 (Recommended)**: Use the radius:install command
+```bash
+php artisan radius:install
+```
+
+**Solution 2 (Alternative)**: Run the RADIUS migrations manually
 ```bash
 php artisan migrate --database=radius --path=database/migrations/radius
 ```
@@ -123,7 +180,19 @@ mysql -h 127.0.0.1 -P 3306 -u radius -p radius
 
 ## Testing RADIUS Setup
 
-### 1. Check Database Connection
+### 1. Check Configuration Status
+```bash
+# Use the radius:install command with --check flag
+php artisan radius:install --check
+
+# This will verify:
+# - Database connection
+# - Database exists
+# - Tables exist and are accessible
+# - Show record counts for each table
+```
+
+### 2. Check Database Connection (Alternative)
 ```bash
 php artisan tinker
 # In tinker:
@@ -131,7 +200,7 @@ DB::connection('radius')->getPdo();
 # Should output PDO object if connection successful
 ```
 
-### 2. Verify Tables Exist
+### 2. Verify Tables Exist (Alternative)
 ```bash
 php artisan db:table radacct --database=radius
 # Should show table structure

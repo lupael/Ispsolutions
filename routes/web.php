@@ -833,6 +833,12 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     Route::get('/settings', [DeveloperController::class, 'settings'])->name('settings');
     Route::get('/debug', [DeveloperController::class, 'debug'])->name('debug');
 
+    // Command Execution
+    Route::get('/commands', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'index'])->name('commands.index');
+    Route::post('/commands/artisan', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'executeArtisan'])->name('commands.execute-artisan');
+    Route::post('/commands/system', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'executeSystem'])->name('commands.execute-system');
+    Route::get('/commands/list', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'getCommands'])->name('commands.list');
+
     // Master Packages (3-tier hierarchy)
     Route::resource('master-packages', MasterPackageController::class);
     Route::get('/master-packages/{masterPackage}/assign', [MasterPackageController::class, 'assignToOperators'])->name('master-packages.assign');

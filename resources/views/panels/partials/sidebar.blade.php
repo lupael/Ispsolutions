@@ -340,6 +340,7 @@
                     ['label' => 'API Keys', 'route' => 'panel.developer.api-keys'],
                 ]
             ],
+            ['label' => 'Command Execution', 'route' => 'panel.developer.commands.index', 'icon' => 'terminal'],
             ['label' => 'Debug Tools', 'route' => 'panel.developer.debug', 'icon' => 'bug'],
             ['label' => 'Settings', 'route' => 'panel.developer.settings', 'icon' => 'cog'],
         ];
