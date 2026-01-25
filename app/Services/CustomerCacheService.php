@@ -94,6 +94,7 @@ class CustomerCacheService
                     'username',
                     'package_id',
                     'status',
+                    'expiry_date',
                     'connection_type',
                     'billing_type',
                     'device_type',

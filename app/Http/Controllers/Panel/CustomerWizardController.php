@@ -481,10 +481,10 @@ class CustomerWizardController extends Controller
                 }
             }
 
-            // Set customer expiry date if field exists
-            if (in_array('expiry_date', $customer->getFillable())) {
-                $customer->expiry_date = $endDate;
-                $customer->save();
+            // Set network user expiry date if it was created
+            if (isset($networkUser) && $networkUser) {
+                $networkUser->expiry_date = $endDate;
+                $networkUser->save();
             }
 
             // Clean up temp customer data

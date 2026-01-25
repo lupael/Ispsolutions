@@ -22,6 +22,7 @@ class NetworkUser extends Model
         'service_type',
         'package_id',
         'status',
+        'expiry_date',
         'is_active',
         'user_id',
         'tenant_id',
@@ -34,6 +35,7 @@ class NetworkUser extends Model
     protected $casts = [
         'package_id' => 'integer',
         'is_active' => 'boolean',
+        'expiry_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -97,25 +97,14 @@ class WidgetCacheService
             $today = Carbon::today();
 
             // Find users expiring today from network_users table
-            // NOTE: Expiry logic assumptions:
-            // - User expiry is tracked via user->expiry_date field
+            // NOTE: Expiry logic uses expiry_date field on network_users
             // - Active users with status != 'suspended' and is_active = true are checked
-            // TODO: Adjust this logic based on actual business rules for expiry tracking
-            // e.g., calculate from last billing date + package validity_days
             $usersAtRisk = NetworkUser::where('tenant_id', $tenantId)
                 ->where('status', '!=', 'suspended')
                 ->where('is_active', true)
+                ->whereDate('expiry_date', $today)
                 ->with(['package', 'user'])
-                ->get()
-                ->filter(function ($networkUser) use ($today) {
-                    // Check if user has expiry date that matches today
-                    // Adjust this logic based on your actual expiry tracking mechanism
-                    if ($networkUser->user && isset($networkUser->user->expiry_date)) {
-                        return Carbon::parse($networkUser->user->expiry_date)->isSameDay($today);
-                    }
-
-                    return false;
-                });
+                ->get();
 
             $totalCount = $usersAtRisk->count();
             $totalAmount = $usersAtRisk->sum(function ($user) {
