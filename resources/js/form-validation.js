@@ -393,9 +393,146 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Feature 8.2: Prevent Duplicate Form Submissions
+    preventDuplicateSubmissions();
 });
+
+/**
+ * Prevent Duplicate Form Submissions (Feature 8.2)
+ * Disables submit buttons after first click and shows loading state
+ */
+function preventDuplicateSubmissions() {
+    document.querySelectorAll('form').forEach(form => {
+        // Skip forms that explicitly opt-out
+        if (form.hasAttribute('data-no-submit-protection')) {
+            return;
+        }
+
+        let isSubmitting = false;
+        const originalSubmitText = new Map();
+
+        // Store original button text
+        form.querySelectorAll('button[type="submit"]').forEach(btn => {
+            originalSubmitText.set(btn, btn.innerHTML);
+        });
+
+        form.addEventListener('submit', function(e) {
+            // If already submitting, prevent duplicate submission
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Check if form is valid (HTML5 validation)
+            if (!form.checkValidity()) {
+                // Let browser handle validation display
+                return true;
+            }
+
+            // Mark as submitting
+            isSubmitting = true;
+
+            // Disable all submit buttons and show loading state
+            form.querySelectorAll('button[type="submit"]').forEach(btn => {
+                btn.disabled = true;
+                
+                // Add loading spinner
+                const hasIcon = btn.querySelector('i');
+                if (hasIcon) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>' + btn.textContent;
+                }
+                
+                // Add visual feedback
+                btn.classList.add('opacity-75', 'cursor-wait');
+            });
+
+            // Re-enable after 10 seconds as a safety mechanism
+            // (in case form submission fails or redirects fail)
+            setTimeout(() => {
+                if (isSubmitting) {
+                    isSubmitting = false;
+                    form.querySelectorAll('button[type="submit"]').forEach(btn => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalSubmitText.get(btn) || btn.innerHTML;
+                        btn.classList.remove('opacity-75', 'cursor-wait');
+                    });
+                }
+            }, 10000);
+        });
+
+        // Handle form reset
+        form.addEventListener('reset', function() {
+            isSubmitting = false;
+            form.querySelectorAll('button[type="submit"]').forEach(btn => {
+                btn.disabled = false;
+                btn.innerHTML = originalSubmitText.get(btn) || btn.innerHTML;
+                btn.classList.remove('opacity-75', 'cursor-wait');
+            });
+        });
+    });
+
+    // Handle AJAX forms separately
+    document.querySelectorAll('form[data-ajax-form]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (!submitBtn || submitBtn.disabled) {
+                return;
+            }
+
+            // Disable button
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+            // Get form data
+            const formData = new FormData(form);
+            const url = form.action;
+            const method = form.method || 'POST';
+
+            // Submit via fetch
+            fetch(url, {
+                method: method,
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert(data.message || 'Success!');
+                    
+                    // Optionally redirect or reset form
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        form.reset();
+                    }
+                } else {
+                    alert(data.message || 'An error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+                alert('An error occurred while submitting the form');
+            })
+            .finally(() => {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    });
+}
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { FormValidator, BulkSelector };
+    module.exports = { FormValidator, BulkSelector, preventDuplicateSubmissions };
 }
