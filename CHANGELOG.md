@@ -9,139 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-25
 
----
+### ✨ Features
 
-## [4.0.0] - 2026-01-23 - 🎉 **400 Feature Milestone - 96.4% Complete**
+- **changelog**: auto-update changelog on every commit ([4aba036](../../commit/4aba0363655c77b2d09925902487718074bac892))
+- **changelog**: implement automated changelog generation system ([bbde231](../../commit/bbde2312121e0252e3b9721f566e0ae92b0c5467))
+- implement production-ready payment gateway integrations ([edb9588](../../commit/edb9588fb6380bb6c89407fd5ee89612d456483e))
+- **services**: add RouterManager and RadiusSyncService stubs with tests, seeders, and documentation ([c2b0979](../../commit/c2b097921140241bd7d884ea2f484551ad78b584))
+- **views**: add admin layout with navigation and footer partials ([48d75b4](../../commit/48d75b4afe0c75e579d44240a57c8cd021ba7837))
+- **rbac**: add operator permissions system with policies and helpers ([de83574](../../commit/de83574b9bc8490fb70f77e0aaab7e30b40abf3d))
+- implement Operators Management module with views and controller methods ([90f5853](../../commit/90f58534ca3efc354e5e636c8011077d91d38bf6))
+- implement customer management module with 10 views and controller methods ([87ba8c8](../../commit/87ba8c83862a33f7cc48d278c3dde6b91257e28d))
+- Implement advanced ISP management features (OLT, monitoring, MikroTik extensions, network visualization, hotspot) ([6eb4e05](../../commit/6eb4e0550e6f307cb81ae1142bf165e325a0b9f5))
+- **db**: add core models, migrations, factories, and seeders ([9ff4138](../../commit/9ff4138e85b8d7b55212d5b157c3f847c58f9bac))
 
-### 🚀 Major Achievement
+### 🐛 Bug Fixes
 
-#### Feature Completion Milestone
-- ✅ **400 Core Features Completed** from comprehensive A-Z feature list
-- ✅ **96.4% Feature Coverage** (400 out of 415 total features)
-- ✅ **Production Readiness** increased from 75% to 95%
-- 🎯 **Only 15 Features Remaining** (3.6% of total)
+- address code review feedback for payment gateways ([92faa43](../../commit/92faa435383e536f15443915f414015232b6362e))
+- Correct order of constraint drops in down() method ([3a88b9f](../../commit/3a88b9f40f62e5e34f10da21979b1e74fa979998))
+- Add tenant_id to packages table in migration ([6fec5ae](../../commit/6fec5aee57da03ce66d2577908bcb52348f36e1c))
+- Update all panel views to use correct 'panels.layouts.app' layout ([a8ddbfe](../../commit/a8ddbfefac156e81537decc85c78b6c87942490d))
+- Change @extends from 'layouts.app' to 'panels.layouts.app' in tenancies/create.blade.php ([5c7d49a](../../commit/5c7d49a8cbcfceda7ec64e85eb830fa5ce79f191))
+- improve stub consistency, security, and documentation based on code review ([077c983](../../commit/077c9838f279fe207dac20b866034ee58d277598))
+- address code review feedback - improve stub methods consistency and add safety checks ([8c55d1f](../../commit/8c55d1fd50b1a075092e8a45a759e400a70f40c9))
+- address PR review feedback - security, dependencies, and service provider ([d584c6f](../../commit/d584c6f2bee40c73d769d4edc59e61e0669af1cb))
 
-#### Completed Feature Categories (All Categories Through W)
-This milestone marks the completion of the next 200 features, bringing the system to near-complete status:
+### 📚 Documentation
 
-##### Newly Completed Categories (M-W)
-- ✅ **MikroTik Integration** (8 features)
-  - Database Sync, PPPoE Profiles & Secrets, Hotspot Management, API Integration
-- ✅ **Management Features** (7 features)
-  - Manager Roles, Customer Attributes, MAC Management, Master Packages
-- ✅ **Network Management** (4 features)
-  - NAS Management, Device Monitoring, Interface Management
-- ✅ **Notification System** (6 features)
-  - Email/SMS Notifications, Payment/Due Date/Expiration Alerts
-- ✅ **OLT Management** (10+ features)
-  - Device Management, ONU Sync, SNMP, Performance Metrics
-- ✅ **Online Payments** (8+ features)
-  - Multiple Gateway Support, Transaction Processing, Reconciliation
-- ✅ **Package Management** (12+ features)
-  - PPPoE/Hotspot/Static IP Packages, Speed Tiers, Custom Packages
-- ✅ **Payment Management** (15+ features)
-  - Invoice Processing, Refunds, Partial Payments, Reports
-- ✅ **PPPoE Management** (10+ features)
-  - User Creation, Profile Management, Session Monitoring
-- ✅ **Queue Management** (6+ features)
-  - Bandwidth Control, Traffic Shaping, QoS
-- ✅ **RADIUS Integration** (8+ features)
-  - User Authentication, Accounting, Session Management
-- ✅ **Reports & Analytics** (20+ features)
-  - Financial Reports, Usage Reports, Customer Reports, Analytics
-- ✅ **Reseller Management** (12+ features)
-  - Multi-level Resellers, Commission Tracking, Sub-accounts
-- ✅ **Router Management** (8+ features)
-  - Configuration, Monitoring, Backup, Sync
-- ✅ **Security Features** (10+ features)
-  - 2FA, Access Control, Audit Logs, Encryption
-- ✅ **Service Management** (8+ features)
-  - Provisioning, Activation, Suspension, Lifecycle
-- ✅ **SMS Management** (8+ features)
-  - Gateway Configuration, Templates, Scheduling, History
-- ✅ **Static IP Management** (6+ features)
-  - Assignment, Billing, Pool Management
-- ✅ **Subscription Management** (10+ features)
-  - Plans, Renewals, Upgrades, Cancellations
-- ✅ **Support System** (8+ features)
-  - Ticketing, Knowledge Base, FAQs, Chat Support
-- ✅ **Tax Management** (5+ features)
-  - VAT Configuration, Tax Reports, Compliance
-- ✅ **Ticketing System** (8+ features)
-  - Issue Tracking, Priority Management, SLA
-- ✅ **User Management** (10+ features)
-  - CRUD Operations, Permissions, Bulk Operations
-- ✅ **VAT Management** (4+ features)
-  - VAT Calculation, Reports, Configuration
-- ✅ **VPN Management** (6+ features)
-  - Account Creation, Pool Management, Monitoring
-- ✅ **VLAN Management** (5+ features)
-  - VLAN Configuration, Tagging, Network Segmentation
-- ✅ **Web Features** (Partial - 13 out of 15 complete)
-  - Administration Panel, Customer Portal, Responsive Design
+- **changelog**: add implementation summary ([9f1f118](../../commit/9f1f118d8135c100b9326d5f94cc9c7d859a3f6d))
+- **changelog**: add comprehensive documentation and quick reference ([23f7c11](../../commit/23f7c113e25529a7eb0d9edc38a37f8021f26cc6))
+- add final payment gateway implementation report ([7a970c8](../../commit/7a970c88774c65ba31020a58c7445ee2e5b8f1c0))
+- add CHANGELOG and update DatabaseSeeder with new seeders ([c84ce5d](../../commit/c84ce5db12c162b2b1c4349b31f442c5fbe3c9cc))
+- add comprehensive implementation status report ([2e7b912](../../commit/2e7b912fdff0fb59393bdba92bb7a61fcd39b3e2))
+- create comprehensive TODO_REIMPLEMENT.md with phase-by-phase checklist ([622a11c](../../commit/622a11c28c4ddedfa0918e5b055b630281fd0b94))
 
-##### All Previously Completed Categories (A-L)
-- ✅ Access Control & Authentication (11 features)
-- ✅ Account Management (7 features)
-- ✅ Administrative Features (4 features)
-- ✅ Billing & Invoicing (12 features)
-- ✅ Backup & Data Management (5 features)
-- ✅ Business Intelligence (3 features)
-- ✅ Customer Management (18 features)
-- ✅ Complaints & Support (9 features)
-- ✅ Card & Recharge System (7 features)
-- ✅ Cash Management (4 features)
-- ✅ Communication (9 features)
-- ✅ Configuration & Settings (5 features)
-- ✅ Dashboard & Analytics (25 features)
-- ✅ Device Management (5 features)
-- ✅ Data Management (9 features)
-- ✅ Expense Management (8 features)
-- ✅ Event Management (3 features)
-- ✅ Exam System (8 features)
-- ✅ Exchange & Trading (2 features)
-- ✅ FreeRADIUS Integration (11 features)
-- ✅ Fair Usage Policy (3 features)
-- ✅ Financial Management (2 features)
-- ✅ Forms & UI (2 features)
-- ✅ Failed Operations (2 features)
-- ✅ Gateway Integration (3 features)
-- ✅ Group Management (2 features)
-- ✅ General Features (2 features)
-- ✅ Hotspot Management (9 features)
-- ✅ Helper Functions (3 features)
-- ✅ Income Management (4 features)
-- ✅ IP Management (7 features)
-- ✅ Import/Export (8 features)
-- ✅ Interface Management (2 features)
-- ✅ Invoice & Printing (3 features)
-- ✅ ISP Information (1 feature)
-- ✅ Language & Localization (1 feature)
-- ✅ Login & Authentication (6 features)
+### 🔧 Chores
 
-#### Remaining Features (15 total)
-- 🚧 **Web Features** (2 remaining)
-  - Billed Customer Widget, Additional responsive components
-- 🚧 **Yearly Reports** (5 features)
-  - Card Distributor Payments, Cash In/Out, Operator Income, Expenses
-- 🚧 **Zone Management** (3 features)
-  - Customer Zone Management, Zone-based Reporting, Zone Configuration
-- 🚧 **Excel/XML Import** (2 features)
-  - Excel Customer Import, XML Configuration Import
-- 🚧 **Additional Web Enhancements** (3 features)
-
-### 📈 System Maturity
-- **Feature Completeness**: 96.4% (400/415 features)
-- **Production Readiness**: 95% (up from 75%)
-- **Testing Coverage**: 20% (requires expansion)
-- **Documentation Coverage**: 10% (requires expansion)
-- **Total Tasks Completed**: 450 (50 core + 400 features)
-
-### 🎯 Next Steps
-- Complete final 15 features (yearly reports, zone management)
-- Expand test coverage to 80%+
-- Enhance documentation to production-ready state
-- Final production hardening and optimization
+- **reimplement**: scaffold, tenancy skeleton and seed roles (PR1) ([a1a58de](../../commit/a1a58def9506ed900e0b2c2d5e7747b0840ab957))
+- add service contracts and NetworkServiceProvider ([d8f93d0](../../commit/d8f93d07794ce3652348178b5a89c0c1a227f24e))
+- **scaffold**: add Docker environment, Makefile, and configuration ([42b682a](../../commit/42b682ad42fced837aa8078569e153bc84c6e7c8))
 
 ---
 
