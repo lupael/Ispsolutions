@@ -51,7 +51,7 @@
             <!-- Enhanced Filters -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <form method="GET" action="{{ route('developer.audit-logs') }}" class="row g-3">
+                    <form method="GET" action="{{ route('panel.developer.audit-logs') }}" class="row g-3">
                         <div class="col-md-3">
                             <label for="event_filter" class="form-label">Event Type</label>
                             <select id="event_filter" name="event" class="form-select">
@@ -82,7 +82,7 @@
 
                         <div class="col-md-2 d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
-                            <a href="{{ route('developer.audit-logs') }}" class="btn btn-secondary">Clear</a>
+                            <a href="{{ route('panel.developer.audit-logs') }}" class="btn btn-secondary">Clear</a>
                         </div>
                     </form>
 
@@ -169,109 +169,54 @@
     </div>
 </div>
 
-<!-- Details Modal -->
-<div class="modal fade" id="logDetailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Audit Log Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="logDetailsContent">
-                <div class="text-center py-4">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script nonce="{{ $cspNonce ?? '' }}">
 function setQuickFilter(period) {
     const dateFrom = document.getElementById('date_from');
     const dateTo = document.getElementById('date_to');
     const today = new Date();
     
+    // Format date as YYYY-MM-DD using local timezone
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
     switch(period) {
         case 'today':
-            dateFrom.value = today.toISOString().split('T')[0];
-            dateTo.value = today.toISOString().split('T')[0];
+            dateFrom.value = formatDate(today);
+            dateTo.value = formatDate(today);
             break;
         case 'yesterday':
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
-            dateFrom.value = yesterday.toISOString().split('T')[0];
-            dateTo.value = yesterday.toISOString().split('T')[0];
+            dateFrom.value = formatDate(yesterday);
+            dateTo.value = formatDate(yesterday);
             break;
         case 'week':
             const weekStart = new Date(today);
             weekStart.setDate(today.getDate() - today.getDay());
-            dateFrom.value = weekStart.toISOString().split('T')[0];
-            dateTo.value = today.toISOString().split('T')[0];
+            dateFrom.value = formatDate(weekStart);
+            dateTo.value = formatDate(today);
             break;
         case 'month':
             const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-            dateFrom.value = monthStart.toISOString().split('T')[0];
-            dateTo.value = today.toISOString().split('T')[0];
+            dateFrom.value = formatDate(monthStart);
+            dateTo.value = formatDate(today);
             break;
     }
 }
 
 function viewDetails(logId) {
-    const modal = new bootstrap.Modal(document.getElementById('logDetailsModal'));
-    const content = document.getElementById('logDetailsContent');
-    
-    modal.show();
-    
-    // Fetch log details via AJAX
-    fetch(`/api/audit-logs/${logId}`)
-        .then(response => response.json())
-        .then(data => {
-            content.innerHTML = `
-                <dl class="row">
-                    <dt class="col-sm-3">Event:</dt>
-                    <dd class="col-sm-9"><span class="badge badge-info">${data.event}</span></dd>
-                    
-                    <dt class="col-sm-3">User:</dt>
-                    <dd class="col-sm-9">${data.user || 'System'}</dd>
-                    
-                    <dt class="col-sm-3">Type:</dt>
-                    <dd class="col-sm-9"><code>${data.type}</code></dd>
-                    
-                    <dt class="col-sm-3">Description:</dt>
-                    <dd class="col-sm-9">${data.description || 'N/A'}</dd>
-                    
-                    <dt class="col-sm-3">IP Address:</dt>
-                    <dd class="col-sm-9">${data.ip_address}</dd>
-                    
-                    <dt class="col-sm-3">User Agent:</dt>
-                    <dd class="col-sm-9 small">${data.user_agent || 'N/A'}</dd>
-                    
-                    <dt class="col-sm-3">Timestamp:</dt>
-                    <dd class="col-sm-9">${data.timestamp}</dd>
-                    
-                    ${data.old_values ? `
-                        <dt class="col-sm-3">Old Values:</dt>
-                        <dd class="col-sm-9"><pre class="bg-light p-2 rounded"><code>${JSON.stringify(data.old_values, null, 2)}</code></pre></dd>
-                    ` : ''}
-                    
-                    ${data.new_values ? `
-                        <dt class="col-sm-3">New Values:</dt>
-                        <dd class="col-sm-9"><pre class="bg-light p-2 rounded"><code>${JSON.stringify(data.new_values, null, 2)}</code></pre></dd>
-                    ` : ''}
-                </dl>
-            `;
-        })
-        .catch(error => {
-            content.innerHTML = '<div class="alert alert-danger">Failed to load details</div>';
-        });
+    // Note: This requires a backend endpoint to be implemented
+    // For now, show a placeholder message
+    alert('Audit log details view requires backend implementation. Log ID: ' + logId);
 }
 
 function exportLogs() {
     const params = new URLSearchParams(window.location.search);
-    window.location.href = '/developer/audit-logs/export?' + params.toString();
+    window.location.href = '/panel/developer/audit-logs/export?' + params.toString();
 }
 </script>
 @endsection

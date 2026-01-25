@@ -25,7 +25,7 @@
     </div>
 
     <!-- Configuration Form -->
-    <form id="billing-config-form" method="POST" action="{{ route('super-admin.billing.daily.update') }}">
+    <form id="billing-config-form" method="POST" action="{{ route('panel.super-admin.billing.daily.update') }}">
         @csrf
         @method('PUT')
         

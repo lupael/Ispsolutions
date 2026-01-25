@@ -33,7 +33,7 @@
     <!-- Enhanced Filters -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
-            <form method="GET" action="{{ route('accountant.payments.history') }}" class="space-y-4">
+            <form method="GET" action="{{ route('panel.accountant.payments.history') }}" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Date Range Filter -->
                     <div>
@@ -105,7 +105,7 @@
                             </svg>
                             Filter
                         </button>
-                        <a href="{{ route('accountant.payments.history') }}" class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <a href="{{ route('panel.accountant.payments.history') }}" class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -243,32 +243,40 @@ function setDateFilter(period) {
     const dateTo = document.getElementById('date_to');
     const today = new Date();
     
+    // Format date as YYYY-MM-DD using local timezone
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
     switch(period) {
         case 'today':
-            dateFrom.value = today.toISOString().split('T')[0];
-            dateTo.value = today.toISOString().split('T')[0];
+            dateFrom.value = formatDate(today);
+            dateTo.value = formatDate(today);
             break;
         case 'yesterday':
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
-            dateFrom.value = yesterday.toISOString().split('T')[0];
-            dateTo.value = yesterday.toISOString().split('T')[0];
+            dateFrom.value = formatDate(yesterday);
+            dateTo.value = formatDate(yesterday);
             break;
         case 'week':
             const weekStart = new Date(today);
             weekStart.setDate(today.getDate() - today.getDay());
-            dateFrom.value = weekStart.toISOString().split('T')[0];
-            dateTo.value = today.toISOString().split('T')[0];
+            dateFrom.value = formatDate(weekStart);
+            dateTo.value = formatDate(today);
             break;
         case 'month':
             const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-            dateFrom.value = monthStart.toISOString().split('T')[0];
-            dateTo.value = today.toISOString().split('T')[0];
+            dateFrom.value = formatDate(monthStart);
+            dateTo.value = formatDate(today);
             break;
         case 'year':
             const yearStart = new Date(today.getFullYear(), 0, 1);
-            dateFrom.value = yearStart.toISOString().split('T')[0];
-            dateTo.value = today.toISOString().split('T')[0];
+            dateFrom.value = formatDate(yearStart);
+            dateTo.value = formatDate(today);
             break;
     }
 }
@@ -276,7 +284,7 @@ function setDateFilter(period) {
 // Export to Excel function
 function exportToExcel() {
     const params = new URLSearchParams(window.location.search);
-    const exportUrl = '{{ route("accountant.payments.history") }}/export';
+    const exportUrl = '{{ route("panel.accountant.payments.history") }}/export';
     
     // Check if export functionality is available
     fetch(exportUrl + '?' + params.toString(), {
@@ -292,9 +300,9 @@ function exportToExcel() {
     });
 }
 
-// View payment details (placeholder)
+// View payment details (open in same page with filter parameter)
 function viewPaymentDetails(paymentId) {
-    window.location.href = '/accountant/payments/' + paymentId;
+    window.location.href = '{{ route("panel.accountant.payments.history") }}?payment=' + encodeURIComponent(paymentId);
 }
 </script>
 @endsection

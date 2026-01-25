@@ -193,34 +193,60 @@
     // Update bandwidth display
     function updateBandwidthDisplay(data) {
         const now = Date.now();
-        const timeDiff = (now - previousData.timestamp) / 1000; // seconds
-
-        // Calculate speed (bytes per second)
-        if (timeDiff > 0 && data.upload >= previousData.upload && data.download >= previousData.download) {
-            const uploadSpeed = (data.upload - previousData.upload) / timeDiff;
-            const downloadSpeed = (data.download - previousData.download) / timeDiff;
-            
-            // Update speed displays
-            document.getElementById(`upload-speed-${customerId}`).textContent = formatSpeed(uploadSpeed);
-            document.getElementById(`download-speed-${customerId}`).textContent = formatSpeed(downloadSpeed);
-        }
-
-        // Update totals
+        
+        // Update totals immediately
         document.getElementById(`upload-total-${customerId}`).textContent = formatBytes(data.upload);
         document.getElementById(`download-total-${customerId}`).textContent = formatBytes(data.download);
+
+        // Calculate speed only after first poll
+        if (isFirstPoll || previousData === null) {
+            // First poll - establish baseline, don't calculate speed yet
+            isFirstPoll = false;
+            previousData = {
+                upload: data.upload,
+                download: data.download,
+                timestamp: now
+            };
+            
+            // Show 0 speed on first poll
+            document.getElementById(`upload-speed-${customerId}`).textContent = '0 KB/s';
+            document.getElementById(`download-speed-${customerId}`).textContent = '0 KB/s';
+        } else {
+            const timeDiff = (now - previousData.timestamp) / 1000; // seconds
+
+            // Check for counter reset (session restart or offline)
+            if (data.upload < previousData.upload || data.download < previousData.download) {
+                // Counter reset detected - reset baseline
+                previousData = {
+                    upload: data.upload,
+                    download: data.download,
+                    timestamp: now
+                };
+                document.getElementById(`upload-speed-${customerId}`).textContent = '0 KB/s';
+                document.getElementById(`download-speed-${customerId}`).textContent = '0 KB/s';
+            } else if (timeDiff > 0) {
+                // Calculate speed (bytes per second)
+                const uploadSpeed = (data.upload - previousData.upload) / timeDiff;
+                const downloadSpeed = (data.download - previousData.download) / timeDiff;
+                
+                // Update speed displays
+                document.getElementById(`upload-speed-${customerId}`).textContent = formatSpeed(uploadSpeed);
+                document.getElementById(`download-speed-${customerId}`).textContent = formatSpeed(downloadSpeed);
+                
+                // Store current data for next calculation
+                previousData = {
+                    upload: data.upload,
+                    download: data.download,
+                    timestamp: now
+                };
+            }
+        }
 
         // Update session information
         document.getElementById(`session-status-${customerId}`).textContent = data.status || '-';
         document.getElementById(`session-time-${customerId}`).textContent = formatSessionTime(data.session_time);
         document.getElementById(`session-ip-${customerId}`).textContent = data.ip_address || '-';
         document.getElementById(`session-nas-${customerId}`).textContent = data.nas_identifier || '-';
-
-        // Store current data for next calculation
-        previousData = {
-            upload: data.upload,
-            download: data.download,
-            timestamp: now
-        };
     }
 
     // Start auto-refresh

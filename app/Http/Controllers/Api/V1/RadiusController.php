@@ -311,6 +311,14 @@ class RadiusController extends Controller
     public function getRealTimeStats(int $customerId): JsonResponse
     {
         try {
+            // Ensure user is authenticated
+            if (!auth()->check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                ], 401);
+            }
+
             // Get the network user by ID
             $user = NetworkUser::findOrFail($customerId);
             
