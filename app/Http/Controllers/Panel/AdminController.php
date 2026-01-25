@@ -1445,9 +1445,7 @@ class AdminController extends Controller
     {
         $router = MikrotikRouter::findOrFail($id);
 
-        // Return to list since edit view doesn't exist yet
-        return redirect()->route('panel.admin.network.routers')
-            ->with('info', 'Router edit view is not yet implemented. Please use the router management interface.');
+        return view('panels.admin.network.routers-edit', compact('router'));
     }
 
     /**
@@ -1688,9 +1686,7 @@ class AdminController extends Controller
      */
     public function ipv4PoolsCreate(): View
     {
-        // Redirect to list since create view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv4-pools')
-            ->with('info', 'IPv4 pool creation view is not yet implemented.');
+        return view('panels.admin.network.ipv4-pools-create');
     }
 
     /**
@@ -1736,9 +1732,7 @@ class AdminController extends Controller
     {
         $pool = IpPool::findOrFail($id);
 
-        // Redirect to list since edit view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv4-pools')
-            ->with('info', 'IPv4 pool edit view is not yet implemented.');
+        return view('panels.admin.network.ipv4-pools-edit', compact('pool'));
     }
 
     /**
@@ -1811,9 +1805,7 @@ class AdminController extends Controller
      */
     public function ipv6PoolsCreate(): View
     {
-        // Redirect to list since create view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv6-pools')
-            ->with('info', 'IPv6 pool creation view is not yet implemented.');
+        return view('panels.admin.network.ipv6-pools-create');
     }
 
     /**
@@ -1859,9 +1851,7 @@ class AdminController extends Controller
     {
         $pool = IpPool::findOrFail($id);
 
-        // Redirect to list since edit view doesn't exist yet
-        return redirect()->route('panel.admin.network.ipv6-pools')
-            ->with('info', 'IPv6 pool edit view is not yet implemented.');
+        return view('panels.admin.network.ipv6-pools-edit', compact('pool'));
     }
 
     /**
@@ -3341,5 +3331,189 @@ class AdminController extends Controller
             'success' => false,
             'message' => 'Connection failed - Device unreachable',
         ], 500);
+    }
+
+    // ==================== Prepaid Card Management Methods ====================
+
+    /**
+     * Display recharge cards list.
+     */
+    public function cardsIndex(): View
+    {
+        // Validate filters
+        $validated = request()->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:active,used,expired,cancelled',
+        ]);
+
+        $query = \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())
+            ->with(['generatedBy', 'assignedTo', 'usedBy']);
+
+        // Apply filters
+        if (! empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        if (! empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('card_number', 'like', "%{$search}%")
+                    ->orWhere('pin', 'like', "%{$search}%");
+            });
+        }
+
+        $cards = $query->latest()->paginate(20);
+
+        $stats = [
+            'total_cards' => \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())->count(),
+            'active_cards' => \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())->where('status', 'active')->count(),
+            'used_cards' => \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())->where('status', 'used')->count(),
+            'total_value' => \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())->where('status', 'active')->sum('denomination'),
+        ];
+
+        return view('panels.admin.cards.index', compact('cards', 'stats'));
+    }
+
+    /**
+     * Show card generation form.
+     */
+    public function cardsCreate(): View
+    {
+        $operators = User::where('tenant_id', getCurrentTenantId())
+            ->whereHas('roles', function ($query) {
+                $query->where('slug', 'operator');
+            })
+            ->get();
+
+        return view('panels.admin.cards.create', compact('operators'));
+    }
+
+    /**
+     * Generate cards.
+     */
+    public function cardsStore(Request $request)
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1|max:1000',
+            'denomination' => 'required|numeric|min:1',
+            'expires_at' => 'nullable|date|after:today',
+            'assign_to' => 'nullable|exists:users,id,tenant_id,' . getCurrentTenantId(),
+        ]);
+
+        $cardService = new \App\Services\CardDistributionService;
+        
+        $expiresAt = $validated['expires_at'] ? \Carbon\Carbon::parse($validated['expires_at']) : null;
+        
+        try {
+            $cards = $cardService->generateCards(
+                $validated['quantity'],
+                $validated['denomination'],
+                auth()->user(),
+                $expiresAt
+            );
+
+            // Assign to operator if specified
+            if (isset($validated['assign_to'])) {
+                $cardIds = collect($cards)->pluck('id')->toArray();
+                $distributor = User::where('tenant_id', getCurrentTenantId())
+                    ->findOrFail($validated['assign_to']);
+                $cardService->assignCardsToDistributor($cardIds, $distributor);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Failed to generate or assign recharge cards.', [
+                'error' => $e->getMessage(),
+                'user_id' => optional(auth()->user())->id,
+                'quantity' => $validated['quantity'] ?? null,
+                'denomination' => $validated['denomination'] ?? null,
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'An error occurred while generating the cards. Please try again.');
+        }
+
+        return redirect()->route('panel.admin.cards.index')
+            ->with('success', count($cards) . ' cards generated successfully.');
+    }
+
+    /**
+     * Export cards to PDF/Excel.
+     */
+    public function cardsExport(Request $request)
+    {
+        $validated = $request->validate([
+            'format' => 'required|in:pdf,excel',
+            'card_ids' => 'required|array',
+            'card_ids.*' => 'exists:recharge_cards,id',
+        ]);
+
+        $cards = \App\Models\RechargeCard::whereIn('id', $validated['card_ids'])
+            ->where('tenant_id', getCurrentTenantId())
+            ->get();
+
+        if ($cards->isEmpty()) {
+            return redirect()
+                ->back()
+                ->with('error', 'No cards found to export. Please ensure the selected cards belong to your organization.');
+        }
+
+        if ($validated['format'] === 'pdf') {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('panels.admin.cards.export-pdf', compact('cards'));
+            return $pdf->download('recharge-cards-' . now()->format('Y-m-d') . '.pdf');
+        } else {
+            // Excel export
+            return Excel::download(
+                new \App\Exports\RechargeCardsExport($cards),
+                'recharge-cards-' . now()->format('Y-m-d') . '.xlsx'
+            );
+        }
+    }
+
+    /**
+     * Show card details.
+     */
+    public function cardsShow($id): View
+    {
+        $card = \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())
+            ->with(['generatedBy', 'assignedTo', 'usedBy'])
+            ->findOrFail($id);
+
+        return view('panels.admin.cards.show', compact('card'));
+    }
+
+    /**
+     * Assign cards to distributor.
+     */
+    public function cardsAssign(Request $request)
+    {
+        $validated = $request->validate([
+            'card_ids' => 'required|array',
+            'card_ids.*' => 'exists:recharge_cards,id',
+            'distributor_id' => 'required|exists:users,id,tenant_id,' . getCurrentTenantId(),
+        ]);
+
+        $cardService = new \App\Services\CardDistributionService;
+        $distributor = User::where('tenant_id', getCurrentTenantId())
+            ->findOrFail($validated['distributor_id']);
+        
+        $assigned = $cardService->assignCardsToDistributor($validated['card_ids'], $distributor);
+
+        return redirect()->back()
+            ->with('success', $assigned . ' cards assigned to ' . $distributor->name);
+    }
+
+    /**
+     * Show used cards mapping.
+     */
+    public function cardsUsedMapping(): View
+    {
+        $usedCards = \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())
+            ->where('status', 'used')
+            ->with(['usedBy', 'assignedTo'])
+            ->latest('used_at')
+            ->paginate(20);
+
+        return view('panels.admin.cards.used-mapping', compact('usedCards'));
     }
 }

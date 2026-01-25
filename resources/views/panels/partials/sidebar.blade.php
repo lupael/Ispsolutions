@@ -157,6 +157,15 @@
                 ]
             ],
             [
+                'label' => 'Prepaid Cards',
+                'icon' => 'card',
+                'children' => [
+                    ['label' => 'All Cards', 'route' => 'panel.admin.cards.index'],
+                    ['label' => 'Generate Cards', 'route' => 'panel.admin.cards.create'],
+                    ['label' => 'Used Cards', 'route' => 'panel.admin.cards.used-mapping'],
+                ]
+            ],
+            [
                 'label' => 'Logs',
                 'icon' => 'clipboard',
                 'children' => [

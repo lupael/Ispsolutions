@@ -518,6 +518,17 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
         Route::post('/{gateway}/set-default', [\App\Http\Controllers\Panel\SmsGatewayController::class, 'setDefault'])->name('set-default');
     });
 
+    // Prepaid Card Management
+    Route::prefix('cards')->name('cards.')->group(function () {
+        Route::get('/', [AdminController::class, 'cardsIndex'])->name('index');
+        Route::get('/create', [AdminController::class, 'cardsCreate'])->name('create');
+        Route::post('/', [AdminController::class, 'cardsStore'])->name('store');
+        Route::get('/{id}', [AdminController::class, 'cardsShow'])->name('show');
+        Route::post('/export', [AdminController::class, 'cardsExport'])->name('export');
+        Route::post('/assign', [AdminController::class, 'cardsAssign'])->name('assign');
+        Route::get('/used-mapping', [AdminController::class, 'cardsUsedMapping'])->name('used-mapping');
+    });
+
     // Logs Management with role-based access control
     // System/Activity Log - Developer, Super Admin, Admin
     Route::get('/logs/system', [AdminController::class, 'activityLogs'])
