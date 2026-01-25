@@ -18,17 +18,17 @@
                 <button type="button" 
                         class="timeframe-btn px-3 py-1 text-sm rounded border" 
                         data-timeframe="daily">
-                    Daily
+                    1 Day
                 </button>
                 <button type="button" 
                         class="timeframe-btn px-3 py-1 text-sm rounded border" 
                         data-timeframe="weekly">
-                    Weekly
+                    7 Days
                 </button>
                 <button type="button" 
                         class="timeframe-btn px-3 py-1 text-sm rounded border" 
                         data-timeframe="monthly">
-                    Monthly
+                    30 Days
                 </button>
                 @if($autoRefresh)
                 <button type="button" 

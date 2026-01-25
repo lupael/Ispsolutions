@@ -100,6 +100,7 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
 
         // Statistics
         Route::get('/users/{username}/stats', [RadiusController::class, 'getUserStats'])->name('api.radius.users.stats');
+        Route::get('/users/{customerId}/realtime-stats', [RadiusController::class, 'getRealTimeStats'])->name('api.radius.users.realtime-stats');
     });
 
     // MikroTik Routes
