@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Features
 
+- enhance audit log display with advanced filtering ([3f585f3](../../commit/3f585f37f1e94a1a9e3b2233fe8e8fe193c3669e))
+- enhance billing UI and add user management interfaces ([394db5d](../../commit/394db5d84227108adacc596ec4f46ec84e1473e8))
+- enhance bandwidth graphs and add real-time bandwidth display ([f87651e](../../commit/f87651ecd2d338cd429a4460a7f90adbfbc5ae0a))
 - Implement prepaid card management UI ([9884e5c](../../commit/9884e5c181d61050ce152a3d07724ce187285307))
 - **changelog**: auto-update changelog on every commit ([4aba036](../../commit/4aba0363655c77b2d09925902487718074bac892))
 - **changelog**: implement automated changelog generation system ([bbde231](../../commit/bbde2312121e0252e3b9721f566e0ae92b0c5467))
@@ -25,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- address PR review comments ([0b0e4c9](../../commit/0b0e4c9832ee3056f91b48c95183df195cdb4df2))
+- address code review findings ([c149bd3](../../commit/c149bd37e8a519404c5fb31208bf8c377c688553))
 - Address security and validation issues from code review ([70d9ee3](../../commit/70d9ee3ad4654e65d52db75658cb04ca59650ef8))
 - Add missing CRUD views for Router, OLT, and IP Pool management ([273567a](../../commit/273567a773adb75f8e8fd660a57ce99cc2181ecc))
 - address code review feedback for payment gateways ([92faa43](../../commit/92faa435383e536f15443915f414015232b6362e))
