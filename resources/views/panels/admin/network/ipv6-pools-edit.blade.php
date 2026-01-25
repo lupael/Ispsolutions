@@ -72,12 +72,13 @@
                     </div>
 
                     <div>
-                        <label for="subnet_mask" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Subnet Mask
+                        <label for="prefix_length" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Prefix Length
                         </label>
-                        <input type="text" name="subnet_mask" id="subnet_mask" value="{{ old('subnet_mask', $pool->subnet_mask) }}"
+                        <input type="text" name="prefix_length" id="prefix_length" value="{{ old('prefix_length', $pool->prefix_length ?? $pool->subnet_mask) }}" placeholder="/64"
                             class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        @error('subnet_mask')
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">IPv6 prefix length (e.g., /64, /48, /56)</p>
+                        @error('prefix_length')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

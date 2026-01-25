@@ -72,6 +72,21 @@
                     </div>
 
                     <div>
+                        <label for="snmp_version" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            SNMP Version <span class="text-red-500">*</span>
+                        </label>
+                        <select name="snmp_version" id="snmp_version" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="v1" {{ old('snmp_version', $olt->snmp_version) === 'v1' ? 'selected' : '' }}>v1</option>
+                            <option value="v2c" {{ old('snmp_version', $olt->snmp_version) === 'v2c' ? 'selected' : '' }}>v2c</option>
+                            <option value="v3" {{ old('snmp_version', $olt->snmp_version) === 'v3' ? 'selected' : '' }}>v3</option>
+                        </select>
+                        @error('snmp_version')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label for="snmp_community" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             SNMP Community
                         </label>

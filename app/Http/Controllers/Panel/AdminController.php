@@ -3340,16 +3340,22 @@ class AdminController extends Controller
      */
     public function cardsIndex(): View
     {
+        // Validate filters
+        $validated = request()->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:active,used,expired,cancelled',
+        ]);
+
         $query = \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())
             ->with(['generatedBy', 'assignedTo', 'usedBy']);
 
         // Apply filters
-        if (request()->filled('status')) {
-            $query->where('status', request('status'));
+        if (! empty($validated['status'])) {
+            $query->where('status', $validated['status']);
         }
 
-        if (request()->filled('search')) {
-            $search = request('search');
+        if (! empty($validated['search'])) {
+            $search = $validated['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('card_number', 'like', "%{$search}%")
                     ->orWhere('pin', 'like', "%{$search}%");
@@ -3391,25 +3397,40 @@ class AdminController extends Controller
             'quantity' => 'required|integer|min:1|max:1000',
             'denomination' => 'required|numeric|min:1',
             'expires_at' => 'nullable|date|after:today',
-            'assign_to' => 'nullable|exists:users,id',
+            'assign_to' => 'nullable|exists:users,id,tenant_id,' . getCurrentTenantId(),
         ]);
 
         $cardService = new \App\Services\CardDistributionService;
         
         $expiresAt = $validated['expires_at'] ? \Carbon\Carbon::parse($validated['expires_at']) : null;
         
-        $cards = $cardService->generateCards(
-            $validated['quantity'],
-            $validated['denomination'],
-            auth()->user(),
-            $expiresAt
-        );
+        try {
+            $cards = $cardService->generateCards(
+                $validated['quantity'],
+                $validated['denomination'],
+                auth()->user(),
+                $expiresAt
+            );
 
-        // Assign to operator if specified
-        if (isset($validated['assign_to'])) {
-            $cardIds = collect($cards)->pluck('id')->toArray();
-            $distributor = User::findOrFail($validated['assign_to']);
-            $cardService->assignCardsToDistributor($cardIds, $distributor);
+            // Assign to operator if specified
+            if (isset($validated['assign_to'])) {
+                $cardIds = collect($cards)->pluck('id')->toArray();
+                $distributor = User::where('tenant_id', getCurrentTenantId())
+                    ->findOrFail($validated['assign_to']);
+                $cardService->assignCardsToDistributor($cardIds, $distributor);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Failed to generate or assign recharge cards.', [
+                'error' => $e->getMessage(),
+                'user_id' => optional(auth()->user())->id,
+                'quantity' => $validated['quantity'] ?? null,
+                'denomination' => $validated['denomination'] ?? null,
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'An error occurred while generating the cards. Please try again.');
         }
 
         return redirect()->route('panel.admin.cards.index')
@@ -3430,6 +3451,12 @@ class AdminController extends Controller
         $cards = \App\Models\RechargeCard::whereIn('id', $validated['card_ids'])
             ->where('tenant_id', getCurrentTenantId())
             ->get();
+
+        if ($cards->isEmpty()) {
+            return redirect()
+                ->back()
+                ->with('error', 'No cards found to export. Please ensure the selected cards belong to your organization.');
+        }
 
         if ($validated['format'] === 'pdf') {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('panels.admin.cards.export-pdf', compact('cards'));
@@ -3463,11 +3490,12 @@ class AdminController extends Controller
         $validated = $request->validate([
             'card_ids' => 'required|array',
             'card_ids.*' => 'exists:recharge_cards,id',
-            'distributor_id' => 'required|exists:users,id',
+            'distributor_id' => 'required|exists:users,id,tenant_id,' . getCurrentTenantId(),
         ]);
 
         $cardService = new \App\Services\CardDistributionService;
-        $distributor = User::findOrFail($validated['distributor_id']);
+        $distributor = User::where('tenant_id', getCurrentTenantId())
+            ->findOrFail($validated['distributor_id']);
         
         $assigned = $cardService->assignCardsToDistributor($validated['card_ids'], $distributor);
 

@@ -70,7 +70,7 @@
                 @if($olt->snmp_community)
                 <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">SNMP Community</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $olt->snmp_community }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">****</dd>
                 </div>
                 @endif
 
