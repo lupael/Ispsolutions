@@ -863,7 +863,8 @@ class AdminController extends Controller
      */
     public function customersShow($id): View
     {
-        $customer = NetworkUser::with('package', 'sessions')->findOrFail($id);
+        // Eager load relationships to avoid N+1 queries
+        $customer = NetworkUser::with(['package', 'sessions', 'user'])->findOrFail($id);
         
         // Load ONU information if exists
         $onu = \App\Models\Onu::where('network_user_id', $id)->with('olt')->first();
@@ -876,18 +877,46 @@ class AdminController extends Controller
      */
     public function customersSuspend($id)
     {
-        $customer = NetworkUser::findOrFail($id);
-        
-        // Authorization check
-        $this->authorize('suspend', $customer);
-        
-        $customer->status = 'suspended';
-        $customer->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Customer suspended successfully.'
-        ]);
+        try {
+            $customer = NetworkUser::with('user')->findOrFail($id);
+            
+            // Authorization check on the related User model
+            if ($customer->user) {
+                $this->authorize('suspend', $customer->user);
+            }
+            
+            // Prevent suspending already suspended customers
+            if ($customer->status === 'suspended') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer is already suspended.'
+                ], 400);
+            }
+            
+            $customer->status = 'suspended';
+            $customer->save();
+            
+            // Clear cache if CustomerCacheService is being used
+            if (class_exists('\App\Services\CustomerCacheService')) {
+                \Cache::tags(['customers'])->flush();
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer suspended successfully.'
+            ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to suspend this customer.'
+            ], 403);
+        } catch (\Exception $e) {
+            \Log::error('Failed to suspend customer: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to suspend customer. Please try again.'
+            ], 500);
+        }
     }
 
     /**
@@ -895,18 +924,46 @@ class AdminController extends Controller
      */
     public function customersActivate($id)
     {
-        $customer = NetworkUser::findOrFail($id);
-        
-        // Authorization check
-        $this->authorize('activate', $customer);
-        
-        $customer->status = 'active';
-        $customer->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Customer activated successfully.'
-        ]);
+        try {
+            $customer = NetworkUser::with('user')->findOrFail($id);
+            
+            // Authorization check on the related User model
+            if ($customer->user) {
+                $this->authorize('activate', $customer->user);
+            }
+            
+            // Prevent activating already active customers
+            if ($customer->status === 'active') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer is already active.'
+                ], 400);
+            }
+            
+            $customer->status = 'active';
+            $customer->save();
+            
+            // Clear cache if CustomerCacheService is being used
+            if (class_exists('\App\Services\CustomerCacheService')) {
+                \Cache::tags(['customers'])->flush();
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer activated successfully.'
+            ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to activate this customer.'
+            ], 403);
+        } catch (\Exception $e) {
+            \Log::error('Failed to activate customer: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to activate customer. Please try again.'
+            ], 500);
+        }
     }
 
     /**

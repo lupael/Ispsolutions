@@ -3,13 +3,23 @@
     'onu' => null,
 ])
 
-<div x-data="{ activeTab: window.location.hash ? window.location.hash.substring(1) : 'profile' }" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
+<div x-data="{ 
+    activeTab: (() => {
+        const hash = window.location.hash.substring(1);
+        const validTabs = ['profile', 'network', 'billing', 'sessions', 'history'];
+        return validTabs.includes(hash) ? hash : 'profile';
+    })()
+}" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
     <!-- Tab Navigation -->
     <div class="border-b border-gray-200 dark:border-gray-700">
-        <nav class="-mb-px flex overflow-x-auto" aria-label="Tabs">
+        <nav class="-mb-px flex overflow-x-auto" role="tablist" aria-label="Customer information tabs">
             <button @click="activeTab = 'profile'; window.location.hash = 'profile'" 
                     :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'profile', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'profile' }"
-                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none">
+                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none"
+                    role="tab"
+                    :aria-selected="activeTab === 'profile'"
+                    aria-controls="profile-panel"
+                    id="profile-tab">
                 <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -17,7 +27,11 @@
             </button>
             <button @click="activeTab = 'network'; window.location.hash = 'network'" 
                     :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'network', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'network' }"
-                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none">
+                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none"
+                    role="tab"
+                    :aria-selected="activeTab === 'network'"
+                    aria-controls="network-panel"
+                    id="network-tab">
                 <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                 </svg>
@@ -25,7 +39,11 @@
             </button>
             <button @click="activeTab = 'billing'; window.location.hash = 'billing'" 
                     :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'billing', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'billing' }"
-                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none">
+                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none"
+                    role="tab"
+                    :aria-selected="activeTab === 'billing'"
+                    aria-controls="billing-panel"
+                    id="billing-tab">
                 <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
@@ -33,7 +51,11 @@
             </button>
             <button @click="activeTab = 'sessions'; window.location.hash = 'sessions'" 
                     :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'sessions', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'sessions' }"
-                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none">
+                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none"
+                    role="tab"
+                    :aria-selected="activeTab === 'sessions'"
+                    aria-controls="sessions-panel"
+                    id="sessions-tab">
                 <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -41,7 +63,11 @@
             </button>
             <button @click="activeTab = 'history'; window.location.hash = 'history'" 
                     :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'history', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'history' }"
-                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none">
+                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none"
+                    role="tab"
+                    :aria-selected="activeTab === 'history'"
+                    aria-controls="history-panel"
+                    id="history-tab">
                 <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -53,7 +79,14 @@
     <!-- Tab Panels -->
     <div class="p-6">
         <!-- Profile Tab -->
-        <div x-show="activeTab === 'profile'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+        <div x-show="activeTab === 'profile'" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100"
+             role="tabpanel"
+             id="profile-panel"
+             aria-labelledby="profile-tab"
+             :aria-hidden="activeTab !== 'profile'">
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <!-- Basic Information -->
                 <div>
@@ -146,7 +179,15 @@
         </div>
 
         <!-- Network Tab -->
-        <div x-show="activeTab === 'network'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div x-show="activeTab === 'network'" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             style="display: none;"
+             role="tabpanel"
+             id="network-panel"
+             aria-labelledby="network-tab"
+             :aria-hidden="activeTab !== 'network'">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Network Information</h3>
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div>
@@ -201,7 +242,15 @@
         </div>
 
         <!-- Billing Tab -->
-        <div x-show="activeTab === 'billing'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div x-show="activeTab === 'billing'" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             style="display: none;"
+             role="tabpanel"
+             id="billing-panel"
+             aria-labelledby="billing-tab"
+             :aria-hidden="activeTab !== 'billing'">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Billing Information</h3>
             <div class="text-center py-8">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,7 +262,15 @@
         </div>
 
         <!-- Sessions Tab -->
-        <div x-show="activeTab === 'sessions'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div x-show="activeTab === 'sessions'" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             style="display: none;"
+             role="tabpanel"
+             id="sessions-panel"
+             aria-labelledby="sessions-tab"
+             :aria-hidden="activeTab !== 'sessions'">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Active Sessions</h3>
             @if($customer->sessions && $customer->sessions->isNotEmpty())
                 <div class="overflow-x-auto">
@@ -229,9 +286,9 @@
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($customer->sessions as $session)
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $session->acctsessionid }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $session->acctstarttime }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $session->framedipaddress }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $session->session_id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $session->start_time->format('M d, Y h:i A') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $session->ip_address }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
                                 </td>
@@ -251,7 +308,15 @@
         </div>
 
         <!-- History Tab -->
-        <div x-show="activeTab === 'history'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div x-show="activeTab === 'history'" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             style="display: none;"
+             role="tabpanel"
+             id="history-panel"
+             aria-labelledby="history-tab"
+             :aria-hidden="activeTab !== 'history'">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Change History</h3>
             <div class="text-center py-8">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
