@@ -209,8 +209,14 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $device->uptime ?? 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View</button>
-                                    <button class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Monitor</button>
+                                    @if($device->type === 'router')
+                                        <a href="{{ route('panel.admin.network.routers.edit', $device->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View</a>
+                                    @elseif($device->type === 'olt')
+                                        <a href="{{ route('panel.admin.network.olt.show', $device->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View</a>
+                                    @else
+                                        <a href="{{ route('panel.admin.network.devices') }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View</a>
+                                    @endif
+                                    <a href="{{ route('panel.admin.network.device-monitors') }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Monitor</a>
                                 </td>
                             </tr>
                         @empty

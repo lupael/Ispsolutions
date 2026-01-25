@@ -89,12 +89,18 @@ return [
             'label' => 'Routers & Packages',
             'icon' => 'bi-hdd-network',
             'children' => [
+                ['label' => 'Routers', 'route' => 'panel.admin.network.routers'],
                 ['label' => 'Master Packages', 'route' => 'panel.admin.packages.index'],
                 ['label' => 'PPPoE Profiles', 'route' => 'panel.admin.network.pppoe-profiles'],
-                ['label' => 'Router (RADIUS NAS)', 'route' => 'panel.admin.nas'],
-                // Temporarily hidden as per issue requirements
-                // ['label' => 'Cisco Devices', 'route' => 'panel.admin.network.cisco'],
-                // ['label' => 'MikroTik Routers', 'route' => 'panel.admin.network.routers'],
+            ],
+        ],
+        [
+            'key' => 'olt_management',
+            'label' => 'OLT Management',
+            'icon' => 'bi-broadcast',
+            'children' => [
+                ['label' => 'OLT Dashboard', 'route' => 'panel.admin.olt.dashboard'],
+                ['label' => 'ONU Devices', 'route' => 'panel.admin.network.onu.index'],
             ],
         ],
         [
