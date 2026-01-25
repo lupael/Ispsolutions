@@ -4,7 +4,14 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite dev"
+        "dev": "vite dev",
+        "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+        "changelog:all": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+        "changelog:auto": "node scripts/auto-update-changelog.cjs",
+        "release": "standard-version",
+        "release:minor": "standard-version --release-as minor",
+        "release:major": "standard-version --release-as major",
+        "release:patch": "standard-version --release-as patch"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.7",
@@ -12,8 +19,11 @@
         "@tailwindcss/typography": "^0.5.10",
         "axios": "^1.6.4",
         "blade-formatter": "^1.42.2",
+        "conventional-changelog-cli": "^5.0.0",
+        "conventional-changelog-conventionalcommits": "^9.1.0",
         "laravel-vite-plugin": "^2.0",
         "postcss": "^8.4.32",
+        "standard-version": "^9.5.0",
         "tailwindcss": "^4.1.12",
         "vite": "^7.3"
     },

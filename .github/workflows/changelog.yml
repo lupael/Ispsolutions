@@ -1,0 +1,98 @@
+name: Generate Changelog
+
+on:
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name to generate changelog for (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Generate Changelog
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "Generating changelog for tag: ${{ github.event.inputs.tag }}"
+            npm run changelog:all
+          else
+            echo "Generating changelog for latest changes"
+            npm run changelog
+          fi
+      
+      - name: Fetch Pull Request Information
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found, fetching all PRs"
+            PREVIOUS_TAG=""
+          else
+            # Get the previous tag
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^ 2>/dev/null || echo "")
+          fi
+          
+          echo "Latest tag: $LATEST_TAG"
+          echo "Previous tag: $PREVIOUS_TAG"
+          
+          # Fetch merged PRs between tags
+          if [ -n "$LATEST_TAG" ] && [ -n "$PREVIOUS_TAG" ]; then
+            echo "Fetching PRs merged between $PREVIOUS_TAG and $LATEST_TAG"
+            gh pr list --state merged --limit 100 --json number,title,mergedAt,author,labels \
+              --jq '.[] | "- PR #\(.number): \(.title) by @\(.author.login)"' > /tmp/recent_prs.txt
+          else
+            echo "Fetching recent merged PRs"
+            gh pr list --state merged --limit 50 --json number,title,mergedAt,author,labels \
+              --jq '.[] | "- PR #\(.number): \(.title) by @\(.author.login)"' > /tmp/recent_prs.txt
+          fi
+          
+          # Display PR information
+          if [ -s /tmp/recent_prs.txt ]; then
+            echo "Recent Pull Requests:"
+            cat /tmp/recent_prs.txt
+          else
+            echo "No pull requests found"
+          fi
+      
+      - name: Commit and push changes
+        run: |
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changes to commit"
+          else
+            git add CHANGELOG.md
+            git commit -m "docs: update CHANGELOG.md [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+            echo "Changelog updated successfully"
+          fi

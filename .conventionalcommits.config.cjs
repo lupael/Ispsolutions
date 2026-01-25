@@ -1,0 +1,42 @@
+/**
+ * Conventional Changelog Configuration
+ * 
+ * This configuration file defines how commit messages are parsed
+ * and how the changelog is generated.
+ */
+
+module.exports = {
+  // Header for the changelog
+  header: '# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n',
+  
+  // Commit types to include in the changelog
+  types: [
+    { type: 'feat', section: '✨ Features' },
+    { type: 'feature', section: '✨ Features' },
+    { type: 'fix', section: '🐛 Bug Fixes' },
+    { type: 'perf', section: '⚡ Performance Improvements' },
+    { type: 'revert', section: '⏪ Reverts' },
+    { type: 'docs', section: '📚 Documentation' },
+    { type: 'style', section: '💄 Styles' },
+    { type: 'refactor', section: '♻️ Code Refactoring' },
+    { type: 'test', section: '✅ Tests' },
+    { type: 'build', section: '🏗️ Build System' },
+    { type: 'ci', section: '👷 CI/CD' },
+    { type: 'chore', section: '🔧 Chores', hidden: false }
+  ],
+  
+  // Issue prefixes
+  issuePrefixes: ['#'],
+  
+  // URLs
+  commitUrlFormat: '{{host}}/{{owner}}/{{repository}}/commit/{{hash}}',
+  compareUrlFormat: '{{host}}/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}',
+  issueUrlFormat: '{{host}}/{{owner}}/{{repository}}/issues/{{id}}',
+  userUrlFormat: '{{host}}/{{user}}',
+  
+  // Release commit message
+  releaseCommitMessageFormat: 'chore(release): {{currentTag}}',
+  
+  // Changelog options
+  prependChangelog: true
+};

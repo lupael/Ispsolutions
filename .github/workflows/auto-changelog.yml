@@ -1,0 +1,90 @@
+name: Auto-Update Changelog
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, 'docs:')"
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Generate Changelog from All Commits
+        run: |
+          echo "Auto-updating changelog with recent commits..."
+          node scripts/auto-update-changelog.cjs
+      
+      - name: Enhance with Pull Request Information
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching merged PRs..."
+          
+          # Get recent merged PRs (last 100)
+          gh pr list --state merged --limit 100 --json number,title,mergedAt,author,labels \
+            --jq '.[] | "- PR #\(.number): \(.title) by @\(.author.login) (merged: \(.mergedAt[:10]))"' \
+            > /tmp/recent_prs.txt || echo "No PRs found"
+          
+          # Display PR information for logging
+          if [ -s /tmp/recent_prs.txt ]; then
+            echo "Recent Pull Requests:"
+            head -20 /tmp/recent_prs.txt
+          else
+            echo "No pull requests found"
+          fi
+      
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changes to CHANGELOG.md"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG.md has been updated"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit and push changelog
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git add CHANGELOG.md
+          git commit -m "docs: auto-update CHANGELOG.md [skip ci]"
+          git push origin ${{ github.ref_name }}
+          echo "✅ Changelog updated successfully"
+      
+      - name: No update needed
+        if: steps.check_changes.outputs.changed == 'false'
+        run: |
+          echo "ℹ️ Changelog is already up to date"

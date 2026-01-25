@@ -597,20 +597,58 @@ If authentication fails:
 
 
 
+## Changelog
+
+All notable changes to this project are documented in [CHANGELOG.md](CHANGELOG.md).
+
+We use automated changelog generation from commit messages. See our [Changelog Guide](docs/CHANGELOG_GUIDE.md) for details on:
+- Conventional commit message format
+- Automatic changelog generation
+- Version release process
+- Contributing guidelines
+
+### Recent Changes
+
+For the latest updates, see:
+- **[CHANGELOG.md](CHANGELOG.md)** - Complete version history
+- **[GitHub Releases](https://github.com/i4edubd/ispsolution/releases)** - Release notes and downloads
+
 ## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+### Quick Start
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+3. Commit your changes using [Conventional Commits](https://www.conventionalcommits.org/):
+   ```bash
+   git commit -m "feat(billing): add PayPal integration"
+   ```
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Commit Message Format
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for automatic changelog generation:
+
+```
+<type>(<scope>): <description>
+
+Examples:
+feat(auth): add two-factor authentication
+fix(billing): resolve invoice calculation bug
+docs: update API documentation
+```
+
+See [Changelog Guide](docs/CHANGELOG_GUIDE.md) for complete details.
 
 ### Code Quality Standards
 
 - Run tests before committing: `make test` or `php artisan test`
 - Follow PSR-12 coding standards: `vendor/bin/pint`
 - Run static analysis: `vendor/bin/phpstan analyse`
-- Write meaningful commit messages
+- Write meaningful commit messages using conventional format
 - Add tests for new features
 - Update documentation as needed
 
@@ -621,6 +659,7 @@ All pull requests are automatically tested using GitHub Actions:
 - **Test Workflow** - Runs unit, feature, and integration tests on PHP 8.2 and 8.3
 - **Lint Workflow** - Checks code quality with PHPStan and Laravel Pint
 - **Integration Workflow** - Tests with full Docker environment including databases
+- **Changelog Workflow** - Automatically generates changelog on releases
 
 See workflow files in `.github/workflows/` for details.
 
