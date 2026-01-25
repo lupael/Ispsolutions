@@ -866,6 +866,44 @@ class AdminController extends Controller
     }
 
     /**
+     * Suspend a customer.
+     */
+    public function customersSuspend($id)
+    {
+        $customer = NetworkUser::findOrFail($id);
+        
+        // Authorization check
+        $this->authorize('suspend', $customer);
+        
+        $customer->status = 'suspended';
+        $customer->save();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer suspended successfully.'
+        ]);
+    }
+
+    /**
+     * Activate a customer.
+     */
+    public function customersActivate($id)
+    {
+        $customer = NetworkUser::findOrFail($id);
+        
+        // Authorization check
+        $this->authorize('activate', $customer);
+        
+        $customer->status = 'active';
+        $customer->save();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer activated successfully.'
+        ]);
+    }
+
+    /**
      * Display deleted customers.
      */
     public function deletedCustomers(): View
