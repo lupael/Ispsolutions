@@ -1,3 +1,12 @@
+#  (2026-01-25)
+
+
+### Features
+
+* **changelog:** implement automated changelog generation system ([bbde231](https://github.com/i4edubd/ispsolution/commit/bbde2312121e0252e3b9721f566e0ae92b0c5467))
+
+
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
