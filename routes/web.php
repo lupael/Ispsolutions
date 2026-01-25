@@ -749,9 +749,28 @@ Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middle
 Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
+    Route::put('/profile', [CustomerController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/documents', [CustomerController::class, 'submitDocumentVerification'])->name('profile.documents');
+    
     Route::get('/billing', [CustomerController::class, 'billing'])->name('billing');
     Route::get('/usage', [CustomerController::class, 'usage'])->name('usage');
     Route::get('/tickets', [CustomerController::class, 'tickets'])->name('tickets');
+
+    // Package Management
+    Route::get('/packages', [CustomerController::class, 'viewPackages'])->name('packages.index');
+    Route::post('/packages/upgrade', [CustomerController::class, 'requestUpgrade'])->name('packages.upgrade');
+    Route::post('/packages/downgrade', [CustomerController::class, 'requestDowngrade'])->name('packages.downgrade');
+
+    // Service Management
+    Route::get('/services', [\App\Http\Controllers\Panel\ServiceController::class, 'index'])->name('services.index');
+    Route::get('/services/{serviceType}/order', [\App\Http\Controllers\Panel\ServiceController::class, 'orderForm'])->name('services.order');
+    Route::post('/services/order', [\App\Http\Controllers\Panel\ServiceController::class, 'submitOrder'])->name('services.submit');
+
+    // History
+    Route::get('/history/payments', [\App\Http\Controllers\Panel\HistoryController::class, 'paymentHistory'])->name('history.payments');
+    Route::get('/history/sms', [\App\Http\Controllers\Panel\HistoryController::class, 'smsHistory'])->name('history.sms');
+    Route::get('/history/sessions', [\App\Http\Controllers\Panel\HistoryController::class, 'sessionHistory'])->name('history.sessions');
+    Route::get('/history/service-changes', [\App\Http\Controllers\Panel\HistoryController::class, 'serviceChangeHistory'])->name('history.service-changes');
 
     // Ticket management
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');

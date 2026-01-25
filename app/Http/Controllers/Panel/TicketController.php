@@ -117,33 +117,70 @@ class TicketController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $user = auth()->user();
+        
+        // Make customer_id required for admin/operator panels
+        $rules = [
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
             'priority' => 'required|in:low,medium,high,urgent',
             'category' => 'required|in:technical,billing,general,complaint,feature_request',
-            'customer_id' => 'nullable|exists:users,id',
-        ]);
+        ];
 
-        $user = auth()->user();
+        // Customer ID is required for non-customers creating tickets
+        if ($user->operator_level < User::OPERATOR_LEVEL_CUSTOMER) {
+            $rules['customer_id'] = [
+                'required',
+                'exists:users,id,tenant_id,' . $user->tenant_id
+            ];
+        } else {
+            $rules['customer_id'] = 'nullable|exists:users,id';
+        }
+
+        $validated = $request->validate($rules);
         
         // Determine the customer_id for the ticket
-        $customerId = auth()->user()->id;
+        $customerId = $user->id;
         
-        // If customer_id is provided and user is not a customer (operator level < 100), use it
-        if (isset($validated['customer_id']) && $user->operator_level < 100) {
+        // If customer_id is provided and user is not a customer, use it
+        if (isset($validated['customer_id']) && $user->operator_level < User::OPERATOR_LEVEL_CUSTOMER) {
             $customerId = $validated['customer_id'];
         }
 
+        // Auto-populate customer data - use find instead of eager loading with non-relationship
+        $customer = User::where('tenant_id', $user->tenant_id)->find($customerId);
+        
+        // Handle case where customer is not found
+        if (!$customer) {
+            return redirect()->back()->withErrors(['customer_id' => 'Customer not found.'])->withInput();
+        }
+        
+        $customerInfo = "\n\n--- Customer Information ---\n";
+        $customerInfo .= "Name: " . $customer->name . "\n";
+        $customerInfo .= "Email: " . $customer->email . "\n";
+        $customerInfo .= "Phone: " . ($customer->company_phone ?? 'N/A') . "\n";
+        $customerInfo .= "Current Package: " . ($customer->currentPackage()?->name ?? 'No Package') . "\n";
+        $customerInfo .= "Account Status: " . ($customer->is_active ? 'Active' : 'Inactive') . "\n";
+        
+        $lastPayment = $customer->payments()->latest()->first();
+        $customerInfo .= "Last Payment: " . ($lastPayment ? $lastPayment->payment_date->format('Y-m-d') . ' (' . $lastPayment->amount . ')' : 'No payments') . "\n";
+        
+        $balance = $customer->wallet_balance ?? 0;
+        $customerInfo .= "Current Balance: " . $balance . "\n";
+
+        // Auto-assign to customer's owner (created_by)
+        $assignedTo = $customer->created_by;
+
         $ticket = Ticket::create([
-            'tenant_id' => auth()->user()->tenant_id,
+            'tenant_id' => $user->tenant_id,
             'customer_id' => $customerId,
             'subject' => $validated['subject'],
-            'message' => $validated['message'],
+            'message' => $validated['message'] . $customerInfo,
             'priority' => $validated['priority'],
             'category' => $validated['category'],
             'status' => Ticket::STATUS_OPEN,
-            'created_by' => auth()->user()->id,
+            'created_by' => $user->id,
+            'assigned_to' => $assignedTo,
         ]);
 
         return redirect()->route('panel.tickets.show', $ticket)
