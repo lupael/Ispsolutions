@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ValidationController extends Controller
 {
@@ -147,6 +148,14 @@ class ValidationController extends Controller
         
         if (empty($ipAddress)) {
             return response()->json(['exists' => false]);
+        }
+
+        // Check if ip_allocations table exists
+        if (!Schema::hasTable('ip_allocations')) {
+            return response()->json([
+                'exists' => false,
+                'message' => 'IP allocation tracking not configured'
+            ]);
         }
 
         // Check in IP allocations table

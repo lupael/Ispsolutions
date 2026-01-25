@@ -96,13 +96,13 @@ class BulkActionsManager {
         const selectedIds = this.getSelectedIds();
         
         if (selectedIds.length === 0) {
-            alert('Please select at least one item');
+            this.showNotification('error', 'Please select at least one item');
             return;
         }
 
         const action = this.bulkActionSelect?.value;
         if (!action) {
-            alert('Please select an action');
+            this.showNotification('error', 'Please select an action');
             return;
         }
 

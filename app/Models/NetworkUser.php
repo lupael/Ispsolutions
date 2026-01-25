@@ -133,11 +133,11 @@ class NetworkUser extends Model
     {
         $startOfMonth = now()->startOfMonth();
         
+        // Optimized: Calculate total in single query
         return (int) $this->sessions()
             ->where('created_at', '>=', $startOfMonth)
-            ->sum('bytes_in') + $this->sessions()
-            ->where('created_at', '>=', $startOfMonth)
-            ->sum('bytes_out');
+            ->selectRaw('SUM(bytes_in + bytes_out) as total_bytes')
+            ->value('total_bytes') ?? 0;
     }
 
     /**
