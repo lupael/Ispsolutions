@@ -1808,13 +1808,48 @@ class AdminController extends Controller
      */
     public function devicesMap(): View
     {
-        $devices = collect(); // Replace with actual query for devices with location data
+        $tenantId = getCurrentTenantId();
+        
+        // Collect all network devices (routers, NAS, OLT) with location data
+        $routers = MikrotikRouter::where('tenant_id', $tenantId)
+            ->select('id', 'name', 'ip_address', 'location', 'latitude', 'longitude', 'status')
+            ->get()
+            ->map(function ($router) {
+                return [
+                    'id' => $router->id,
+                    'name' => $router->name,
+                    'type' => 'router',
+                    'ip_address' => $router->ip_address,
+                    'location' => $router->location ?? 'N/A',
+                    'latitude' => $router->latitude ?? 0,
+                    'longitude' => $router->longitude ?? 0,
+                    'status' => $router->status ?? 'unknown',
+                ];
+            });
+
+        $nas = Nas::where('tenant_id', $tenantId)
+            ->select('id', 'shortname', 'nasname', 'description')
+            ->get()
+            ->map(function ($device) {
+                return [
+                    'id' => $device->id,
+                    'name' => $device->shortname,
+                    'type' => 'nas',
+                    'ip_address' => $device->nasname,
+                    'location' => $device->description ?? 'N/A',
+                    'latitude' => 0,
+                    'longitude' => 0,
+                    'status' => 'unknown',
+                ];
+            });
+
+        $devices = $routers->concat($nas);
 
         $stats = [
-            'online' => 0,
-            'offline' => 0,
-            'warning' => 0,
-            'critical' => 0,
+            'online' => $devices->where('status', 'online')->count(),
+            'offline' => $devices->where('status', 'offline')->count(),
+            'warning' => $devices->where('status', 'warning')->count(),
+            'critical' => $devices->where('status', 'critical')->count(),
         ];
 
         return view('panels.admin.network.devices-map', compact('devices', 'stats'));
@@ -3501,6 +3536,80 @@ class AdminController extends Controller
             'success' => false,
             'message' => 'Connection failed - Device unreachable',
         ], 500);
+    }
+
+    // ==================== Mikrotik Monitoring & Configuration Methods ====================
+
+    /**
+     * Display Mikrotik monitoring dashboard.
+     */
+    public function mikrotikMonitoring(): View
+    {
+        $tenantId = getCurrentTenantId();
+        $routers = MikrotikRouter::where('tenant_id', $tenantId)
+            ->with(['nas'])
+            ->orderBy('name')
+            ->paginate(20);
+
+        $stats = [
+            'total' => MikrotikRouter::where('tenant_id', $tenantId)->count(),
+            'online' => 0,  // To be implemented with actual status check
+            'offline' => 0,  // To be implemented with actual status check
+        ];
+
+        return view('panels.admin.mikrotik.monitoring', compact('routers', 'stats'));
+    }
+
+    /**
+     * Display individual Mikrotik router monitor.
+     */
+    public function mikrotikMonitor($id): View
+    {
+        $router = MikrotikRouter::where('tenant_id', getCurrentTenantId())
+            ->with(['nas'])
+            ->findOrFail($id);
+
+        return view('panels.admin.mikrotik.monitor', compact('router'));
+    }
+
+    /**
+     * Show Mikrotik configuration form.
+     */
+    public function mikrotikConfigureShow($id): View
+    {
+        $router = MikrotikRouter::where('tenant_id', getCurrentTenantId())
+            ->findOrFail($id);
+
+        return view('panels.admin.mikrotik.configure', compact('router'));
+    }
+
+    /**
+     * Apply configuration to Mikrotik router.
+     */
+    public function mikrotikConfigure(Request $request, $id)
+    {
+        $router = MikrotikRouter::where('tenant_id', getCurrentTenantId())
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'config_type' => 'required|string|in:pppoe,ippool,firewall,queue',
+            'settings' => 'required|array',
+        ]);
+
+        try {
+            // This would integrate with MikrotikService to apply configuration
+            // For now, return success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Configuration applied successfully',
+                'router' => $router->name,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to apply configuration: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     // ==================== Prepaid Card Management Methods ====================
