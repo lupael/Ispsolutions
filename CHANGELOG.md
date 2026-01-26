@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rename duplicate walletTransactions method to operatorWalletTransactions ([10978b3](../../commit/10978b334a85c1058d3245cf176519434e9e17fd))
 
+### 📚 Documentation
+
+- Add Router + RADIUS implementation summary and finalize documentation ([4df04cf](../../commit/4df04cfb94f1ce4f11f1575687ee8ad9826e335b))
+- Add comprehensive Router + RADIUS implementation documentation ([03e6098](../../commit/03e6098690ec34fd99f73c2867b0fd0a7df6cb0f))
+
 ---
 
 ## [3.1.0] - 2026-01-23 - 🎯 **Role System Consolidation**
