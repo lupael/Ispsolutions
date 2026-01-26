@@ -11,10 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Features
 
+- Add Customer model as type alias for User (operator_level=100) ([e3cc9c6](../../commit/e3cc9c67c1bf337b174d5cf99000674ab220184a))
+- Complete Phase 10-12 - Testing, Documentation, Security & mark all phases complete ([13c21e2](../../commit/13c21e268df83a27b9e6feaecf0e380014289ef6))
 - Add billing section Blade views for customer billing management ([7535978](../../commit/7535978275114889c0ca2df255a13b2a932bd5f5))
+- Complete Phase 7-9 - Configuration, Policies, Events & Listeners ([0eca658](../../commit/0eca6589ebd8e057323895750276230902d46213))
 
 ### 🐛 Bug Fixes
 
+- Address security and consistency issues, add views to sidebar menu ([3578f99](../../commit/3578f991f220e2b52373aeaf01094652f9f569ef))
+- Replace hardcoded routes with route() helper, add null safety to components ([ff5706d](../../commit/ff5706dab4bf586f76416c74ba4424157fda4088))
+- Address PR review comments - crypto security, validation, routes ([07f5287](../../commit/07f528788f115fcfa0673804bb29c296fae0ce10))
 - Add missing GET route and method for other-payment form ([8fc5cf5](../../commit/8fc5cf5c9c19bc578341fc8d55224be59e56d1d9))
 - Rename duplicate walletTransactions method to operatorWalletTransactions ([10978b3](../../commit/10978b334a85c1058d3245cf176519434e9e17fd))
 
