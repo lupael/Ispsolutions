@@ -9,8 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-26
 
+### ✨ Features
+
+- Add billing section Blade views for customer billing management ([7535978](../../commit/7535978275114889c0ca2df255a13b2a932bd5f5))
+
 ### 🐛 Bug Fixes
 
+- Add missing GET route and method for other-payment form ([8fc5cf5](../../commit/8fc5cf5c9c19bc578341fc8d55224be59e56d1d9))
 - Rename duplicate walletTransactions method to operatorWalletTransactions ([10978b3](../../commit/10978b334a85c1058d3245cf176519434e9e17fd))
 
 ### 📚 Documentation
