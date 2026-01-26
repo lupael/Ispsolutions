@@ -1125,9 +1125,64 @@ class AdminController extends Controller
     /**
      * Display customer payments.
      */
-    public function customerPayments(): View
+    public function customerPayments(Request $request): View
     {
-        return view('panels.admin.accounting.customer-payments');
+        $query = \App\Models\Payment::with(['user', 'invoice'])
+            ->latest();
+
+        // Search by customer name, username, or invoice number
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%");
+                })->orWhereHas('invoice', function ($invoiceQuery) use ($search) {
+                    $invoiceQuery->where('invoice_number', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Filter by payment method
+        if ($request->filled('method')) {
+            $query->where('payment_method', $request->method);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('payment_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('payment_date', '<=', $request->date_to);
+        }
+
+        // Filter by amount range
+        if ($request->filled('amount_min')) {
+            $query->where('amount', '>=', $request->amount_min);
+        }
+        if ($request->filled('amount_max')) {
+            $query->where('amount', '<=', $request->amount_max);
+        }
+
+        $payments = $query->paginate(50);
+
+        // Calculate statistics
+        $stats = [
+            'total_collected' => \App\Models\Payment::where('status', 'completed')->sum('amount'),
+            'this_month' => \App\Models\Payment::where('status', 'completed')
+                ->whereMonth('payment_date', now()->month)
+                ->whereYear('payment_date', now()->year)
+                ->sum('amount'),
+            'total_payments' => \App\Models\Payment::count(),
+            'pending_amount' => \App\Models\Payment::where('status', 'pending')->sum('amount'),
+        ];
+
+        return view('panels.admin.accounting.customer-payments', compact('payments', 'stats'));
     }
 
     /**
