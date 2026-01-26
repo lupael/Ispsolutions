@@ -358,16 +358,19 @@ class CheckUnusedComponents extends Command
         $parts = explode('.', $viewName);
         
         // Check for patterns like: view($this->getViewPrefix() . '.index')
-        // If view is panels.admin.something.index, check if there's getViewPrefix() usage
+        // If view starts with 'panels' (e.g., panels.admin.something.index), check for dynamic usage
         if (count($parts) >= 3 && $parts[0] === 'panels') {
             $lastPart = end($parts);
             // Check for dynamic patterns with the last part
             $dynamicPatterns = [
+                // Matches: $this->getViewPrefix() . '.index'
                 "/getViewPrefix\(\)\s*\.\s*['\"]" . preg_quote($lastPart, '/') . "['\"]/",
+                // Matches: $this->getViewPrefix() . '.index' (with optional dot prefix)
                 "/getViewPrefix\(\)\s*\.\s*['\"]\.?" . preg_quote($lastPart, '/') . "['\"]/",
-                // Check for variable concatenation
+                // Matches: $variable . '.index' (variable concatenation)
                 "/\\\$\w+\s*\.\s*['\"]\.?" . preg_quote($lastPart, '/') . "['\"]/",
-                "/['\"]" . preg_quote($lastPart, '/') . "['\"]\s*\)/", // Just the last part
+                // Matches: view('index') (just the action name)
+                "/['\"]" . preg_quote($lastPart, '/') . "['\"]\s*\)/",
             ];
 
             foreach ($dynamicPatterns as $pattern) {
@@ -492,7 +495,7 @@ class CheckUnusedComponents extends Command
                 }
             } else {
                 $this->line("      <fg=yellow>Suggestion: Create controller or add route:</>");
-                $this->suggestRouteAndMethod($relativePath, $panelType);
+                $this->suggestRouteAndMethod($relativePath, $panelType, $suggestedController['class']);
             }
         }
     }
@@ -536,7 +539,7 @@ class CheckUnusedComponents extends Command
     /**
      * Suggest route and controller method for view
      */
-    private function suggestRouteAndMethod(string $viewPath, string $panelType): void
+    private function suggestRouteAndMethod(string $viewPath, string $panelType, string $suggestedController): void
     {
         $parts = explode('/', str_replace('.blade.php', '', $viewPath));
         $resource = $parts[2] ?? 'resource';
@@ -547,8 +550,11 @@ class CheckUnusedComponents extends Command
         
         $panelPrefix = strtolower($panelType);
         
+        // Extract short class name for display
+        $shortClassName = class_basename($suggestedController);
+        
         $this->line("        <fg=blue>Route (in web.php, {$panelPrefix} section):</>");
-        $this->line("          Route::get('/{$routeName}', [YourController::class, '{$methodName}'])->name('{$routeName}.{$action}');");
+        $this->line("          Route::get('/{$routeName}', [{$shortClassName}::class, '{$methodName}'])->name('{$routeName}.{$action}');");
         
         $this->line("        <fg=blue>Controller method:</>");
         $viewName = $this->getViewName(resource_path('views') . '/' . $viewPath, resource_path('views'));
