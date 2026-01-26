@@ -198,6 +198,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the network user for this customer.
+     */
+    public function networkUser(): HasOne
+    {
+        return $this->hasOne(NetworkUser::class, 'user_id');
+    }
+
+    /**
      * Get the roles for the user.
      */
     public function roles(): BelongsToMany
@@ -773,5 +781,83 @@ class User extends Authenticatable
     public function customPrices(): HasMany
     {
         return $this->hasMany(CustomPrice::class);
+    }
+
+    /**
+     * Get username from network user (for backward compatibility)
+     */
+    public function getUsernameAttribute($value)
+    {
+        // If username is set on User, return it
+        if ($value) {
+            return $value;
+        }
+        // Otherwise try to get from networkUser
+        return $this->networkUser?->username ?? $this->email;
+    }
+
+    /**
+     * Get status from network user (for backward compatibility)
+     */
+    public function getStatusAttribute($value)
+    {
+        // Try to get from networkUser if it exists
+        return $this->networkUser?->status ?? $value;
+    }
+
+    /**
+     * Get package from network user (for backward compatibility)
+     */
+    public function getPackageAttribute()
+    {
+        return $this->networkUser?->package;
+    }
+
+    /**
+     * Get sessions from network user (for backward compatibility)
+     */
+    public function getSessionsAttribute()
+    {
+        return $this->networkUser?->sessions ?? collect();
+    }
+
+    /**
+     * Get service type from network user (for backward compatibility)
+     */
+    public function getServiceTypeAttribute()
+    {
+        return $this->networkUser?->service_type;
+    }
+
+    /**
+     * Get expiry date from network user (for backward compatibility)
+     */
+    public function getExpiryDateAttribute()
+    {
+        return $this->networkUser?->expiry_date;
+    }
+
+    /**
+     * Get customer name (alias for name)
+     */
+    public function getCustomerNameAttribute()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Get IP address (needs to be fetched from network user or IP allocations)
+     */
+    public function getIpAddressAttribute()
+    {
+        return $this->ipAllocations?->first()?->ip_address;
+    }
+
+    /**
+     * Get MAC address (needs to be fetched from MAC addresses)
+     */
+    public function getMacAddressAttribute()
+    {
+        return $this->macAddresses?->first()?->mac_address;
     }
 }
