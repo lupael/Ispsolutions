@@ -21,7 +21,7 @@ class CheckUnusedComponents extends Command
      *
      * @var string
      */
-    protected $description = 'Check for unused, mismatched and not developed view, controller, model, task, jobs, routes, service, command, api, blade template';
+    protected $description = 'Check for unused, mismatched and undeveloped views, controllers, models, tasks, jobs, routes, services, commands, APIs, and blade templates';
 
     /**
      * Statistics tracking
