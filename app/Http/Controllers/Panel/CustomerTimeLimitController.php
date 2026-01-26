@@ -16,6 +16,8 @@ class CustomerTimeLimitController extends Controller
      */
     public function show(User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $timeLimit = $customer->timeLimit;
 
         return view('panel.customers.time-limit.show', compact('customer', 'timeLimit'));
@@ -26,6 +28,8 @@ class CustomerTimeLimitController extends Controller
      */
     public function update(Request $request, User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $request->validate([
             'daily_minutes_limit' => 'nullable|integer|min:0',
             'monthly_minutes_limit' => 'nullable|integer|min:0',
@@ -68,6 +72,8 @@ class CustomerTimeLimitController extends Controller
      */
     public function reset(Request $request, User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $request->validate([
             'reset_type' => 'required|in:daily,monthly,both',
         ]);
@@ -102,6 +108,8 @@ class CustomerTimeLimitController extends Controller
      */
     public function destroy(User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $timeLimit = $customer->timeLimit;
 
         if ($timeLimit) {

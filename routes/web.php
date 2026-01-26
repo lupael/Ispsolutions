@@ -1035,6 +1035,14 @@ Route::prefix('panel/customers/{customer}/time-limit')->name('panel.customers.ti
     Route::delete('/', [\App\Http\Controllers\Panel\CustomerTimeLimitController::class, 'destroy'])->name('destroy');
 });
 
+// Customer Speed Limits
+Route::prefix('panel/customers/{customer}/speed-limit')->name('panel.customers.speed-limit.')->middleware(['auth', 'can:manage-customers'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\CustomerSpeedLimitController::class, 'show'])->name('show');
+    Route::put('/', [\App\Http\Controllers\Panel\CustomerSpeedLimitController::class, 'update'])->name('update');
+    Route::post('/reset', [\App\Http\Controllers\Panel\CustomerSpeedLimitController::class, 'reset'])->name('reset');
+    Route::delete('/', [\App\Http\Controllers\Panel\CustomerSpeedLimitController::class, 'destroy'])->name('destroy');
+});
+
 // Advance Payments
 Route::prefix('panel/customers/{customer}/advance-payments')->name('panel.customers.advance-payments.')->middleware(['auth', 'can:manage-payments'])->group(function () {
     Route::get('/', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'index'])->name('index');

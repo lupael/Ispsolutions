@@ -16,6 +16,8 @@ class CustomerVolumeLimitController extends Controller
      */
     public function show(User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $volumeLimit = $customer->volumeLimit;
 
         return view('panel.customers.volume-limit.show', compact('customer', 'volumeLimit'));
@@ -26,6 +28,8 @@ class CustomerVolumeLimitController extends Controller
      */
     public function update(Request $request, User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $request->validate([
             'monthly_limit_mb' => 'nullable|integer|min:0',
             'daily_limit_mb' => 'nullable|integer|min:0',
@@ -62,6 +66,8 @@ class CustomerVolumeLimitController extends Controller
      */
     public function reset(Request $request, User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $request->validate([
             'reset_type' => 'required|in:daily,monthly,both',
         ]);
@@ -96,6 +102,8 @@ class CustomerVolumeLimitController extends Controller
      */
     public function destroy(User $customer)
     {
+        $this->authorize('editSpeedLimit', $customer);
+        
         $volumeLimit = $customer->volumeLimit;
 
         if ($volumeLimit) {
