@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\ConfirmPasswordController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Panel\AdminController;
 use App\Http\Controllers\Panel\AnalyticsController;
@@ -29,6 +30,12 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+// Password confirmation routes
+Route::middleware('auth')->group(function () {
+    Route::get('/confirm-password', [ConfirmPasswordController::class, 'show'])->name('password.confirm');
+    Route::post('/confirm-password', [ConfirmPasswordController::class, 'store']);
+});
 
 /*
 |--------------------------------------------------------------------------
