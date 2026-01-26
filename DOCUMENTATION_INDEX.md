@@ -31,12 +31,15 @@ This is the central documentation hub for the ISP Solution project. All document
 
 ### For Administrators
 - **[CUSTOMER_WIZARD_GUIDE.md](CUSTOMER_WIZARD_GUIDE.md)** - Creating and managing customers
+- **[CUSTOMER_DETAILS_ACTIONS_GUIDE.md](CUSTOMER_DETAILS_ACTIONS_GUIDE.md)** - ⭐ Customer detail page actions (activate, suspend, disconnect, package change, etc.)
+- **[CUSTOMER_ACTIONS_TODO.md](CUSTOMER_ACTIONS_TODO.md)** - Implementation status and task tracking for customer actions
 - **[ANALYTICS_DASHBOARD_GUIDE.md](ANALYTICS_DASHBOARD_GUIDE.md)** - Using analytics and reports
 - **[PANEL_README.md](PANEL_README.md)** - Panel-specific documentation
 
 ### For Operators
 - **[COMMAND_EXECUTION_GUIDE.md](COMMAND_EXECUTION_GUIDE.md)** - CLI command reference
 - **[CUSTOMER_WIZARD_GUIDE.md](CUSTOMER_WIZARD_GUIDE.md)** - Customer onboarding
+- **[CUSTOMER_DETAILS_ACTIONS_GUIDE.md](CUSTOMER_DETAILS_ACTIONS_GUIDE.md)** - Customer management actions
 
 ---
 
@@ -158,7 +161,7 @@ Historical documents are kept for reference but are no longer actively maintaine
 
 ### By Topic
 - **Installation** → [INSTALLATION.md](INSTALLATION.md)
-- **Customer Management** → [CUSTOMER_WIZARD_GUIDE.md](CUSTOMER_WIZARD_GUIDE.md)
+- **Customer Management** → [CUSTOMER_WIZARD_GUIDE.md](CUSTOMER_WIZARD_GUIDE.md), [CUSTOMER_DETAILS_ACTIONS_GUIDE.md](CUSTOMER_DETAILS_ACTIONS_GUIDE.md)
 - **Network Setup** → [ROUTER_PROVISIONING_GUIDE.md](ROUTER_PROVISIONING_GUIDE.md), [RADIUS_SETUP_GUIDE.md](RADIUS_SETUP_GUIDE.md)
 - **Payments** → [PAYMENT_GATEWAY_GUIDE.md](PAYMENT_GATEWAY_GUIDE.md)
 - **Troubleshooting** → [TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md)
@@ -166,7 +169,7 @@ Historical documents are kept for reference but are no longer actively maintaine
 - **API** → [docs/API.md](docs/API.md)
 
 ### By User Role
-- **Admin** → [ANALYTICS_DASHBOARD_GUIDE.md](ANALYTICS_DASHBOARD_GUIDE.md), [CUSTOMER_WIZARD_GUIDE.md](CUSTOMER_WIZARD_GUIDE.md)
+- **Admin** → [ANALYTICS_DASHBOARD_GUIDE.md](ANALYTICS_DASHBOARD_GUIDE.md), [CUSTOMER_WIZARD_GUIDE.md](CUSTOMER_WIZARD_GUIDE.md), [CUSTOMER_DETAILS_ACTIONS_GUIDE.md](CUSTOMER_DETAILS_ACTIONS_GUIDE.md)
 - **Network Engineer** → [ROUTER_PROVISIONING_GUIDE.md](ROUTER_PROVISIONING_GUIDE.md), [RADIUS_SETUP_GUIDE.md](RADIUS_SETUP_GUIDE.md)
 - **Developer** → [FEATURE_IMPLEMENTATION_GUIDE.md](FEATURE_IMPLEMENTATION_GUIDE.md), [docs/API.md](docs/API.md)
 - **Support Staff** → [TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md), [COMMAND_EXECUTION_GUIDE.md](COMMAND_EXECUTION_GUIDE.md)
