@@ -40,6 +40,9 @@ class SecurityFeaturesTest extends TestCase
         // Verify font-src includes required domains
         $this->assertStringContainsString('fonts.gstatic.com', $cspHeader);
 
+        // Verify connect-src includes required domains for external resources (e.g., source maps)
+        $this->assertStringContainsString('connect-src', $cspHeader);
+        
         // Verify nonce is present
         $this->assertStringContainsString("'nonce-", $cspHeader);
     }

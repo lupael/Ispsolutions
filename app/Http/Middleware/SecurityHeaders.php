@@ -44,7 +44,7 @@ class SecurityHeaders
             "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com fonts.bunny.net; " .
             "font-src 'self' fonts.gstatic.com fonts.bunny.net cdnjs.cloudflare.com cdn.jsdelivr.net; " .
             "img-src 'self' data: https:; " .
-            "connect-src 'self'; " .
+            "connect-src 'self' cdn.jsdelivr.net; " .
             "frame-ancestors 'self';"
         );
 
