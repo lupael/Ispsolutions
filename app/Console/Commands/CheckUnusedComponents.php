@@ -21,7 +21,7 @@ class CheckUnusedComponents extends Command
      *
      * @var string
      */
-    protected $description = 'Check for unused, mismatch and not developed view, controller, model, task, jobs, routes, service, command, api, blade template';
+    protected $description = 'Check for unused, mismatched and not developed view, controller, model, task, jobs, routes, service, command, api, blade template';
 
     /**
      * Statistics tracking
@@ -339,10 +339,9 @@ class CheckUnusedComponents extends Command
             $lines = explode("\n", $content);
 
             foreach ($lines as $lineNumber => $line) {
-                $this->stats['routes']['total']++;
-
                 // Match Route::method([Controller::class, 'method'])
                 if (preg_match('/Route::\w+\([^,]+,\s*\[\\\\?([^:]+)::class,\s*[\'"](\w+)[\'"]\]/', $line, $matches)) {
+                    $this->stats['routes']['total']++;
                     $controllerClass = trim($matches[1]);
                     $method = $matches[2];
 
@@ -377,6 +376,7 @@ class CheckUnusedComponents extends Command
 
                 // Match Route::method('Controller@method')
                 if (preg_match('/Route::\w+\([^,]+,\s*[\'"]([^@]+)@(\w+)[\'"]/', $line, $matches)) {
+                    $this->stats['routes']['total']++;
                     $controllerClass = trim($matches[1]);
                     $method = $matches[2];
 
@@ -448,6 +448,8 @@ class CheckUnusedComponents extends Command
 
         foreach ($services as $service) {
             $className = $this->getClassName($service);
+            $namespace = $this->getNamespace($service);
+            $fullClassName = $namespace . '\\' . $className;
             $isUsed = false;
 
             foreach ($searchPaths as $searchPath) {
@@ -463,8 +465,8 @@ class CheckUnusedComponents extends Command
 
                     $content = File::get($file);
 
-                    // Check for class usage (new, dependency injection, static calls)
-                    if (preg_match("/\b{$className}\b/", $content)) {
+                    // Check for various usage patterns similar to isModelUsed
+                    if ($this->isClassUsed($className, $fullClassName, $content)) {
                         $isUsed = true;
                         break 2;
                     }
@@ -477,7 +479,7 @@ class CheckUnusedComponents extends Command
                 $providers = $this->getPhpFiles($providersPath);
                 foreach ($providers as $provider) {
                     $content = File::get($provider);
-                    if (preg_match("/\b{$className}\b/", $content)) {
+                    if ($this->isClassUsed($className, $fullClassName, $content)) {
                         $isUsed = true;
                         break;
                     }
@@ -591,16 +593,6 @@ class CheckUnusedComponents extends Command
         $commands = $this->getPhpFiles($commandsPath);
         $this->stats['commands']['total'] = count($commands);
 
-        // Check console.php
-        $consolePath = base_path('routes/console.php');
-        $consoleContent = File::exists($consolePath) ? File::get($consolePath) : '';
-
-        // Check Kernel.php
-        $kernelPath = app_path('Console/Kernel.php');
-        $kernelContent = File::exists($kernelPath) ? File::get($kernelPath) : '';
-
-        $unusedCommands = [];
-
         foreach ($commands as $command) {
             $className = $this->getClassName($command);
             $commandContent = File::get($command);
@@ -615,20 +607,7 @@ class CheckUnusedComponents extends Command
             }
 
             // Commands are auto-discovered in Laravel 5.5+
-            // Check if explicitly disabled or if there are registration issues
-            // Most commands are registered automatically, so we'll flag potential issues only
-
-            // Check if command might be manually scheduled
-            $isScheduled = false;
-            if (! empty($consoleContent) && preg_match("/\b{$className}\b/", $consoleContent)) {
-                $isScheduled = true;
-            }
-            if (! empty($kernelContent) && preg_match("/\b{$className}\b/", $kernelContent)) {
-                $isScheduled = true;
-            }
-
-            // For this analysis, we'll mainly report commands that are explicitly registered
-            // but might have issues - this is informational
+            // All commands with signatures are automatically registered
         }
 
         // Display results - commands are auto-discovered in Laravel, so this is informational
@@ -877,6 +856,37 @@ class CheckUnusedComponents extends Command
         }
 
         return $unusedMethods;
+    }
+
+    /**
+     * Check if class is used in content (for services, jobs, etc.)
+     */
+    private function isClassUsed(string $className, string $fullClassName, string $content): bool
+    {
+        $escapedClassName = preg_quote($className, '/');
+        $escapedFullClassName = preg_quote($fullClassName, '/');
+
+        // Check for various usage patterns
+        $patterns = [
+            "/\b{$escapedClassName}::/",                         // Static calls
+            "/new\s+{$escapedClassName}\s*\(/",                  // Instantiation
+            "/\b{$escapedClassName}\s+\$/",                      // Type hints
+            "/use\s+" . str_replace('\\\\', '\\\\', $escapedFullClassName) . ';/',  // Use statements
+            "/@var\s+{$escapedClassName}/",                      // PHPDoc
+            "/@param\s+{$escapedClassName}/",                    // PHPDoc
+            "/@return\s+{$escapedClassName}/",                   // PHPDoc
+            "/:\s*{$escapedClassName}\s*[\|\)]/",                // Return types
+            "/dispatch\s*\(\s*new\s+{$escapedClassName}/",       // Job dispatch
+            "/{$escapedClassName}::dispatch/",                   // Job static dispatch
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
