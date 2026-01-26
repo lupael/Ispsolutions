@@ -223,7 +223,7 @@ class RouterBackupControllerTest extends TestCase
             'backup_type' => 'manual',
             'configuration_data' => json_encode(['test' => 'data']),
             'notes' => 'Other tenant backup',
-            'created_by' => 1,
+            'created_by' => $this->admin->id,
         ]);
 
         // Try to list backups for router from another tenant
