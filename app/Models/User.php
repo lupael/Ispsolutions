@@ -705,7 +705,7 @@ class User extends Authenticatable
     /**
      * Get operator wallet transactions.
      */
-    public function walletTransactions(): HasMany
+    public function operatorWalletTransactions(): HasMany
     {
         return $this->hasMany(OperatorWalletTransaction::class, 'operator_id');
     }
