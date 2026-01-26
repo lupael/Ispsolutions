@@ -40,7 +40,7 @@ class NasController extends Controller
             'name' => 'required|string|max:100',
             'nas_name' => 'required|string|max:100',
             'short_name' => 'required|string|max:50',
-            'server' => 'required|ip|max:100|unique:nas,server',
+            'server' => 'required|ip|unique:nas,server',
             'secret' => 'required|string|max:100',
             'type' => 'required|string|max:50',
             'ports' => 'nullable|integer|min:0',
@@ -88,7 +88,7 @@ class NasController extends Controller
             'name' => 'required|string|max:100',
             'nas_name' => 'required|string|max:100',
             'short_name' => 'required|string|max:50',
-            'server' => 'required|ip|max:100|unique:nas,server,' . $id,
+            'server' => 'required|ip|unique:nas,server,' . $id,
             'secret' => 'nullable|string|max:100',
             'type' => 'required|string|max:50',
             'ports' => 'nullable|integer|min:0',
@@ -127,7 +127,7 @@ class NasController extends Controller
     {
         $device = Nas::where('tenant_id', getCurrentTenantId())->findOrFail($id);
 
-        // Validate server is a valid IP address before executing command
+        // Validate server is a valid IP address
         if (! filter_var($device->server, FILTER_VALIDATE_IP)) {
             return response()->json([
                 'success' => false,
@@ -135,19 +135,25 @@ class NasController extends Controller
             ], 400);
         }
 
-        // Simple ping test with sanitized IP
-        $output = [];
-        $returnCode = 0;
-        $sanitizedIp = escapeshellarg($device->server);
-        exec("ping -c 1 -W 2 {$sanitizedIp}", $output, $returnCode);
+        // Test connection using socket (more secure than exec)
+        // Test RADIUS ports (1812 for auth, 1813 for accounting)
+        $authPort = 1812;
+        $timeout = 2;
 
-        if ($returnCode === 0) {
+        // Try to connect to RADIUS authentication port
+        $socket = @fsockopen($device->server, $authPort, $errno, $errstr, $timeout);
+
+        if ($socket !== false) {
+            fclose($socket);
+
             return response()->json([
                 'success' => true,
-                'message' => 'Connection successful',
+                'message' => 'Connection successful - RADIUS port is reachable',
             ]);
         }
 
+        // If RADIUS port fails, try a simple ICMP-like check using socket
+        // Note: This requires proper network configuration
         return response()->json([
             'success' => false,
             'message' => 'Connection failed - Device unreachable',

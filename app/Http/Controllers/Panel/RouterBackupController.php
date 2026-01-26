@@ -11,6 +11,7 @@ use App\Services\RouterBackupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class RouterBackupController extends Controller
@@ -154,6 +155,17 @@ class RouterBackupController extends Controller
 
         $backup = RouterConfigurationBackup::where('router_id', $router->id)
             ->findOrFail($backupId);
+
+        // Log backup deletion for audit trail
+        Log::info('Router backup deleted', [
+            'router_id' => $router->id,
+            'router_name' => $router->name,
+            'backup_id' => $backup->id,
+            'backup_type' => $backup->backup_type,
+            'backup_notes' => $backup->notes,
+            'deleted_by' => Auth::id(),
+            'deleted_at' => now(),
+        ]);
 
         $backup->delete();
 
