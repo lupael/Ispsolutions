@@ -1,6 +1,7 @@
 /**
  * Form Validation Utility
  * Provides client-side validation for ISP Solution forms
+ * Feature 2.1: Added real-time duplicate validation
  */
 
 class FormValidator {
@@ -8,10 +9,22 @@ class FormValidator {
         this.form = document.querySelector(formSelector);
         if (!this.form) return;
 
+        this.debounceTimers = {};
+        this.validationEndpoints = {
+            mobile: '/api/validate/mobile',
+            username: '/api/validate/username',
+            email: '/api/validate/email',
+            national_id: '/api/validate/national-id',
+            ip_address: '/api/validate/static-ip'
+        };
+
         this.init();
     }
 
     init() {
+        // Get exclude ID for edit forms
+        this.excludeId = this.form.dataset.excludeId || null;
+
         this.form.addEventListener('submit', (e) => {
             if (!this.validateForm()) {
                 e.preventDefault();
@@ -28,7 +41,111 @@ class FormValidator {
                     this.validateField(field);
                 }
             });
+
+            // Real-time duplicate validation for specific fields
+            if (this.validationEndpoints[field.name]) {
+                this.attachDuplicateValidation(field);
+            }
         });
+    }
+
+    /**
+     * Attach duplicate validation to a field (Feature 2.1)
+     */
+    attachDuplicateValidation(field) {
+        const fieldName = field.name;
+        
+        // Validation on blur
+        field.addEventListener('blur', () => {
+            const value = field.value.trim();
+            if (value) {
+                this.checkDuplicate(field, fieldName, value);
+            }
+        });
+
+        // Validation on input with debounce
+        field.addEventListener('input', () => {
+            this.debounce(() => {
+                const value = field.value.trim();
+                if (value) {
+                    this.checkDuplicate(field, fieldName, value);
+                }
+            }, fieldName, 800);
+        });
+    }
+
+    /**
+     * Check for duplicates via API (Feature 2.1)
+     */
+    async checkDuplicate(field, fieldName, value) {
+        const feedbackEl = this.getOrCreateFeedback(field);
+        
+        // Show loading state
+        this.setLoadingState(field, feedbackEl);
+
+        try {
+            const endpoint = this.validationEndpoints[fieldName];
+            const params = new URLSearchParams({
+                [fieldName]: value
+            });
+            
+            if (this.excludeId) {
+                params.append('exclude_id', this.excludeId);
+            }
+
+            const response = await fetch(`${endpoint}?${params.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.exists) {
+                this.updateFieldState(field, false, data.message);
+            } else {
+                // Only show success indicator for duplicate check
+                field.classList.remove('is-invalid', 'border-red-500');
+                field.classList.add('border-green-500');
+                feedbackEl.className = 'validation-feedback text-sm mt-1 text-green-600';
+                feedbackEl.innerHTML = `<i class="fas fa-check-circle me-1"></i>${data.message}`;
+            }
+        } catch (error) {
+            console.error('Duplicate validation error:', error);
+            // Clear validation state on error
+            field.classList.remove('is-invalid', 'is-valid', 'border-green-500', 'border-red-500');
+        }
+    }
+
+    /**
+     * Set loading state (Feature 2.1)
+     */
+    setLoadingState(field, feedbackEl) {
+        field.classList.remove('is-valid', 'is-invalid', 'border-green-500', 'border-red-500');
+        feedbackEl.className = 'validation-feedback text-sm mt-1 text-gray-500';
+        feedbackEl.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
+    }
+
+    /**
+     * Get or create feedback element (Feature 2.1)
+     */
+    getOrCreateFeedback(field) {
+        let feedback = field.parentElement.querySelector('.validation-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'validation-feedback text-sm mt-1';
+            field.parentNode.insertBefore(feedback, field.nextSibling);
+        }
+        return feedback;
+    }
+
+    /**
+     * Debounce function (Feature 2.1)
+     */
+    debounce(func, key, delay = 500) {
+        clearTimeout(this.debounceTimers[key]);
+        this.debounceTimers[key] = setTimeout(func, delay);
     }
 
     validateForm() {
@@ -276,9 +393,151 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Feature 8.2: Prevent Duplicate Form Submissions
+    preventDuplicateSubmissions();
 });
+
+/**
+ * Prevent Duplicate Form Submissions (Feature 8.2)
+ * Disables submit buttons after first click and shows loading state
+ */
+function preventDuplicateSubmissions() {
+    document.querySelectorAll('form').forEach(form => {
+        // Skip forms that explicitly opt-out or are handled via AJAX-specific logic
+        if (form.hasAttribute('data-no-submit-protection') || form.hasAttribute('data-ajax-form')) {
+            return;
+        }
+
+        let isSubmitting = false;
+        const originalSubmitText = new Map();
+
+        // Store original button text
+        form.querySelectorAll('button[type="submit"]').forEach(btn => {
+            originalSubmitText.set(btn, btn.innerHTML);
+        });
+
+        form.addEventListener('submit', function(e) {
+            // Check if another listener already prevented submission
+            if (e.defaultPrevented) {
+                return;
+            }
+
+            // If already submitting, prevent duplicate submission
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Check if form is valid (HTML5 validation)
+            if (!form.checkValidity()) {
+                // Let browser handle validation display
+                return true;
+            }
+
+            // Mark as submitting
+            isSubmitting = true;
+
+            // Disable all submit buttons and show loading state
+            form.querySelectorAll('button[type="submit"]').forEach(btn => {
+                btn.disabled = true;
+                
+                // Add loading spinner
+                const hasIcon = btn.querySelector('i');
+                if (hasIcon) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>' + btn.textContent;
+                }
+                
+                // Add visual feedback
+                btn.classList.add('opacity-75', 'cursor-wait');
+            });
+
+            // Re-enable after 10 seconds as a safety mechanism
+            // (in case form submission fails or redirects fail)
+            setTimeout(() => {
+                if (isSubmitting) {
+                    isSubmitting = false;
+                    form.querySelectorAll('button[type="submit"]').forEach(btn => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalSubmitText.get(btn) || btn.innerHTML;
+                        btn.classList.remove('opacity-75', 'cursor-wait');
+                    });
+                }
+            }, 10000);
+        });
+
+        // Handle form reset
+        form.addEventListener('reset', function() {
+            isSubmitting = false;
+            form.querySelectorAll('button[type="submit"]').forEach(btn => {
+                btn.disabled = false;
+                btn.innerHTML = originalSubmitText.get(btn) || btn.innerHTML;
+                btn.classList.remove('opacity-75', 'cursor-wait');
+            });
+        });
+    });
+
+    // Handle AJAX forms separately
+    document.querySelectorAll('form[data-ajax-form]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (!submitBtn || submitBtn.disabled) {
+                return;
+            }
+
+            // Disable button
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+            // Get form data
+            const formData = new FormData(form);
+            const url = form.action;
+            const method = form.method || 'POST';
+
+            // Submit via fetch
+            fetch(url, {
+                method: method,
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert(data.message || 'Success!');
+                    
+                    // Optionally redirect or reset form
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        form.reset();
+                    }
+                } else {
+                    alert(data.message || 'An error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+                alert('An error occurred while submitting the form');
+            })
+            .finally(() => {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    });
+}
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { FormValidator, BulkSelector };
+    module.exports = { FormValidator, BulkSelector, preventDuplicateSubmissions };
 }

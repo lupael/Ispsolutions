@@ -250,3 +250,13 @@ Route::prefix('v1/distributor')
         Route::get('sales', [\App\Http\Controllers\Api\V1\CardDistributorController::class, 'getSales']);
         Route::post('sales', [\App\Http\Controllers\Api\V1\CardDistributorController::class, 'recordSale']);
     });
+
+// Real-Time Validation API Routes (Feature 2.1)
+Route::prefix('validate')->middleware(['auth'])->group(function () {
+    Route::get('/mobile', [\App\Http\Controllers\Api\ValidationController::class, 'checkMobile'])->name('api.validate.mobile');
+    Route::get('/username', [\App\Http\Controllers\Api\ValidationController::class, 'checkUsername'])->name('api.validate.username');
+    Route::get('/email', [\App\Http\Controllers\Api\ValidationController::class, 'checkEmail'])->name('api.validate.email');
+    Route::get('/national-id', [\App\Http\Controllers\Api\ValidationController::class, 'checkNationalId'])->name('api.validate.national-id');
+    Route::get('/static-ip', [\App\Http\Controllers\Api\ValidationController::class, 'checkStaticIp'])->name('api.validate.static-ip');
+});
+

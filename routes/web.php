@@ -1026,3 +1026,27 @@ Route::prefix('panel/expenses/categories')->name('panel.expenses.categories.')->
         Route::delete('/{subcategory}', [\App\Http\Controllers\Panel\ExpenseSubcategoryController::class, 'destroy'])->name('destroy');
     });
 });
+
+// Modal Routes (Feature 1.5: Enhanced Modal System)
+Route::prefix('panel')->name('panel.')->middleware(['auth'])->group(function () {
+    // Package FUP Modal
+    Route::get('/packages/{package}/fup', [\App\Http\Controllers\Panel\ModalController::class, 'showFup'])->name('packages.fup');
+    
+    // Billing Profile Modal (placeholder for Feature 3.1)
+    Route::get('/billing-profiles/{profileId}', [\App\Http\Controllers\Panel\ModalController::class, 'showBillingProfile'])->name('billing-profiles.show');
+    
+    // Quick Action Modals
+    Route::get('/customers/{customer}/quick-action/{action}', [\App\Http\Controllers\Panel\ModalController::class, 'showQuickAction'])
+        ->whereIn('action', ['activate', 'suspend', 'recharge'])
+        ->name('customers.quick-action.show');
+    
+    Route::post('/customers/{customer}/quick-action/{action}', [\App\Http\Controllers\Panel\ModalController::class, 'executeQuickAction'])
+        ->whereIn('action', ['activate', 'suspend', 'recharge'])
+        ->name('customers.quick-action.execute');
+    
+    // Bulk Customer Actions (Feature 6.1) - restricted to authorized users
+    Route::post('/customers/bulk-action', [\App\Http\Controllers\Panel\BulkCustomerController::class, 'executeBulkAction'])
+        ->middleware('can:manage-customers')
+        ->name('customers.bulk-action');
+});
+

@@ -94,4 +94,63 @@ class NetworkUser extends Model
                 ->orWhere('email', 'like', "%{$search}%");
         });
     }
+
+    /**
+     * Calculate data usage percentage based on package limits
+     */
+    public function dataUsagePercent(): float
+    {
+        if (!$this->package || !$this->package->data_limit) {
+            return 0;
+        }
+
+        // Get current month usage from sessions
+        $usedData = $this->getCurrentMonthDataUsage();
+        $limit = $this->package->data_limit;
+
+        if ($limit === 0) {
+            return 0;
+        }
+
+        return round(($usedData / $limit) * 100, 1);
+    }
+
+    /**
+     * Format data usage display
+     */
+    public function formatDataUsage(): string
+    {
+        $usedData = $this->getCurrentMonthDataUsage();
+        $limit = $this->package?->data_limit ?? 0;
+
+        return $this->formatBytes($usedData) . ' / ' . $this->formatBytes($limit);
+    }
+
+    /**
+     * Get current month data usage in bytes
+     */
+    protected function getCurrentMonthDataUsage(): int
+    {
+        $startOfMonth = now()->startOfMonth();
+        
+        // Optimized: Calculate total in single query using actual column names
+        return (int) $this->sessions()
+            ->where('created_at', '>=', $startOfMonth)
+            ->selectRaw('SUM(upload_bytes + download_bytes) as total_bytes')
+            ->value('total_bytes') ?? 0;
+    }
+
+    /**
+     * Format bytes to human-readable format
+     */
+    protected function formatBytes(int $bytes, int $precision = 2): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        
+        return round($bytes, $precision) . ' ' . $units[$i];
+    }
 }

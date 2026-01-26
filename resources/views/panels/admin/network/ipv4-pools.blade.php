@@ -116,14 +116,15 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ $pool->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $pool->network }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $pool->gateway ?? 'N/A' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $pool->total_ips ?? 0 }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-blue-500 h-2 rounded-full" style="width: {{ $pool->usage_percent ?? 0 }}%"></div>
-                                        </div>
-                                        <span class="ml-2 text-xs text-gray-600 dark:text-gray-400">{{ $pool->usage_percent ?? 0 }}%</span>
-                                    </div>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $pool->total_ips }}</td>
+                                <td class="px-6 py-4">
+                                    <x-progress-bar 
+                                        :current="$pool->used_ips" 
+                                        :total="$pool->total_ips" 
+                                        height="h-5"
+                                        :showLabel="true"
+                                        :showPercentage="true"
+                                    />
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">Active</span>
