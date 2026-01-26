@@ -186,13 +186,19 @@
             }
 
             // Confirm if customer is missing contact info
-            if (smsCheckbox.checked && !smsCheckbox.nextElementSibling.textContent.includes('(') ) {
+            const smsLabel = smsCheckbox.nextElementSibling;
+            const hasPhone = smsLabel && smsLabel.textContent.includes('(') && !smsLabel.textContent.includes('(No phone number)');
+            
+            if (smsCheckbox.checked && !hasPhone) {
                 e.preventDefault();
                 alert('Customer does not have a phone number. Please uncheck SMS or add a phone number first.');
                 return false;
             }
 
-            if (emailCheckbox.checked && !emailCheckbox.nextElementSibling.textContent.includes('@')) {
+            const emailLabel = emailCheckbox.nextElementSibling;
+            const hasEmail = emailLabel && emailLabel.textContent.includes('@');
+            
+            if (emailCheckbox.checked && !hasEmail) {
                 e.preventDefault();
                 alert('Customer does not have an email address. Please uncheck Email or add an email address first.');
                 return false;

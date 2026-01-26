@@ -43,7 +43,7 @@ class CustomerCommunicationController extends Controller
         $this->authorize('sendSms', $customer);
 
         $validated = $request->validate([
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string|max:500',
             'template_id' => 'nullable|exists:sms_templates,id',
         ]);
 
