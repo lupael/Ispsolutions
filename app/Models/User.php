@@ -793,7 +793,9 @@ class User extends Authenticatable
             return $value;
         }
         // Otherwise try to get from networkUser
-        return $this->networkUser?->username ?? $this->email;
+        return $this->relationLoaded('networkUser') && $this->networkUser 
+            ? $this->networkUser->username 
+            : $this->email;
     }
 
     /**
@@ -801,16 +803,26 @@ class User extends Authenticatable
      */
     public function getStatusAttribute($value)
     {
-        // Try to get from networkUser if it exists
-        return $this->networkUser?->status ?? $value;
+        // If status exists on User, return it
+        if ($value) {
+            return $value;
+        }
+        // Try to get from networkUser if it exists and is loaded
+        return $this->relationLoaded('networkUser') && $this->networkUser 
+            ? $this->networkUser->status 
+            : $value;
     }
 
     /**
-     * Get package from network user (for backward compatibility)
+     * Get current active package (from networkUser if available, otherwise servicePackage)
      */
-    public function getPackageAttribute()
+    public function getCurrentPackageAttribute()
     {
-        return $this->networkUser?->package;
+        if ($this->relationLoaded('networkUser') && $this->networkUser) {
+            return $this->networkUser->package;
+        }
+        
+        return $this->servicePackage;
     }
 
     /**
@@ -818,7 +830,9 @@ class User extends Authenticatable
      */
     public function getSessionsAttribute()
     {
-        return $this->networkUser?->sessions ?? collect();
+        return $this->relationLoaded('networkUser') && $this->networkUser 
+            ? $this->networkUser->sessions 
+            : collect();
     }
 
     /**
@@ -826,15 +840,9 @@ class User extends Authenticatable
      */
     public function getServiceTypeAttribute()
     {
-        return $this->networkUser?->service_type;
-    }
-
-    /**
-     * Get expiry date from network user (for backward compatibility)
-     */
-    public function getExpiryDateAttribute()
-    {
-        return $this->networkUser?->expiry_date;
+        return $this->relationLoaded('networkUser') && $this->networkUser 
+            ? $this->networkUser->service_type 
+            : null;
     }
 
     /**
@@ -850,7 +858,9 @@ class User extends Authenticatable
      */
     public function getIpAddressAttribute()
     {
-        return $this->ipAllocations?->first()?->ip_address;
+        return $this->relationLoaded('ipAllocations') && $this->ipAllocations->isNotEmpty()
+            ? $this->ipAllocations->first()->ip_address
+            : null;
     }
 
     /**
@@ -858,6 +868,8 @@ class User extends Authenticatable
      */
     public function getMacAddressAttribute()
     {
-        return $this->macAddresses?->first()?->mac_address;
+        return $this->relationLoaded('macAddresses') && $this->macAddresses->isNotEmpty()
+            ? $this->macAddresses->first()->mac_address
+            : null;
     }
 }

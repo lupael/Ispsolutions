@@ -130,7 +130,7 @@
                                 </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Package</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $customer->package->name ?? 'N/A' }}</dd>
+                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $customer->currentPackage->name ?? 'N/A' }}</dd>
                                 </div>
                                 @if($customer->email)
                                 <div>
