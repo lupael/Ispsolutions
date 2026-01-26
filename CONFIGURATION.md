@@ -227,16 +227,18 @@ Copy `.env.example` to `.env` and update with your configuration:
 
 ```bash
 cp .env.example .env
-nano .env  # or use your preferred editor
+# Edit with your preferred editor (nano, vim, etc.)
+nano .env
 ```
 
 ### 2. Clear Configuration Cache
 
-After updating configuration files, clear the Laravel cache:
+After updating configuration files, clear and rebuild the Laravel cache:
 
 ```bash
 php artisan config:clear
 php artisan cache:clear
+php artisan config:cache
 php artisan optimize
 ```
 
