@@ -502,6 +502,11 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/network/ipv6-pools/{id}/edit', [AdminController::class, 'ipv6PoolsEdit'])->name('network.ipv6-pools.edit');
     Route::put('/network/ipv6-pools/{id}', [AdminController::class, 'ipv6PoolsUpdate'])->name('network.ipv6-pools.update');
     Route::delete('/network/ipv6-pools/{id}', [AdminController::class, 'ipv6PoolsDestroy'])->middleware('password.confirm')->name('network.ipv6-pools.destroy');
+    
+    // IP Pool Analytics Routes
+    Route::get('/network/ip-analytics', [AdminController::class, 'ipAnalytics'])->name('network.ip-analytics');
+    Route::get('/network/ip-analytics/export', [AdminController::class, 'exportIpAnalytics'])->name('network.ip-analytics.export');
+    
     Route::get('/network/pppoe-profiles', [AdminController::class, 'pppoeProfiles'])->name('network.pppoe-profiles');
     Route::post('/network/pppoe-profiles', [AdminController::class, 'pppoeProfilesStore'])->name('network.pppoe-profiles.store');
     Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->middleware('password.confirm')->name('network.pppoe-profiles.destroy');

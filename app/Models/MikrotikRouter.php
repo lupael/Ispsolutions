@@ -97,4 +97,83 @@ class MikrotikRouter extends Model
     {
         return $query->where('tenant_id', $tenantId);
     }
+
+    /**
+     * Test connectivity to the router
+     */
+    public function testConnectivity(): bool
+    {
+        try {
+            // Use MikroTik API service to test connection by attempting to connect
+            $service = app(\App\Services\MikrotikService::class);
+            return $service->connectRouter($this->id);
+        } catch (\Exception $e) {
+            \Log::error("Router connectivity test failed: " . $e->getMessage(), [
+                'router_id' => $this->id,
+                'router_name' => $this->name
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Disconnect from the router
+     */
+    public function disconnect(): void
+    {
+        $this->update(['status' => 'offline']);
+        // Additional cleanup can be added here if needed
+    }
+
+    /**
+     * Connect to the router
+     */
+    public function connect(): bool
+    {
+        try {
+            $service = app(\App\Services\MikrotikService::class);
+            $connected = $service->connectRouter($this->id);
+            
+            if ($connected) {
+                $this->update([
+                    'status' => 'online',
+                    'last_seen' => now()
+                ]);
+                return true;
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            \Log::error("Router connection failed: " . $e->getMessage(), [
+                'router_id' => $this->id,
+                'router_name' => $this->name
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Refresh router statistics
+     */
+    public function refreshStats(): void
+    {
+        try {
+            // Note: MikrotikService does not currently have getSystemResources() method
+            // This is a placeholder for future implementation
+            // For now, we just update the last_seen timestamp
+            $this->update([
+                'last_seen' => now(),
+            ]);
+            
+            \Log::info("Router stats refresh placeholder called", [
+                'router_id' => $this->id,
+                'router_name' => $this->name
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Failed to refresh router stats: " . $e->getMessage(), [
+                'router_id' => $this->id,
+                'router_name' => $this->name
+            ]);
+        }
+    }
 }

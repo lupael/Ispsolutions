@@ -3631,4 +3631,172 @@ class AdminController extends Controller
 
         return view('panels.admin.cards.used-mapping', compact('usedCards'));
     }
+
+    /**
+     * Show IP Pool Analytics Dashboard
+     */
+    public function ipAnalytics(): View
+    {
+        $analytics = $this->getIpPoolAnalytics();
+        $poolStats = $this->getPoolStats();
+        $recentAllocations = $this->getRecentAllocations();
+
+        return view('panels.admin.network.ip-pool-analytics', compact('analytics', 'poolStats', 'recentAllocations'));
+    }
+
+    /**
+     * Export IP Analytics
+     */
+    public function exportIpAnalytics(Request $request)
+    {
+        $format = $request->get('format', 'pdf');
+        
+        // Gather analytics data
+        $analytics = $this->getIpPoolAnalytics();
+        $poolStats = $this->getPoolStats();
+        $recentAllocations = $this->getRecentAllocations();
+        
+        $data = compact('analytics', 'poolStats', 'recentAllocations');
+        
+        switch ($format) {
+            case 'pdf':
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.ip-analytics-pdf', $data);
+                return $pdf->download('ip-pool-analytics-' . date('Y-m-d') . '.pdf');
+                
+            case 'excel':
+                return Excel::download(
+                    new \App\Exports\IpAnalyticsExport($data),
+                    'ip-pool-analytics-' . date('Y-m-d') . '.xlsx'
+                );
+                
+            case 'csv':
+                return Excel::download(
+                    new \App\Exports\IpAnalyticsExport($data),
+                    'ip-pool-analytics-' . date('Y-m-d') . '.csv',
+                    \Maatwebsite\Excel\Excel::CSV
+                );
+                
+            default:
+                abort(400, 'Invalid export format');
+        }
+    }
+
+    /**
+     * Get IP pool analytics data
+     */
+    protected function getIpPoolAnalytics(): array
+    {
+        $pools = IpPool::all();
+        
+        $totalIps = $pools->sum('total_ips');
+        $allocatedIps = $pools->sum('used_ips');
+        $availableIps = $totalIps - $allocatedIps;
+        
+        return [
+            'total_ips' => $totalIps,
+            'allocated_ips' => $allocatedIps,
+            'available_ips' => $availableIps,
+            'allocation_percent' => $totalIps > 0 ? ($allocatedIps / $totalIps) * 100 : 0,
+            'available_percent' => $totalIps > 0 ? ($availableIps / $totalIps) * 100 : 0,
+            'total_pools' => $pools->count(),
+            'by_type' => $this->getPoolsByType($pools),
+            'top_utilized' => $this->getTopUtilizedPools($pools),
+        ];
+    }
+
+    /**
+     * Get pool statistics
+     */
+    protected function getPoolStats(): array
+    {
+        $pools = IpPool::all();
+        
+        return $pools->map(function ($pool) {
+            $totalIps = $pool->total_ips;
+            $usedIps = $pool->used_ips;
+            $availableIps = $totalIps - $usedIps;
+            
+            return [
+                'name' => $pool->name,
+                'description' => $pool->description,
+                'start_ip' => $pool->start_ip,
+                'end_ip' => $pool->end_ip,
+                'gateway' => $pool->gateway,
+                'total_ips' => $totalIps,
+                'allocated_ips' => $usedIps,
+                'available_ips' => $availableIps,
+                'utilization_percent' => $pool->utilizationPercent(),
+                'pool_type' => $pool->pool_type ?? 'standard',
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get pools by type
+     */
+    protected function getPoolsByType($pools): array
+    {
+        $byType = [];
+        
+        foreach ($pools as $pool) {
+            $type = $pool->pool_type ?? 'standard';
+            
+            if (!isset($byType[$type])) {
+                $byType[$type] = [
+                    'total' => 0,
+                    'allocated' => 0,
+                ];
+            }
+            
+            $byType[$type]['total'] += $pool->total_ips;
+            $byType[$type]['allocated'] += $pool->used_ips;
+        }
+        
+        return $byType;
+    }
+
+    /**
+     * Get top utilized pools
+     */
+    protected function getTopUtilizedPools($pools): array
+    {
+        return $pools->map(function ($pool) {
+            return [
+                'name' => $pool->name,
+                'total' => $pool->total_ips,
+                'allocated' => $pool->used_ips,
+                'utilization' => $pool->utilizationPercent(),
+            ];
+        })
+        ->sortByDesc('utilization')
+        ->take(5)
+        ->values()
+        ->toArray();
+    }
+
+    /**
+     * Get recent IP allocations
+     */
+    protected function getRecentAllocations(): array
+    {
+        $allocations = IpAllocation::with('subnet.pool')
+            ->latest()
+            ->take(20)
+            ->get();
+        
+        return $allocations->map(function ($allocation) {
+            // Get pool name from subnet relationship
+            $poolName = 'N/A';
+            if ($allocation->subnet && $allocation->subnet->pool) {
+                $poolName = $allocation->subnet->pool->name;
+            }
+            
+            return [
+                'ip_address' => $allocation->ip_address,
+                'pool_name' => $poolName,
+                'assigned_to' => $allocation->username ?? 'N/A',
+                'allocated_at' => $allocation->allocated_at ?? $allocation->created_at,
+            ];
+        })->toArray();
+    }
 }
