@@ -224,10 +224,30 @@ function generateSecret() {
     const length = 32;
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
     let secret = '';
-    for (let i = 0; i < length; i++) {
-        secret += charset.charAt(Math.floor(Math.random() * charset.length));
+    
+    // Use cryptographically secure random number generator
+    const cryptoObj = window.crypto || window.msCrypto;
+    
+    if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+        const randomValues = new Uint32Array(length);
+        cryptoObj.getRandomValues(randomValues);
+        for (let i = 0; i < length; i++) {
+            const index = randomValues[i] % charset.length;
+            secret += charset.charAt(index);
+        }
+    } else {
+        // Fallback for environments without Web Crypto (less secure)
+        console.warn('Web Crypto API not available, using less secure random generator');
+        for (let i = 0; i < length; i++) {
+            const index = Math.floor(Math.random() * charset.length);
+            secret += charset.charAt(index);
+        }
     }
-    document.getElementById('radius_secret').value = secret;
+    
+    const radiusSecretInput = document.getElementById('radius_secret');
+    if (radiusSecretInput) {
+        radiusSecretInput.value = secret;
+    }
 }
 </script>
 @endpush

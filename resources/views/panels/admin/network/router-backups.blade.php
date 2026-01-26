@@ -65,21 +65,27 @@
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($backups as $backup)
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ $backup->name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ $backup->notes }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    @if($backup->type === 'manual') bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100
-                                    @elseif($backup->type === 'automatic') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                    @elseif($backup->type === 'pre_import') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
-                                    @elseif($backup->type === 'pre_configuration') bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100
+                                    @if($backup->backup_type === 'manual') bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100
+                                    @elseif($backup->backup_type === 'automatic') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                    @elseif($backup->backup_type === 'pre_import') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
+                                    @elseif($backup->backup_type === 'pre_configuration') bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100
                                     @else bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100
                                     @endif">
-                                    {{ ucfirst(str_replace('_', ' ', $backup->type)) }}
+                                    {{ ucfirst(str_replace('_', ' ', $backup->backup_type)) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $backup->reason ?? 'N/A' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $backup->notes ?? 'N/A' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $backup->created_at->format('Y-m-d H:i:s') }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $backup->created_by_user->name ?? 'System' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                @if($backup->created_by)
+                                    {{ $backup->creator->name ?? 'User #'.$backup->created_by }}
+                                @else
+                                    System
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button @click="restoreBackup({{ $backup->id }})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">
                                     Restore
@@ -179,6 +185,7 @@ function routerBackups() {
         isCreating: false,
         filterType: '',
         routerId: {{ $router->id }},
+        backupNameMaxLength: 100,
         newBackup: {
             name: '',
             type: 'manual',
@@ -186,14 +193,24 @@ function routerBackups() {
         },
         
         async createBackup() {
-            if (!this.newBackup.name) {
+            const trimmedName = this.newBackup.name ? this.newBackup.name.trim() : '';
+            if (!trimmedName) {
                 this.showNotification('Please enter a backup name', 'error');
                 return;
             }
+            if (trimmedName.length > this.backupNameMaxLength) {
+                this.showNotification(`Backup name must be at most ${this.backupNameMaxLength} characters long`, 'error');
+                return;
+            }
+            if (!/^[A-Za-z0-9_\- ]+$/.test(trimmedName)) {
+                this.showNotification('Backup name may only contain letters, numbers, spaces, hyphens, and underscores.', 'error');
+                return;
+            }
+            this.newBackup.name = trimmedName;
             
             this.isCreating = true;
             try {
-                const response = await fetch(`/routers/backup/${this.routerId}/create`, {
+                const response = await fetch('{{ route('panel.admin.routers.backup.create', ['routerId' => $router->id]) }}', {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -228,7 +245,7 @@ function routerBackups() {
             }
             
             try {
-                const response = await fetch(`/routers/backup/${this.routerId}/restore`, {
+                const response = await fetch('{{ route('panel.admin.routers.backup.restore', ['routerId' => $router->id]) }}', {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -259,7 +276,8 @@ function routerBackups() {
             }
             
             try {
-                const response = await fetch(`/routers/backup/${this.routerId}/backups/${backupId}`, {
+                const url = '{{ route('panel.admin.routers.backup.destroy', ['routerId' => $router->id, 'backupId' => '__BACKUP_ID__']) }}';
+                const response = await fetch(url.replace('__BACKUP_ID__', backupId), {
                     method: 'DELETE',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
