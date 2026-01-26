@@ -145,6 +145,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function billingProfile(): BelongsTo
+    {
+        return $this->belongsTo(BillingProfile::class);
+    }
+
     public function servicePackage(): BelongsTo
     {
         return $this->belongsTo(ServicePackage::class);
@@ -166,6 +171,11 @@ class User extends Authenticatable
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
     }
 
     public function ipAllocations(): HasMany
