@@ -145,6 +145,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function billingProfile(): BelongsTo
+    {
+        return $this->belongsTo(BillingProfile::class);
+    }
+
     public function servicePackage(): BelongsTo
     {
         return $this->belongsTo(ServicePackage::class);

@@ -56,17 +56,17 @@
                 </div>
 
                 <div class="flex items-center">
-                    <input type="checkbox" name="auto_generate_bill" id="auto_generate_bill" value="1" {{ old('auto_generate_bill', true) ? 'checked' : '' }} class="rounded border-gray-300">
+                    <input type="checkbox" name="auto_generate_bill" id="auto_generate_bill" value="1" {{ old('auto_generate_bill', '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300">
                     <label for="auto_generate_bill" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Auto Generate Bills</label>
                 </div>
 
                 <div class="flex items-center">
-                    <input type="checkbox" name="auto_suspend" id="auto_suspend" value="1" {{ old('auto_suspend', true) ? 'checked' : '' }} class="rounded border-gray-300">
+                    <input type="checkbox" name="auto_suspend" id="auto_suspend" value="1" {{ old('auto_suspend', '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300">
                     <label for="auto_suspend" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Auto Suspend on Overdue</label>
                 </div>
 
                 <div class="flex items-center">
-                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} class="rounded border-gray-300">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300">
                     <label for="is_active" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active</label>
                 </div>
             </div>

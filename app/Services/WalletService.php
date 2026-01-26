@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientBalanceException;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
@@ -61,7 +62,7 @@ class WalletService
             
             // Check if sufficient balance
             if ($balanceBefore < $amount) {
-                throw new \Exception('Insufficient wallet balance');
+                throw new InsufficientBalanceException('Insufficient wallet balance');
             }
 
             $balanceAfter = $balanceBefore - $amount;

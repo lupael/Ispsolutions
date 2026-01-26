@@ -64,9 +64,9 @@ class BillingProfileController extends Controller
         BillingProfile::create([
             ...$validated,
             'tenant_id' => auth()->user()->tenant_id,
-            'auto_generate_bill' => $request->has('auto_generate_bill'),
-            'auto_suspend' => $request->has('auto_suspend'),
-            'is_active' => $request->has('is_active'),
+            'auto_generate_bill' => isset($validated['auto_generate_bill']) && $validated['auto_generate_bill'],
+            'auto_suspend' => isset($validated['auto_suspend']) && $validated['auto_suspend'],
+            'is_active' => isset($validated['is_active']) && $validated['is_active'],
         ]);
 
         return redirect()->route('panel.admin.billing-profiles.index')
@@ -136,9 +136,9 @@ class BillingProfileController extends Controller
 
         $billingProfile->update([
             ...$validated,
-            'auto_generate_bill' => $request->has('auto_generate_bill'),
-            'auto_suspend' => $request->has('auto_suspend'),
-            'is_active' => $request->has('is_active'),
+            'auto_generate_bill' => isset($validated['auto_generate_bill']) && $validated['auto_generate_bill'],
+            'auto_suspend' => isset($validated['auto_suspend']) && $validated['auto_suspend'],
+            'is_active' => isset($validated['is_active']) && $validated['is_active'],
         ]);
 
         return redirect()->route('panel.admin.billing-profiles.index')
