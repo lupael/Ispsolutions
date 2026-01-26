@@ -1812,7 +1812,7 @@ class AdminController extends Controller
         
         // Collect all network devices (routers, NAS, OLT) with location data
         $routers = MikrotikRouter::where('tenant_id', $tenantId)
-            ->select('id', 'name', 'ip_address', 'location', 'latitude', 'longitude', 'status')
+            ->select('id', 'name', 'ip_address', 'status')
             ->get()
             ->map(function ($router) {
                 return [
@@ -1820,9 +1820,9 @@ class AdminController extends Controller
                     'name' => $router->name,
                     'type' => 'router',
                     'ip_address' => $router->ip_address,
-                    'location' => $router->location ?? 'N/A',
-                    'latitude' => $router->latitude ?? 0,
-                    'longitude' => $router->longitude ?? 0,
+                    'location' => 'N/A',
+                    'latitude' => 0,
+                    'longitude' => 0,
                     'status' => $router->status ?? 'unknown',
                 ];
             });
@@ -3547,7 +3547,6 @@ class AdminController extends Controller
     {
         $tenantId = getCurrentTenantId();
         $routers = MikrotikRouter::where('tenant_id', $tenantId)
-            ->with(['nas'])
             ->orderBy('name')
             ->paginate(20);
 
@@ -3566,7 +3565,6 @@ class AdminController extends Controller
     public function mikrotikMonitor($id): View
     {
         $router = MikrotikRouter::where('tenant_id', getCurrentTenantId())
-            ->with(['nas'])
             ->findOrFail($id);
 
         return view('panels.admin.mikrotik.monitor', compact('router'));

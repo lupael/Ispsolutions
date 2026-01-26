@@ -43,15 +43,9 @@
                         <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $router->api_port }}</dd>
                     </div>
                     <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Location</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $router->location ?? 'N/A' }}</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Host</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $router->host ?? $router->ip_address }}</dd>
                     </div>
-                    @if($router->nas)
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">NAS Device</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $router->nas->shortname }}</dd>
-                    </div>
-                    @endif
                 </dl>
             </div>
         </div>
