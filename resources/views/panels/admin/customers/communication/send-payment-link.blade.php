@@ -59,7 +59,7 @@
                         id="invoice_id" 
                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('invoice_id') border-red-500 @enderror">
                         <option value="">All pending invoices</option>
-                        @foreach($invoices ?? [] as $invoice)
+                        @foreach($pendingInvoices ?? [] as $invoice)
                             <option value="{{ $invoice->id }}" {{ old('invoice_id') == $invoice->id ? 'selected' : '' }}>
                                 #{{ $invoice->invoice_number }} - {{ $invoice->total_amount }} (Due: {{ $invoice->due_date->format('Y-m-d') }})
                             </option>
@@ -81,6 +81,7 @@
                                 name="send_via[]" 
                                 id="send_via_sms" 
                                 value="sms"
+                                data-has-phone="{{ $customer->phone ? 'true' : 'false' }}"
                                 {{ is_array(old('send_via')) && in_array('sms', old('send_via')) ? 'checked' : '' }}
                                 class="h-4 w-4 rounded border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-indigo-600 focus:ring-indigo-500 @error('send_via') border-red-500 @enderror">
                             <label for="send_via_sms" class="ml-3 block text-sm text-gray-700 dark:text-gray-300">
@@ -98,6 +99,7 @@
                                 name="send_via[]" 
                                 id="send_via_email" 
                                 value="email"
+                                data-has-email="{{ $customer->email ? 'true' : 'false' }}"
                                 {{ is_array(old('send_via')) && in_array('email', old('send_via')) ? 'checked' : '' }}
                                 class="h-4 w-4 rounded border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-indigo-600 focus:ring-indigo-500 @error('send_via') border-red-500 @enderror">
                             <label for="send_via_email" class="ml-3 block text-sm text-gray-700 dark:text-gray-300">
@@ -185,18 +187,15 @@
                 return false;
             }
 
-            // Confirm if customer is missing contact info
-            const smsLabel = smsCheckbox.nextElementSibling;
-            const hasPhone = smsLabel && smsLabel.textContent.includes('(') && !smsLabel.textContent.includes('(No phone number)');
+            // Use data attributes for reliable validation
+            const hasPhone = smsCheckbox.dataset.hasPhone === 'true';
+            const hasEmail = emailCheckbox.dataset.hasEmail === 'true';
             
             if (smsCheckbox.checked && !hasPhone) {
                 e.preventDefault();
                 alert('Customer does not have a phone number. Please uncheck SMS or add a phone number first.');
                 return false;
             }
-
-            const emailLabel = emailCheckbox.nextElementSibling;
-            const hasEmail = emailLabel && emailLabel.textContent.includes('@');
             
             if (emailCheckbox.checked && !hasEmail) {
                 e.preventDefault();
