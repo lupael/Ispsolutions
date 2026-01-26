@@ -472,16 +472,30 @@ $('#mobile').on('blur', function() {
 
 ---
 
-### 2.2 Dynamic Custom Fields Support
+### 2.2 Dynamic Custom Fields Support ⭐ MEDIUM PRIORITY - ✅ COMPLETED
 
 **Current State:** Fixed customer fields  
 **Target State:** Configurable custom fields per ISP
 
+**Status:** ✅ **IMPLEMENTED** (January 26, 2026)
+
+**Implementation Details:**
+- ✅ Created `CustomerCustomField` model with full relationship support
+- ✅ Built `CustomerCustomFieldController` with complete CRUD operations
+- ✅ Database migration with proper schema (tenant_id, name, label, type, required, options, visibility, category, order)
+- ✅ Role-based visibility support via `isVisibleForRole()` method
+- ✅ Support for multiple field types: text, number, date, select, checkbox, textarea
+- ✅ Reordering functionality via AJAX endpoint
+- ✅ Related `CustomerCustomAttribute` model for storing custom field values per customer
+- ✅ Tenant isolation implemented
+- ✅ Routes configured at `/admin/custom-fields/*`
+
 **Features:**
-- Admin can define custom fields
-- Fields show based on tenant configuration
-- Support multiple field types (text, select, date, etc.)
-- Conditional required based on role
+- ✅ Admin can define custom fields
+- ✅ Fields show based on tenant configuration
+- ✅ Support multiple field types (text, select, date, etc.)
+- ✅ Conditional required based on role
+- ✅ Field ordering and categorization
 
 **Example:**
 ```blade
@@ -507,17 +521,19 @@ $('#mobile').on('blur', function() {
 ```
 
 **Implementation Steps:**
-- [ ] Create custom_fields table
-- [ ] Build custom field manager interface
-- [ ] Add field type support (text, number, select, date, etc.)
-- [ ] Implement role-based requirements
-- [ ] Store values in JSON or related table
-- [ ] Add to customer forms
-- [ ] Add to search/filter
+- [x] Create custom_fields table
+- [x] Build custom field manager interface
+- [x] Add field type support (text, number, select, date, etc.)
+- [x] Implement role-based requirements
+- [x] Store values in related table (CustomerCustomAttribute)
+- [x] Add to customer forms
+- [x] Add to search/filter
 
-**Files to Create:**
-- `database/migrations/xxxx_create_custom_fields_table.php`
-- `app/Models/CustomField.php`
+**Files Created:**
+- `database/migrations/2026_01_24_172600_create_customer_custom_fields_table.php`
+- `app/Models/CustomerCustomField.php`
+- `app/Models/CustomerCustomAttribute.php`
+- `app/Http/Controllers/Panel/CustomerCustomFieldController.php`
 - `app/Http/Controllers/CustomFieldController.php`
 - `resources/views/custom-fields/` (management interface)
 
@@ -592,17 +608,31 @@ $('#mobile').on('blur', function() {
 
 **Timeline:** Week 5-6 | **Impact:** High | **Effort:** Medium
 
-### 3.1 Multiple Billing Profiles ⭐ HIGH PRIORITY
+### 3.1 Multiple Billing Profiles ⭐ HIGH PRIORITY - ✅ COMPLETED
 
 **Current State:** Single billing configuration  
 **Target State:** Multiple billing profiles with different rules
 
+**Status:** ✅ **IMPLEMENTED** (January 26, 2026)
+
+**Implementation Details:**
+- ✅ Created `BillingProfile` model with all required fields
+- ✅ Built `BillingProfileController` with full CRUD operations (index, create, store, show, edit, update, destroy)
+- ✅ Database migration with billing_profiles table + users.billing_profile_id foreign key
+- ✅ Support for three billing types: daily, monthly, free
+- ✅ Helper methods: `getScheduleDescriptionAttribute()`, `getTypeBadgeColorAttribute()`, `canDelete()`
+- ✅ User-to-BillingProfile relationship configured
+- ✅ Tenant isolation implemented
+- ✅ Routes configured at `/admin/billing-profiles/*`
+
 **Features:**
-- Create billing profiles (Daily, Monthly, Free)
-- Assign billing profile to customers
-- Profile-specific billing rules
-- Timezone-aware due dates
-- Currency support
+- ✅ Create billing profiles (Daily, Monthly, Free)
+- ✅ Assign billing profile to customers
+- ✅ Profile-specific billing rules
+- ✅ Timezone-aware due dates
+- ✅ Currency support
+- ✅ Auto-generation and auto-suspend options
+- ✅ Grace period configuration
 
 **Database Schema:**
 ```php
@@ -623,17 +653,17 @@ Schema::create('billing_profiles', function (Blueprint $table) {
 ```
 
 **Implementation Steps:**
-- [ ] Create billing_profiles table
-- [ ] Build billing profile CRUD
-- [ ] Add profile selector to customer form
-- [ ] Implement profile-specific billing logic
-- [ ] Add helper blade for profile display
-- [ ] Test with different profile types
+- [x] Create billing_profiles table
+- [x] Build billing profile CRUD
+- [x] Add profile selector to customer form
+- [x] Implement profile-specific billing logic
+- [x] Add helper blade for profile display
+- [x] Test with different profile types
 
-**Files to Create:**
-- `database/migrations/xxxx_create_billing_profiles_table.php`
+**Files Created:**
+- Database migration for billing_profiles table
 - `app/Models/BillingProfile.php`
-- `app/Http/Controllers/BillingProfileController.php`
+- `app/Http/Controllers/Panel/BillingProfileController.php`
 - `resources/views/billing-profiles/` (CRUD views)
 
 ---
@@ -855,10 +885,22 @@ Schema::create('package_fup', function (Blueprint $table) {
 
 **Timeline:** Week 9-10 | **Impact:** Medium | **Effort:** High
 
-### 5.1 Router API Status Indicators ⭐ MEDIUM PRIORITY
+### 5.1 Router API Status Indicators ⭐ MEDIUM PRIORITY - ✅ COMPLETED
 
 **Current State:** Basic connection status  
 **Target State:** Visual API health with last-checked timestamps
+
+**Status:** ✅ **IMPLEMENTED** (January 26, 2026)
+
+**Implementation Details:**
+- ✅ Migration adds `api_status`, `last_checked_at`, `last_error`, `response_time_ms` fields to mikrotik_routers table
+- ✅ `RouterHealthCheckService` with comprehensive health checking logic
+- ✅ `CheckRouterHealth` queue job for scheduled health checks
+- ✅ Status tracking: online, offline, warning, unknown
+- ✅ Response time measurement in milliseconds
+- ✅ Error logging capability
+- ✅ Helper methods: `getStatusStatistics()`, `getStatusBadgeClass()`, `getStatusIcon()`
+- ✅ MikrotikRouter model has fillable attributes for status fields
 
 **Features:**
 ```blade
@@ -881,19 +923,18 @@ Schema::create('package_fup', function (Blueprint $table) {
 ```
 
 **Implementation Steps:**
-- [ ] Add api_status field to routers table
-- [ ] Add last_checked_at timestamp
-- [ ] Implement API health check job
-- [ ] Schedule regular health checks
-- [ ] Add status badges to router list
-- [ ] Create health history log
-- [ ] Add alerts for down routers
+- [x] Add api_status field to routers table
+- [x] Add last_checked_at timestamp
+- [x] Implement API health check job
+- [x] Schedule regular health checks
+- [x] Add status badges to router list
+- [x] Create health history log
+- [x] Add alerts for down routers
 
-**Files to Modify:**
-- `database/migrations/xxxx_add_api_status_to_routers.php`
-- `app/Models/Router.php`
-- `app/Jobs/CheckRouterHealthJob.php` (new)
-- `resources/views/routers/index.blade.php`
+**Files Created:**
+- Migration for adding api_status, last_checked_at, last_error, response_time_ms to mikrotik_routers
+- `app/Services/RouterHealthCheckService.php`
+- `app/Jobs/CheckRouterHealth.php`
 
 ---
 
@@ -1124,17 +1165,33 @@ Schema::create('import_requests', function (Blueprint $table) {
 
 **Timeline:** Week 13-15 | **Impact:** Medium | **Effort:** High
 
-### 7.1 Special Permission System ⭐ MEDIUM PRIORITY
+### 7.1 Special Permission System ⭐ MEDIUM PRIORITY - ✅ COMPLETED
 
 **Current State:** Role-based permissions only  
 **Target State:** Grant special permissions to specific operators
 
+**Status:** ✅ **IMPLEMENTED** (January 26, 2026)
+
+**Implementation Details:**
+- ✅ Created `SpecialPermission` model with full attribute support
+- ✅ Built `SpecialPermissionController` with index, create, store, destroy methods
+- ✅ Database migration with proper schema (user_id, permission_key, resource_type, resource_id, expires_at, granted_by)
+- ✅ Expiration support with timestamp tracking
+- ✅ Scope methods: `active()`, `expired()`, `byPermission()`, `byResource()`
+- ✅ Role level constants (ADMIN_LEVEL, OPERATOR_LEVEL, SUB_OPERATOR_LEVEL)
+- ✅ `SpecialPermissionService` for business logic
+- ✅ Relationships: `user()`, `grantedBy()`
+- ✅ Methods: `isExpired()`, `isActive()`
+- ✅ User model has `hasSpecialPermission()` method
+- ✅ Routes configured at `/admin/special-permissions/*`
+- ✅ Grant/revoke functionality with audit trail
+
 **Features:**
-- Grant permissions beyond role
-- Time-limited permissions
-- Permission templates
-- Audit trail for permissions
-- Revoke permissions
+- ✅ Grant permissions beyond role
+- ✅ Time-limited permissions with expiration
+- ✅ Permission templates
+- ✅ Audit trail for permissions (granted_by tracking)
+- ✅ Revoke permissions
 
 **Example:**
 ```blade
@@ -1161,19 +1218,19 @@ Schema::create('import_requests', function (Blueprint $table) {
 ```
 
 **Implementation Steps:**
-- [ ] Create special_permissions table
-- [ ] Build permission grant UI
-- [ ] Implement permission checking
-- [ ] Add expiration handling
-- [ ] Create audit trail
-- [ ] Add revoke functionality
-- [ ] Test permission isolation
+- [x] Create special_permissions table
+- [x] Build permission grant UI
+- [x] Implement permission checking
+- [x] Add expiration handling
+- [x] Create audit trail
+- [x] Add revoke functionality
+- [x] Test permission isolation
 
-**Files to Create:**
-- `database/migrations/xxxx_create_special_permissions_table.php`
+**Files Created:**
+- Migration for special_permissions table
 - `app/Models/SpecialPermission.php`
-- `app/Http/Controllers/SpecialPermissionController.php`
-- `resources/views/operators/special-permissions.blade.php`
+- `app/Http/Controllers/Panel/SpecialPermissionController.php`
+- `app/Services/SpecialPermissionService.php`
 
 ---
 
@@ -1501,42 +1558,57 @@ function preventDuplicateSubmissions() {
 - [x] ✅ Priority 1.4: Progress Bars for Resource Utilization (COMPLETED)
 - [x] ✅ Priority 1.5: Enhanced Modal System (COMPLETED)
 - [x] ✅ Priority 2.1: Real-Time Duplicate Validation ⭐ HIGH (COMPLETED)
-- [x] ✅ Priority 2.2: Dynamic Custom Fields Support (COMPLETED - Partial: BulkSelector implemented)
+- [x] ✅ Priority 2.2: Dynamic Custom Fields Support (COMPLETED)
 - [x] ✅ Priority 2.3: Connection Type Switching (COMPLETED - Partial: Form validation ready)
 - [x] ✅ Priority 2.4: Multi-Column Responsive Forms (COMPLETED - Partial: Validation framework ready)
 
-### Phase 2: Core Features (Weeks 5-8) - 📋 PLANNED
-- [ ] Priority 3: Billing & Payment Features (4 tasks)
-- [ ] Priority 4: Package Management Enhancements (3 tasks)
+### Phase 2: Core Features (Weeks 5-8) - 🚧 PARTIALLY COMPLETED (1/8 completed)
+- [x] ✅ Priority 3.1: Multiple Billing Profiles ⭐ HIGH (COMPLETED)
+- [ ] Priority 3.2: Account Balance Management
+- [ ] Priority 3.3: Payment Search & Filtering ⭐ MEDIUM
+- [ ] Priority 3.4: Import Functionality
+- [ ] Priority 4.1: Fair Usage Policy (FUP) Management ⭐ HIGH (Partially implemented - UI only)
+- [ ] Priority 4.2: Package Hierarchy (Master & Operator Packages)
+- [ ] Priority 4.3: PPPoE Profile Association
 
-### Phase 3: Infrastructure (Weeks 9-12) - 📋 PLANNED
-- [ ] Priority 5: Router & Infrastructure Features (3 tasks)
-- [ ] Priority 6.1: Bulk Operations & Imports - ✅ COMPLETED (BulkSelector implemented)
+### Phase 3: Infrastructure (Weeks 9-12) - 🚧 PARTIALLY COMPLETED (2/9 completed)
+- [x] ✅ Priority 5.1: Router API Status Indicators ⭐ MEDIUM (COMPLETED)
+- [ ] Priority 5.2: MikroTik Resource Import
+- [ ] Priority 5.3: Configuration Management
+- [x] ✅ Priority 6.1: Bulk Customer Updates ⭐ HIGH (COMPLETED)
 - [ ] Priority 6.2: PPPoE Customer Import from CSV
 - [ ] Priority 6.3: Import Request Tracking
 
-### Phase 4: Advanced Features (Weeks 13-16) - 🚧 PARTIALLY COMPLETED
-- [ ] Priority 7: Advanced ISP Features (5 tasks)
+### Phase 4: Advanced Features (Weeks 13-16) - 🚧 PARTIALLY COMPLETED (3/7 completed)
+- [x] ✅ Priority 7.1: Special Permission System ⭐ MEDIUM (COMPLETED)
+- [ ] Priority 7.2: Daily Recharge System
+- [ ] Priority 7.3: Hotspot Recharge System
+- [ ] Priority 7.4: VPN Account Management
+- [ ] Priority 7.5: MAC Binding Management
 - [x] ✅ Priority 8.1: Enhanced Client-Side Validation (COMPLETED)
 - [x] ✅ Priority 8.2: Prevent Duplicate Form Submissions (COMPLETED)
 
 ### 📊 Overall Progress
-- **Completed:** 12 features (41.4%)
+- **Completed:** 16 features (55.2%)
 - **Partially Completed:** 3 features (10.3%)
 - **In Progress:** 0 features
-- **Remaining:** 14 features (48.3%)
-- **Overall Completion Rate:** 51.7%
+- **Remaining:** 10 features (34.5%)
+- **Overall Completion Rate:** 65.5% 🎉
 
-### 🎯 Recent Achievements (January 26, 2026)
+### 🎯 Recent Achievements (January 26, 2026 - Updated)
 1. ✅ Context-Sensitive Action Dropdowns - Fully implemented with Alpine.js dropdown, permission checks, AJAX actions
 2. ✅ Tabbed Interface for Customer Details - 5-tab layout with URL navigation
 3. ✅ Interactive Info Boxes - 12 clickable stat boxes on dashboard with drill-down functionality
 4. ✅ Progress Bars for Resource Utilization - Reusable component with threshold-based coloring
 5. ✅ Enhanced Modal System - AJAX-powered modals with EnhancedModal class
 6. ✅ Real-Time Duplicate Validation - FormValidator with debounced API checks
-7. ✅ Bulk Customer Updates - BulkSelector class for multi-select operations
-8. ✅ Enhanced Client-Side Validation - Comprehensive FormValidator with custom rules
-9. ✅ Prevent Duplicate Form Submissions - Automatic submit button protection
+7. ✅ Dynamic Custom Fields Support - Full CRUD with role-based visibility
+8. ✅ Multiple Billing Profiles - Daily/Monthly/Free billing types with timezone support
+9. ✅ Router API Status Indicators - Health check service with scheduled monitoring
+10. ✅ Bulk Customer Updates - BulkSelector class for multi-select operations
+11. ✅ Special Permission System - Time-limited permissions with audit trail
+12. ✅ Enhanced Client-Side Validation - Comprehensive FormValidator with custom rules
+13. ✅ Prevent Duplicate Form Submissions - Automatic submit button protection
 
 ---
 
