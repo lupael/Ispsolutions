@@ -77,14 +77,14 @@
                                             </td>
                                             <td>
                                                 <input type="hidden" name="mappings[{{ $loop->index }}][router_id]" value="{{ $router->id }}">
-                                                <select name="mappings[{{ $loop->index }}][profile_id]" 
+                                                <select name="mappings[{{ $loop->index }}][profile_name]" 
                                                         class="form-control profile-select" 
                                                         data-router-id="{{ $router->id }}">
                                                     <option value="">-- Select Profile --</option>
                                                     @if(isset($profilesByRouter[$router->id]))
                                                         @foreach($profilesByRouter[$router->id] as $profile)
-                                                            <option value="{{ $profile->id }}"
-                                                                    {{ isset($mappings[$router->id]) && $mappings[$router->id]->profile_id == $profile->id ? 'selected' : '' }}>
+                                                            <option value="{{ $profile->name }}"
+                                                                    {{ isset($mappings[$router->id]) && $mappings[$router->id]->profile_name == $profile->name ? 'selected' : '' }}>
                                                                 {{ $profile->name }}
                                                                 @if($profile->rate_limit)
                                                                     - {{ $profile->rate_limit }}
@@ -97,7 +97,7 @@
                                             <td>
                                                 @if(isset($mappings[$router->id]))
                                                     <span class="badge badge-info">
-                                                        {{ $mappings[$router->id]->profile->name ?? 'N/A' }}
+                                                        {{ $mappings[$router->id]->profile_name ?? 'N/A' }}
                                                     </span>
                                                 @else
                                                     <span class="text-muted">Not mapped</span>
@@ -105,15 +105,9 @@
                                             </td>
                                             <td>
                                                 @if(isset($mappings[$router->id]))
-                                                    @if($mappings[$router->id]->auto_apply)
-                                                        <span class="badge badge-success">
-                                                            <i class="fas fa-check"></i> Auto-apply
-                                                        </span>
-                                                    @else
-                                                        <span class="badge badge-secondary">
-                                                            <i class="fas fa-hand-paper"></i> Manual
-                                                        </span>
-                                                    @endif
+                                                    <span class="badge badge-success">
+                                                        <i class="fas fa-check"></i> Mapped
+                                                    </span>
                                                 @else
                                                     <span class="badge badge-light">-</span>
                                                 @endif

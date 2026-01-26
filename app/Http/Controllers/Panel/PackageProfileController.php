@@ -35,7 +35,6 @@ class PackageProfileController extends Controller
         $profilesByRouter = [];
         foreach ($routers as $router) {
             $profilesByRouter[$router->id] = MikrotikProfile::where('router_id', $router->id)
-                ->where('profile_type', 'pppoe')
                 ->get();
         }
 
@@ -57,7 +56,7 @@ class PackageProfileController extends Controller
         $validated = $request->validate([
             'mappings' => 'required|array',
             'mappings.*.router_id' => 'required|exists:mikrotik_routers,id',
-            'mappings.*.profile_id' => 'required|exists:mikrotik_profiles,id',
+            'mappings.*.profile_name' => 'required|string',
             'auto_apply' => 'boolean',
         ]);
 
@@ -70,8 +69,7 @@ class PackageProfileController extends Controller
                 PackageProfileMapping::create([
                     'package_id' => $package->id,
                     'router_id' => $mapping['router_id'],
-                    'profile_id' => $mapping['profile_id'],
-                    'auto_apply' => $validated['auto_apply'] ?? true,
+                    'profile_name' => $mapping['profile_name'],
                 ]);
             }
 
@@ -143,7 +141,6 @@ class PackageProfileController extends Controller
     {
         try {
             $profiles = MikrotikProfile::where('router_id', $router->id)
-                ->where('profile_type', 'pppoe')
                 ->get(['id', 'name', 'rate_limit']);
 
             return response()->json([

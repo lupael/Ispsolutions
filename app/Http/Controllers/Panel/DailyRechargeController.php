@@ -64,16 +64,14 @@ class DailyRechargeController extends Controller
             $days = $validated['days'] ?? 1;
 
             // Calculate amount
-            $amount = $this->rechargeService->calculateDailyRate($package, $days);
+            $dailyRate = $this->rechargeService->calculateDailyRate($package);
+            $amount = $dailyRate * $days;
 
             // Process recharge
-            $transaction = $this->rechargeService->processDailyRecharge(
+            $result = $this->rechargeService->processDailyRecharge(
                 $customer,
                 $package,
-                $days,
-                $amount,
-                $validated['payment_method'],
-                $validated['notes'] ?? null
+                $days
             );
 
             return redirect()
@@ -100,13 +98,14 @@ class DailyRechargeController extends Controller
         try {
             $package = Package::findOrFail($validated['package_id']);
             $days = $validated['days'];
-            $amount = $this->rechargeService->calculateDailyRate($package, $days);
+            $dailyRate = $this->rechargeService->calculateDailyRate($package);
+            $amount = $dailyRate * $days;
 
             return response()->json([
                 'success' => true,
                 'amount' => $amount,
                 'formatted_amount' => number_format($amount, 2),
-                'per_day' => number_format($amount / $days, 2),
+                'per_day' => number_format($dailyRate, 2),
             ]);
         } catch (\Exception $e) {
             return response()->json([
