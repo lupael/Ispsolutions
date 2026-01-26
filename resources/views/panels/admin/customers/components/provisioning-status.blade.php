@@ -1,5 +1,15 @@
 @props(['customer'])
 
+{{-- Note: This component expects customer provisioning properties that may need to be added via a database migration:
+     - provisioned_on_router (boolean)
+     - router relationship
+     - pppoe_profile (string)
+     - ip_address (string) 
+     - last_provisioned_at (timestamp)
+     
+     If these don't exist, this component will show N/A for missing data.
+--}}
+
 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg" x-data="provisioningStatus()">
     <div class="p-6">
         <div class="flex justify-between items-center mb-4">
@@ -21,7 +31,7 @@
                             <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
                             <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 <span class="inline-flex items-center">
-                                    @if($customer->provisioned_on_router)
+                                    @if($customer->provisioned_on_router ?? false)
                                         <span class="flex h-2 w-2 mr-2">
                                             <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-green-400 opacity-75"></span>
                                             <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -36,7 +46,7 @@
                                 </span>
                             </p>
                         </div>
-                        <svg class="w-8 h-8 {{ $customer->provisioned_on_router ? 'text-green-500' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-8 h-8 {{ ($customer->provisioned_on_router ?? false) ? 'text-green-500' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
@@ -45,9 +55,9 @@
                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                     <p class="text-sm text-gray-500 dark:text-gray-400">Router</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        {{ $customer->router->name ?? 'N/A' }}
+                        {{ optional($customer->router)->name ?? 'N/A' }}
                     </p>
-                    @if($customer->router)
+                    @if($customer->router ?? false)
                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ $customer->router->ip_address }}</p>
                     @endif
                 </div>
@@ -67,7 +77,7 @@
                 </div>
             </div>
 
-            @if($customer->last_provisioned_at)
+            @if($customer->last_provisioned_at ?? false)
             <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -86,7 +96,7 @@
 
             <!-- Actions -->
             <div class="flex flex-wrap gap-2">
-                @if(!$customer->provisioned_on_router)
+                @if(!($customer->provisioned_on_router ?? false))
                     <button @click="provisionNow()" :disabled="isLoading" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

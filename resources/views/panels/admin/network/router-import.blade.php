@@ -243,7 +243,12 @@ function routerImport() {
                 this.statusMessage = `Importing ${type}... (${i + 1}/${types.length})`;
                 this.progress = Math.floor(((i + 1) / types.length) * 100);
                 
-                const endpoint = `/mikrotik/import/${type === 'pools' ? 'ip-pools' : type}`;
+                const typeToRoute = {
+                    'pools': '{{ route("panel.admin.mikrotik.import.ip-pools") }}',
+                    'profiles': '{{ route("panel.admin.mikrotik.import.profiles") }}',
+                    'secrets': '{{ route("panel.admin.mikrotik.import.secrets") }}'
+                };
+                const endpoint = typeToRoute[type] || typeToRoute['pools'];
                 
                 try {
                     const response = await fetch(endpoint, {
@@ -287,16 +292,16 @@ function routerImport() {
             // Use the existing MikroTik import routes
             switch (this.importType) {
                 case 'pools':
-                    return '/mikrotik/import/ip-pools';
+                    return '{{ route("panel.admin.mikrotik.import.ip-pools") }}';
                 case 'profiles':
-                    return '/mikrotik/import/profiles';
+                    return '{{ route("panel.admin.mikrotik.import.profiles") }}';
                 case 'secrets':
-                    return '/mikrotik/import/secrets';
+                    return '{{ route("panel.admin.mikrotik.import.secrets") }}';
                 case 'all':
                     // For "all", we'll need to call each endpoint sequentially
                     return null; // Handle in startImport
                 default:
-                    return '/mikrotik/import/ip-pools';
+                    return '{{ route("panel.admin.mikrotik.import.ip-pools") }}';
             }
         },
         
