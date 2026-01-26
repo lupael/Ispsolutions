@@ -37,6 +37,27 @@ Use the `--detailed` flag to see:
 - Full code snippets of problematic routes
 - More verbose output for debugging
 
+### Panel View Linkage Suggestions (NEW)
+
+```bash
+php artisan app:check-unused-components --suggest-links
+```
+
+Use the `--suggest-links` flag to see:
+- Detailed suggestions for linking unused panel views
+- Controller existence checks for each unused panel view
+- Suggested routes and controller methods for unlinking views
+- Dynamic view detection results
+- Grouped suggestions by panel type (Admin, Developer, Customer, etc.)
+
+### Combined Options
+
+```bash
+php artisan app:check-unused-components --detailed --suggest-links
+```
+
+You can combine both options for maximum detail.
+
 ## What It Analyzes
 
 ### 1. Controllers Analysis 📋
@@ -78,15 +99,94 @@ Use the `--detailed` flag to see:
 - Scans all Blade templates in `resources/views`
 - Checks if views are returned in controllers, mail classes, or notifications
 - Looks for `view()`, `View::make()`, and `Inertia::render()` calls
+- **NEW:** Detects dynamic view references (e.g., `view($this->getViewPrefix() . '.index')`)
+- **NEW:** Categorizes unused views by type (Panel, PDF, Email, Error, Other)
 - Excludes layouts, components, and partials (files starting with `_` or in `/layouts/`, `/components/`, `/partials/`)
 
 **Output:**
 ```
 👁️  Analyzing Views/Blade Templates...
-  ⚠️  Found 52 unused view(s):
-    - resources/views/pages/demo10/index.blade.php
-    - resources/views/pdf/invoice.blade.php
+  ⚠️  Found 40 unused view(s):
+    📁 Panel Views (8):
+      - resources/views/panels/admin/ip-pools/migration-progress.blade.php
+      - resources/views/panels/admin/logs/system.blade.php
+    📁 Pdf Views (15):
+      - resources/views/pdf/customer-statement.blade.php
+      - resources/views/pdf/invoice.blade.php
+    📁 Email Views (2):
+      - resources/views/emails/invoice.blade.php
+    📁 Error Views (3):
+      - resources/views/errors/429.blade.php
+    📁 Other Views (12):
+      - resources/views/pages/demo10/index.blade.php
+
+    💡 Run with --suggest-links to see linkage suggestions for panel views
 ```
+
+**Dynamic View Detection:**
+
+The command now intelligently detects views that are used through dynamic patterns:
+- `view($this->getViewPrefix() . '.index')`
+- `view($viewPath . '.show')`
+- Dynamic path construction in controllers
+
+For example, if a controller uses:
+```php
+protected function getViewPrefix(): string
+{
+    return $this->isAdminContext() 
+        ? 'panels.admin.master-packages' 
+        : 'panels.developer.master-packages';
+}
+
+public function index()
+{
+    return view($this->getViewPrefix() . '.index');
+}
+```
+
+The command will correctly detect that both `panels/admin/master-packages/index.blade.php` and `panels/developer/master-packages/index.blade.php` are being used.
+
+**Panel View Linkage Suggestions (with --suggest-links):**
+
+When you use the `--suggest-links` option, the command provides intelligent suggestions for linking unused panel views:
+
+```
+📋 Panel View Linkage Suggestions:
+
+  Admin Panel:
+    - panels/admin/ip-pools/migration-progress.blade.php
+      Controller: App\Http\Controllers\Panel\IpPoolsController ✗
+      Suggestion: Create controller or add route:
+        Route (in web.php, admin section):
+          Route::get('/ip-pools', [YourController::class, 'migrationProgress'])->name('ip-pools.migration-progress');
+        Controller method:
+          public function migrationProgress() {
+              return view('panels.admin.ip-pools.migration-progress');
+          }
+    
+    - panels/admin/logs/system.blade.php
+      Controller: App\Http\Controllers\Panel\LogsController ✗
+      Suggestion: Create controller or add route:
+        Route (in web.php, admin section):
+          Route::get('/logs', [YourController::class, 'system'])->name('logs.system');
+        Controller method:
+          public function system() {
+              return view('panels.admin.logs.system');
+          }
+
+  Developer Panel:
+    - panels/developer/reports/analytics.blade.php
+      Controller: App\Http\Controllers\Panel\ReportsController ✓
+      Suggestion: View is likely used via dynamic path $this->getViewPrefix()
+```
+
+The suggestions include:
+- Whether the suggested controller exists (✓ or ✗)
+- For existing controllers: hints about dynamic view usage
+- For missing controllers: complete route and method suggestions
+- Proper naming conventions based on Laravel standards
+- Panel-type-specific route grouping suggestions
 
 ### 4. Routes Analysis 🛣️
 
@@ -182,7 +282,12 @@ At the end of the analysis, you'll see a comprehensive statistics table:
 | Controllers         | 80    | 46     | 42.5%      |
 |   └─ Unused Methods | -     | 5      | -          |
 | Models              | 97    | 11     | 88.7%      |
-| Views               | 340   | 52     | 84.7%      |
+| Views               | 340   | 40     | 88.2%      |
+|   └─ Panel Views    | -     | 8      | -          |
+|   └─ Pdf Views      | -     | 15     | -          |
+|   └─ Email Views    | -     | 2      | -          |
+|   └─ Error Views    | -     | 3      | -          |
+|   └─ Other Views    | -     | 12     | -          |
 | Routes              | 700   | 0      | 100%       |
 | Services            | 54    | 10     | 81.5%      |
 | Jobs                | 12    | 10     | 16.7%      |
@@ -190,9 +295,14 @@ At the end of the analysis, you'll see a comprehensive statistics table:
 | Api controllers     | 14    | 5      | 64.3%      |
 +---------------------+-------+--------+------------+
 
-⚠️  Found 134 unused components and 4 broken routes out of 1331 total components.
+⚠️  Found 122 unused components and 4 broken routes out of 1331 total components.
    Consider reviewing and removing unused code to improve maintainability.
 ```
+
+**New in Latest Version:**
+- Views are now categorized by type (Panel, PDF, Email, Error, Other)
+- Each category shows a breakdown count in the statistics
+- Panel views are further grouped by panel type (Admin, Developer, Customer, etc.)
 
 ## Interpreting Results
 
@@ -217,6 +327,7 @@ Run this command regularly (e.g., weekly or before major releases) to keep your 
 ### 2. False Positives
 Be aware of potential false positives:
 - **Dynamic Loading:** Classes loaded dynamically might be flagged as unused
+  - **Improved:** The command now detects common dynamic view patterns like `$this->getViewPrefix()`
 - **Config Files:** Classes referenced in config files might not be detected
 - **Blade Components:** Some Blade components might be flagged incorrectly
 - **API/Event Listeners:** Some listeners or API routes might be used externally
@@ -228,6 +339,7 @@ Before removing any "unused" component:
 3. Check if it's used in JavaScript/frontend code
 4. Consider if it's part of a planned feature
 5. Review git history to understand why it was created
+6. **NEW:** For panel views, run with `--suggest-links` to see if they might be used via dynamic paths
 
 ### 4. Broken Routes
 **Priority:** Fix broken routes immediately as they will cause 404 or 500 errors in production.
@@ -236,6 +348,13 @@ Before removing any "unused" component:
 # Use detailed mode to see exact code
 php artisan app:check-unused-components --detailed
 ```
+
+### 5. Panel View Linkage
+For unused panel views, use the `--suggest-links` option to:
+- Check if a controller exists but uses dynamic view paths
+- Get specific route and method suggestions
+- Understand the panel structure and naming conventions
+- Plan your view-to-controller mapping strategy
 
 ## Integration with CI/CD
 
@@ -263,11 +382,38 @@ The analysis is read-only and safe to run in production.
 
 ## Limitations
 
-1. **Dynamic Code:** Cannot detect components loaded dynamically or through reflection
+1. **Dynamic Code:** Cannot detect all components loaded dynamically or through reflection
+   - **Improved:** Now detects common patterns like `$this->getViewPrefix()` and variable concatenation
+   - May still miss complex dynamic view construction
 2. **External References:** Cannot detect usage from external packages or JavaScript
 3. **Magic Methods:** May not detect all Laravel magic method usage
 4. **Vendor Code:** Does not analyze vendor directory
 5. **Database/Config:** Does not check references in database or config files
+
+## Recent Enhancements
+
+### Version 2.0 Features (Latest)
+
+1. **Dynamic View Detection:**
+   - Detects views used via `$this->getViewPrefix()`
+   - Identifies variable-based view paths
+   - Recognizes string concatenation patterns
+
+2. **View Categorization:**
+   - Automatically categorizes unused views by type
+   - Panel views grouped by panel type
+   - PDF, Email, and Error views separately categorized
+
+3. **Panel Linkage Suggestions:**
+   - New `--suggest-links` option
+   - Intelligent controller suggestions based on view paths
+   - Complete route and method code examples
+   - Controller existence verification
+
+4. **Enhanced Statistics:**
+   - Breakdown of unused views by category
+   - Better visualization of component types
+   - More actionable insights
 
 ## Exit Codes
 

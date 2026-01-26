@@ -14,14 +14,15 @@ class CheckUnusedComponents extends Command
      * @var string
      */
     protected $signature = 'app:check-unused-components
-                            {--detailed : Show detailed output with file paths and line numbers}';
+                            {--detailed : Show detailed output with file paths and line numbers}
+                            {--suggest-links : Show detailed suggestions for linking unused panel views}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Check for unused, mismatched and undeveloped views, controllers, models, tasks, jobs, routes, services, commands, APIs, and blade templates';
+    protected $description = 'Check for unused, mismatched and undeveloped views, controllers, models, tasks, jobs, routes, services, commands, APIs, and blade templates. Includes dynamic view detection and panel linkage suggestions.';
 
     /**
      * Statistics tracking
@@ -35,6 +36,17 @@ class CheckUnusedComponents extends Command
         'jobs' => ['total' => 0, 'unused' => 0],
         'commands' => ['total' => 0, 'unused' => 0],
         'api_controllers' => ['total' => 0, 'unused' => 0],
+    ];
+
+    /**
+     * Unused views categorized by type
+     */
+    private array $categorizedViews = [
+        'panel' => [],
+        'pdf' => [],
+        'email' => [],
+        'error' => [],
+        'other' => [],
     ];
 
     /**
@@ -285,7 +297,7 @@ class CheckUnusedComponents extends Command
                 continue;
             }
 
-            // Check for view() or View::make() or Inertia::render()
+            // Check for direct view references
             $escapedViewName = preg_quote($viewName, '/');
             $patterns = [
                 "/view\(['\"]" . $escapedViewName . "['\"]/",
@@ -301,23 +313,248 @@ class CheckUnusedComponents extends Command
                 }
             }
 
+            // Check for dynamic view references if not found yet
+            if (! $isUsed) {
+                $isUsed = $this->checkDynamicViewUsage($viewName, $allContent);
+            }
+
             if (! $isUsed) {
                 $unusedViews[] = $view;
                 $this->stats['views']['unused']++;
+                $this->categorizeView($view, $viewsPath);
             }
         }
 
         // Display results
         if (! empty($unusedViews)) {
             $this->warn("  ⚠️  Found {$this->stats['views']['unused']} unused view(s):");
-            foreach ($unusedViews as $view) {
-                $this->line('    - ' . $this->getRelativePath($view));
+            
+            // Show categorized breakdown
+            $this->displayCategorizedViews();
+
+            if (! $this->option('suggest-links')) {
+                $this->newLine();
+                $this->line('    💡 Run with --suggest-links to see linkage suggestions for panel views');
             }
         } else {
             $this->info('  ✓ All views are being used');
         }
 
+        // Show panel linkage suggestions if requested
+        if ($this->option('suggest-links') && ! empty($this->categorizedViews['panel'])) {
+            $this->newLine();
+            $this->showPanelLinkageSuggestions();
+        }
+
         $this->newLine();
+    }
+
+    /**
+     * Check if view is used through dynamic patterns
+     */
+    private function checkDynamicViewUsage(string $viewName, string $content): bool
+    {
+        // Split view name into parts to check for dynamic construction
+        $parts = explode('.', $viewName);
+        
+        // Check for patterns like: view($this->getViewPrefix() . '.index')
+        // If view is panels.admin.something.index, check if there's getViewPrefix() usage
+        if (count($parts) >= 3 && $parts[0] === 'panels') {
+            $lastPart = end($parts);
+            // Check for dynamic patterns with the last part
+            $dynamicPatterns = [
+                "/getViewPrefix\(\)\s*\.\s*['\"]" . preg_quote($lastPart, '/') . "['\"]/",
+                "/getViewPrefix\(\)\s*\.\s*['\"]\.?" . preg_quote($lastPart, '/') . "['\"]/",
+                // Check for variable concatenation
+                "/\\\$\w+\s*\.\s*['\"]\.?" . preg_quote($lastPart, '/') . "['\"]/",
+                "/['\"]" . preg_quote($lastPart, '/') . "['\"]\s*\)/", // Just the last part
+            ];
+
+            foreach ($dynamicPatterns as $pattern) {
+                if (preg_match($pattern, $content)) {
+                    return true;
+                }
+            }
+
+            // Check if middle parts are used dynamically
+            if (count($parts) >= 4) {
+                $pathPart = $parts[2]; // e.g., "master-packages" from panels.admin.master-packages.index
+                if (preg_match("/['\"]" . preg_quote($pathPart, '/') . "\." . preg_quote($lastPart, '/') . "['\"]/", $content)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Categorize view by type
+     */
+    private function categorizeView(string $viewPath, string $basePath): void
+    {
+        $relativePath = str_replace($basePath . '/', '', $viewPath);
+        
+        if (Str::startsWith($relativePath, 'panels/')) {
+            $this->categorizedViews['panel'][] = $viewPath;
+        } elseif (Str::startsWith($relativePath, 'pdf/') || Str::contains($relativePath, '/pdf/')) {
+            $this->categorizedViews['pdf'][] = $viewPath;
+        } elseif (Str::startsWith($relativePath, 'emails/') || Str::contains($relativePath, '/mail/')) {
+            $this->categorizedViews['email'][] = $viewPath;
+        } elseif (Str::startsWith($relativePath, 'errors/')) {
+            $this->categorizedViews['error'][] = $viewPath;
+        } else {
+            $this->categorizedViews['other'][] = $viewPath;
+        }
+    }
+
+    /**
+     * Display categorized views breakdown
+     */
+    private function displayCategorizedViews(): void
+    {
+        $viewsPath = resource_path('views');
+        
+        foreach ($this->categorizedViews as $type => $views) {
+            if (empty($views)) {
+                continue;
+            }
+
+            $count = count($views);
+            $label = ucfirst($type);
+            $this->line("    📁 {$label} Views ({$count}):");
+            
+            foreach ($views as $view) {
+                $this->line('      - ' . $this->getRelativePath($view));
+            }
+        }
+    }
+
+    /**
+     * Show suggestions for linking panel views
+     */
+    private function showPanelLinkageSuggestions(): void
+    {
+        $this->info('📋 Panel View Linkage Suggestions:');
+        $this->newLine();
+
+        $viewsPath = resource_path('views');
+        $panelViews = $this->categorizedViews['panel'];
+        
+        // Group by panel type
+        $groupedPanels = [];
+        foreach ($panelViews as $view) {
+            $relativePath = str_replace($viewsPath . '/', '', $view);
+            $parts = explode('/', $relativePath);
+            
+            if (count($parts) >= 2) {
+                $panelType = ucfirst($parts[1]); // admin, developer, customer, etc.
+                $groupedPanels[$panelType][] = $view;
+            }
+        }
+
+        foreach ($groupedPanels as $panelType => $views) {
+            $this->line("  <fg=cyan>{$panelType} Panel:</>");
+            
+            foreach ($views as $view) {
+                $this->analyzeAndSuggestLinkage($view, $viewsPath, $panelType);
+            }
+            
+            $this->newLine();
+        }
+    }
+
+    /**
+     * Analyze a view and suggest linkage
+     */
+    private function analyzeAndSuggestLinkage(string $viewPath, string $basePath, string $panelType): void
+    {
+        $relativePath = str_replace($basePath . '/', '', $viewPath);
+        $this->line("    - {$relativePath}");
+        
+        $suggestedController = $this->suggestControllerForView($relativePath);
+        
+        if ($suggestedController) {
+            $controllerPath = $this->classToPath($suggestedController['class']);
+            $exists = File::exists($controllerPath);
+            
+            $status = $exists ? '<fg=green>✓</>' : '<fg=red>✗</>';
+            $this->line("      Controller: {$suggestedController['class']} {$status}");
+            
+            if ($exists) {
+                // Check if controller might use dynamic views
+                $controllerContent = File::get($controllerPath);
+                if (Str::contains($controllerContent, 'getViewPrefix()')) {
+                    $this->line("      <fg=yellow>Suggestion: View is likely used via dynamic path \$this->getViewPrefix()</>");
+                } else {
+                    $this->line("      <fg=yellow>Suggestion: Add view reference to controller:</>");
+                    $this->line("        return view('{$this->getViewName($viewPath, $basePath)}');");
+                }
+            } else {
+                $this->line("      <fg=yellow>Suggestion: Create controller or add route:</>");
+                $this->suggestRouteAndMethod($relativePath, $panelType);
+            }
+        }
+    }
+
+    /**
+     * Suggest controller for a view based on path
+     */
+    private function suggestControllerForView(string $viewPath): ?array
+    {
+        // Parse view path: panels/admin/master-packages/index.blade.php
+        $parts = explode('/', str_replace('.blade.php', '', $viewPath));
+        
+        if (count($parts) < 3 || $parts[0] !== 'panels') {
+            return null;
+        }
+
+        $panelType = $parts[1]; // admin, developer, customer
+        $resource = $parts[2]; // master-packages, expired-users, etc.
+        
+        // Convert kebab-case to StudlyCase
+        $resourceClass = Str::studly(str_replace('-', '_', $resource));
+        
+        // Try different controller naming patterns
+        $possibleControllers = [
+            "App\\Http\\Controllers\\Panel\\{$resourceClass}Controller",
+            "App\\Http\\Controllers\\" . Str::studly($panelType) . "\\{$resourceClass}Controller",
+            "App\\Http\\Controllers\\{$resourceClass}Controller",
+        ];
+
+        foreach ($possibleControllers as $controller) {
+            $path = $this->classToPath($controller);
+            if (File::exists($path)) {
+                return ['class' => $controller, 'exists' => true];
+            }
+        }
+
+        // Return first as suggestion even if doesn't exist
+        return ['class' => $possibleControllers[0], 'exists' => false];
+    }
+
+    /**
+     * Suggest route and controller method for view
+     */
+    private function suggestRouteAndMethod(string $viewPath, string $panelType): void
+    {
+        $parts = explode('/', str_replace('.blade.php', '', $viewPath));
+        $resource = $parts[2] ?? 'resource';
+        $action = $parts[3] ?? 'index';
+        
+        $routeName = str_replace('_', '-', Str::snake($resource));
+        $methodName = Str::camel($action);
+        
+        $panelPrefix = strtolower($panelType);
+        
+        $this->line("        <fg=blue>Route (in web.php, {$panelPrefix} section):</>");
+        $this->line("          Route::get('/{$routeName}', [YourController::class, '{$methodName}'])->name('{$routeName}.{$action}');");
+        
+        $this->line("        <fg=blue>Controller method:</>");
+        $viewName = $this->getViewName(resource_path('views') . '/' . $viewPath, resource_path('views'));
+        $this->line("          public function {$methodName}() {");
+        $this->line("              return view('{$viewName}');");
+        $this->line("          }");
     }
 
     /**
@@ -703,6 +940,22 @@ class CheckUnusedComponents extends Command
                     "<fg=yellow>{$data['methods_unused']}</>",
                     '-',
                 ];
+            }
+
+            // Add view breakdown if we have unused views
+            if ($component === 'views' && $unused > 0) {
+                foreach ($this->categorizedViews as $type => $views) {
+                    $count = count($views);
+                    if ($count > 0) {
+                        $typeName = ucfirst($type) . ' Views';
+                        $rows[] = [
+                            "  └─ {$typeName}",
+                            '-',
+                            "<fg=yellow>{$count}</>",
+                            '-',
+                        ];
+                    }
+                }
             }
         }
 
