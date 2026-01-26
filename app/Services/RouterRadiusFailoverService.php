@@ -11,63 +11,26 @@ class RouterRadiusFailoverService
 {
     /**
      * Configure Netwatch for RADIUS failover monitoring
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
      */
     public function configureFailover(MikrotikRouter $router): bool
     {
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                Log::error('Failed to connect to router for failover configuration', [
-                    'router_id' => $router->id,
-                ]);
-                return false;
-            }
-
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return false;
-            }
-
-            $nas = $router->nas;
-            $radiusServer = $nas?->server ?? config('radius.server_ip', '127.0.0.1');
-
-            // Remove existing netwatch for this RADIUS server
-            $existing = $api->comm('/tool/netwatch/print');
-            foreach ($existing as $watch) {
-                if (isset($watch['host']) && $watch['host'] === $radiusServer) {
-                    $api->comm('/tool/netwatch/remove', [
-                        '.id' => $watch['.id'],
-                    ]);
-                }
-            }
-
-            // Create netwatch entry for RADIUS server
-            $upScript = $this->generateUpScript();
-            $downScript = $this->generateDownScript();
-
-            $api->comm('/tool/netwatch/add', [
-                'host' => $radiusServer,
-                'interval' => config('radius.netwatch.interval', '1m'),
-                'timeout' => config('radius.netwatch.timeout', '1s'),
-                'up-script' => $upScript,
-                'down-script' => $downScript,
-                'comment' => 'ISP Solution RADIUS Failover',
-            ]);
-
-            Log::info('RADIUS failover configured', [
+        // Check if Netwatch failover is enabled in config
+        if (!config('radius.netwatch.enabled', true)) {
+            Log::info('Netwatch failover is disabled in configuration', [
                 'router_id' => $router->id,
-                'radius_server' => $radiusServer,
-            ]);
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failover configuration failed', [
-                'router_id' => $router->id,
-                'error' => $e->getMessage(),
             ]);
             return false;
         }
+
+        Log::warning('Failover configuration is not fully implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+        ]);
+
+        return false;
     }
 
     /**

@@ -12,83 +12,45 @@ class RouterConfigurationService
 {
     /**
      * Configure RADIUS authentication on the router
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
      */
     public function configureRadius(MikrotikRouter $router): array
     {
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to connect to router',
-                ];
-            }
-
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return [
-                    'success' => false,
-                    'error' => 'Router connection not available',
-                ];
-            }
-
-            // Get NAS configuration
-            $nas = $router->nas;
-            if (!$nas) {
-                return [
-                    'success' => false,
-                    'error' => 'Router is not associated with a NAS device',
-                ];
-            }
-
-            $steps = [];
-
-            // Step 1: Configure RADIUS client
-            $this->configureRadiusClient($api, $router, $nas);
-            $steps[] = 'RADIUS client configured';
-
-            // Step 2: Configure PPP AAA
-            $this->configurePppAaa($api);
-            $steps[] = 'PPP AAA configured';
-
-            // Step 3: Configure RADIUS Incoming
-            $this->configureRadiusIncoming($api);
-            $steps[] = 'RADIUS incoming configured';
-
-            // Step 4: Update PPP profiles to use RADIUS
-            $this->updatePppProfiles($api, $router);
-            $steps[] = 'PPP profiles updated';
-
-            Log::info('RADIUS configuration completed', [
-                'router_id' => $router->id,
-                'steps' => $steps,
-            ]);
-
-            return [
-                'success' => true,
-                'steps' => $steps,
-            ];
-        } catch (\Exception $e) {
-            Log::error('RADIUS configuration failed', [
-                'router_id' => $router->id,
-                'error' => $e->getMessage(),
-            ]);
-
+        // Get NAS configuration
+        $nas = $router->nas;
+        if (!$nas) {
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => 'Router is not associated with a NAS device',
             ];
         }
+
+        Log::warning('RADIUS configuration is not fully implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+        ]);
+
+        return [
+            'success' => false,
+            'error' => 'RADIUS configuration requires RouterOS API implementation',
+        ];
     }
 
     /**
      * Configure RADIUS client on the router
+     * 
+     * Note: Placeholder - requires RouterOS API implementation
      */
     public function configureRadiusClient($api, MikrotikRouter $router, Nas $nas): void
     {
-        // Remove existing RADIUS configuration
-        $existing = $api->comm('/radius/print');
+        // Remove only ISP Solution managed RADIUS entries (identified by comment)
+        // This avoids clobbering RADIUS config for other services
+        $existing = $api->comm('/radius/print', [
+            '?comment' => 'ISP Solution RADIUS Server',
+        ]);
+        
         foreach ($existing as $item) {
             $api->comm('/radius/remove', [
                 '.id' => $item['.id'],
@@ -261,7 +223,7 @@ class RouterConfigurationService
                 [
                     'chain' => 'input',
                     'protocol' => 'tcp',
-                    'dst-port' => config('mikrotik.api_port', 8728),
+                    'dst-port' => config('mikrotik.port', 8728),
                     'action' => 'accept',
                     'comment' => 'Allow API access',
                 ],

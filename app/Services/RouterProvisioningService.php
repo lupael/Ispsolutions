@@ -829,206 +829,56 @@ class RouterProvisioningService
 
     /**
      * Provision a single user to a router
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
      */
     public function provisionUser(\App\Models\NetworkUser $user, MikrotikRouter $router): bool
     {
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                Log::error('Failed to connect to router for user provisioning', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                ]);
-                return false;
-            }
+        Log::warning('User provisioning is not fully implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+            'user_id' => $user->id,
+        ]);
 
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return false;
-            }
-
-            // Get or create profile for user's package
-            $profile = $this->getProfileForPackage($user->package, $router);
-            if (!$profile) {
-                Log::error('No profile found for user package', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                    'package_id' => $user->package_id,
-                ]);
-                return false;
-            }
-
-            // Ensure profile exists on router
-            $this->ensureProfileExists($router, $profile, $api);
-
-            // Build customer comment
-            $comment = \App\Helpers\RouterCommentHelper::buildUserComment($user);
-
-            // Check if secret already exists
-            $existing = $api->comm('/ppp/secret/print', [
-                '?name' => $user->username,
-            ]);
-
-            if (empty($existing)) {
-                // Create new secret
-                $api->comm('/ppp/secret/add', [
-                    'name' => $user->username,
-                    'password' => $user->password,
-                    'service' => 'pppoe',
-                    'profile' => $profile->name,
-                    'comment' => $comment,
-                ]);
-
-                Log::info('User provisioned to router', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                ]);
-            } else {
-                // Update existing secret
-                $api->comm('/ppp/secret/set', [
-                    '.id' => $existing[0]['.id'],
-                    'password' => $user->password,
-                    'profile' => $profile->name,
-                    'comment' => $comment,
-                ]);
-
-                Log::info('User updated on router', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                ]);
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('User provisioning failed', [
-                'router_id' => $router->id,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return false;
     }
 
     /**
      * Deprovision a user from a router
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
      */
     public function deprovisionUser(\App\Models\NetworkUser $user, MikrotikRouter $router, bool $delete = true): bool
     {
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                Log::error('Failed to connect to router for user deprovisioning', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                ]);
-                return false;
-            }
+        Log::warning('User deprovisioning is not fully implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+            'user_id' => $user->id,
+        ]);
 
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return false;
-            }
-
-            // Find the secret
-            $existing = $api->comm('/ppp/secret/print', [
-                '?name' => $user->username,
-            ]);
-
-            if (empty($existing)) {
-                Log::warning('User not found on router for deprovisioning', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                ]);
-                return true; // Consider it success if user doesn't exist
-            }
-
-            if ($delete) {
-                // Remove the secret
-                $api->comm('/ppp/secret/remove', [
-                    '.id' => $existing[0]['.id'],
-                ]);
-
-                Log::info('User deprovisioned from router', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                ]);
-            } else {
-                // Disable the secret
-                $api->comm('/ppp/secret/set', [
-                    '.id' => $existing[0]['.id'],
-                    'disabled' => 'yes',
-                ]);
-
-                Log::info('User disabled on router', [
-                    'router_id' => $router->id,
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                ]);
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('User deprovisioning failed', [
-                'router_id' => $router->id,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return false;
     }
 
     /**
      * Ensure a profile exists on the router
+     * 
+     * Note: Placeholder - requires RouterOS API implementation
      */
     protected function ensureProfileExists(MikrotikRouter $router, \App\Models\MikrotikProfile $profile, $api): void
     {
-        // Check if profile exists on router
-        $existing = $api->comm('/ppp/profile/print', [
-            '?name' => $profile->name,
-        ]);
-
-        if (empty($existing)) {
-            // Create profile on router
-            $this->createProfileOnRouter($router, $profile, $api);
-        }
+        // Placeholder - requires RouterOS API implementation
     }
 
     /**
      * Create a profile on the router
+     * 
+     * Note: Placeholder - requires RouterOS API implementation
      */
     protected function createProfileOnRouter(MikrotikRouter $router, \App\Models\MikrotikProfile $profile, $api): void
     {
-        try {
-            $params = [
-                'name' => $profile->name,
-                'local-address' => $profile->local_address ?? config('mikrotik.ppp_local_address', '10.0.0.1'),
-                'remote-address' => $profile->pool_name ?? 'default-pool',
-            ];
-
-            // Add rate limit if specified
-            if ($profile->rate_limit) {
-                $params['rate-limit'] = $profile->rate_limit;
-            }
-
-            $api->comm('/ppp/profile/add', $params);
-
-            Log::info('Profile created on router', [
-                'router_id' => $router->id,
-                'profile_name' => $profile->name,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to create profile on router', [
-                'router_id' => $router->id,
-                'profile_name' => $profile->name,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        // Placeholder - requires RouterOS API implementation
     }
 
     /**
@@ -1045,8 +895,10 @@ class RouterProvisioningService
             ->where('router_id', $router->id)
             ->first();
 
-        if ($mapping && $mapping->profile_id) {
-            return \App\Models\MikrotikProfile::find($mapping->profile_id);
+        if ($mapping && $mapping->profile_name) {
+            return \App\Models\MikrotikProfile::where('router_id', $router->id)
+                ->where('name', $mapping->profile_name)
+                ->first();
         }
 
         // Fallback: Find a profile on this router with the same name as the package

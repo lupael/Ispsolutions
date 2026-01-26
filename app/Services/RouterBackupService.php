@@ -24,13 +24,12 @@ class RouterBackupService
             }
 
             return RouterConfigurationBackup::create([
-                'tenant_id' => $router->tenant_id,
                 'router_id' => $router->id,
                 'created_by' => $userId,
                 'backup_type' => 'pre_change',
-                'backup_name' => 'Pre-change backup: ' . $reason,
-                'backup_reason' => $reason,
-                'backup_data' => $backupData,
+                'notes' => 'Pre-change backup: ' . $reason,
+                'backup_data' => $this->encryptBackupData($backupData),
+                'created_at' => now(),
             ]);
         } catch (\Exception $e) {
             Log::error('Pre-change backup failed', [
@@ -45,7 +44,7 @@ class RouterBackupService
     /**
      * Create a manual backup
      */
-    public function createManualBackup(MikrotikRouter $router, string $name, ?string $reason = null, ?int $userId = null): ?RouterConfigurationBackup
+    public function createManualBackup(MikrotikRouter $router, string $name, ?string $reason = null, ?int $userId = null, string $backupType = 'manual'): ?RouterConfigurationBackup
     {
         try {
             $backupData = $this->fetchRouterConfiguration($router);
@@ -54,14 +53,18 @@ class RouterBackupService
                 return null;
             }
 
+            $notes = $name;
+            if ($reason) {
+                $notes .= ' - ' . $reason;
+            }
+
             return RouterConfigurationBackup::create([
-                'tenant_id' => $router->tenant_id,
                 'router_id' => $router->id,
                 'created_by' => $userId,
-                'backup_type' => 'manual',
-                'backup_name' => $name,
-                'backup_reason' => $reason,
-                'backup_data' => $backupData,
+                'backup_type' => $backupType,
+                'notes' => $notes,
+                'backup_data' => $this->encryptBackupData($backupData),
+                'created_at' => now(),
             ]);
         } catch (\Exception $e) {
             Log::error('Manual backup failed', [
@@ -82,140 +85,47 @@ class RouterBackupService
             $router,
             'Scheduled backup - ' . now()->format('Y-m-d H:i:s'),
             'Automated scheduled backup',
-            null
+            null,
+            'scheduled'
         );
     }
 
     /**
      * Backup PPP secrets from router
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
      */
     public function backupPppSecrets(MikrotikRouter $router): ?string
     {
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                return null;
-            }
+        Log::warning('PPP secrets backup is not implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+        ]);
 
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return null;
-            }
-
-            // Fetch all PPP secrets
-            $secrets = $api->comm('/ppp/secret/print');
-            
-            // Convert to JSON for storage
-            return json_encode($secrets, JSON_PRETTY_PRINT);
-        } catch (\Exception $e) {
-            Log::error('PPP secrets backup failed', [
-                'router_id' => $router->id,
-                'error' => $e->getMessage(),
-            ]);
-            return null;
-        }
+        return null;
     }
 
     /**
      * Mirror customers from database to router (sync all users)
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
      */
     public function mirrorCustomersToRouter(MikrotikRouter $router): array
     {
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to connect to router',
-                    'synced' => 0,
-                    'failed' => 0,
-                ];
-            }
-
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return [
-                    'success' => false,
-                    'error' => 'Router connection not available',
-                    'synced' => 0,
-                    'failed' => 0,
-                ];
-            }
-
-            // Get all active PPPoE users from database
-            $networkUsers = \App\Models\NetworkUser::where('tenant_id', $router->tenant_id)
-                ->where('is_active', true)
-                ->where('service_type', 'pppoe')
-                ->with('package')
-                ->get();
-
-            $synced = 0;
-            $failed = 0;
-            $errors = [];
-
-            foreach ($networkUsers as $user) {
-                try {
-                    // Check if secret exists on router
-                    $existing = $api->comm('/ppp/secret/print', [
-                        '?name' => $user->username,
-                    ]);
-
-                    $profile = $user->package?->name ?? 'default';
-                    
-                    if (empty($existing)) {
-                        // Create new secret
-                        $api->comm('/ppp/secret/add', [
-                            'name' => $user->username,
-                            'password' => $user->password,
-                            'service' => 'pppoe',
-                            'profile' => $profile,
-                            'comment' => \App\Helpers\RouterCommentHelper::buildUserComment($user),
-                        ]);
-                    } else {
-                        // Update existing secret
-                        $api->comm('/ppp/secret/set', [
-                            '.id' => $existing[0]['.id'],
-                            'password' => $user->password,
-                            'profile' => $profile,
-                            'comment' => \App\Helpers\RouterCommentHelper::buildUserComment($user),
-                        ]);
-                    }
-                    
-                    $synced++;
-                } catch (\Exception $e) {
-                    $failed++;
-                    $errors[] = "User {$user->username}: " . $e->getMessage();
-                    Log::error('Failed to sync user to router', [
-                        'user_id' => $user->id,
-                        'username' => $user->username,
-                        'router_id' => $router->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            return [
-                'success' => true,
-                'synced' => $synced,
-                'failed' => $failed,
-                'total' => $networkUsers->count(),
-                'errors' => $errors,
-            ];
-        } catch (\Exception $e) {
-            Log::error('Mirror customers to router failed', [
-                'router_id' => $router->id,
-                'error' => $e->getMessage(),
-            ]);
-            
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'synced' => 0,
-                'failed' => 0,
-            ];
-        }
+        Log::warning('Mirror customers to router is not fully implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+        ]);
+        
+        return [
+            'success' => false,
+            'error' => 'Mirror functionality requires RouterOS API implementation',
+            'synced' => 0,
+            'failed' => 0,
+            'total' => 0,
+        ];
     }
 
     /**
@@ -238,7 +148,7 @@ class RouterBackupService
             Log::warning('Restore from backup called - placeholder implementation', [
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
-                'backup_name' => $backup->backup_name,
+                'notes' => $backup->notes,
             ]);
 
             // TODO: Implement actual restore logic via MikroTik API
@@ -288,39 +198,39 @@ class RouterBackupService
 
     /**
      * Fetch router configuration via API
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
      */
     protected function fetchRouterConfiguration(MikrotikRouter $router): ?string
     {
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                return null;
-            }
+        Log::warning('Fetch router configuration is not implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+        ]);
 
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return null;
-            }
+        // Return minimal placeholder data for now
+        return json_encode([
+            'router_id' => $router->id,
+            'router_name' => $router->name,
+            'timestamp' => now()->toDateTimeString(),
+            'note' => 'Placeholder configuration - requires RouterOS API implementation',
+        ], JSON_PRETTY_PRINT);
+    }
 
-            // Fetch various configuration sections
-            $config = [
-                'system' => $api->comm('/system/identity/print'),
-                'interfaces' => $api->comm('/interface/print'),
-                'ip_pools' => $api->comm('/ip/pool/print'),
-                'ppp_profiles' => $api->comm('/ppp/profile/print'),
-                'ppp_secrets' => $api->comm('/ppp/secret/print'),
-                'radius' => $api->comm('/radius/print'),
-                'timestamp' => now()->toDateTimeString(),
-            ];
+    /**
+     * Encrypt backup data to protect sensitive information like passwords and secrets
+     */
+    protected function encryptBackupData(string $data): string
+    {
+        return encrypt($data);
+    }
 
-            return json_encode($config, JSON_PRETTY_PRINT);
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch router configuration', [
-                'router_id' => $router->id,
-                'error' => $e->getMessage(),
-            ]);
-            return null;
-        }
+    /**
+     * Decrypt backup data
+     */
+    protected function decryptBackupData(string $encryptedData): string
+    {
+        return decrypt($encryptedData);
     }
 }

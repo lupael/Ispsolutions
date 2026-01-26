@@ -12,7 +12,7 @@ class RouterCommentHelper
 {
     /**
      * Build a structured comment string for a user on the router
-     * Format: username|user_id|package_id|expiry_date
+     * Format: username|user_id|package_id|expiry_date|service_type
      */
     public static function buildUserComment(NetworkUser $user): string
     {
