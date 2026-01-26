@@ -550,17 +550,27 @@ class CheckUnusedComponents extends Command
         
         $panelPrefix = strtolower($panelType);
         
-        // Extract short class name for display
-        $shortClassName = class_basename($suggestedController);
+        // Determine appropriate HTTP method based on action name
+        $httpMethod = $this->getHttpMethodForAction($action);
         
         $this->line("        <fg=blue>Route (in web.php, {$panelPrefix} section):</>");
-        $this->line("          Route::get('/{$routeName}', [{$shortClassName}::class, '{$methodName}'])->name('{$routeName}.{$action}');");
+        $this->line("          Route::{$httpMethod}('/{$routeName}', [{$suggestedController}::class, '{$methodName}'])->name('{$routeName}.{$action}');");
         
         $this->line("        <fg=blue>Controller method:</>");
         $viewName = $this->getViewName(resource_path('views') . '/' . $viewPath, resource_path('views'));
         $this->line("          public function {$methodName}() {");
         $this->line("              return view('{$viewName}');");
         $this->line("          }");
+    }
+
+    /**
+     * Determine appropriate HTTP method for action
+     */
+    private function getHttpMethodForAction(string $action): string
+    {
+        $postActions = ['store', 'update', 'destroy', 'delete'];
+        
+        return in_array($action, $postActions) ? 'post' : 'get';
     }
 
     /**
