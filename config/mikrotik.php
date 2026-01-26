@@ -18,6 +18,42 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | PPP Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Settings for PPP/PPPoE configuration.
+    |
+    */
+    'ppp_local_address' => env('MIKROTIK_PPP_LOCAL_ADDRESS', '10.0.0.1'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backup Settings
+    |--------------------------------------------------------------------------
+    |
+    | Automatic backup configuration.
+    |
+    */
+    'backup' => [
+        'auto_backup_before_change' => env('MIKROTIK_AUTO_BACKUP', true),
+        'retention_days' => env('MIKROTIK_BACKUP_RETENTION_DAYS', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Provisioning Settings
+    |--------------------------------------------------------------------------
+    |
+    | Automatic provisioning configuration.
+    |
+    */
+    'provisioning' => [
+        'auto_provision_on_create' => env('MIKROTIK_AUTO_PROVISION', true),
+        'update_on_password_change' => env('MIKROTIK_UPDATE_ON_PASSWORD_CHANGE', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Connection Settings
     |--------------------------------------------------------------------------
     |

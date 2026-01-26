@@ -826,4 +826,84 @@ class RouterProvisioningService
             ->limit($limit)
             ->get();
     }
+
+    /**
+     * Provision a single user to a router
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
+     */
+    public function provisionUser(\App\Models\NetworkUser $user, MikrotikRouter $router): bool
+    {
+        Log::warning('User provisioning is not fully implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+            'user_id' => $user->id,
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Deprovision a user from a router
+     * 
+     * Note: This is a placeholder implementation. The current MikrotikService implementation
+     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
+     * This method requires future implementation when RouterOS API support is added.
+     */
+    public function deprovisionUser(\App\Models\NetworkUser $user, MikrotikRouter $router, bool $delete = true): bool
+    {
+        Log::warning('User deprovisioning is not fully implemented for the current MikrotikService', [
+            'router_id' => $router->id,
+            'user_id' => $user->id,
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Ensure a profile exists on the router
+     * 
+     * Note: Placeholder - requires RouterOS API implementation
+     */
+    protected function ensureProfileExists(MikrotikRouter $router, \App\Models\MikrotikProfile $profile, $api): void
+    {
+        // Placeholder - requires RouterOS API implementation
+    }
+
+    /**
+     * Create a profile on the router
+     * 
+     * Note: Placeholder - requires RouterOS API implementation
+     */
+    protected function createProfileOnRouter(MikrotikRouter $router, \App\Models\MikrotikProfile $profile, $api): void
+    {
+        // Placeholder - requires RouterOS API implementation
+    }
+
+    /**
+     * Get profile for a package from the router
+     */
+    protected function getProfileForPackage(?\App\Models\Package $package, MikrotikRouter $router): ?\App\Models\MikrotikProfile
+    {
+        if (!$package) {
+            return null;
+        }
+
+        // Try to find a profile mapped to this package for this router
+        $mapping = \App\Models\PackageProfileMapping::where('package_id', $package->id)
+            ->where('router_id', $router->id)
+            ->first();
+
+        if ($mapping && $mapping->profile_name) {
+            return \App\Models\MikrotikProfile::where('router_id', $router->id)
+                ->where('name', $mapping->profile_name)
+                ->first();
+        }
+
+        // Fallback: Find a profile on this router with the same name as the package
+        return \App\Models\MikrotikProfile::where('router_id', $router->id)
+            ->where('name', $package->name)
+            ->first();
+    }
 }

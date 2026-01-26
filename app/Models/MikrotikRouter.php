@@ -8,6 +8,7 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MikrotikRouter extends Model
@@ -17,12 +18,16 @@ class MikrotikRouter extends Model
 
     protected $fillable = [
         'tenant_id',
+        'nas_id',
         'name',
         'ip_address',
+        'public_ip',
         'host',
         'api_port',
         'username',
         'password',
+        'radius_secret',
+        'primary_auth',
         'status',
         'api_status',
         'last_checked_at',
@@ -32,10 +37,12 @@ class MikrotikRouter extends Model
 
     protected $hidden = [
         'password',
+        'radius_secret',
     ];
 
     protected $casts = [
         'password' => 'encrypted',
+        'radius_secret' => 'encrypted',
         'api_port' => 'integer',
         'last_checked_at' => 'datetime',
         'response_time_ms' => 'integer',
@@ -46,6 +53,11 @@ class MikrotikRouter extends Model
     public function pppoeUsers(): HasMany
     {
         return $this->hasMany(MikrotikPppoeUser::class, 'router_id');
+    }
+
+    public function nas(): BelongsTo
+    {
+        return $this->belongsTo(Nas::class, 'nas_id');
     }
 
     // Alias for backward compatibility - returns PPPoE users (MikrotikPppoeUser models)
