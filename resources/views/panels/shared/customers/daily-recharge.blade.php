@@ -10,7 +10,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Daily Recharge for {{ $customer->name }}</h3>
                     <div class="card-tools">
-                        <a href="{{ route('panel.customers.show', $customer) }}" class="btn btn-sm btn-secondary">
+                        <a href="{{ route('panel.admin.customers.show', $customer) }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Customer
                         </a>
                     </div>
@@ -55,7 +55,7 @@
                     </div>
 
                     <!-- Recharge Form -->
-                    <form action="{{ route('panel.customers.daily-recharge.process', $customer) }}" method="POST" id="rechargeForm">
+                    <form action="{{ route('panel.admin.customers.daily-recharge.process', $customer) }}" method="POST" id="rechargeForm">
                         @csrf
                         
                         <div class="row">
@@ -165,8 +165,8 @@
                             @foreach($rechargeHistory as $transaction)
                             <tr>
                                 <td>{{ $transaction->created_at->format('M d, Y H:i') }}</td>
-                                <td>{{ $transaction->description ?? 'N/A' }}</td>
-                                <td>{{ $transaction->metadata['days'] ?? 1 }}</td>
+                                <td>{{ $transaction->notes ?? 'N/A' }}</td>
+                                <td>{{ $transaction->payment_data['days'] ?? 1 }}</td>
                                 <td>{{ number_format($transaction->amount, 2) }} BDT</td>
                                 <td>{{ ucfirst($transaction->payment_method ?? 'N/A') }}</td>
                                 <td>

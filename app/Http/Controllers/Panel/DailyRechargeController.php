@@ -24,16 +24,16 @@ class DailyRechargeController extends Controller
      */
     public function show(User $customer): View
     {
-        $this->authorize('recharge', $customer);
+        $this->authorize('update', $customer);
 
         // Get available daily packages
         $dailyPackages = Package::where('billing_type', 'daily')
             ->where('status', 'active')
             ->get();
 
-        // Get recharge history for this customer
-        $rechargeHistory = $customer->transactions()
-            ->where('type', 'daily_recharge')
+        // Get recharge history for this customer - use payments relationship
+        $rechargeHistory = $customer->payments()
+            ->where('notes', 'like', '%daily recharge%')
             ->latest()
             ->take(10)
             ->get();
@@ -50,7 +50,7 @@ class DailyRechargeController extends Controller
      */
     public function recharge(Request $request, User $customer): RedirectResponse
     {
-        $this->authorize('recharge', $customer);
+        $this->authorize('update', $customer);
 
         $validated = $request->validate([
             'package_id' => 'required|exists:packages,id',
@@ -75,7 +75,7 @@ class DailyRechargeController extends Controller
             );
 
             return redirect()
-                ->route('panel.customers.daily-recharge.show', $customer)
+                ->route('panel.admin.customers.daily-recharge.show', $customer)
                 ->with('success', "Daily recharge successful. Package activated for {$days} day(s). Amount: " . number_format($amount, 2));
         } catch (\Exception $e) {
             return redirect()

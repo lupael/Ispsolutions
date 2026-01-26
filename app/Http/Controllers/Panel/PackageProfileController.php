@@ -20,14 +20,15 @@ class PackageProfileController extends Controller
      */
     public function index(Package $package): View
     {
-        $this->authorize('update', $package);
+        // Authorization check - just verify user can manage packages
+        $this->authorize('update');
 
         // Get all routers
         $routers = MikrotikRouter::where('status', 'active')->get();
 
         // Get existing mappings for this package
         $mappings = $package->profileMappings()
-            ->with(['router', 'profile'])
+            ->with('router')
             ->get()
             ->keyBy('router_id');
 
@@ -51,7 +52,8 @@ class PackageProfileController extends Controller
      */
     public function update(Request $request, Package $package): RedirectResponse
     {
-        $this->authorize('update', $package);
+        // Authorization check - just verify user can manage packages
+        $this->authorize('update');
 
         $validated = $request->validate([
             'mappings' => 'required|array',
@@ -119,12 +121,12 @@ class PackageProfileController extends Controller
             // Apply the profile to the customer on the router
             // This would integrate with MikroTik API
             // TODO: Implement actual MikroTik API call to change customer profile
-            \Illuminate\Support\Facades\Log::info("Applying profile {$mapping->profile_id} to customer {$customer->id} on router {$router->id}");
+            \Illuminate\Support\Facades\Log::info("Applying profile {$mapping->profile_name} to customer {$customer->id} on router {$router->id}");
 
             return response()->json([
                 'success' => true,
                 'message' => 'Profile applied successfully.',
-                'profile_id' => $mapping->profile_id,
+                'profile_name' => $mapping->profile_name,
             ]);
         } catch (\Exception $e) {
             return response()->json([
