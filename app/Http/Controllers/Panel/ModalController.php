@@ -100,19 +100,14 @@ class ModalController extends Controller
                     // Create a payment transaction for the recharge
                     $payment = \App\Models\Payment::create([
                         'tenant_id' => $customer->tenant_id,
-                        'network_user_id' => $customer->id,
+                        'user_id' => $customer->user_id,
                         'amount' => $validated['amount'],
                         'payment_method' => $validated['payment_method'] ?? 'cash',
                         'payment_date' => now(),
                         'status' => 'completed',
-                        'notes' => $validated['notes'] ?? 'Quick recharge',
-                        'created_by' => auth()->id(),
+                        'notes' => $validated['notes'] ?? 'Quick recharge for customer: ' . $customer->username,
+                        'collected_by' => auth()->id(),
                     ]);
-
-                    // Update customer balance if using prepaid model
-                    if ($customer->billing_type === 'prepaid' && isset($customer->balance)) {
-                        $customer->increment('balance', $validated['amount']);
-                    }
 
                     return response()->json([
                         'success' => true,
