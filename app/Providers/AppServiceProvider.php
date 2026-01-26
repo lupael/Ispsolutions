@@ -31,10 +31,22 @@ class AppServiceProvider extends ServiceProvider
             \App\Listeners\ImportPppCustomersListener::class
         );
 
+        // Note: UserCreated and PasswordChanged events need to be created
+        // and fired from the appropriate places (CustomerController, AuthController, etc.)
+        // Uncomment these when those events are implemented:
+        // \Illuminate\Support\Facades\Event::listen(
+        //     \App\Events\UserCreated::class,
+        //     \App\Listeners\ProvisionUserAfterCreation::class
+        // );
+        // \Illuminate\Support\Facades\Event::listen(
+        //     \App\Events\PasswordChanged::class,
+        //     \App\Listeners\UpdateRouterOnPasswordChange::class
+        // );
+
         // Register policies
-        Gate::policy(\App\Models\MikrotikRouter::class, \App\Policies\NetworkDevicePolicy::class);
+        Gate::policy(\App\Models\MikrotikRouter::class, \App\Policies\MikrotikRouterPolicy::class);
         Gate::policy(\App\Models\MikrotikPppoeUser::class, \App\Policies\NetworkDevicePolicy::class);
-        Gate::policy(\App\Models\Nas::class, \App\Policies\NetworkDevicePolicy::class);
+        Gate::policy(\App\Models\Nas::class, \App\Policies\NasPolicy::class);
         Gate::policy(\App\Models\Olt::class, \App\Policies\NetworkDevicePolicy::class);
         Gate::policy(\App\Models\IpPool::class, \App\Policies\NetworkDevicePolicy::class);
         Gate::policy(\App\Models\MikrotikIpPool::class, \App\Policies\NetworkDevicePolicy::class);

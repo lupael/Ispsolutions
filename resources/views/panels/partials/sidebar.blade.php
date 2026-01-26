@@ -76,6 +76,10 @@
                 'children' => [
                     ['label' => 'MikroTik Routers', 'route' => 'panel.admin.network.routers'],
                     ['label' => 'Router Provisioning', 'route' => 'panel.admin.routers.provision.index'],
+                    ['label' => 'Router Configuration', 'route' => 'panel.admin.routers.configuration.index'],
+                    ['label' => 'Router Backups', 'route' => 'panel.admin.routers.backup.index'],
+                    ['label' => 'Router Failover', 'route' => 'panel.admin.routers.failover.index'],
+                    ['label' => 'Router Import', 'route' => 'panel.admin.mikrotik.import.index'],
                     ['label' => 'NAS Devices', 'route' => 'panel.admin.network.nas'],
                     ['label' => 'Cisco Devices', 'route' => 'panel.admin.cisco'],
                     ['label' => 'All Devices', 'route' => 'panel.admin.network.devices'],

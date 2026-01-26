@@ -130,6 +130,45 @@
                 </div>
             </div>
 
+            <!-- RADIUS Configuration -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">RADIUS Configuration</h3>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="radius_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300">RADIUS Shared Secret</label>
+                        <div class="mt-1 flex rounded-md shadow-sm">
+                            <input type="text" id="radius_secret" name="radius_secret" class="flex-1 rounded-none rounded-l-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500">
+                            <button type="button" onclick="generateSecret()" class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 dark:border-gray-700 rounded-r-md bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="public_ip" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Public IP Address</label>
+                        <input type="text" id="public_ip" name="public_ip" placeholder="203.0.113.1" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="radius_server_ip" class="block text-sm font-medium text-gray-700 dark:text-gray-300">RADIUS Server IP</label>
+                        <input type="text" id="radius_server_ip" name="radius_server_ip" value="{{ config('radius.server_ip', '127.0.0.1') }}" readonly class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">From configuration file</p>
+                    </div>
+
+                    <div>
+                        <label for="primary_auth" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Primary Authentication Mode</label>
+                        <select id="primary_auth" name="primary_auth" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="radius">RADIUS Only</option>
+                            <option value="router" selected>Router Only</option>
+                            <option value="hybrid">Hybrid (RADIUS + Router Fallback)</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose how users are authenticated</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Monitoring Options -->
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Monitoring Options</h3>
@@ -178,4 +217,36 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function generateSecret() {
+    const length = 32;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let secret = '';
+    
+    // Use cryptographically secure random number generator
+    const cryptoObj = window.crypto || window.msCrypto;
+    
+    if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+        const randomValues = new Uint32Array(length);
+        cryptoObj.getRandomValues(randomValues);
+        for (let i = 0; i < length; i++) {
+            const index = randomValues[i] % charset.length;
+            secret += charset.charAt(index);
+        }
+        
+        const radiusSecretInput = document.getElementById('radius_secret');
+        if (radiusSecretInput) {
+            radiusSecretInput.value = secret;
+        }
+    } else {
+        // Do not fall back to Math.random() for security-sensitive secrets
+        console.error('Web Crypto API not available. Unable to securely generate a RADIUS shared secret.');
+        alert('Your browser does not support secure random number generation. Please use a modern browser or manually enter a strong RADIUS shared secret.');
+        return;
+    }
+}
+</script>
+@endpush
 @endsection
