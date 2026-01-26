@@ -504,6 +504,23 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     // Router Connection Test
     Route::post('/network/routers/{id}/test-connection', [AdminController::class, 'routerTestConnection'])->name('network.routers.test-connection');
     
+    // Mikrotik Import Routes
+    Route::prefix('mikrotik/import')->name('mikrotik.import.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'index'])->name('index');
+        Route::post('/ip-pools', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'importIpPools'])->name('ip-pools');
+        Route::post('/profiles', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'importProfiles'])->name('profiles');
+        Route::post('/secrets', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'importSecrets'])->name('secrets');
+        Route::post('/validate', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'validate'])->name('validate');
+    });
+    
+    // Mikrotik Monitoring Routes
+    Route::prefix('mikrotik')->name('mikrotik.')->group(function () {
+        Route::get('/monitoring', [AdminController::class, 'mikrotikMonitoring'])->name('monitoring');
+        Route::get('/{id}/monitor', [AdminController::class, 'mikrotikMonitor'])->name('monitor');
+        Route::post('/{id}/configure', [AdminController::class, 'mikrotikConfigure'])->name('configure');
+        Route::get('/{id}/configure', [AdminController::class, 'mikrotikConfigureShow'])->name('configure.show');
+    });
+    
     // Existing OLT routes (kept for backward compatibility)
     Route::get('/olt/dashboard', [AdminController::class, 'oltDashboard'])->name('olt.dashboard');
     Route::get('/olt/{id}/monitor', [AdminController::class, 'oltMonitor'])->name('olt.monitor');

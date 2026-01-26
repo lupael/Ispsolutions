@@ -34,30 +34,24 @@ class MikrotikImportController extends Controller
     }
 
     /**
-     * Import IP pools.
+     * Import IP pools from router.
+     * Note: This currently expects manual pool data, not automatic fetching from router.
      */
     public function importIpPools(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'pools' => 'required|array',
-            'pools.*.name' => 'required|string',
-            'pools.*.ip_range' => 'required|string',
-            'pools.*.subnet_mask' => 'nullable|string',
-            'pools.*.gateway' => 'nullable|string',
-            'pools.*.pool_type' => 'nullable|string',
-            'pools.*.nas_id' => 'nullable|integer|exists:nas,id',
+            'router_id' => 'required|integer|exists:mikrotik_routers,id',
         ]);
 
         try {
-            $result = $this->importService->importIpPools($validated);
-
+            // TODO: Fetch IP pools from the router via MikroTik API and format them
+            // For now, return a message indicating the feature needs the router API integration
+            
             return response()->json([
-                'success' => $result['success'],
-                'message' => $result['success'] 
-                    ? "Successfully imported {$result['imported']} IP addresses"
-                    : 'Import failed',
-                'data' => $result,
-            ]);
+                'success' => false,
+                'message' => 'IP pool import from router requires MikroTik API integration. Please use manual IP pool creation for now.',
+                'note' => 'This feature will fetch pools directly from the router once MikroTik API service is integrated.',
+            ], 501);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

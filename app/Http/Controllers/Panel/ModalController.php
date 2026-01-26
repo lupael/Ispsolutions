@@ -89,11 +89,37 @@ class ModalController extends Controller
                 ]);
 
             case 'recharge':
-                // Recharge logic not implemented yet
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Recharge operation not implemented'
-                ], 501);
+                // Validate recharge data
+                $validated = $request->validate([
+                    'amount' => 'required|numeric|min:0',
+                    'payment_method' => 'nullable|string',
+                    'notes' => 'nullable|string|max:500',
+                ]);
+
+                try {
+                    // Create a payment transaction for the recharge
+                    $payment = \App\Models\Payment::create([
+                        'tenant_id' => $customer->tenant_id,
+                        'user_id' => $customer->user_id,
+                        'amount' => $validated['amount'],
+                        'payment_method' => $validated['payment_method'] ?? 'cash',
+                        'payment_date' => now(),
+                        'status' => 'completed',
+                        'notes' => $validated['notes'] ?? 'Quick recharge for customer: ' . $customer->username,
+                        'collected_by' => auth()->id(),
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Customer recharged successfully with amount: ' . $validated['amount'],
+                        'payment_id' => $payment->id,
+                    ]);
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Recharge failed: ' . $e->getMessage(),
+                    ], 500);
+                }
 
             default:
                 return response()->json([
