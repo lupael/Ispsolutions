@@ -213,8 +213,8 @@ class MenuService
                 'children' => [
                     ['title' => 'All Customers', 'route' => 'panel.admin.customers'],
                     ['title' => 'Add Customer', 'route' => 'panel.admin.customers.create'],
-                    ['title' => 'Online Customers', 'route' => 'panel.admin.customers-online'],
-                    ['title' => 'Offline Customers', 'route' => 'panel.admin.customers-offline'],
+                    ['title' => 'Online Customers', 'route' => 'panel.admin.customers.online'],
+                    ['title' => 'Offline Customers', 'route' => 'panel.admin.customers.offline'],
                 ],
             ],
             [

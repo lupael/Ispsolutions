@@ -20,7 +20,7 @@
             :value="$stats['total_users']" 
             icon="users" 
             color="indigo"
-            link="{{ route('panel.admin.users.index') }}"
+            link="{{ route('panel.admin.users') }}"
         />
 
         <!-- Total Network Users -->
@@ -62,7 +62,7 @@
                     :value="$stats['online_customers']" 
                     icon="wifi" 
                     color="green"
-                    link="{{ route('panel.admin.customers-online') }}"
+                    link="{{ route('panel.admin.customers.online') }}"
                     subtitle="Active sessions"
                 />
 

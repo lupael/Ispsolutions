@@ -117,11 +117,11 @@ return [
             'label' => 'Customers',
             'icon' => 'bi-people',
             'children' => [
-                ['label' => 'All Customers', 'route' => 'panel.admin.customers.index'],
-                ['label' => 'Online Customers', 'route' => 'panel.admin.customers-online'],
-                ['label' => 'Offline Customers', 'route' => 'panel.admin.customers-offline'],
+                ['label' => 'All Customers', 'route' => 'panel.admin.customers'],
+                ['label' => 'Online Customers', 'route' => 'panel.admin.customers.online'],
+                ['label' => 'Offline Customers', 'route' => 'panel.admin.customers.offline'],
                 ['label' => 'Import Customers', 'route' => 'panel.admin.customers.pppoe-import'],
-                ['label' => 'Customer Zones', 'route' => 'panel.admin.customers.zones'],
+                ['label' => 'Customer Zones', 'route' => 'panel.admin.zones.index'],
             ],
         ],
         [

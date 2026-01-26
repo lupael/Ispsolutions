@@ -139,7 +139,7 @@ class CustomerWizardController extends Controller
             $request->session()->forget('wizard_session_id');
         }
 
-        return redirect()->route('panel.admin.customers.index')
+        return redirect()->route('panel.admin.customers')
             ->with('success', 'Customer creation wizard cancelled.');
     }
 
