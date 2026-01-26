@@ -163,6 +163,16 @@ class CustomerBillingController extends Controller
     }
 
     /**
+     * Show other payment form
+     */
+    public function createOtherPayment(User $customer)
+    {
+        $this->authorize('advancePayment', $customer);
+
+        return view('panels.admin.customers.billing.other-payment', compact('customer'));
+    }
+
+    /**
      * Store other payment (non-package payment)
      */
     public function storeOtherPayment(Request $request, User $customer)
