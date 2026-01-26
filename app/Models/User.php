@@ -785,32 +785,44 @@ class User extends Authenticatable
 
     /**
      * Get username from network user (for backward compatibility)
+     * Note: Users table doesn't have a username column, this accessor
+     * provides it from the networkUser relationship or falls back to email
      */
     public function getUsernameAttribute($value)
     {
-        // If username is set on User, return it
-        if ($value) {
+        // If a value is passed (from database or set programmatically), use it
+        if (!is_null($value)) {
             return $value;
         }
-        // Otherwise try to get from networkUser
-        return $this->relationLoaded('networkUser') && $this->networkUser 
-            ? $this->networkUser->username 
-            : $this->email;
+        
+        // Try to get from networkUser if it exists and is loaded
+        if ($this->relationLoaded('networkUser') && $this->networkUser) {
+            return $this->networkUser->username;
+        }
+        
+        // Final fallback to email
+        return $this->email;
     }
 
     /**
      * Get status from network user (for backward compatibility)
+     * Note: Users table doesn't have a status column for customers,
+     * this accessor provides it from the networkUser relationship
      */
     public function getStatusAttribute($value)
     {
-        // If status exists on User, return it
-        if ($value) {
+        // If a value is passed (from database or set programmatically), use it
+        if (!is_null($value)) {
             return $value;
         }
+        
         // Try to get from networkUser if it exists and is loaded
-        return $this->relationLoaded('networkUser') && $this->networkUser 
-            ? $this->networkUser->status 
-            : $value;
+        if ($this->relationLoaded('networkUser') && $this->networkUser) {
+            return $this->networkUser->status;
+        }
+        
+        // Default status
+        return null;
     }
 
     /**
