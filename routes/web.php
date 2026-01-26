@@ -329,6 +329,35 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/customers/{id}/change-package', [\App\Http\Controllers\Panel\CustomerPackageChangeController::class, 'edit'])->name('customers.change-package.edit');
     Route::put('/customers/{id}/change-package', [\App\Http\Controllers\Panel\CustomerPackageChangeController::class, 'update'])->name('customers.change-package.update');
     
+    // Section 2: Package & Billing Management
+    Route::get('/customers/{customer}/bills/create', [\App\Http\Controllers\Panel\CustomerBillingController::class, 'createBill'])->name('customers.bills.create');
+    Route::post('/customers/{customer}/bills', [\App\Http\Controllers\Panel\CustomerBillingController::class, 'storeBill'])->name('customers.bills.store');
+    Route::get('/customers/{customer}/billing-profile', [\App\Http\Controllers\Panel\CustomerBillingController::class, 'editBillingProfile'])->name('customers.billing-profile.edit');
+    Route::put('/customers/{customer}/billing-profile', [\App\Http\Controllers\Panel\CustomerBillingController::class, 'updateBillingProfile'])->name('customers.billing-profile.update');
+    Route::post('/customers/{customer}/other-payment', [\App\Http\Controllers\Panel\CustomerBillingController::class, 'storeOtherPayment'])->name('customers.other-payment.store');
+    
+    // Section 4: Communication & Support
+    Route::get('/customers/{customer}/send-sms', [\App\Http\Controllers\Panel\CustomerCommunicationController::class, 'showSmsForm'])->name('customers.send-sms');
+    Route::post('/customers/{customer}/send-sms', [\App\Http\Controllers\Panel\CustomerCommunicationController::class, 'sendSms'])->name('customers.send-sms.send');
+    Route::get('/customers/{customer}/send-payment-link', [\App\Http\Controllers\Panel\CustomerCommunicationController::class, 'showPaymentLinkForm'])->name('customers.send-payment-link');
+    Route::post('/customers/{customer}/send-payment-link', [\App\Http\Controllers\Panel\CustomerCommunicationController::class, 'sendPaymentLink'])->name('customers.send-payment-link.send');
+    
+    // Section 5: Additional Features
+    Route::get('/customers/{customer}/internet-history', [\App\Http\Controllers\Panel\CustomerHistoryController::class, 'internetHistory'])->name('customers.internet-history');
+    Route::post('/customers/{customer}/internet-history/export', [\App\Http\Controllers\Panel\CustomerHistoryController::class, 'exportHistory'])->name('customers.internet-history.export');
+    Route::get('/customers/{customer}/change-operator', [\App\Http\Controllers\Panel\CustomerOperatorController::class, 'edit'])->name('customers.change-operator.edit');
+    Route::put('/customers/{customer}/change-operator', [\App\Http\Controllers\Panel\CustomerOperatorController::class, 'update'])->name('customers.change-operator.update');
+    Route::get('/customers/{customer}/check-usage', [\App\Http\Controllers\Panel\CustomerUsageController::class, 'checkUsage'])->name('customers.check-usage');
+    Route::get('/customers/{customer}/suspend-date', [\App\Http\Controllers\Panel\CustomerSuspendDateController::class, 'edit'])->name('customers.suspend-date.edit');
+    Route::put('/customers/{customer}/suspend-date', [\App\Http\Controllers\Panel\CustomerSuspendDateController::class, 'update'])->name('customers.suspend-date.update');
+    Route::get('/customers/{customer}/hotspot-recharge', [\App\Http\Controllers\Panel\CustomerHotspotRechargeController::class, 'create'])->name('customers.hotspot-recharge.create');
+    Route::post('/customers/{customer}/hotspot-recharge', [\App\Http\Controllers\Panel\CustomerHotspotRechargeController::class, 'store'])->name('customers.hotspot-recharge.store');
+    
+    // Advance Payment UI (existing controller, adding routes)
+    Route::get('/customers/{customer}/advance-payment', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'create'])->name('customers.advance-payment.create');
+    Route::post('/customers/{customer}/advance-payment', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'store'])->name('customers.advance-payment.store');
+    Route::get('/customers/{customer}/advance-payment/{advancePayment}', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'show'])->name('customers.advance-payment.show');
+    
     // Daily Recharge
     Route::get('/customers/{customer}/daily-recharge', [\App\Http\Controllers\Panel\DailyRechargeController::class, 'show'])->name('customers.daily-recharge.show');
     Route::post('/customers/{customer}/daily-recharge', [\App\Http\Controllers\Panel\DailyRechargeController::class, 'recharge'])->name('customers.daily-recharge.process');
