@@ -24,6 +24,7 @@ class Payment extends Model
         'status', // pending, completed, failed, refunded
         'payment_method', // gateway, card, cash, bank_transfer
         'payment_data', // JSON field for gateway response
+        'payment_type', // hotspot_recharge, installation, equipment, etc.
         'paid_at',
         'payment_date',
         'notes',

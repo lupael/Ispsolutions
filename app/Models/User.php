@@ -110,6 +110,15 @@ class User extends Authenticatable
         'payment_type',
         'wallet_balance',
         'sms_balance',
+        'suspend_date',
+        'expiry_date',
+        'auto_suspend',
+        'billing_date',
+        'billing_cycle',
+        'preferred_payment_method',
+        'billing_contact_name',
+        'billing_contact_email',
+        'billing_contact_phone',
     ];
 
     /**

@@ -77,7 +77,7 @@
     <!-- Change Operator Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
-            <form method="POST" action="{{ route('panel.admin.customers.operator.update', $customer->id) }}">
+            <form method="POST" action="{{ route('panel.admin.customers.change-operator.update', $customer->id) }}">
                 @csrf
                 @method('PUT')
 

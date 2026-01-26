@@ -20,9 +20,16 @@ class CustomerHistoryController extends Controller
     {
         $this->authorize('view', $customer);
 
-        $startDate = request('start_date', now()->subDays(30)->format('Y-m-d'));
-        $endDate = request('end_date', now()->format('Y-m-d'));
-        $sessionType = request('session_type', 'all');
+        // Validate query parameters
+        $validated = request()->validate([
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'session_type' => ['nullable', 'string'],
+        ]);
+
+        $startDate = $validated['start_date'] ?? now()->subDays(30)->format('Y-m-d');
+        $endDate = $validated['end_date'] ?? now()->format('Y-m-d');
+        $sessionType = $validated['session_type'] ?? 'all';
 
         $query = RadAcct::where('username', $customer->username ?? $customer->email)
             ->whereBetween('acctstarttime', [$startDate, $endDate]);

@@ -65,7 +65,7 @@ class CustomerHotspotRechargeController extends Controller
 
             // Update customer
             $customer->update([
-                'package_id' => $package->id,
+                'service_package_id' => $package->id,
                 'expiry_date' => $expiryDate,
                 'status' => 'active',
             ]);

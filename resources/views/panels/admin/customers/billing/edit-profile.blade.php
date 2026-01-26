@@ -42,7 +42,7 @@
 
     <!-- Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <form action="{{ route('panel.admin.customers.billing-profile.update', $customer) }}" method="POST" class="p-6" novalidate>
+        <form action="{{ route('panel.admin.customers.billing-profile.update', $customer) }}" method="POST" class="p-6">
             @csrf
             @method('PUT')
             

@@ -47,6 +47,11 @@ class CustomerCommunicationController extends Controller
             'template_id' => 'nullable|exists:sms_templates,id',
         ]);
 
+        // Check if customer has a phone number
+        if (empty($customer->phone)) {
+            return back()->withErrors(['phone' => 'Customer does not have a phone number.']);
+        }
+
         try {
             // Replace variables in message
             $message = $this->replaceVariables($validated['message'], $customer);
@@ -84,12 +89,12 @@ class CustomerCommunicationController extends Controller
     {
         $this->authorize('sendLink', $customer);
 
-        $pendingInvoices = Invoice::where('user_id', $customer->id)
+        $invoices = Invoice::where('user_id', $customer->id)
             ->where('status', 'pending')
             ->orderBy('due_date')
             ->get();
 
-        return view('panels.admin.customers.communication.send-payment-link', compact('customer', 'pendingInvoices'));
+        return view('panels.admin.customers.communication.send-payment-link', compact('customer', 'invoices'));
     }
 
     /**
@@ -113,11 +118,17 @@ class CustomerCommunicationController extends Controller
 
             // Generate unique payment link token
             $token = Str::random(32);
-            $paymentLink = route('customer.payment.show', [
+            
+            // Build payment link without relying on a missing named route
+            $baseUrl = rtrim((string) config('app.url'), '/');
+            $queryParams = [
                 'customer' => $customer->id,
                 'token' => $token,
-                'invoice' => $invoice?->id
-            ]);
+            ];
+            if ($invoice) {
+                $queryParams['invoice'] = $invoice->id;
+            }
+            $paymentLink = $baseUrl . '/payment-link?' . http_build_query($queryParams);
 
             // Store the token (you may want to add a payment_links table)
             // For now, we'll just generate the link
@@ -127,9 +138,11 @@ class CustomerCommunicationController extends Controller
                 $message .= " | Amount: " . config('app.currency') . number_format($invoice->total_amount, 2);
             }
 
-            $sent = false;
+            $smsSent = false;
+            $emailSent = false;
+            
             if (in_array('sms', $validated['send_via']) && $customer->phone) {
-                $sent = $this->smsService->sendSms(
+                $smsSent = $this->smsService->sendSms(
                     $customer->phone,
                     $message,
                     null,
@@ -139,9 +152,9 @@ class CustomerCommunicationController extends Controller
             }
 
             if (in_array('email', $validated['send_via']) && $customer->email) {
-                // Email sending would go here
+                // TODO: Email sending would go here
                 // For now, we'll just mark as sent
-                $sent = true;
+                $emailSent = true;
             }
 
             $this->auditLogService->log(
@@ -150,14 +163,20 @@ class CustomerCommunicationController extends Controller
                 [
                     'customer_id' => $customer->id,
                     'invoice_id' => $invoice?->id,
-                    'methods' => $validated['send_via']
+                    'methods' => $validated['send_via'],
+                    'sms_sent' => $smsSent,
+                    'email_sent' => $emailSent,
                 ]
             );
 
-            if ($sent) {
+            // Success if at least one requested method succeeded
+            $success = (in_array('sms', $validated['send_via']) && $smsSent) || 
+                      (in_array('email', $validated['send_via']) && $emailSent);
+
+            if ($success) {
                 return back()->with('success', 'Payment link sent successfully via ' . implode(' and ', $validated['send_via']));
             } else {
-                return back()->with('error', 'Failed to send payment link.');
+                return back()->with('error', 'Failed to send payment link. Please check customer contact information.');
             }
         } catch (\Exception $e) {
             return back()

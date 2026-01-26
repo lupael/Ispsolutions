@@ -42,7 +42,7 @@
 
     <!-- Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-        <form action="{{ route('panel.admin.customers.other-payment.store', $customer) }}" method="POST" class="p-6" novalidate>
+        <form action="{{ route('panel.admin.customers.other-payment.store', $customer) }}" method="POST" class="p-6">
             @csrf
             
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

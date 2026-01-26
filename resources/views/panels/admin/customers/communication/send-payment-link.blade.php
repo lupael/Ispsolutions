@@ -59,7 +59,7 @@
                         id="invoice_id" 
                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('invoice_id') border-red-500 @enderror">
                         <option value="">All pending invoices</option>
-                        @foreach($pendingInvoices ?? [] as $invoice)
+                        @foreach($invoices ?? [] as $invoice)
                             <option value="{{ $invoice->id }}" {{ old('invoice_id') == $invoice->id ? 'selected' : '' }}>
                                 #{{ $invoice->invoice_number }} - {{ $invoice->total_amount }} (Due: {{ $invoice->due_date->format('Y-m-d') }})
                             </option>

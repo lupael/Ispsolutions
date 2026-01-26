@@ -72,7 +72,7 @@ class CustomerBillingController extends Controller
                 'billing_period_start' => $validated['billing_period_start'],
                 'billing_period_end' => $validated['billing_period_end'],
                 'due_date' => $validated['due_date'],
-                'description' => $validated['description'] ?? null,
+                'notes' => $validated['description'] ?? null,
                 'created_by' => auth()->id(),
             ]);
 

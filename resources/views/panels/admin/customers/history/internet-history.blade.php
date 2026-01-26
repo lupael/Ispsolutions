@@ -38,7 +38,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Sessions</dt>
-                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($summary['total_sessions'] ?? 0) }}</dd>
+                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($totals->total_sessions ?? 0) }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Time</dt>
-                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $summary['total_time'] ?? '0h' }}</dd>
+                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ floor(($totals->total_time ?? 0) / 3600) }}h {{ floor((($totals->total_time ?? 0) % 3600) / 60) }}m</dd>
                         </dl>
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Upload</dt>
-                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $summary['total_upload'] ?? '0 MB' }}</dd>
+                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format(($totals->total_upload ?? 0) / (1024 * 1024), 2) }} MB</dd>
                         </dl>
                     </div>
                 </div>
@@ -92,7 +92,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Download</dt>
-                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $summary['total_download'] ?? '0 MB' }}</dd>
+                            <dd class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format(($totals->total_download ?? 0) / (1024 * 1024), 2) }} MB</dd>
                         </dl>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
-            <form method="GET" action="{{ route('panel.admin.customers.history.internet', $customer->id) }}">
+            <form method="GET" action="{{ route('panel.admin.customers.internet-history', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
                     <div>
                         <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
@@ -139,7 +139,7 @@
                             </svg>
                             Filter
                         </button>
-                        <a href="{{ route('panel.admin.customers.history.internet', $customer->id) }}" 
+                        <a href="{{ route('panel.admin.customers.internet-history', $customer->id) }}" 
                            class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             Clear
                         </a>
@@ -155,7 +155,7 @@
             <div class="flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Session History</h3>
                 <div class="flex gap-2">
-                    <form method="POST" action="{{ route('panel.admin.customers.history.internet.export', $customer->id) }}" class="inline">
+                    <form method="POST" action="{{ route('panel.admin.customers.internet-history.export', $customer->id) }}" class="inline">
                         @csrf
                         <input type="hidden" name="format" value="csv">
                         <input type="hidden" name="start_date" value="{{ request('start_date') }}">
@@ -169,7 +169,7 @@
                             Export CSV
                         </button>
                     </form>
-                    <form method="POST" action="{{ route('panel.admin.customers.history.internet.export', $customer->id) }}" class="inline">
+                    <form method="POST" action="{{ route('panel.admin.customers.internet-history.export', $customer->id) }}" class="inline">
                         @csrf
                         <input type="hidden" name="format" value="excel">
                         <input type="hidden" name="start_date" value="{{ request('start_date') }}">

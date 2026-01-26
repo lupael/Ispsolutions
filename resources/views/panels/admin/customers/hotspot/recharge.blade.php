@@ -86,7 +86,7 @@
     <!-- Recharge Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
-            <form method="POST" action="{{ route('panel.admin.customers.hotspot.recharge.store', $customer->id) }}">
+            <form method="POST" action="{{ route('panel.admin.customers.hotspot-recharge.store', $customer->id) }}">
                 @csrf
 
                 <div class="space-y-6">
@@ -101,7 +101,7 @@
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('package_id') border-red-500 @enderror"
                                 onchange="updatePackageDetails(this)">
                             <option value="">-- Select Hotspot Package --</option>
-                            @foreach($hotspotPackages as $package)
+                            @foreach($packages as $package)
                                 <option value="{{ $package->id }}" 
                                         data-price="{{ $package->price }}"
                                         data-data-limit="{{ $package->data_limit }}"
