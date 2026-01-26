@@ -158,10 +158,15 @@ class ValidationController extends Controller
             ]);
         }
 
-        // Check in IP allocations table
+        // Check in IP allocations table with tenant scoping
         $query = DB::table('ip_allocations')
             ->where('ip_address', $ipAddress)
             ->where('status', 'allocated');
+        
+        // Scope to tenant for security
+        if (auth()->user() && auth()->user()->tenant_id) {
+            $query->where('tenant_id', auth()->user()->tenant_id);
+        }
         
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);

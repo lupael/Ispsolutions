@@ -404,8 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function preventDuplicateSubmissions() {
     document.querySelectorAll('form').forEach(form => {
-        // Skip forms that explicitly opt-out
-        if (form.hasAttribute('data-no-submit-protection')) {
+        // Skip forms that explicitly opt-out or are handled via AJAX-specific logic
+        if (form.hasAttribute('data-no-submit-protection') || form.hasAttribute('data-ajax-form')) {
             return;
         }
 
@@ -418,6 +418,11 @@ function preventDuplicateSubmissions() {
         });
 
         form.addEventListener('submit', function(e) {
+            // Check if another listener already prevented submission
+            if (e.defaultPrevented) {
+                return;
+            }
+
             // If already submitting, prevent duplicate submission
             if (isSubmitting) {
                 e.preventDefault();

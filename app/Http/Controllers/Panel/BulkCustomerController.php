@@ -54,6 +54,31 @@ class BulkCustomerController extends Controller
             ], 403);
         }
 
+        // Per-customer authorization check
+        foreach ($customers as $customer) {
+            if (!auth()->user()->can('update', $customer)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to update all selected customers'
+                ], 403);
+            }
+        }
+
+        // Validate operator is in same tenant if changing operator
+        if ($action === 'change_operator') {
+            $operatorId = $request->input('operator_id');
+            $operator = User::where('id', $operatorId)
+                ->where('tenant_id', $tenantId)
+                ->first();
+            
+            if (!$operator) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid operator or operator not in your tenant'
+                ], 403);
+            }
+        }
+
         // Execute the bulk action
         try {
             DB::beginTransaction();
@@ -92,7 +117,7 @@ class BulkCustomerController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while executing the bulk action: ' . $e->getMessage()
+                'message' => 'An error occurred while executing the bulk action.'
             ], 500);
         }
     }

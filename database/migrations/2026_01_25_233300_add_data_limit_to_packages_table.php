@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('packages', function (Blueprint $table) {
-            $table->bigInteger('data_limit')->nullable()->after('bandwidth_download')->comment('Data limit in bytes, NULL for unlimited');
+            $table->bigInteger('data_limit')->nullable()->after('bandwidth_down')->comment('Data limit in bytes, NULL for unlimited');
         });
     }
 

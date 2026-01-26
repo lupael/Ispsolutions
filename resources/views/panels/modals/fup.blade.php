@@ -11,12 +11,12 @@
             </div>
         @endif
 
-        @if($package->bandwidth_upload || $package->bandwidth_download)
+        @if($package->bandwidth_up || $package->bandwidth_down)
             <div class="border-l-4 border-green-500 pl-4 py-2">
                 <h5 class="font-semibold text-sm text-gray-700 dark:text-gray-300">Bandwidth</h5>
                 <p class="text-gray-600 dark:text-gray-400">
-                    Download: {{ $package->bandwidth_download ?? 'Unlimited' }} Mbps<br>
-                    Upload: {{ $package->bandwidth_upload ?? 'Unlimited' }} Mbps
+                    Download: {{ $package->bandwidth_down ?? 'Unlimited' }} Mbps<br>
+                    Upload: {{ $package->bandwidth_up ?? 'Unlimited' }} Mbps
                 </p>
             </div>
         @endif

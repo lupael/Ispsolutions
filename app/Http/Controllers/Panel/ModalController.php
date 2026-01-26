@@ -37,7 +37,10 @@ class ModalController extends Controller
      */
     public function showQuickAction(NetworkUser $customer, string $action): View
     {
-        $this->authorize('update', $customer);
+        // Check if user can access this customer (tenant scoping)
+        if ($customer->tenant_id !== auth()->user()->tenant_id) {
+            abort(403, 'Unauthorized access to customer');
+        }
 
         // Validate action
         $allowedActions = ['activate', 'suspend', 'recharge'];
@@ -56,7 +59,13 @@ class ModalController extends Controller
      */
     public function executeQuickAction(Request $request, NetworkUser $customer, string $action)
     {
-        $this->authorize('update', $customer);
+        // Check if user can access this customer (tenant scoping)
+        if ($customer->tenant_id !== auth()->user()->tenant_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to customer'
+            ], 403);
+        }
 
         switch ($action) {
             case 'activate':
@@ -80,17 +89,11 @@ class ModalController extends Controller
                 ]);
 
             case 'recharge':
-                // Handle recharge logic
-                $validated = $request->validate([
-                    'amount' => 'required|numeric|min:0',
-                    'method' => 'required|string'
-                ]);
-
-                // TODO: Implement recharge logic
+                // Recharge logic not implemented yet
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Recharge processed successfully'
-                ]);
+                    'success' => false,
+                    'message' => 'Recharge operation not implemented'
+                ], 501);
 
             default:
                 return response()->json([

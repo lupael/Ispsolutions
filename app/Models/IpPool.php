@@ -36,19 +36,6 @@ class IpPool extends Model
     }
 
     /**
-     * Get utilization percentage
-     */
-    public function utilizationPercent(): float
-    {
-        $total = $this->total_ips;
-        if ($total === 0) {
-            return 0;
-        }
-
-        return round(($this->used_ips / $total) * 100, 1);
-    }
-
-    /**
      * Calculate the total number of IPs in this pool
      */
     public function getTotalIpsAttribute(): int
@@ -65,7 +52,34 @@ class IpPool extends Model
             return 0;
         }
 
-        return (int) abs($endLong - $startLong) + 1;
+        // Invalid range: start IP is greater than end IP
+        if ($startLong > $endLong) {
+            return 0;
+        }
+
+        return (int) ($endLong - $startLong) + 1;
+    }
+
+    /**
+     * Calculate the number of used IPs
+     */
+    public function getUsedIpsAttribute(): int
+    {
+        // Count allocated IPs from subnets or allocations
+        return $this->subnets()->count();
+    }
+
+    /**
+     * Get utilization percentage
+     */
+    public function utilizationPercent(): float
+    {
+        $total = $this->total_ips;
+        if ($total === 0) {
+            return 0;
+        }
+
+        return round(($this->used_ips / $total) * 100, 1);
     }
 
     /**

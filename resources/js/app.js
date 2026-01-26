@@ -2,8 +2,8 @@ import './bootstrap';
 import Alpine from 'alpinejs';
 import AnalyticsManager from './analytics';
 import ApexCharts from 'apexcharts';
-import './modal-helper';
 import './bulk-actions';
+import './form-validation';
 
 // Start Alpine.js
 window.Alpine = Alpine;

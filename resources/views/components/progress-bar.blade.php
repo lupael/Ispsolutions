@@ -14,33 +14,24 @@
     
     // Determine color class based on threshold
     $colorClass = match(true) {
-        $percentage >= 90 => 'bg-danger',
-        $percentage >= 70 => 'bg-warning',
-        default => 'bg-success',
+        $percentage >= 90 => 'bg-red-600',
+        $percentage >= 70 => 'bg-yellow-500',
+        default => 'bg-green-600',
     };
-    
-    // Combine classes
-    $progressBarClasses = $colorClass;
-    if ($animated) {
-        $progressBarClasses .= ' progress-bar-animated';
-    }
-    if ($striped) {
-        $progressBarClasses .= ' progress-bar-striped';
-    }
     
     // Format label
     $displayLabel = $label ?: "$current / $total";
 @endphp
 
-<div class="progress {{ $height }}" style="min-height: 20px;">
-    <div class="progress-bar {{ $progressBarClasses }}" 
-         role="progressbar" 
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full {{ $height }} overflow-hidden">
+    <div class="{{ $colorClass }} {{ $height }} rounded-full flex items-center justify-center text-white text-xs font-semibold transition-all duration-300" 
          style="width: {{ $percentage }}%"
+         role="progressbar" 
          aria-valuenow="{{ $current }}" 
          aria-valuemin="0" 
          aria-valuemax="{{ $total }}">
         @if($showLabel || $showPercentage)
-            <span class="d-flex align-items-center justify-content-center h-100 text-white fw-bold" style="font-size: 0.85rem;">
+            <span class="px-2">
                 @if($showLabel)
                     {{ $displayLabel }}
                 @endif

@@ -11,7 +11,7 @@
             
             <select 
                 data-bulk-action-select 
-                class="form-select text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md"
+                class="text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500"
             >
                 <option value="">Select Action...</option>
                 @foreach($actions as $action)
@@ -24,7 +24,7 @@
             <button 
                 type="button" 
                 data-bulk-action-button 
-                class="btn btn-primary text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                class="text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled
             >
                 <span data-action-text>Apply Action</span>
@@ -32,8 +32,8 @@
             
             <button 
                 type="button" 
-                onclick="document.querySelectorAll('[data-bulk-select-item]').forEach(cb => cb.checked = false); bulkActionsManager.updateUI();"
-                class="btn btn-secondary text-sm px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md"
+                onclick="document.querySelectorAll('[data-bulk-select-item]').forEach(cb => { if (cb.checked) { cb.checked = false; cb.dispatchEvent(new Event('change', { bubbles: true })); } }); if (window.bulkActionsManager) window.bulkActionsManager.updateUI();"
+                class="text-sm px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
             >
                 Clear Selection
             </button>

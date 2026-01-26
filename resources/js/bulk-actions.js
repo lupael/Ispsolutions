@@ -15,11 +15,17 @@ class BulkActionsManager {
         this.itemCheckboxes = this.container.querySelectorAll('[data-bulk-select-item]');
         this.bulkActionButton = document.querySelector('[data-bulk-action-button]');
         this.bulkActionSelect = document.querySelector('[data-bulk-action-select]');
+        this.originalButtonText = null; // Store original button text once
         
         this.init();
     }
 
     init() {
+        // Store original button text
+        if (this.bulkActionButton) {
+            this.originalButtonText = this.bulkActionButton.innerHTML;
+        }
+
         // Select all functionality
         if (this.selectAllCheckbox) {
             this.selectAllCheckbox.addEventListener('change', (e) => {
@@ -66,12 +72,13 @@ class BulkActionsManager {
         const selectedCount = this.getSelectedCount();
         if (this.bulkActionButton) {
             this.bulkActionButton.disabled = selectedCount === 0;
-            
-            const countBadge = this.bulkActionButton.querySelector('[data-selected-count]');
-            if (countBadge) {
-                countBadge.textContent = selectedCount;
-            }
         }
+
+        // Update selected count anywhere in the container
+        const countBadges = document.querySelectorAll('[data-selected-count]');
+        countBadges.forEach(badge => {
+            badge.textContent = selectedCount;
+        });
 
         // Update button text
         const actionText = this.bulkActionButton?.querySelector('[data-action-text]');
@@ -186,12 +193,12 @@ class BulkActionsManager {
     setLoadingState(loading) {
         if (this.bulkActionButton) {
             this.bulkActionButton.disabled = loading;
-            const originalText = this.bulkActionButton.textContent;
             
             if (loading) {
                 this.bulkActionButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
             } else {
-                this.bulkActionButton.textContent = originalText;
+                // Restore from stored original text
+                this.bulkActionButton.innerHTML = this.originalButtonText || 'Apply Action';
             }
         }
     }
