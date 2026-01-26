@@ -134,7 +134,8 @@ For example, if a controller uses:
 ```php
 protected function getViewPrefix(): string
 {
-    return $this->isAdminContext() 
+    // Determine panel context based on user role or route
+    return auth()->user()->isAdmin() 
         ? 'panels.admin.master-packages' 
         : 'panels.developer.master-packages';
 }
@@ -159,7 +160,7 @@ When you use the `--suggest-links` option, the command provides intelligent sugg
       Controller: App\Http\Controllers\Panel\IpPoolsController ✗
       Suggestion: Create controller or add route:
         Route (in web.php, admin section):
-          Route::get('/ip-pools', [YourController::class, 'migrationProgress'])->name('ip-pools.migration-progress');
+          Route::get('/ip-pools', [App\Http\Controllers\Panel\IpPoolsController::class, 'migrationProgress'])->name('ip-pools.migration-progress');
         Controller method:
           public function migrationProgress() {
               return view('panels.admin.ip-pools.migration-progress');
