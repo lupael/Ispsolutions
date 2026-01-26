@@ -6,7 +6,7 @@ This is a quick reference for the required configuration implemented in this PR.
 
 ```bash
 # Currency Symbol
-APP_CURRENCY_SYMBOL=৳  # or $, €, £, ₹, etc.
+APP_CURRENCY=৳  # or $, €, £, ₹, etc.
 
 # Tax Rate (percentage)
 BILLING_TAX_RATE=15  # 15%
@@ -72,7 +72,7 @@ Grant these permissions to operators via Admin Panel:
 ```bash
 # Test config loading
 php artisan tinker --execute="
-  echo 'Currency: ' . config('app.currency_symbol') . PHP_EOL;
+  echo 'Currency: ' . config('app.currency') . PHP_EOL;
   echo 'Tax Rate: ' . config('billing.tax_rate') . '%' . PHP_EOL;
   echo 'SMS: ' . (config('sms.enabled') ? 'Enabled' : 'Disabled') . PHP_EOL;
 "

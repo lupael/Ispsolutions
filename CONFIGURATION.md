@@ -86,7 +86,7 @@ The system supports the following billing types (defined in `config/billing.php`
 Configure the currency symbol displayed throughout the application in `config/app.php` or via environment variable:
 
 ```env
-APP_CURRENCY_SYMBOL=$
+APP_CURRENCY=$
 ```
 
 Common currency symbols:
@@ -108,7 +108,7 @@ The currency symbol is used in:
 Access the currency symbol in your code:
 
 ```php
-$symbol = config('app.currency_symbol');
+$symbol = config('app.currency');
 ```
 
 ## SMS Gateway Configuration
@@ -201,7 +201,7 @@ APP_NAME="ISP Solution"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://your-domain.com
-APP_CURRENCY_SYMBOL=৳
+APP_CURRENCY=৳
 
 # Billing
 BILLING_TAX_RATE=15
