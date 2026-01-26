@@ -1815,7 +1815,7 @@ class AdminController extends Controller
             ->select('id', 'name', 'ip_address', 'status')
             ->get()
             ->map(function ($router) {
-                return [
+                return (object) [
                     'id' => $router->id,
                     'name' => $router->name,
                     'type' => 'router',
@@ -1831,7 +1831,7 @@ class AdminController extends Controller
             ->select('id', 'short_name', 'nas_name', 'description', 'status')
             ->get()
             ->map(function ($device) {
-                return [
+                return (object) [
                     'id' => $device->id,
                     'name' => $device->short_name,
                     'type' => 'nas',
@@ -3552,8 +3552,12 @@ class AdminController extends Controller
 
         $stats = [
             'total' => MikrotikRouter::where('tenant_id', $tenantId)->count(),
-            'online' => 0,  // To be implemented with actual status check
-            'offline' => 0,  // To be implemented with actual status check
+            'online' => MikrotikRouter::where('tenant_id', $tenantId)
+                ->where('status', 'online')
+                ->count(),
+            'offline' => MikrotikRouter::where('tenant_id', $tenantId)
+                ->where('status', 'offline')
+                ->count(),
         ];
 
         return view('panels.admin.mikrotik.monitoring', compact('routers', 'stats'));
@@ -3595,17 +3599,27 @@ class AdminController extends Controller
         ]);
 
         try {
-            // This would integrate with MikrotikService to apply configuration
-            // For now, return success response
-            return response()->json([
-                'success' => true,
-                'message' => 'Configuration applied successfully',
-                'router' => $router->name,
+            // TODO: Integrate with MikrotikService to apply actual configuration
+            // Currently this is a placeholder that validates the request structure
+            // but does not push configuration to the router
+            
+            \Log::info('Mikrotik configuration request', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'config_type' => $validated['config_type'],
+                'settings' => $validated['settings'],
             ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Configuration feature is not yet fully implemented. Configuration validation passed but changes were not applied to the router.',
+                'router' => $router->name,
+                'note' => 'Integration with MikrotikService is required to apply actual configuration.',
+            ], 501);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to apply configuration: ' . $e->getMessage(),
+                'message' => 'Failed to process configuration: ' . $e->getMessage(),
             ], 500);
         }
     }

@@ -138,10 +138,16 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok && response.headers.get('content-type')?.includes('text/html')) {
+                throw new Error('Server returned HTML instead of JSON. Please check validation.');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 resultDiv.innerHTML = '<p class="text-green-600">' + data.message + '</p>';
