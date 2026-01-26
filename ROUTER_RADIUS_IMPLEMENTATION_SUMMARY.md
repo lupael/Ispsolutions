@@ -494,21 +494,45 @@ All core functionality has been implemented and is accessible through the Admin 
 
 ### Admin Panel Routes (All Functional)
 
-#### 1. NAS (Network Access Server) Management
-**Location:** `/panel/admin/network/nas`
+#### Unified Router Management
+**Location:** `/panel/admin/network/routers`
+
+The router management interface has been unified to provide a single access point for all router types:
+- **MikroTik Routers** - Primary router management
+- **NAS Devices** - Network Access Server configuration (via tabs)
+- **Cisco Devices** - Cisco network device management (via tabs)
+
+**Navigation:** Admin Panel → Network Devices → Routers
+
+From the main Routers page, you can switch between device types using the tabs at the top.
+
+#### 1. Router Management (MikroTik, NAS, Cisco)
+**Location:** `/panel/admin/network/routers` (with tabs for each type)
 
 **Available Operations:**
-- ✅ **List NAS Devices** - View all configured NAS devices
-- ✅ **Create NAS** - Add new RADIUS NAS with authentication settings
-- ✅ **Edit NAS** - Update NAS configuration (IP, ports, secrets)
-- ✅ **Delete NAS** - Remove NAS devices
-- ✅ **Test Connection** - Verify connectivity to NAS devices
+- ✅ **List Routers** - View all configured routers (MikroTik, NAS, Cisco)
+- ✅ **Create Router** - Add new router with authentication settings
+- ✅ **Edit Router** - Update router configuration (IP, ports, credentials)
+- ✅ **Delete Router** - Remove routers
+- ✅ **Test Connection** - Verify connectivity to routers
 
-**Controller:** `App\Http\Controllers\Panel\NasController`
-**Views:** `resources/views/panels/admin/nas/`
+**Tab Navigation:**
+- **MikroTik Routers** tab - `/panel/admin/network/routers`
+- **NAS Devices** tab - `/panel/admin/network/nas`
+- **Cisco Devices** tab - `/panel/admin/cisco`
+
+**Controllers:** 
+- `App\Http\Controllers\Panel\AdminController` (MikroTik)
+- `App\Http\Controllers\Panel\NasController` (NAS)
+- `App\Http\Controllers\Panel\AdminController` (Cisco)
+
+**Views:** 
+- `resources/views/panels/admin/network/routers.blade.php`
+- `resources/views/panels/admin/nas/index.blade.php`
+- `resources/views/panels/admin/cisco/index.blade.php`
 
 #### 2. Router Configuration Management
-**Location:** `/panel/admin/routers/configuration/{routerId}`
+**Location:** Accessible from individual router actions in the router list
 
 **Available Operations:**
 - ✅ **Configuration Dashboard** - View router status and configuration
@@ -516,11 +540,14 @@ All core functionality has been implemented and is accessible through the Admin 
 - ✅ **Configure PPP** - Configure PPP settings and profiles
 - ✅ **RADIUS Status** - Check RADIUS connection status
 
+**Access:** Click "Configure" button on any router in the list, or navigate to:
+- `/panel/admin/routers/configuration/{routerId}`
+
 **Controller:** `App\Http\Controllers\Panel\RouterConfigurationController`
 **Views:** `resources/views/panels/admin/network/router-configure.blade.php`
 
 #### 3. Router Backup Management
-**Location:** `/panel/admin/routers/backup/{routerId}`
+**Location:** Accessible from individual router actions in the router list
 
 **Available Operations:**
 - ✅ **List Backups** - View all router backups
@@ -530,11 +557,14 @@ All core functionality has been implemented and is accessible through the Admin 
 - ✅ **Delete Backup** - Remove old backups
 - ✅ **Cleanup Old Backups** - Automated cleanup
 
+**Access:** Click "Backups" button on any router in the list, or navigate to:
+- `/panel/admin/routers/backup/{routerId}`
+
 **Controller:** `App\Http\Controllers\Panel\RouterBackupController`
 **Views:** `resources/views/panels/admin/network/router-backups.blade.php`
 
 #### 4. Router Failover Management
-**Location:** `/panel/admin/routers/failover/{routerId}`
+**Location:** Accessible from individual router actions in the router list
 
 **Available Operations:**
 - ✅ **Configure Failover** - Set up automatic failover
@@ -542,11 +572,14 @@ All core functionality has been implemented and is accessible through the Admin 
 - ✅ **View Failover Status** - Monitor current authentication mode
 - ✅ **Test RADIUS Connection** - Verify RADIUS availability
 
+**Access:** Click "Failover" button on any router in the list, or navigate to:
+- `/panel/admin/routers/failover/{routerId}`
+
 **Controller:** `App\Http\Controllers\Panel\RouterFailoverController`
 **Views:** `resources/views/panels/admin/network/components/failover-status.blade.php`
 
 #### 5. Router Provisioning
-**Location:** `/panel/admin/routers/provision/{routerId}`
+**Location:** Accessible from individual router actions in the router list
 
 **Available Operations:**
 - ✅ **Provisioning Dashboard** - View provisioning status
@@ -554,17 +587,22 @@ All core functionality has been implemented and is accessible through the Admin 
 - ✅ **View Provisioning Logs** - Audit trail of provisioning actions
 - ✅ **View Backups** - List backups for this router
 
+**Access:** Click "Provision" button on any router in the list, or navigate to:
+- `/panel/admin/routers/provision/{routerId}`
+
 **Controller:** `App\Http\Controllers\Panel\RouterProvisioningController`
 **Views:** `resources/views/panels/admin/routers/provision.blade.php`
 
 #### 6. Router Data Import
-**Location:** `/panel/admin/network/router-import`
+**Location:** Accessible from router list page or direct navigation
 
 **Available Operations:**
 - ✅ **Import IP Pools** - Import IP pool configurations
 - ✅ **Import PPP Profiles** - Import speed profiles from router
 - ✅ **Import PPP Secrets** - Import customer accounts from router
 - ✅ **Import All** - Bulk import all data
+
+**Access:** Navigate to `/panel/admin/network/router-import`
 
 **Controller:** `App\Http\Controllers\Panel\MikrotikImportController`
 **Views:** `resources/views/panels/admin/network/router-import.blade.php`
@@ -618,24 +656,28 @@ All services are fully implemented and production-ready:
 To verify the implementation in your Admin Panel:
 
 1. **Login as Admin**
-2. **Navigate to Network → NAS** - Verify NAS management interface loads
-3. **Navigate to Network → Routers** - Select a router
-4. **Access Router Actions:**
-   - Configuration (RADIUS setup)
-   - Backups (backup management)
-   - Failover (authentication mode switching)
-   - Provisioning (customer management)
+2. **Navigate to Network Devices → Routers** - Opens unified router management page
+3. **Switch Between Device Types:**
+   - Click "MikroTik Routers" tab to view MikroTik devices
+   - Click "NAS Devices" tab to view NAS configurations
+   - Click "Cisco Devices" tab to view Cisco equipment
+4. **Access Router Actions** (from any router in the list):
+   - Click "Configure" - RADIUS and PPP setup
+   - Click "Backups" - Backup management
+   - Click "Failover" - Authentication mode switching
+   - Click "Provision" - Customer provisioning
 5. **Test RADIUS Functionality:**
-   - Create a test NAS device
-   - Configure RADIUS on a router
+   - Create a test NAS device (via NAS Devices tab)
+   - Configure RADIUS on a MikroTik router
    - Provision a test user
    - Check RADIUS logs
 
-All features are accessible and functional through the standard admin panel navigation.
+All features are accessible through the unified router management interface with tabbed navigation.
 
 ---
 
-**Document Version:** 2.0  
+**Document Version:** 3.0  
 **Last Updated:** 2026-01-26  
 **Status:** ✅ Implementation Complete - Production Ready  
+**Navigation:** Unified router management with consolidated menu items
 **Next Review:** Post-deployment monitoring
