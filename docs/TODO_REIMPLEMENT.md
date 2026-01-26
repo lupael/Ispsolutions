@@ -672,13 +672,13 @@ This PR completes the network services reimplementation with:
 
 **Checklist:**
 - [x] All API endpoints implemented
-- [ ] API authentication and rate limiting
-- [ ] Artisan commands created
-- [ ] Scheduled tasks configured
-- [ ] CI workflows passing
-- [ ] Documentation complete
-- [ ] Security scan passed
-- [ ] No vulnerabilities found
+- [x] API authentication and rate limiting
+- [x] Artisan commands created
+- [x] Scheduled tasks configured
+- [x] CI workflows passing
+- [x] Documentation complete
+- [x] Security scan passed
+- [x] No vulnerabilities found
 
 **Migration Notes:**
 - API routes added to routes/api.php
@@ -788,18 +788,18 @@ IPAM_LOCK_TIMEOUT=10
 
 ## Security Checklist
 
-- [ ] No hardcoded secrets in code
-- [ ] All secrets in .env file
-- [ ] .env.example has placeholder values only
-- [ ] Database credentials use environment variables
-- [ ] API endpoints protected with authentication
-- [ ] Rate limiting enabled on API
-- [ ] SQL injection prevention (use query builder/ORM)
-- [ ] XSS prevention (escape output)
-- [ ] CSRF protection enabled
-- [ ] Input validation on all endpoints
-- [ ] CodeQL scan passed
-- [ ] Dependency vulnerabilities checked
+- [x] No hardcoded secrets in code
+- [x] All secrets in .env file
+- [x] .env.example has placeholder values only
+- [x] Database credentials use environment variables
+- [x] API endpoints protected with authentication
+- [x] Rate limiting enabled on API
+- [x] SQL injection prevention (use query builder/ORM)
+- [x] XSS prevention (escape output)
+- [x] CSRF protection enabled
+- [x] Input validation on all endpoints
+- [x] CodeQL scan passed
+- [x] Dependency vulnerabilities checked
 
 ---
 

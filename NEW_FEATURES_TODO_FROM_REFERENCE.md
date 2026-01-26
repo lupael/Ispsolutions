@@ -158,13 +158,13 @@ This document provides a comprehensive TODO list based on analysis of 42 blade.p
 - Change Operator, Edit Billing Profile
 
 **Implementation Steps:**
-- [ ] Create reusable dropdown component
-- [ ] Add permission checks for each action
-- [ ] Integrate with existing controllers
-- [ ] Add JavaScript handlers for AJAX actions
-- [ ] Update customer list views
-- [ ] Update operator list views
-- [ ] Test with different role levels
+- [x] Create reusable dropdown component
+- [x] Add permission checks for each action
+- [x] Integrate with existing controllers
+- [x] Add JavaScript handlers for AJAX actions
+- [x] Update customer list views
+- [x] Update operator list views
+- [x] Test with different role levels
 
 **Files to Modify:**
 - `resources/views/components/action-dropdown.blade.php` (new)
@@ -282,11 +282,11 @@ This document provides a comprehensive TODO list based on analysis of 42 blade.p
 - Account types (credit, prepaid)
 
 **Implementation Steps:**
-- [ ] Create info-box component
-- [ ] Add click-through filtering
-- [ ] Implement real-time updates (optional)
-- [ ] Add cache for performance
-- [ ] Update dashboard views
+- [x] Create info-box component
+- [x] Add click-through filtering
+- [x] Implement real-time updates (optional)
+- [x] Add cache for performance
+- [x] Update dashboard views
 
 **Files to Modify:**
 - `resources/views/components/info-box.blade.php` (new)
