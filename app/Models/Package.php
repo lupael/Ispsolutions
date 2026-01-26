@@ -27,17 +27,22 @@ class Package extends Model
         'data_limit',
         'validity_days',
         'billing_type',
+        'billing_cycle',
+        'daily_rate',
+        'allow_partial_day',
         'status',
         'is_global',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'daily_rate' => 'decimal:2',
         'bandwidth_upload' => 'integer',
         'bandwidth_download' => 'integer',
         'data_limit' => 'integer',
         'validity_days' => 'integer',
         'is_global' => 'boolean',
+        'allow_partial_day' => 'boolean',
         'master_package_id' => 'integer',
         'operator_package_rate_id' => 'integer',
         'created_at' => 'datetime',

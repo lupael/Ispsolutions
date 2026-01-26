@@ -267,6 +267,9 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     // Billing Profiles Management
     Route::resource('billing-profiles', \App\Http\Controllers\Panel\BillingProfileController::class);
 
+    // Special Permissions Management
+    Route::resource('special-permissions', \App\Http\Controllers\Panel\SpecialPermissionController::class)->except(['show', 'edit', 'update']);
+
     // Wallet Management
     Route::get('/users/{user}/wallet/adjust', [\App\Http\Controllers\Panel\WalletController::class, 'adjustForm'])->name('wallet.adjust-form');
     Route::post('/users/{user}/wallet/adjust', [\App\Http\Controllers\Panel\WalletController::class, 'adjust'])->middleware('password.confirm')->name('wallet.adjust');

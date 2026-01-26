@@ -206,16 +206,44 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php
-                                        $statusClass = match($router->status ?? 'offline') {
+                                        $apiStatus = $router->api_status ?? 'unknown';
+                                        $statusClass = match($apiStatus) {
                                             'online' => 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
                                             'warning' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100',
-                                            'critical' => 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100',
+                                            'offline' => 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100',
                                             default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                                         };
+                                        $statusIcon = match($apiStatus) {
+                                            'online' => '●',
+                                            'warning' => '●',
+                                            'offline' => '●',
+                                            default => '○',
+                                        };
+                                        $iconColor = match($apiStatus) {
+                                            'online' => 'text-green-600',
+                                            'warning' => 'text-yellow-600',
+                                            'offline' => 'text-red-600',
+                                            default => 'text-gray-400',
+                                        };
                                     @endphp
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
-                                        {{ ucfirst($router->status ?? 'offline') }}
-                                    </span>
+                                    <div class="flex items-center">
+                                        <span class="{{ $iconColor }} text-2xl mr-2">{{ $statusIcon }}</span>
+                                        <div>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
+                                                {{ ucfirst($apiStatus) }}
+                                            </span>
+                                            @if($router->last_checked_at)
+                                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    {{ $router->last_checked_at->diffForHumans() }}
+                                                </div>
+                                            @endif
+                                            @if($router->response_time_ms && $apiStatus === 'online')
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $router->response_time_ms }}ms
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {{ $router->uptime ?? 'N/A' }}

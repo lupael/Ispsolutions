@@ -24,6 +24,10 @@ class MikrotikRouter extends Model
         'username',
         'password',
         'status',
+        'api_status',
+        'last_checked_at',
+        'last_error',
+        'response_time_ms',
     ];
 
     protected $hidden = [
@@ -33,6 +37,8 @@ class MikrotikRouter extends Model
     protected $casts = [
         'password' => 'encrypted',
         'api_port' => 'integer',
+        'last_checked_at' => 'datetime',
+        'response_time_ms' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
