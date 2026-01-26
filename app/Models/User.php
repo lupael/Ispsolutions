@@ -835,7 +835,7 @@ class User extends Authenticatable
     /**
      * Get current active package (from networkUser if available, otherwise servicePackage)
      * 
-     * Note: This differs from the package() relationship method (line 170):
+     * Note: This differs from the package() relationship method (line 175):
      * - package() returns User's subscription/billing package (service_package_id)
      * - currentPackage returns NetworkUser's active network service package
      * Use currentPackage when displaying the customer's actual network service details.
