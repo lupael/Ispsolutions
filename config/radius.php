@@ -13,6 +13,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | RADIUS Server Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for RADIUS server connectivity.
+    |
+    */
+    'server_ip' => env('RADIUS_SERVER_IP', '127.0.0.1'),
+    'authentication_port' => env('RADIUS_AUTH_PORT', 1812),
+    'accounting_port' => env('RADIUS_ACCT_PORT', 1813),
+    'interim_update' => env('RADIUS_INTERIM_UPDATE', '5m'),
+    'primary_authenticator' => env('RADIUS_PRIMARY_AUTH', 'hybrid'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Settings
     |--------------------------------------------------------------------------
     |
@@ -36,6 +50,20 @@ return [
     */
     'accounting' => [
         'session_timeout' => env('RADIUS_SESSION_TIMEOUT', 86400), // 24 hours
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Netwatch Failover Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Settings for automatic failover using MikroTik Netwatch.
+    |
+    */
+    'netwatch' => [
+        'enabled' => env('RADIUS_NETWATCH_ENABLED', true),
+        'interval' => env('RADIUS_NETWATCH_INTERVAL', '1m'),
+        'timeout' => env('RADIUS_NETWATCH_TIMEOUT', '1s'),
     ],
 
     /*
