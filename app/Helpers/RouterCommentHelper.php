@@ -6,6 +6,7 @@ namespace App\Helpers;
 
 use App\Models\MikrotikRouter;
 use App\Models\NetworkUser;
+use Illuminate\Support\Facades\Log;
 
 class RouterCommentHelper
 {
@@ -85,7 +86,7 @@ class RouterCommentHelper
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('Failed to update router comment', [
+            Log::error('Failed to update router comment', [
                 'user_id' => $user->id,
                 'username' => $user->username,
                 'router_id' => $router->id,

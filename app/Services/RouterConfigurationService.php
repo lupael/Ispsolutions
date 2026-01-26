@@ -190,8 +190,9 @@ class RouterConfigurationService
             }
 
             // Configure PPPoE server
+            // Note: '0' => 'default-profile' sets the default profile for the first PPPoE server interface
             $api->comm('/interface/pppoe-server/server/set', [
-                '0' => 'default-profile',
+                '0' => 'default-profile', // MikroTik API index for the first server interface
                 'service-name' => config('app.name', 'ISP Solution'),
                 'authentication' => 'pap,chap,mschap1,mschap2',
                 'keepalive-timeout' => '10',

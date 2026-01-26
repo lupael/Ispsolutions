@@ -220,6 +220,12 @@ class RouterBackupService
 
     /**
      * Restore configuration from backup
+     * 
+     * Note: This is a placeholder implementation. Full restore functionality requires:
+     * 1. Parsing the backup JSON data structure
+     * 2. Applying configurations in the correct order via MikroTik API
+     * 3. Handling conflicts and validation
+     * This should be implemented based on specific backup format and requirements.
      */
     public function restoreFromBackup(MikrotikRouter $router, RouterConfigurationBackup $backup): bool
     {
@@ -229,17 +235,19 @@ class RouterBackupService
             }
 
             // Implementation depends on router API
-            // This is a placeholder that would need actual router API integration
-            Log::info('Restore from backup initiated', [
+            Log::warning('Restore from backup called - placeholder implementation', [
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
                 'backup_name' => $backup->backup_name,
             ]);
 
             // TODO: Implement actual restore logic via MikroTik API
-            // This would involve parsing the backup data and applying it to the router
+            // This would involve:
+            // 1. Parsing $backup->backup_data JSON
+            // 2. Applying each configuration section via MikroTik API
+            // 3. Validating the restored configuration
             
-            return true;
+            throw new \Exception('Restore from backup is not yet implemented');
         } catch (\Exception $e) {
             Log::error('Restore from backup failed', [
                 'router_id' => $router->id,
