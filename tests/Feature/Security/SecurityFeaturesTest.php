@@ -170,4 +170,41 @@ class SecurityFeaturesTest extends TestCase
             );
         }
     }
+
+    public function test_password_confirmation_routes_exist(): void
+    {
+        // Verify password.confirm route is registered
+        $this->assertTrue(
+            \Illuminate\Support\Facades\Route::has('password.confirm'),
+            'password.confirm route should be registered'
+        );
+
+        // Test the GET route is accessible to authenticated users
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->get(route('password.confirm'));
+        $response->assertStatus(200);
+        $response->assertViewIs('auth.confirm-password');
+    }
+
+    public function test_password_confirmation_validation_works(): void
+    {
+        $user = User::factory()->create([
+            'password' => bcrypt('correct-password'),
+        ]);
+
+        // Test with incorrect password
+        $response = $this->actingAs($user)->post(route('password.confirm'), [
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertSessionHasErrors('password');
+
+        // Test with correct password
+        $response = $this->actingAs($user)->post(route('password.confirm'), [
+            'password' => 'correct-password',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+    }
 }
