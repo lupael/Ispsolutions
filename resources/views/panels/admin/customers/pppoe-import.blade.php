@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const routerIdInput = document.getElementById('router_id');
     const form = deviceSelect ? deviceSelect.closest('form') : null;
 
-    if (deviceSelect) {
+    if (deviceSelect && nasIdInput && routerIdInput) {
         deviceSelect.addEventListener('change', function() {
             const value = this.value;
 
