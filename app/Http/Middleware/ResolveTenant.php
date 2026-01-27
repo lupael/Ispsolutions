@@ -28,11 +28,6 @@ class ResolveTenant
         // Resolve tenant by domain/subdomain
         $tenant = $this->tenancyService->resolveTenantByDomain($host);
 
-        // If no tenant found by domain and user is authenticated, try resolving from user
-        if (! $tenant && $request->user() && $request->user()->tenant_id) {
-            $tenant = \App\Models\Tenant::find($request->user()->tenant_id);
-        }
-
         // Set current tenant
         $this->tenancyService->setCurrentTenant($tenant);
 
@@ -55,9 +50,6 @@ class ResolveTenant
             'login',
             'register',
             'health',
-            'panel/admin/*',
-            'panel/operator/*',
-            'panel/manager/*',
         ];
 
         foreach ($publicRoutes as $pattern) {
