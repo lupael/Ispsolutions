@@ -58,10 +58,13 @@ All tests passing:
 - ✅ 10/10 TenantIsolationSecurityTest tests
 
 ## Security Considerations
-- Tenant isolation is still enforced at the application level
-- Users can only access data within their assigned tenant
-- The fix only removes the HTTP 404 error for missing tenant resolution
-- Actual data access is still controlled by policies and scopes
+- Tenant isolation is intended to be enforced at the application level, but there are important caveats
+- When tenant resolution fails on allowed panel routes, `TenancyService` would be explicitly set to `null`, which disables `BelongsToTenant` global scoping
+- In multi-tenant installations, this could allow cross-tenant aggregate data (e.g., dashboard counts) to be computed across all tenants unless queries explicitly constrain by the authenticated user's tenant
+- **Mitigation Applied**: The middleware now falls back to resolving the tenant from the authenticated user's `tenant_id` when domain-based resolution fails
+- This ensures that `BelongsToTenant` global scope remains active and properly filters queries by tenant
+- Policies and scopes still apply where they are explicitly used
+- Developers must ensure that data access (including aggregates) derives tenant context from the authenticated user when host-based tenant resolution is not available
 
 ## Impact
 - Admin users can access their panels without tenant configuration
