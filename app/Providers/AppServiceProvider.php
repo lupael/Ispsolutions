@@ -22,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register model observers
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+        \App\Models\MikrotikRouter::observe(\App\Observers\MikrotikRouterObserver::class);
 
         // Configure rate limiters
         \Illuminate\Support\Facades\RateLimiter::for('distributor-api', function (\Illuminate\Http\Request $request) {

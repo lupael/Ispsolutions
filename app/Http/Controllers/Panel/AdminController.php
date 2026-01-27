@@ -76,7 +76,7 @@ class AdminController extends Controller
             $sqlState = $e->getCode();
             $isTableNotFound = $sqlState === '42S02' || str_contains($e->getMessage(), '42S02');
             $isPermissionDenied = $sqlState === '42000' || str_contains($e->getMessage(), '42000');
-            
+
             if ($isTableNotFound || $isPermissionDenied) {
                 $reason = $isTableNotFound ? 'table not found' : 'permission denied';
                 Log::warning("Unable to query radacct table for online/offline status ({$reason})", [
@@ -1917,21 +1917,28 @@ class AdminController extends Controller
             'username' => 'required|string|max:100',
             'password' => 'required|string',
             'port' => 'nullable|integer|min:1|max:65535',
+            'radius_secret' => 'nullable|string|max:255',
+            'public_ip' => 'nullable|ip',
+            'primary_auth' => 'nullable|in:radius,router,hybrid',
             'status' => 'required|in:active,inactive,maintenance',
         ]);
 
         // Map form fields to database columns
-        MikrotikRouter::create([
+        $router = MikrotikRouter::create([
+            'tenant_id' => auth()->user()->tenant_id,
             'name' => $validated['router_name'],
             'ip_address' => $validated['ip_address'],
             'username' => $validated['username'],
             'password' => $validated['password'],
             'api_port' => $validated['port'] ?? 8728,
+            'radius_secret' => $validated['radius_secret'] ?? null,
+            'public_ip' => $validated['public_ip'] ?? null,
+            'primary_auth' => $validated['primary_auth'] ?? 'hybrid',
             'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
         ]);
 
         return redirect()->route('panel.admin.network.routers')
-            ->with('success', 'Router created successfully.');
+            ->with('success', 'Router and NAS entry created successfully. You can now import PPP users from this device.');
     }
 
     /**
@@ -1957,6 +1964,9 @@ class AdminController extends Controller
             'username' => 'required|string|max:100',
             'password' => 'nullable|string',
             'port' => 'nullable|integer|min:1|max:65535',
+            'radius_secret' => 'nullable|string|max:255',
+            'public_ip' => 'nullable|ip',
+            'primary_auth' => 'nullable|in:radius,router,hybrid',
             'status' => 'required|in:active,inactive,maintenance',
         ]);
 
@@ -1966,6 +1976,8 @@ class AdminController extends Controller
             'ip_address' => $validated['ip_address'],
             'username' => $validated['username'],
             'api_port' => $validated['port'] ?? $router->api_port,
+            'public_ip' => $validated['public_ip'] ?? $router->public_ip,
+            'primary_auth' => $validated['primary_auth'] ?? $router->primary_auth,
             'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
         ];
 
@@ -1974,10 +1986,15 @@ class AdminController extends Controller
             $updateData['password'] = $validated['password'];
         }
 
+        // Only update radius_secret if provided
+        if (! empty($validated['radius_secret'])) {
+            $updateData['radius_secret'] = $validated['radius_secret'];
+        }
+
         $router->update($updateData);
 
         return redirect()->route('panel.admin.network.routers')
-            ->with('success', 'Router updated successfully.');
+            ->with('success', 'Router and linked NAS entry updated successfully.');
     }
 
     /**
