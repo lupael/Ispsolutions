@@ -20,6 +20,9 @@ return new class extends Migration
         Schema::table('operator_package_rates', function (Blueprint $table) {
             // Drop the foreign key constraint
             $table->dropForeign(['package_id']);
+            
+            // Drop the old unique constraint that includes package_id
+            $table->dropUnique('unique_tenant_operator_package');
         });
 
         Schema::table('operator_package_rates', function (Blueprint $table) {
@@ -33,6 +36,9 @@ return new class extends Migration
                 ->references('id')
                 ->on('packages')
                 ->onDelete('cascade');
+            
+            // Add unique constraint for master package based records (new system)
+            $table->unique(['tenant_id', 'operator_id', 'master_package_id'], 'unique_tenant_operator_master_package');
         });
     }
 
@@ -44,6 +50,9 @@ return new class extends Migration
         Schema::table('operator_package_rates', function (Blueprint $table) {
             // Drop the foreign key constraint
             $table->dropForeign(['package_id']);
+            
+            // Drop the new unique constraint
+            $table->dropUnique('unique_tenant_operator_master_package');
         });
 
         Schema::table('operator_package_rates', function (Blueprint $table) {
@@ -57,6 +66,9 @@ return new class extends Migration
                 ->references('id')
                 ->on('packages')
                 ->onDelete('cascade');
+            
+            // Re-add the old unique constraint
+            $table->unique(['tenant_id', 'operator_id', 'package_id'], 'unique_tenant_operator_package');
         });
     }
 };
