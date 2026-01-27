@@ -209,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (deviceSelect) {
                     deviceSelect.focus();
                 }
-                return false;
             }
         });
     }
