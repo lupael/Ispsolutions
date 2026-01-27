@@ -49,6 +49,47 @@ class AdminController extends Controller
         // Exclude developer and super-admin from user counts
         $excludedRoleSlugs = ['developer', 'super-admin'];
 
+        // Calculate online/offline customers with error handling for radacct table
+        try {
+            // Base query for customers with network service
+            $totalNetworkCustomers = User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->whereNotNull('username')
+                ->count();
+
+            $onlineCustomers = User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->whereNotNull('username')
+                ->whereIn('username', function ($subQuery) {
+                    $subQuery->select('username')
+                        ->distinct()
+                        ->from('radius.radacct')
+                        ->whereNull('acctstoptime');
+                })
+                ->count();
+
+            // Calculate offline as total minus online for better performance
+            // Note: This includes customers who have never connected (no radacct entries)
+            $offlineCustomers = $totalNetworkCustomers - $onlineCustomers;
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Only swallow "table not found" (SQLSTATE 42S02); rethrow other database errors
+            $sqlState = $e->getCode();
+            if ($sqlState === '42S02' || str_contains($e->getMessage(), '42S02')) {
+                Log::warning('Unable to query radacct table for online/offline status (table not found)', [
+                    'sql_state' => $sqlState,
+                    'error' => $e->getMessage(),
+                ]);
+                $onlineCustomers = 0;
+                $offlineCustomers = 0;
+            } else {
+                Log::error('Database error while querying radacct table for online/offline status', [
+                    'sql_state' => $sqlState,
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
+        }
+
         $stats = [
             'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                 $query->whereIn('slug', $excludedRoleSlugs);
@@ -87,14 +128,8 @@ class AdminController extends Controller
                 ->whereDate('expiry_date', today())
                 ->count(),
             // Additional customer statistics (now using User model)
-            'online_customers' => User::where('operator_level', 100)
-                ->whereNotNull('service_type')
-                ->has('radiusSessions')
-                ->count(),
-            'offline_customers' => User::where('operator_level', 100)
-                ->whereNotNull('service_type')
-                ->doesntHave('radiusSessions')
-                ->count(),
+            'online_customers' => $onlineCustomers,
+            'offline_customers' => $offlineCustomers,
             'suspended_customers' => User::where('operator_level', 100)
                 ->where('status', 'suspended')
                 ->count(),
@@ -145,9 +180,9 @@ class AdminController extends Controller
 
         // Get the role to check its level
         $role = Role::where('slug', $validated['role'])->firstOrFail();
-        
+
         // Authorization check: Verify current user can create users with this role level
-        if (!auth()->user()->canCreateUserWithLevel($role->level)) {
+        if (! auth()->user()->canCreateUserWithLevel($role->level)) {
             abort(403, 'You are not authorized to create users with this role.');
         }
 
@@ -244,7 +279,7 @@ class AdminController extends Controller
      * DEPRECATED: NetworkUser model has been eliminated.
      * Network credentials are now stored directly in the User model.
      * Customers should be managed via customer routes instead.
-     * 
+     *
      * Display network users listing.
      * Enforce tenant isolation - Admin can only see network users in their own tenant.
      */
@@ -252,7 +287,7 @@ class AdminController extends Controller
     public function networkUsers(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $networkUsers = NetworkUser::with(['user', 'package'])
             ->where('tenant_id', $tenantId)
             ->latest()
@@ -278,7 +313,7 @@ class AdminController extends Controller
     public function networkUsersCreate(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $customers = User::where('tenant_id', $tenantId)
             ->whereHas('roles', function ($query) {
                 $query->where('slug', 'customer');
@@ -756,7 +791,7 @@ class AdminController extends Controller
         $roleId = auth()->user()->role_id;
         $refresh = $request->boolean('refresh', false);
         $perPage = $request->input('per_page', session('customers_per_page', 25));
-        
+
         // Save pagination preference
         if ($request->has('per_page')) {
             session(['customers_per_page' => $perPage]);
@@ -925,16 +960,16 @@ class AdminController extends Controller
         try {
             // Load User model (not NetworkUser) since $id is User ID from the show page
             $user = User::with('networkUser')->findOrFail($id);
-            
-            if (!$user->networkUser) {
+
+            if (! $user->networkUser) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Network user not found for this customer.'
+                    'message' => 'Network user not found for this customer.',
                 ], 404);
             }
 
             $networkUser = $user->networkUser;
-            
+
             // Authorize the action
             $this->authorize('update', $user);
 
@@ -947,25 +982,25 @@ class AdminController extends Controller
                     'status' => 'sometimes|in:active,inactive,suspended',
                     'zone_id' => 'nullable|exists:zones,id',
                 ]);
-                
+
                 if (isset($validated['status'])) {
                     $networkUser->update(['status' => $validated['status']]);
                     $updated = true;
                 }
-                
+
                 if ($request->has('zone_id')) {
                     $networkUser->update(['zone_id' => $validated['zone_id']]);
                     $updated = true;
                 }
-                
+
                 // Update User model fields
                 $userValidated = $request->validate([
                     'customer_name' => 'sometimes|string|max:255',
                     'phone' => 'sometimes|string|max:20',
                     'email' => 'sometimes|email|max:255',
                 ]);
-                
-                if (!empty($userValidated)) {
+
+                if (! empty($userValidated)) {
                     $user->update([
                         'name' => $userValidated['customer_name'] ?? $user->name,
                         'phone' => $userValidated['phone'] ?? $user->phone,
@@ -981,16 +1016,16 @@ class AdminController extends Controller
                     'username' => 'sometimes|string|min:3|max:255|unique:network_users,username,' . $networkUser->id . '|regex:/^[a-zA-Z0-9_-]+$/',
                     'password' => 'nullable|string|min:8',
                 ]);
-                
+
                 $updateData = [];
                 if (isset($validated['username'])) {
                     $updateData['username'] = $validated['username'];
                 }
-                if (!empty($validated['password'])) {
+                if (! empty($validated['password'])) {
                     $updateData['password'] = bcrypt($validated['password']);
                 }
-                
-                if (!empty($updateData)) {
+
+                if (! empty($updateData)) {
                     $networkUser->update($updateData);
                     $updated = true;
                 }
@@ -1004,7 +1039,7 @@ class AdminController extends Controller
                     'zip_code' => 'nullable|string|max:20',
                     'state' => 'nullable|string|max:100',
                 ]);
-                
+
                 $user->update($validated);
                 $updated = true;
             }
@@ -1015,12 +1050,12 @@ class AdminController extends Controller
                     'router_id' => 'nullable|exists:mikrotik_routers,id',
                     'ip_address' => 'nullable|ip',
                 ]);
-                
+
                 if (isset($validated['router_id'])) {
                     $networkUser->update(['router_id' => $validated['router_id']]);
                     $updated = true;
                 }
-                
+
                 // Handle IP address - update or create IpAllocation
                 if (isset($validated['ip_address'])) {
                     $ipAllocation = $user->ipAllocations()->first();
@@ -1041,8 +1076,8 @@ class AdminController extends Controller
                 $validated = $request->validate([
                     'mac_address' => 'nullable|string|max:17',
                 ]);
-                
-                if (!empty($validated['mac_address'])) {
+
+                if (! empty($validated['mac_address'])) {
                     $macAddress = $user->macAddresses()->first();
                     if ($macAddress) {
                         $macAddress->update(['mac_address' => $validated['mac_address']]);
@@ -1058,39 +1093,40 @@ class AdminController extends Controller
                 $validated = $request->validate([
                     'comments' => 'nullable|string|max:1000',
                 ]);
-                
+
                 $networkUser->update(['comments' => $validated['comments']]);
                 $updated = true;
             }
 
-            if (!$updated) {
+            if (! $updated) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No valid fields provided for update.'
+                    'message' => 'No valid fields provided for update.',
                 ], 400);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Changes saved successfully.'
+                'message' => 'Changes saved successfully.',
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are not authorized to update this customer.'
+                'message' => 'You are not authorized to update this customer.',
             ], 403);
         } catch (\Exception $e) {
             \Log::error('Failed to update customer: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update customer. Please try again.'
+                'message' => 'Failed to update customer. Please try again.',
             ], 500);
         }
     }
@@ -1118,18 +1154,18 @@ class AdminController extends Controller
     public function customersShow($id): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Load the User model which is what all customer actions expect
         // The $id could be either User ID or NetworkUser ID, so we need to handle both cases
         $customer = User::with([
-            'networkUser.package', 
+            'networkUser.package',
             'networkUser.sessions',
             'ipAllocations',
-            'macAddresses'
+            'macAddresses',
         ])->where('tenant_id', $tenantId)->find($id);
-        
+
         // If not found as User, try finding as NetworkUser and get the related User
-        if (!$customer) {
+        if (! $customer) {
             // Mirror the eager loading done above by loading the same User relations via NetworkUser
             $networkUser = NetworkUser::with([
                 'user.ipAllocations',
@@ -1137,18 +1173,18 @@ class AdminController extends Controller
                 'package',
                 'sessions',
             ])->where('tenant_id', $tenantId)->find($id);
-            
+
             if ($networkUser && $networkUser->user) {
                 $customer = $networkUser->user;
                 $customer->setRelation('networkUser', $networkUser);
             } else {
-                if ($networkUser && !$networkUser->user) {
+                if ($networkUser && ! $networkUser->user) {
                     \Log::warning('NetworkUser found without associated User', ['network_user_id' => $id]);
                 }
                 abort(404, 'Customer not found');
             }
         }
-        
+
         // Load ONU information if the customer has an associated NetworkUser
         $onu = null;
         if ($customer->networkUser) {
@@ -1177,42 +1213,43 @@ class AdminController extends Controller
     {
         try {
             $customer = NetworkUser::with('user')->findOrFail($id);
-            
+
             // Authorization check on the related User model
             if ($customer->user) {
                 $this->authorize('suspend', $customer->user);
             }
-            
+
             // Prevent suspending already suspended customers
             if ($customer->status === 'suspended') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Customer is already suspended.'
+                    'message' => 'Customer is already suspended.',
                 ], 400);
             }
-            
+
             $customer->status = 'suspended';
             $customer->save();
-            
+
             // Clear cache if CustomerCacheService is being used
             if (class_exists('\App\Services\CustomerCacheService')) {
                 \Cache::tags(['customers'])->flush();
             }
-            
+
             return response()->json([
                 'success' => true,
-                'message' => 'Customer suspended successfully.'
+                'message' => 'Customer suspended successfully.',
             ]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are not authorized to suspend this customer.'
+                'message' => 'You are not authorized to suspend this customer.',
             ], 403);
         } catch (\Exception $e) {
             \Log::error('Failed to suspend customer: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to suspend customer. Please try again.'
+                'message' => 'Failed to suspend customer. Please try again.',
             ], 500);
         }
     }
@@ -1224,42 +1261,43 @@ class AdminController extends Controller
     {
         try {
             $customer = NetworkUser::with('user')->findOrFail($id);
-            
+
             // Authorization check on the related User model
             if ($customer->user) {
                 $this->authorize('activate', $customer->user);
             }
-            
+
             // Prevent activating already active customers
             if ($customer->status === 'active') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Customer is already active.'
+                    'message' => 'Customer is already active.',
                 ], 400);
             }
-            
+
             $customer->status = 'active';
             $customer->save();
-            
+
             // Clear cache if CustomerCacheService is being used
             if (class_exists('\App\Services\CustomerCacheService')) {
                 \Cache::tags(['customers'])->flush();
             }
-            
+
             return response()->json([
                 'success' => true,
-                'message' => 'Customer activated successfully.'
+                'message' => 'Customer activated successfully.',
             ]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are not authorized to activate this customer.'
+                'message' => 'You are not authorized to activate this customer.',
             ], 403);
         } catch (\Exception $e) {
             \Log::error('Failed to activate customer: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to activate customer. Please try again.'
+                'message' => 'Failed to activate customer. Please try again.',
             ], 500);
         }
     }
@@ -2107,7 +2145,7 @@ class AdminController extends Controller
     public function devicesMap(): View
     {
         $tenantId = getCurrentTenantId();
-        
+
         // Collect all network devices (routers, NAS, OLT) with location data
         $routers = MikrotikRouter::where('tenant_id', $tenantId)
             ->select('id', 'name', 'ip_address', 'status')
@@ -2642,7 +2680,7 @@ class AdminController extends Controller
             if ($customer && \Illuminate\Support\Facades\Gate::allows('view', $customer)) {
                 $query->where(function ($q) use ($request) {
                     $q->where('user_id', $request->customer_id)
-                      ->orWhere('auditable_id', $request->customer_id);
+                        ->orWhere('auditable_id', $request->customer_id);
                 });
             }
         }
@@ -2768,7 +2806,7 @@ class AdminController extends Controller
                 'active_sessions' => 0,
                 'total_bandwidth' => 0,
             ];
-            
+
             // Flash an informational message
             session()->flash('error', 'RADIUS database table not found. Please ensure RADIUS is properly configured and migrations have been run.');
         }
@@ -2831,7 +2869,7 @@ class AdminController extends Controller
                 'active_sessions' => 0,
                 'total_bandwidth' => 0,
             ];
-            
+
             // Flash an informational message
             session()->flash('error', 'RADIUS database table not found. Please ensure RADIUS is properly configured and migrations have been run.');
         }
@@ -3912,14 +3950,14 @@ class AdminController extends Controller
             // TODO: Integrate with MikrotikService to apply actual configuration
             // Currently this is a placeholder that validates the request structure
             // but does not push configuration to the router
-            
+
             \Log::info('Mikrotik configuration request', [
                 'router_id' => $router->id,
                 'router_name' => $router->name,
                 'config_type' => $validated['config_type'],
                 'settings' => $validated['settings'],
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Configuration feature is not yet fully implemented. Configuration validation passed but changes were not applied to the router.',
@@ -4002,9 +4040,9 @@ class AdminController extends Controller
         ]);
 
         $cardService = new \App\Services\CardDistributionService;
-        
+
         $expiresAt = $validated['expires_at'] ? \Carbon\Carbon::parse($validated['expires_at']) : null;
-        
+
         try {
             $cards = $cardService->generateCards(
                 $validated['quantity'],
@@ -4061,6 +4099,7 @@ class AdminController extends Controller
 
         if ($validated['format'] === 'pdf') {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('panels.admin.cards.export-pdf', compact('cards'));
+
             return $pdf->download('recharge-cards-' . now()->format('Y-m-d') . '.pdf');
         } else {
             // Excel export
@@ -4097,7 +4136,7 @@ class AdminController extends Controller
         $cardService = new \App\Services\CardDistributionService;
         $distributor = User::where('tenant_id', getCurrentTenantId())
             ->findOrFail($validated['distributor_id']);
-        
+
         $assigned = $cardService->assignCardsToDistributor($validated['card_ids'], $distributor);
 
         return redirect()->back()
@@ -4136,32 +4175,33 @@ class AdminController extends Controller
     public function exportIpAnalytics(Request $request)
     {
         $format = $request->get('format', 'pdf');
-        
+
         // Gather analytics data
         $analytics = $this->getIpPoolAnalytics();
         $poolStats = $this->getPoolStats();
         $recentAllocations = $this->getRecentAllocations();
-        
+
         $data = compact('analytics', 'poolStats', 'recentAllocations');
-        
+
         switch ($format) {
             case 'pdf':
                 $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.ip-analytics-pdf', $data);
+
                 return $pdf->download('ip-pool-analytics-' . date('Y-m-d') . '.pdf');
-                
+
             case 'excel':
                 return Excel::download(
                     new \App\Exports\IpAnalyticsExport($data),
                     'ip-pool-analytics-' . date('Y-m-d') . '.xlsx'
                 );
-                
+
             case 'csv':
                 return Excel::download(
                     new \App\Exports\IpAnalyticsExport($data),
                     'ip-pool-analytics-' . date('Y-m-d') . '.csv',
                     \Maatwebsite\Excel\Excel::CSV
                 );
-                
+
             default:
                 abort(400, 'Invalid export format');
         }
@@ -4173,11 +4213,11 @@ class AdminController extends Controller
     protected function getIpPoolAnalytics(): array
     {
         $pools = IpPool::all();
-        
+
         $totalIps = $pools->sum('total_ips');
         $allocatedIps = $pools->sum('used_ips');
         $availableIps = $totalIps - $allocatedIps;
-        
+
         return [
             'total_ips' => $totalIps,
             'allocated_ips' => $allocatedIps,
@@ -4196,12 +4236,12 @@ class AdminController extends Controller
     protected function getPoolStats(): array
     {
         $pools = IpPool::all();
-        
+
         return $pools->map(function ($pool) {
             $totalIps = $pool->total_ips;
             $usedIps = $pool->used_ips;
             $availableIps = $totalIps - $usedIps;
-            
+
             return [
                 'name' => $pool->name,
                 'description' => $pool->description,
@@ -4223,21 +4263,21 @@ class AdminController extends Controller
     protected function getPoolsByType($pools): array
     {
         $byType = [];
-        
+
         foreach ($pools as $pool) {
             $type = $pool->pool_type ?? 'standard';
-            
-            if (!isset($byType[$type])) {
+
+            if (! isset($byType[$type])) {
                 $byType[$type] = [
                     'total' => 0,
                     'allocated' => 0,
                 ];
             }
-            
+
             $byType[$type]['total'] += $pool->total_ips;
             $byType[$type]['allocated'] += $pool->used_ips;
         }
-        
+
         return $byType;
     }
 
@@ -4254,10 +4294,10 @@ class AdminController extends Controller
                 'utilization' => $pool->utilizationPercent(),
             ];
         })
-        ->sortByDesc('utilization')
-        ->take(5)
-        ->values()
-        ->toArray();
+            ->sortByDesc('utilization')
+            ->take(5)
+            ->values()
+            ->toArray();
     }
 
     /**
@@ -4269,14 +4309,14 @@ class AdminController extends Controller
             ->latest()
             ->take(20)
             ->get();
-        
+
         return $allocations->map(function ($allocation) {
             // Get pool name from subnet relationship
             $poolName = 'N/A';
             if ($allocation->subnet && $allocation->subnet->pool) {
                 $poolName = $allocation->subnet->pool->name;
             }
-            
+
             return [
                 'ip_address' => $allocation->ip_address,
                 'pool_name' => $poolName,
