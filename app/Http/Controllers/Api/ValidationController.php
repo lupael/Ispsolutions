@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,7 +45,8 @@ class ValidationController extends Controller
     }
 
     /**
-     * Check if username already exists
+     * Check if username already exists (now uses User model with operator_level = 100).
+     * Note: Migrated from NetworkUser to User model.
      */
     public function checkUsername(Request $request): JsonResponse
     {
@@ -57,7 +57,8 @@ class ValidationController extends Controller
             return response()->json(['exists' => false]);
         }
 
-        $query = NetworkUser::where('username', $username);
+        $query = User::where('username', $username)
+            ->where('operator_level', 100);
         
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);

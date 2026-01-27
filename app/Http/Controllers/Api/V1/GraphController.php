@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
+use App\Models\User;
 use App\Services\RrdGraphService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * GraphController
+ * 
+ * Note: Updated to use User model (operator_level = 100) instead of NetworkUser model.
+ */
 class GraphController extends Controller
 {
     public function __construct(
@@ -50,13 +55,14 @@ class GraphController extends Controller
     }
     
     /**
-     * Get graph for customer by timeframe
+     * Get graph for customer by timeframe.
+     * Note: Now uses User model with operator_level = 100.
      */
     private function getGraph(int $customerId, string $timeframe): JsonResponse
     {
         try {
             // Verify customer exists and user has access
-            $customer = NetworkUser::findOrFail($customerId);
+            $customer = User::where('operator_level', 100)->findOrFail($customerId);
             
             // Check tenant isolation
             if ($customer->tenant_id !== auth()->user()->tenant_id) {

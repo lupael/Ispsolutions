@@ -53,7 +53,10 @@ class AdminController extends Controller
             'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                 $query->whereIn('slug', $excludedRoleSlugs);
             })->count(),
-            'total_network_users' => NetworkUser::count(),
+            // Count customers with network service types (previously NetworkUser count)
+            'total_network_users' => User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->count(),
             'active_users' => User::where('is_active', true)
                 ->whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                     $query->whereIn('slug', $excludedRoleSlugs);
@@ -79,17 +82,28 @@ class AdminController extends Controller
                 ->where('status', 'success')
                 ->sum('amount'),
             'tickets_today' => \App\Models\Ticket::whereDate('created_at', today())->count(),
-            'expiring_today' => NetworkUser::whereDate('expiry_date', today())
-                ->whereHas('user.roles', function ($query) {
-                    $query->where('slug', 'customer');
-                })
+            // Customers expiring today (now using User model)
+            'expiring_today' => User::where('operator_level', 100)
+                ->whereDate('expiry_date', today())
                 ->count(),
-            // Additional customer statistics
-            'online_customers' => NetworkUser::has('sessions')->count(),
-            'offline_customers' => NetworkUser::doesntHave('sessions')->count(),
-            'suspended_customers' => NetworkUser::where('status', 'suspended')->count(),
-            'pppoe_customers' => NetworkUser::where('service_type', 'pppoe')->count(),
-            'hotspot_customers' => NetworkUser::where('service_type', 'hotspot')->count(),
+            // Additional customer statistics (now using User model)
+            'online_customers' => User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->has('radiusSessions')
+                ->count(),
+            'offline_customers' => User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->doesntHave('radiusSessions')
+                ->count(),
+            'suspended_customers' => User::where('operator_level', 100)
+                ->where('status', 'suspended')
+                ->count(),
+            'pppoe_customers' => User::where('operator_level', 100)
+                ->where('service_type', 'pppoe')
+                ->count(),
+            'hotspot_customers' => User::where('operator_level', 100)
+                ->where('service_type', 'hotspot')
+                ->count(),
         ];
 
         return view('panels.admin.dashboard', compact('stats'));
@@ -207,8 +221,13 @@ class AdminController extends Controller
     }
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
+     * Network credentials are now stored directly in the User model.
+     * Customers should be managed via customer routes instead.
+     * 
      * Display network users listing.
      */
+    /*
     public function networkUsers(): View
     {
         $networkUsers = NetworkUser::with(['user', 'package'])->latest()->paginate(20);
@@ -222,10 +241,13 @@ class AdminController extends Controller
 
         return view('panels.admin.network-users.index', compact('networkUsers', 'stats'));
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Show the form for creating a new network user.
      */
+    /*
     public function networkUsersCreate(): View
     {
         $customers = User::whereHas('roles', function ($query) {
@@ -236,10 +258,13 @@ class AdminController extends Controller
 
         return view('panels.admin.network-users.create', compact('customers', 'packages', 'routers'));
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Store a newly created network user.
      */
+    /*
     public function networkUsersStore(Request $request)
     {
         $validated = $request->validate([
@@ -307,20 +332,26 @@ class AdminController extends Controller
         return redirect()->route('panel.admin.network-users')
             ->with('success', 'Network user created successfully.');
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Display the specified network user.
      */
+    /*
     public function networkUsersShow($id): View
     {
         $networkUser = NetworkUser::with(['user', 'package'])->findOrFail($id);
 
         return view('panels.admin.network-users.show', compact('networkUser'));
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Show the form for editing the specified network user.
      */
+    /*
     public function networkUsersEdit($id): View
     {
         $networkUser = NetworkUser::findOrFail($id);
@@ -332,10 +363,13 @@ class AdminController extends Controller
 
         return view('panels.admin.network-users.edit', compact('networkUser', 'customers', 'packages', 'routers'));
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Update the specified network user.
      */
+    /*
     public function networkUsersUpdate(Request $request, $id)
     {
         $networkUser = NetworkUser::findOrFail($id);
@@ -389,10 +423,13 @@ class AdminController extends Controller
         return redirect()->route('panel.admin.network-users')
             ->with('success', 'Network user updated successfully.');
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Remove the specified network user.
      */
+    /*
     public function networkUsersDestroy($id)
     {
         $networkUser = NetworkUser::findOrFail($id);
@@ -401,20 +438,26 @@ class AdminController extends Controller
         return redirect()->route('panel.admin.network-users')
             ->with('success', 'Network user deleted successfully.');
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Show the form for importing network users from router.
      */
+    /*
     public function networkUsersImport(): View
     {
         $routers = MikrotikRouter::where('status', 'active')->get();
 
         return view('panels.admin.network-users.import', compact('routers'));
     }
+    */
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Process the import of network users from router.
      */
+    /*
     public function networkUsersProcessImport(Request $request)
     {
         $validated = $request->validate([
@@ -516,6 +559,7 @@ class AdminController extends Controller
                 ->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
+    */
 
     /**
      * Display packages listing.

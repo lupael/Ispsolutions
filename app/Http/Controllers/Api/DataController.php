@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\NetworkUser;
 use App\Models\Package;
 use App\Models\Payment;
 use App\Models\User;
@@ -49,19 +48,23 @@ class DataController extends Controller
     }
 
     /**
-     * Get network users data
+     * Get network users data (now uses User model with operator_level = 100).
+     * Note: Migrated from NetworkUser to User model.
      */
     public function getNetworkUsers(Request $request): JsonResponse
     {
-        $query = NetworkUser::with(['user', 'package'])
-            ->where('tenant_id', auth()->user()->tenant_id);
+        $query = User::with(['package'])
+            ->where('tenant_id', auth()->user()->tenant_id)
+            ->where('operator_level', 100);
 
         // Search
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
-                    ->orWhere('ip_address', 'like', "%{$search}%");
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -187,7 +190,7 @@ class DataController extends Controller
     }
 
     /**
-     * Get dashboard statistics
+     * Get dashboard statistics (migrated from NetworkUser to User model).
      */
     public function getDashboardStats(Request $request): JsonResponse
     {
@@ -219,10 +222,10 @@ class DataController extends Controller
                     ->where('status', 'completed')
                     ->sum('amount'),
             ],
-            'network_users' => [
-                'total' => NetworkUser::where('tenant_id', $tenantId)->count(),
-                'active' => NetworkUser::where('tenant_id', $tenantId)->where('status', 'active')->count(),
-                'suspended' => NetworkUser::where('tenant_id', $tenantId)->where('status', 'suspended')->count(),
+            'customers' => [
+                'total' => User::where('tenant_id', $tenantId)->where('operator_level', 100)->count(),
+                'active' => User::where('tenant_id', $tenantId)->where('operator_level', 100)->where('status', 'active')->count(),
+                'suspended' => User::where('tenant_id', $tenantId)->where('operator_level', 100)->where('status', 'suspended')->count(),
             ],
         ];
 

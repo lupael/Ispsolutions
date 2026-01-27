@@ -7,11 +7,17 @@ namespace App\Http\Controllers\Api\V1;
 use App\Contracts\RadiusServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNetworkUserRequest;
-use App\Models\NetworkUser;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * NetworkUserController - kept for backward API compatibility.
+ * 
+ * Note: NetworkUser model has been eliminated. This controller now works with
+ * User model (operator_level = 100 for customers) but maintains the same API contract.
+ */
 class NetworkUserController extends Controller
 {
     public function __construct(
@@ -19,19 +25,20 @@ class NetworkUserController extends Controller
     ) {}
 
     /**
-     * List all network users
+     * List all customers (network users).
+     * Note: Now uses User model with operator_level = 100.
      */
     public function index(Request $request): JsonResponse
     {
-        // Optimized: Use eager loading with select to avoid N+1 queries
-        $query = NetworkUser::select([
+        $query = User::select([
             'id', 'username', 'email', 'service_type',
-            'package_id', 'status', 'user_id', 'tenant_id',
+            'package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
-        ])->with(['package:id,name,price,bandwidth_upload,bandwidth_download']);
+        ])->where('operator_level', 100)
+          ->with(['package:id,name,price,bandwidth_upload,bandwidth_download']);
 
         if ($request->has('service_type')) {
-            $query->byServiceType($request->service_type);
+            $query->where('service_type', $request->service_type);
         }
 
         if ($request->has('status')) {
@@ -39,7 +46,12 @@ class NetworkUserController extends Controller
         }
 
         if ($request->has('search')) {
-            $query->search($request->search);
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
+            });
         }
 
         $users = $query->paginate($request->get('per_page', 15));
@@ -48,56 +60,57 @@ class NetworkUserController extends Controller
     }
 
     /**
-     * Create a new network user
+     * Create a new customer (network user).
+     * Note: Now uses User model with operator_level = 100.
      */
     public function store(StoreNetworkUserRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $password = $data['password'];
-        unset($data['password']); // Don't store plain password in network_users
+        $password = $data['radius_password'] ?? $data['password'] ?? null;
+        unset($data['password']); // Don't store plain password
 
-        $user = NetworkUser::create($data);
+        $data['operator_level'] = 100;
+        $user = User::create($data);
 
-        // Sync to RADIUS
-        $this->radiusService->syncUser($user, $password);
+        // Sync to RADIUS if password provided
+        if ($password) {
+            $this->radiusService->syncUser($user, $password);
+        }
 
         return response()->json([
-            'message' => 'Network user created successfully',
+            'message' => 'Customer created successfully',
             'data' => $user->load('package'),
         ], 201);
     }
 
     /**
-     * Get a specific network user
+     * Get a specific customer (network user).
+     * Note: Now uses User model with operator_level = 100.
      */
     public function show(int $id): JsonResponse
     {
-        // Optimized: Load only necessary relations with specific columns
-        $user = NetworkUser::select([
+        $user = User::select([
             'id', 'username', 'email', 'service_type',
-            'package_id', 'status', 'user_id', 'tenant_id',
+            'package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
-        ])->with([
+        ])->where('operator_level', 100)
+          ->with([
             'package:id,name,price,bandwidth_upload,bandwidth_download',
-            'sessions' => function ($q) {
-                $q->select('id', 'user_id', 'start_time', 'stop_time', 'input_octets', 'output_octets')
-                    ->latest()
-                    ->limit(10);
-            },
         ])->findOrFail($id);
 
         return response()->json($user);
     }
 
     /**
-     * Update a network user
+     * Update a customer (network user).
+     * Note: Now uses User model with operator_level = 100.
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = NetworkUser::findOrFail($id);
+        $user = User::where('operator_level', 100)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'email' => 'nullable|email|unique:network_users,email,' . $id,
+            'email' => 'nullable|email|unique:users,email,' . $id,
             'service_type' => 'sometimes|in:pppoe,hotspot,static_ip',
             'package_id' => 'nullable|exists:packages,id',
             'status' => 'nullable|in:active,suspended,expired',
@@ -118,17 +131,18 @@ class NetworkUserController extends Controller
         }
 
         return response()->json([
-            'message' => 'Network user updated successfully',
+            'message' => 'Customer updated successfully',
             'data' => $user->load('package'),
         ]);
     }
 
     /**
-     * Delete a network user
+     * Delete a customer (network user).
+     * Note: Now uses User model with operator_level = 100.
      */
     public function destroy(int $id): JsonResponse
     {
-        $user = NetworkUser::findOrFail($id);
+        $user = User::where('operator_level', 100)->findOrFail($id);
 
         // Delete from RADIUS
         $this->radiusService->deleteUser($user->username);
@@ -136,16 +150,17 @@ class NetworkUserController extends Controller
         $user->delete();
 
         return response()->json([
-            'message' => 'Network user deleted successfully',
+            'message' => 'Customer deleted successfully',
         ]);
     }
 
     /**
-     * Sync user to RADIUS
+     * Sync customer to RADIUS.
+     * Note: Now uses User model with operator_level = 100.
      */
     public function syncToRadius(Request $request, int $id): JsonResponse
     {
-        $user = NetworkUser::findOrFail($id);
+        $user = User::where('operator_level', 100)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'password' => 'nullable|string|min:6',
@@ -164,12 +179,12 @@ class NetworkUserController extends Controller
 
         if (! $success) {
             return response()->json([
-                'message' => 'Failed to sync user to RADIUS',
+                'message' => 'Failed to sync customer to RADIUS',
             ], 400);
         }
 
         return response()->json([
-            'message' => 'User synced to RADIUS successfully',
+            'message' => 'Customer synced to RADIUS successfully',
         ]);
     }
 }
