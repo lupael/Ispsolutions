@@ -105,8 +105,9 @@ class OltService implements OltServiceInterface
                 ];
             }
 
-            // Test command execution
-            $result = $connection->exec('show version');
+            // Get vendor-specific commands and test command execution
+            $commands = $this->getVendorCommands($olt);
+            $result = $connection->exec($commands['version']);
             $connection->disconnect();
 
             $latency = (int) ((microtime(true) - $startTime) * 1000);
@@ -151,12 +152,14 @@ class OltService implements OltServiceInterface
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
 
+            $olt = Olt::findOrFail($oltId);
             $connection = $this->connections[$oltId];
+            $commands = $this->getVendorCommands($olt);
             $onus = [];
 
             // This is a mock implementation - real implementation would parse actual OLT output
-            // Different OLT vendors (Huawei, ZTE, Fiberhome) have different commands and output formats
-            $output = $connection->exec('show gpon onu state');
+            // Different OLT vendors (Huawei, ZTE, Fiberhome, VSOL) have different commands and output formats
+            $output = $connection->exec($commands['onu_state']);
 
             if ($output === false) {
                 throw new RuntimeException('Failed to execute discovery command');
@@ -414,9 +417,10 @@ class OltService implements OltServiceInterface
             }
 
             $connection = $this->connections[$oltId];
+            $commands = $this->getVendorCommands($olt);
 
             // Execute backup command (vendor-specific)
-            $output = $connection->exec('display current-configuration');
+            $output = $connection->exec($commands['backup']);
 
             if ($output === false || empty($output)) {
                 throw new RuntimeException('Failed to retrieve configuration');
@@ -649,6 +653,96 @@ class OltService implements OltServiceInterface
         }
 
         return true;
+    }
+
+    /**
+     * Get vendor-specific commands based on OLT model.
+     */
+    private function getVendorCommands(Olt $olt): array
+    {
+        $model = strtolower($olt->model ?? '');
+        
+        // Detect vendor from model string
+        if (str_contains($model, 'vsol') || str_contains($model, 'v-sol')) {
+            return $this->getVsolCommands();
+        } elseif (str_contains($model, 'huawei')) {
+            return $this->getHuaweiCommands();
+        } elseif (str_contains($model, 'zte')) {
+            return $this->getZteCommands();
+        } elseif (str_contains($model, 'fiberhome')) {
+            return $this->getFiberhomeCommands();
+        }
+        
+        // Default to Huawei-style commands (most common)
+        return $this->getHuaweiCommands();
+    }
+
+    /**
+     * Get VSOL-specific commands.
+     */
+    private function getVsolCommands(): array
+    {
+        return [
+            'version' => 'show version',
+            'onu_list' => 'show gpon onu-list',
+            'onu_state' => 'show gpon onu state',
+            'onu_detail' => 'show gpon onu detail gpon-onu_{port}:{id}',
+            'authorize' => 'gpon onu authorize gpon-onu_{port}:{id}',
+            'unauthorize' => 'no gpon onu authorize gpon-onu_{port}:{id}',
+            'reboot' => 'gpon onu reboot gpon-onu_{port}:{id}',
+            'backup' => 'show running-config',
+        ];
+    }
+
+    /**
+     * Get Huawei-specific commands.
+     */
+    private function getHuaweiCommands(): array
+    {
+        return [
+            'version' => 'display version',
+            'onu_list' => 'display ont info summary all',
+            'onu_state' => 'display ont info 0 all',
+            'onu_detail' => 'display ont info {slot} {port} {id}',
+            'authorize' => 'ont confirm {slot} {port} ontid {id}',
+            'unauthorize' => 'undo ont {slot} {port} {id}',
+            'reboot' => 'ont reset {slot} {port} {id}',
+            'backup' => 'display current-configuration',
+        ];
+    }
+
+    /**
+     * Get ZTE-specific commands.
+     */
+    private function getZteCommands(): array
+    {
+        return [
+            'version' => 'show version',
+            'onu_list' => 'show gpon onu uncfg',
+            'onu_state' => 'show pon onu-info',
+            'onu_detail' => 'show gpon onu detail-info gpon-onu_{port}:{id}',
+            'authorize' => 'interface gpon-onu_{port}:{id}',
+            'unauthorize' => 'no interface gpon-onu_{port}:{id}',
+            'reboot' => 'pon-onu-mng gpon-onu_{port}:{id} reboot',
+            'backup' => 'show running-config',
+        ];
+    }
+
+    /**
+     * Get Fiberhome-specific commands.
+     */
+    private function getFiberhomeCommands(): array
+    {
+        return [
+            'version' => 'show version',
+            'onu_list' => 'show onu-list',
+            'onu_state' => 'show onu state',
+            'onu_detail' => 'show onu detail-info onu-index {port}:{id}',
+            'authorize' => 'onu add {port} {id}',
+            'unauthorize' => 'onu delete {port} {id}',
+            'reboot' => 'onu reboot {port} {id}',
+            'backup' => 'show running-config',
+        ];
     }
 
     /**

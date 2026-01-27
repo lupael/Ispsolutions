@@ -207,7 +207,7 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
     });
 
     // OLT Routes
-    Route::prefix('olt')->group(function () {
+    Route::prefix('olt')->middleware(['auth', 'rate_limit:api'])->group(function () {
         // OLT Management
         Route::get('/', [OltController::class, 'index'])->name('api.olt.index');
         Route::get('/{id}', [OltController::class, 'show'])->name('api.olt.show');
