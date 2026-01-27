@@ -1951,7 +1951,9 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('panel.admin.network.routers')
-            ->with('success', 'Router and NAS entry created successfully. You can now import PPP users from this device.');
+            ->with('success', 'Router created successfully!')
+            ->with('router_id', $router->id)
+            ->with('configure_prompt', 'Would you like to configure this router now for RADIUS integration and PPP profiles?');
     }
 
     /**

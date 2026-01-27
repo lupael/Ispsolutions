@@ -310,6 +310,13 @@
 
 @push('scripts')
 <script nonce="{{ csp_nonce() }}">
+// Check for router configuration prompt
+@if(session('configure_prompt') && session('router_id'))
+    if (confirm('{{ session('configure_prompt') }}\n\nClick OK to configure now, or Cancel to do it later.')) {
+        window.location.href = '{{ route('panel.admin.routers.configuration.show', session('router_id')) }}';
+    }
+@endif
+
 async function checkRouterApi(routerId) {
     const button = event.target.closest('button');
     const originalHTML = button.innerHTML;
