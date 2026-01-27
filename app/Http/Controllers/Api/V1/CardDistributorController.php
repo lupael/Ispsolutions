@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\NetworkUser;
 use App\Models\Card;
 use App\Models\CardSale;
 use App\Services\DistributorService;
@@ -12,6 +11,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 
+/**
+ * CardDistributorController
+ * 
+ * Note: Updated to use User model (operator_level = 100) instead of NetworkUser model.
+ */
 class CardDistributorController extends Controller
 {
     protected $distributorService;
@@ -345,20 +349,12 @@ class CardDistributorController extends Controller
         $expiresAt = now()->addDays($card->validity_days);
         
         if ($customer) {
-            // Update user's package
+            // Update user's package and expiry (User model with operator_level = 100)
             $customer->update([
                 'service_package_id' => $card->package_id,
+                'expiry_date' => $expiresAt,
+                'status' => 'active',
             ]);
-            
-            // Update network user's expiry date if exists
-            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
-            if ($networkUser) {
-                $networkUser->update([
-                    'package_id' => $card->package_id,
-                    'expiry_date' => $expiresAt,
-                    'status' => 'active',
-                ]);
-            }
         }
         
         // Clear cache

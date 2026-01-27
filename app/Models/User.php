@@ -119,6 +119,17 @@ class User extends Authenticatable
         'billing_contact_name',
         'billing_contact_email',
         'billing_contact_phone',
+        // Network service fields (previously in NetworkUser)
+        'username',
+        'radius_password',
+        'service_type',
+        'connection_type',
+        'billing_type',
+        'device_type',
+        'mac_address',
+        'ip_address',
+        'status',
+        'zone_id',
     ];
 
     /**
@@ -128,6 +139,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'radius_password',
         'remember_token',
         'two_factor_secret',
         'two_factor_recovery_codes',
@@ -151,6 +163,8 @@ class User extends Authenticatable
             'allow_rename_package' => 'boolean',
             'can_manage_customers' => 'boolean',
             'can_view_financials' => 'boolean',
+            'expiry_date' => 'date',
+            'suspend_date' => 'date',
         ];
     }
 
@@ -162,6 +176,14 @@ class User extends Authenticatable
     public function servicePackage(): BelongsTo
     {
         return $this->belongsTo(ServicePackage::class);
+    }
+
+    /**
+     * Get the zone for this user (for network management).
+     */
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class);
     }
 
     /**
@@ -204,6 +226,10 @@ class User extends Authenticatable
 
     /**
      * Get the network user for this customer.
+     * 
+     * @deprecated Network credentials now stored directly on User model.
+     *             This relationship maintained for backward compatibility only.
+     *             Use User model fields directly (username, service_type, etc.)
      */
     public function networkUser(): HasOne
     {
@@ -909,5 +935,106 @@ class User extends Authenticatable
         return $this->relationLoaded('macAddresses') && $this->macAddresses->isNotEmpty()
             ? $this->macAddresses->first()->mac_address
             : null;
+    }
+
+    /**
+     * Sync this customer to RADIUS for network authentication.
+     * Only applies to customers (operator_level = 100) with network service types.
+     *
+     * @param array $attributes Additional RADIUS attributes to set
+     * @return bool Success status
+     */
+    public function syncToRadius(array $attributes = []): bool
+    {
+        // Only sync customers with network service types
+        if ($this->operator_level !== 100 || !$this->service_type) {
+            return false;
+        }
+
+        $radiusService = app(\App\Services\RadiusService::class);
+
+        // Prepare base attributes
+        $baseAttributes = [];
+        if ($this->ip_address) {
+            $baseAttributes['Framed-IP-Address'] = $this->ip_address;
+        }
+
+        $allAttributes = array_merge($baseAttributes, $attributes);
+
+        // Check if customer should be active in RADIUS
+        if ($this->isActiveForRadius()) {
+            // Use the radius_password field (plain text for RADIUS)
+            $password = $attributes['password'] ?? $this->radius_password ?? $this->username;
+            
+            return $radiusService->createUser($this->username, $password, $allAttributes);
+        } else {
+            // Remove from RADIUS if suspended/inactive
+            return $radiusService->deleteUser($this->username);
+        }
+    }
+
+    /**
+     * Update this customer's RADIUS attributes.
+     *
+     * @param array $attributes RADIUS attributes to update
+     * @return bool Success status
+     */
+    public function updateRadius(array $attributes): bool
+    {
+        if ($this->operator_level !== 100 || !$this->service_type) {
+            return false;
+        }
+
+        $radiusService = app(\App\Services\RadiusService::class);
+        
+        return $radiusService->updateUser($this->username, $attributes);
+    }
+
+    /**
+     * Remove this customer from RADIUS.
+     *
+     * @return bool Success status
+     */
+    public function removeFromRadius(): bool
+    {
+        if ($this->operator_level !== 100 || !$this->username) {
+            return false;
+        }
+
+        $radiusService = app(\App\Services\RadiusService::class);
+        
+        return $radiusService->deleteUser($this->username);
+    }
+
+    /**
+     * Check if this user is a network service customer.
+     *
+     * @return bool
+     */
+    public function isNetworkCustomer(): bool
+    {
+        return $this->operator_level === 100 && 
+               in_array($this->service_type, ['pppoe', 'hotspot', 'static', 'static_ip', 'vpn']);
+    }
+
+    /**
+     * Get the network password (plain text for RADIUS).
+     * 
+     * @return string|null
+     */
+    public function getNetworkPasswordAttribute(): ?string
+    {
+        return $this->radius_password ?? $this->username;
+    }
+
+    /**
+     * Check if customer should be active in RADIUS.
+     * Customer must have status 'active' AND is_active flag set.
+     *
+     * @return bool
+     */
+    public function isActiveForRadius(): bool
+    {
+        return $this->status === 'active' && $this->is_active;
     }
 }

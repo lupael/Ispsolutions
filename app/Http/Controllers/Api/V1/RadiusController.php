@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\RadiusServiceInterface;
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
 use App\Models\RadAcct;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -253,7 +253,8 @@ class RadiusController extends Controller
     }
 
     /**
-     * Sync a network user to RADIUS
+     * Sync a customer to RADIUS (now uses User model with operator_level = 100).
+     * Note: Migrated from NetworkUser to User model, kept for backward compatibility.
      */
     public function syncUser(Request $request, string $username): JsonResponse
     {
@@ -268,7 +269,9 @@ class RadiusController extends Controller
             ], 422);
         }
 
-        $user = NetworkUser::where('username', $username)->firstOrFail();
+        $user = User::where('username', $username)
+            ->where('operator_level', 100)
+            ->firstOrFail();
 
         $password = $request->password ?? null;
         $attributes = $password ? ['password' => $password] : [];
@@ -306,7 +309,8 @@ class RadiusController extends Controller
     }
 
     /**
-     * Get real-time bandwidth stats for a user (by customer ID)
+     * Get real-time bandwidth stats for a customer (by customer ID).
+     * Note: Migrated from NetworkUser to User model with operator_level = 100.
      */
     public function getRealTimeStats(int $customerId): JsonResponse
     {
@@ -319,8 +323,8 @@ class RadiusController extends Controller
                 ], 401);
             }
 
-            // Get the network user by ID
-            $user = NetworkUser::findOrFail($customerId);
+            // Get the customer by ID (User model with operator_level = 100)
+            $user = User::where('operator_level', 100)->findOrFail($customerId);
             
             // Check tenant isolation
             if ($user->tenant_id !== auth()->user()->tenant_id) {

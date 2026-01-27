@@ -3,26 +3,31 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
 use App\Models\NetworkUserSession;
+use App\Models\User;
 use Illuminate\View\View;
 
 class ManagerController extends Controller
 {
     /**
      * Display the manager dashboard.
+     * 
+     * Note: Network credentials are now stored directly in User model (operator_level = 100 for customers)
      */
     public function dashboard(): View
     {
         $tenantId = auth()->user()->tenant_id;
 
         $stats = [
-            'total_network_users' => NetworkUser::where('tenant_id', $tenantId)->count(),
+            'total_network_users' => User::where('tenant_id', $tenantId)
+                ->where('operator_level', 100)->count(),
             'active_sessions' => NetworkUserSession::where('tenant_id', $tenantId)
                 ->whereNull('end_time')->count(),
-            'pppoe_users' => NetworkUser::where('tenant_id', $tenantId)
+            'pppoe_users' => User::where('tenant_id', $tenantId)
+                ->where('operator_level', 100)
                 ->where('service_type', 'pppoe')->count(),
-            'hotspot_users' => NetworkUser::where('tenant_id', $tenantId)
+            'hotspot_users' => User::where('tenant_id', $tenantId)
+                ->where('operator_level', 100)
                 ->where('service_type', 'hotspot')->count(),
         ];
 
@@ -30,8 +35,11 @@ class ManagerController extends Controller
     }
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Display network users listing.
+     * Customers should be managed via customer routes instead.
      */
+    /*
     public function networkUsers(): View
     {
         $tenantId = auth()->user()->tenant_id;
@@ -39,6 +47,7 @@ class ManagerController extends Controller
 
         return view('panels.manager.network-users.index', compact('networkUsers'));
     }
+    */
 
     /**
      * Display active sessions.

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
 use App\Models\Package;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -17,13 +16,22 @@ use Illuminate\Support\Facades\Validator;
 class BulkCustomerController extends Controller
 {
     /**
-     * Execute bulk action on selected customers
+     * Execute bulk action on selected customers (User model with operator_level = 100).
+     * Note: Migrated from NetworkUser to User model.
      */
     public function executeBulkAction(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'customer_ids' => 'required|array|min:1',
-            'customer_ids.*' => 'required|integer|exists:network_users,id',
+            'customer_ids.*' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if (!User::where('id', $value)->where('operator_level', 100)->exists()) {
+                        $fail('The selected customer is invalid.');
+                    }
+                }
+            ],
             'action' => 'required|string|in:change_package,change_operator,suspend,activate,update_expiry',
             'package_id' => 'required_if:action,change_package|exists:packages,id',
             'operator_id' => 'required_if:action,change_operator|exists:users,id',
@@ -43,8 +51,9 @@ class BulkCustomerController extends Controller
         
         // Authorization: Check if user can update these customers
         $tenantId = auth()->user()->tenant_id;
-        $customers = NetworkUser::whereIn('id', $customerIds)
+        $customers = User::whereIn('id', $customerIds)
             ->where('tenant_id', $tenantId)
+            ->where('operator_level', 100)
             ->get();
 
         if ($customers->count() !== count($customerIds)) {
@@ -136,7 +145,7 @@ class BulkCustomerController extends Controller
 
         $updatedCount = 0;
         foreach ($customers as $customer) {
-            $customer->package_id = $packageId;
+            $customer->service_package_id = $packageId;
             if ($customer->save()) {
                 $updatedCount++;
             }
@@ -161,7 +170,8 @@ class BulkCustomerController extends Controller
 
         $updatedCount = 0;
         foreach ($customers as $customer) {
-            $customer->user_id = $operatorId;
+            // Transfer customer to new operator
+            $customer->created_by = $operatorId;
             if ($customer->save()) {
                 $updatedCount++;
             }

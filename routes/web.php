@@ -249,15 +249,19 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     Route::get('/users/{id}/edit', [AdminController::class, 'usersEdit'])->name('users.edit');
     Route::put('/users/{id}', [AdminController::class, 'usersUpdate'])->name('users.update');
     Route::delete('/users/{id}', [AdminController::class, 'usersDestroy'])->middleware('password.confirm')->name('users.destroy');
-    Route::get('/network-users', [AdminController::class, 'networkUsers'])->name('network-users');
-    Route::get('/network-users/create', [AdminController::class, 'networkUsersCreate'])->name('network-users.create');
-    Route::post('/network-users', [AdminController::class, 'networkUsersStore'])->name('network-users.store');
-    Route::get('/network-users/import', [AdminController::class, 'networkUsersImport'])->name('network-users.import');
-    Route::post('/network-users/import', [AdminController::class, 'networkUsersProcessImport'])->name('network-users.import.process');
-    Route::get('/network-users/{id}', [AdminController::class, 'networkUsersShow'])->name('network-users.show');
-    Route::get('/network-users/{id}/edit', [AdminController::class, 'networkUsersEdit'])->name('network-users.edit');
-    Route::put('/network-users/{id}', [AdminController::class, 'networkUsersUpdate'])->name('network-users.update');
-    Route::delete('/network-users/{id}', [AdminController::class, 'networkUsersDestroy'])->middleware('password.confirm')->name('network-users.destroy');
+    
+    // DEPRECATED: Network users are now managed via Customer model (User with operator_level=100)
+    // Use customer management routes instead
+    // Route::get('/network-users', [AdminController::class, 'networkUsers'])->name('network-users');
+    // Route::get('/network-users/create', [AdminController::class, 'networkUsersCreate'])->name('network-users.create');
+    // Route::post('/network-users', [AdminController::class, 'networkUsersStore'])->name('network-users.store');
+    // Route::get('/network-users/import', [AdminController::class, 'networkUsersImport'])->name('network-users.import');
+    // Route::post('/network-users/import', [AdminController::class, 'networkUsersProcessImport'])->name('network-users.import.process');
+    // Route::get('/network-users/{id}', [AdminController::class, 'networkUsersShow'])->name('network-users.show');
+    // Route::get('/network-users/{id}/edit', [AdminController::class, 'networkUsersEdit'])->name('network-users.edit');
+    // Route::put('/network-users/{id}', [AdminController::class, 'networkUsersUpdate'])->name('network-users.update');
+    // Route::delete('/network-users/{id}', [AdminController::class, 'networkUsersDestroy'])->middleware('password.confirm')->name('network-users.destroy');
+    
     Route::get('/packages', [AdminController::class, 'packages'])->name('packages');
     Route::get('/packages/create', [AdminController::class, 'packagesCreate'])->name('packages.create');
     Route::post('/packages', [AdminController::class, 'packagesStore'])->name('packages.store');
@@ -800,7 +804,8 @@ Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware([
 // Manager Panel
 Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'tenant', 'role:manager'])->group(function () {
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
-    Route::get('/network-users', [ManagerController::class, 'networkUsers'])->name('network-users');
+    // DEPRECATED: Network users now managed via Customer model
+    // Route::get('/network-users', [ManagerController::class, 'networkUsers'])->name('network-users');
     Route::get('/sessions', [ManagerController::class, 'sessions'])->name('sessions');
     Route::get('/reports', [ManagerController::class, 'reports'])->name('reports');
     Route::get('/customers', [ManagerController::class, 'customers'])->name('customers.index');
@@ -853,7 +858,8 @@ Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth'
 // Staff Panel
 Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'tenant', 'role:staff'])->group(function () {
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
-    Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
+    // DEPRECATED: Network users now managed via Customer model
+    // Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
     Route::get('/tickets', [StaffController::class, 'tickets'])->name('tickets');
 
     // Ticket management for staff

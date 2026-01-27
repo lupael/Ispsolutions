@@ -20,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register model observers
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
+
         // Configure rate limiters
         \Illuminate\Support\Facades\RateLimiter::for('distributor-api', function (\Illuminate\Http\Request $request) {
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());

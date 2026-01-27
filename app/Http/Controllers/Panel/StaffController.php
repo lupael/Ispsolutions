@@ -6,20 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\CiscoDevice;
 use App\Models\MikrotikRouter;
 use App\Models\Nas;
-use App\Models\NetworkUser;
 use App\Models\Olt;
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\View\View;
 
 class StaffController extends Controller
 {
     /**
      * Display the staff dashboard.
+     * 
+     * Note: Network credentials are now stored directly in User model (operator_level = 100 for customers)
      */
     public function dashboard(): View
     {
         $stats = [
-            'assigned_users' => NetworkUser::count(),
+            'assigned_users' => User::where('operator_level', 100)->count(),
             'pending_tickets' => Ticket::where('status', Ticket::STATUS_PENDING)->count(),
         ];
 
@@ -50,8 +52,11 @@ class StaffController extends Controller
     }
 
     /**
+     * DEPRECATED: NetworkUser model has been eliminated.
      * Display network users listing.
+     * Customers should be managed via customer routes instead.
      */
+    /*
     public function networkUsers(): View
     {
         // Optimized: Use eager loading with select to avoid N+1 queries
@@ -64,6 +69,7 @@ class StaffController extends Controller
 
         return view('panels.staff.network-users.index', compact('networkUsers'));
     }
+    */
 
     /**
      * Display tickets listing.

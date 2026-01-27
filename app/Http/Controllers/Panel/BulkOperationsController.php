@@ -7,7 +7,6 @@ use App\Http\Requests\BulkActionRequest;
 use App\Http\Requests\BulkDeleteRequest;
 use App\Http\Traits\HandlesFormValidation;
 use App\Models\Invoice;
-use App\Models\NetworkUser;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -18,24 +17,26 @@ class BulkOperationsController extends Controller
     use HandlesFormValidation;
 
     /**
-     * Bulk delete network users.
+     * Bulk delete customers (User model with operator_level = 100).
+     * Note: Migrated from NetworkUser to User model.
      */
     public function bulkDeleteNetworkUsers(BulkDeleteRequest $request): RedirectResponse
     {
         return $this->handleBulkOperation(
             $request->validated('ids'),
             function ($id) {
-                $user = NetworkUser::findOrFail($id);
+                $user = User::where('operator_level', 100)->findOrFail($id);
                 $this->authorize('delete', $user);
                 $user->delete();
             },
-            '%d network users deleted successfully.',
-            'Bulk delete network users'
+            '%d customers deleted successfully.',
+            'Bulk delete customers'
         );
     }
 
     /**
-     * Bulk action on network users.
+     * Bulk action on customers (User model with operator_level = 100).
+     * Note: Migrated from NetworkUser to User model.
      */
     public function bulkActionNetworkUsers(BulkActionRequest $request): RedirectResponse
     {
@@ -61,12 +62,12 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = NetworkUser::findOrFail($id);
+                $user = User::where('operator_level', 100)->findOrFail($id);
                 $this->authorize('update', $user);
                 $user->update(['is_active' => true, 'status' => 'active']);
             },
-            '%d users activated successfully.',
-            'Bulk activate users'
+            '%d customers activated successfully.',
+            'Bulk activate customers'
         );
     }
 
@@ -78,12 +79,12 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = NetworkUser::findOrFail($id);
+                $user = User::where('operator_level', 100)->findOrFail($id);
                 $this->authorize('update', $user);
                 $user->update(['is_active' => false, 'status' => 'inactive']);
             },
-            '%d users deactivated successfully.',
-            'Bulk deactivate users'
+            '%d customers deactivated successfully.',
+            'Bulk deactivate customers'
         );
     }
 
@@ -95,12 +96,12 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = NetworkUser::findOrFail($id);
+                $user = User::where('operator_level', 100)->findOrFail($id);
                 $this->authorize('update', $user);
                 $user->update(['status' => 'suspended']);
             },
-            '%d users suspended successfully.',
-            'Bulk suspend users'
+            '%d customers suspended successfully.',
+            'Bulk suspend customers'
         );
     }
 
@@ -112,12 +113,12 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = NetworkUser::findOrFail($id);
+                $user = User::where('operator_level', 100)->findOrFail($id);
                 $this->authorize('delete', $user);
                 $user->delete();
             },
-            '%d users deleted successfully.',
-            'Bulk delete users'
+            '%d customers deleted successfully.',
+            'Bulk delete customers'
         );
     }
 
@@ -133,16 +134,17 @@ class BulkOperationsController extends Controller
             DB::transaction(function () use ($ids, &$successCount, &$failedCount) {
                 foreach ($ids as $id) {
                     try {
-                        $user = NetworkUser::with('package')->findOrFail($id);
+                        $customer = User::where('operator_level', 100)
+                            ->with('servicePackage')->findOrFail($id);
 
-                        if (! $user->package) {
+                        if (! $customer->servicePackage) {
                             $failedCount++;
 
                             continue;
                         }
 
-                        // Check if user already has a pending invoice
-                        $existingInvoice = Invoice::where('user_id', $user->user_id)
+                        // Check if customer already has a pending invoice
+                        $existingInvoice = Invoice::where('user_id', $customer->id)
                             ->whereIn('status', ['pending', 'overdue'])
                             ->exists();
 
@@ -154,13 +156,13 @@ class BulkOperationsController extends Controller
 
                         // Generate invoice
                         $invoice = Invoice::create([
-                            'tenant_id' => $user->tenant_id,
-                            'user_id' => $user->user_id,
-                            'package_id' => $user->package_id,
+                            'tenant_id' => $customer->tenant_id,
+                            'user_id' => $customer->id,
+                            'package_id' => $customer->service_package_id,
                             'invoice_number' => $this->generateInvoiceNumber(),
-                            'amount' => $user->package->price_monthly,
-                            'tax_amount' => $user->package->price_monthly * 0.15, // 15% tax
-                            'total_amount' => $user->package->price_monthly * 1.15,
+                            'amount' => $customer->servicePackage->price_monthly,
+                            'tax_amount' => $customer->servicePackage->price_monthly * 0.15, // 15% tax
+                            'total_amount' => $customer->servicePackage->price_monthly * 1.15,
                             'billing_period_start' => now(),
                             'billing_period_end' => now()->addMonth(),
                             'due_date' => now()->addDays(7),
@@ -169,7 +171,7 @@ class BulkOperationsController extends Controller
 
                         $successCount++;
                     } catch (\Exception $e) {
-                        Log::error("Failed to generate invoice for user ID {$id}: " . $e->getMessage());
+                        Log::error("Failed to generate invoice for customer ID {$id}: " . $e->getMessage());
                         $failedCount++;
                     }
                 }
