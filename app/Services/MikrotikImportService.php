@@ -17,10 +17,12 @@ use Illuminate\Support\Str;
 class MikrotikImportService
 {
     protected MikrotikService $mikrotikService;
+    protected MikrotikApiService $mikrotikApiService;
 
-    public function __construct(MikrotikService $mikrotikService)
+    public function __construct(MikrotikService $mikrotikService, MikrotikApiService $mikrotikApiService)
     {
         $this->mikrotikService = $mikrotikService;
+        $this->mikrotikApiService = $mikrotikApiService;
     }
 
     /**
@@ -373,23 +375,86 @@ class MikrotikImportService
     }
 
     /**
-     * Fetch PPP profiles from router (mock implementation).
+     * Fetch PPP profiles from router via API.
      */
     private function fetchPppProfilesFromRouter(int $routerId): array
     {
-        // In production, this would use RouterOS API client
-        // For now, return empty array - to be implemented with actual API
-        return [];
+        try {
+            $router = MikrotikRouter::find($routerId);
+            
+            if (!$router) {
+                Log::error('Router not found for fetching profiles', ['router_id' => $routerId]);
+                return [];
+            }
+
+            // Fetch profiles from router using API service
+            $profiles = $this->mikrotikApiService->getMktRows($router, '/ppp/profile');
+
+            // Normalize profiles to expected format
+            return array_map(function ($profile) {
+                return [
+                    'name' => $profile['name'] ?? '',
+                    'local_address' => $profile['local-address'] ?? '',
+                    'remote_address' => $profile['remote-address'] ?? '',
+                    'rate_limit' => $profile['rate-limit'] ?? '',
+                    'session_timeout' => $profile['session-timeout'] ?? '',
+                    'idle_timeout' => $profile['idle-timeout'] ?? '',
+                    'only_one' => isset($profile['only-one']) ? ($profile['only-one'] === 'yes') : false,
+                    'change_tcp_mss' => isset($profile['change-tcp-mss']) ? ($profile['change-tcp-mss'] === 'yes') : true,
+                ];
+            }, $profiles);
+        } catch (\Exception $e) {
+            Log::error('Error fetching PPP profiles from router', [
+                'router_id' => $routerId,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
     }
 
     /**
-     * Fetch PPP secrets from router (mock implementation).
+     * Fetch PPP secrets from router via API.
      */
     private function fetchPppSecretsFromRouter(int $routerId, bool $filterDisabled): array
     {
-        // In production, this would use RouterOS API client
-        // For now, return empty array - to be implemented with actual API
-        return [];
+        try {
+            $router = MikrotikRouter::find($routerId);
+            
+            if (!$router) {
+                Log::error('Router not found for fetching secrets', ['router_id' => $routerId]);
+                return [];
+            }
+
+            // Fetch secrets from router using API service
+            $secrets = $this->mikrotikApiService->getMktRows($router, '/ppp/secret');
+
+            // Filter disabled secrets if requested
+            if ($filterDisabled) {
+                $secrets = array_filter($secrets, function ($secret) {
+                    return !isset($secret['disabled']) || $secret['disabled'] !== 'yes';
+                });
+            }
+
+            // Normalize secrets to expected format
+            return array_map(function ($secret) {
+                return [
+                    'name' => $secret['name'] ?? '',
+                    'password' => $secret['password'] ?? '',
+                    'service' => $secret['service'] ?? 'pppoe',
+                    'profile' => $secret['profile'] ?? 'default',
+                    'local_address' => $secret['local-address'] ?? '',
+                    'remote_address' => $secret['remote-address'] ?? '',
+                    'comment' => $secret['comment'] ?? '',
+                    'disabled' => isset($secret['disabled']) ? ($secret['disabled'] === 'yes') : false,
+                ];
+            }, $secrets);
+        } catch (\Exception $e) {
+            Log::error('Error fetching PPP secrets from router', [
+                'router_id' => $routerId,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
     }
 
     /**

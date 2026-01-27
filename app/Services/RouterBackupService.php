@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Log;
 
 class RouterBackupService
 {
+    protected MikrotikApiService $mikrotikApiService;
+
+    public function __construct(MikrotikApiService $mikrotikApiService)
+    {
+        $this->mikrotikApiService = $mikrotikApiService;
+    }
     /**
      * Create a pre-change backup before making configuration changes
      */
@@ -131,11 +137,8 @@ class RouterBackupService
     /**
      * Restore configuration from backup
      * 
-     * Note: This is a placeholder implementation. Full restore functionality requires:
-     * 1. Parsing the backup JSON data structure
-     * 2. Applying configurations in the correct order via MikroTik API
-     * 3. Handling conflicts and validation
-     * This should be implemented based on specific backup format and requirements.
+     * Parses backup data and applies configurations via MikroTik API.
+     * Configurations are applied in a specific order to maintain dependencies.
      */
     public function restoreFromBackup(MikrotikRouter $router, RouterConfigurationBackup $backup): bool
     {
@@ -144,20 +147,94 @@ class RouterBackupService
                 throw new \Exception('Backup does not belong to this router');
             }
 
-            // Implementation depends on router API
-            Log::warning('Restore from backup called - placeholder implementation', [
+            // Decrypt and parse backup data
+            $backupDataJson = $this->decryptBackupData($backup->backup_data);
+            $backupData = json_decode($backupDataJson, true);
+
+            if (!$backupData) {
+                throw new \Exception('Invalid backup data format');
+            }
+
+            Log::info('Starting restore from backup', [
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
-                'notes' => $backup->notes,
+                'backup_type' => $backup->backup_type,
             ]);
 
-            // TODO: Implement actual restore logic via MikroTik API
-            // This would involve:
-            // 1. Parsing $backup->backup_data JSON
-            // 2. Applying each configuration section via MikroTik API
-            // 3. Validating the restored configuration
+            // Create a pre-restore backup as safety measure
+            $preRestoreBackup = $this->createPreChangeBackup(
+                $router,
+                "Pre-restore backup before restoring backup #{$backup->id}"
+            );
+
+            if (!$preRestoreBackup) {
+                Log::warning('Could not create pre-restore backup, continuing anyway');
+            }
+
+            // Track restoration progress
+            $restored = [];
+            $failed = [];
+
+            // Restore configurations in order of dependencies
+            $sections = [
+                'ip_pools' => '/ip/pool',
+                'ppp_profiles' => '/ppp/profile',
+                'radius_settings' => '/radius',
+                'ppp_secrets' => '/ppp/secret',
+                'firewall_rules' => '/firewall/filter',
+            ];
+
+            foreach ($sections as $section => $menu) {
+                if (isset($backupData[$section]) && is_array($backupData[$section])) {
+                    try {
+                        $items = $backupData[$section];
+                        
+                        // Skip if no items to restore
+                        if (empty($items)) {
+                            continue;
+                        }
+
+                        // Restore items to router
+                        $success = $this->mikrotikApiService->addMktRows($router, $menu, $items);
+                        
+                        if ($success) {
+                            $restored[$section] = count($items);
+                            Log::info("Restored {$section}", [
+                                'router_id' => $router->id,
+                                'count' => count($items),
+                            ]);
+                        } else {
+                            $failed[$section] = count($items);
+                            Log::warning("Failed to restore {$section}", [
+                                'router_id' => $router->id,
+                                'count' => count($items),
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        $failed[$section] = $e->getMessage();
+                        Log::error("Error restoring {$section}", [
+                            'router_id' => $router->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
+            // Log overall results
+            $totalRestored = array_sum($restored);
+            $hasFailures = !empty($failed);
+
+            Log::info('Restore from backup completed', [
+                'router_id' => $router->id,
+                'backup_id' => $backup->id,
+                'restored_sections' => $restored,
+                'failed_sections' => $failed,
+                'total_restored' => $totalRestored,
+            ]);
+
+            // Return true if at least some sections were restored and no critical failures
+            return $totalRestored > 0 && !$hasFailures;
             
-            throw new \Exception('Restore from backup is not yet implemented');
         } catch (\Exception $e) {
             Log::error('Restore from backup failed', [
                 'router_id' => $router->id,
@@ -198,24 +275,48 @@ class RouterBackupService
 
     /**
      * Fetch router configuration via API
-     * 
-     * Note: This is a placeholder implementation. The current MikrotikService implementation
-     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
-     * This method requires future implementation when RouterOS API support is added.
      */
     protected function fetchRouterConfiguration(MikrotikRouter $router): ?string
     {
-        Log::warning('Fetch router configuration is not implemented for the current MikrotikService', [
-            'router_id' => $router->id,
-        ]);
+        try {
+            $configuration = [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'timestamp' => now()->toDateTimeString(),
+            ];
 
-        // Return minimal placeholder data for now
-        return json_encode([
-            'router_id' => $router->id,
-            'router_name' => $router->name,
-            'timestamp' => now()->toDateTimeString(),
-            'note' => 'Placeholder configuration - requires RouterOS API implementation',
-        ], JSON_PRETTY_PRINT);
+            // Fetch various configuration sections
+            $sections = [
+                'ip_pools' => '/ip/pool',
+                'ppp_profiles' => '/ppp/profile',
+                'radius_settings' => '/radius',
+                'ppp_secrets' => '/ppp/secret',
+                'firewall_rules' => '/firewall/filter',
+            ];
+
+            foreach ($sections as $section => $menu) {
+                try {
+                    $data = $this->mikrotikApiService->getMktRows($router, $menu);
+                    $configuration[$section] = $data;
+                } catch (\Exception $e) {
+                    Log::warning("Failed to fetch {$section} during backup", [
+                        'router_id' => $router->id,
+                        'section' => $section,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $configuration[$section] = [];
+                }
+            }
+
+            return json_encode($configuration, JSON_PRETTY_PRINT);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch router configuration', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**
