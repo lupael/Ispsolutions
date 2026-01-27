@@ -117,6 +117,12 @@
                     <a href="{{ route('panel.admin.network.routers') }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
                         Cancel
                     </a>
+                    <button type="button" id="testConnectionBtn" onclick="testConnection()" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Test Connection
+                    </button>
                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -128,4 +134,42 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script nonce="{{ csp_nonce() }}">
+async function testConnection() {
+    const routerId = {{ $router->id }};
+    
+    const button = document.getElementById('testConnectionBtn');
+    const originalHTML = button.innerHTML;
+    
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Testing...';
+    
+    try {
+        const response = await fetch('{{ route("panel.admin.network.routers.test-connection", $router->id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✓ Connection Successful!\n\n' + (data.message || 'Router is accessible.'));
+        } else {
+            alert('✗ Connection Failed\n\n' + (data.message || 'Could not connect to the router.'));
+        }
+    } catch (error) {
+        alert('✗ Error testing connection\n\n' + error.message);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+    }
+}
+</script>
+@endpush
 @endsection

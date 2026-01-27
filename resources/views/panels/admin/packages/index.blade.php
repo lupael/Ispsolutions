@@ -13,11 +13,11 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Manage internet service packages for your customers</p>
                 </div>
                 <div>
-                    <a href="{{ route('panel.admin.packages.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <a href="{{ route('panel.admin.master-packages.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        Create Package
+                        Create Master Package
                     </a>
                 </div>
             </div>
@@ -122,6 +122,10 @@
                             View Details
                         </a>
                         <div class="flex space-x-2">
+                            <a href="{{ route('panel.admin.packages.profiles', $package->id) }}" class="text-sm text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300" title="Associate PPPoE Profiles">
+                                Profiles
+                            </a>
+                            <span class="text-gray-300 dark:text-gray-600">|</span>
                             <a href="{{ route('panel.admin.packages.edit', $package->id) }}" class="text-sm text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                                 Edit
                             </a>

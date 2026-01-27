@@ -109,9 +109,31 @@
                         @error('commission_percentage')
                             <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Commission percentage for the operator on this package
-                        </p>
+                        
+                        <!-- Detailed explanation -->
+                        <div class="mt-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">Commission Percentage Explained</h4>
+                                    <div class="mt-2 text-sm text-blue-700 dark:text-blue-300 space-y-2">
+                                        <p><strong>What is commission?</strong> It's the percentage of earnings the operator keeps from each package sale.</p>
+                                        <p><strong>How it works:</strong></p>
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            <li>Original Package Price: ৳{{ old('custom_price', '100.00') }}</li>
+                                            <li>Commission (e.g., 10%): ৳{{ number_format((float)old('custom_price', 100) * 0.10, 2) }}</li>
+                                            <li>You receive: ৳{{ number_format((float)old('custom_price', 100) * 0.90, 2) }} (90%)</li>
+                                        </ul>
+                                        <p class="pt-1"><strong>Example:</strong> If the operator sells a ৳500 package with 15% commission, they keep ৳75 and you receive ৳425.</p>
+                                        <p class="text-xs italic">💡 Leave blank if no commission applies or if you want to set it later.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Submit Buttons -->
