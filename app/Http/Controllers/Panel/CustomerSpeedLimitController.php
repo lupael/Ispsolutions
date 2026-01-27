@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\CustomerSpeedLimit;
 use App\Models\NetworkUser;
 use App\Models\RadReply;
 use App\Models\User;
@@ -24,6 +25,9 @@ class CustomerSpeedLimitController extends Controller
         $this->authorize('editSpeedLimit', $customer);
 
         $networkUser = NetworkUser::with('package')->where('user_id', $customer->id)->first();
+        
+        // Get current speed limit configuration from database
+        $speedLimitConfig = $customer->speedLimit()->active()->first();
         
         // Get current speed limit from RADIUS
         $speedLimit = null;
@@ -58,7 +62,7 @@ class CustomerSpeedLimitController extends Controller
             ];
         }
 
-        return view('panel.customers.speed-limit.show', compact('customer', 'networkUser', 'speedLimit', 'packageSpeed'));
+        return view('panel.customers.speed-limit.show', compact('customer', 'networkUser', 'speedLimit', 'speedLimitConfig', 'packageSpeed'));
     }
 
     /**
@@ -71,6 +75,8 @@ class CustomerSpeedLimitController extends Controller
         $request->validate([
             'upload_speed' => 'required|integer|min:0',
             'download_speed' => 'required|integer|min:0',
+            'is_temporary' => 'boolean',
+            'expires_at' => 'nullable|date|after:now',
         ]);
 
         $networkUser = NetworkUser::where('user_id', $customer->id)->firstOrFail();
@@ -79,6 +85,8 @@ class CustomerSpeedLimitController extends Controller
         try {
             $uploadSpeed = (int) $request->input('upload_speed');
             $downloadSpeed = (int) $request->input('download_speed');
+            $isTemporary = $request->boolean('is_temporary', false);
+            $expiresAt = $request->input('expires_at');
 
             // If "0 = managed by router" option is selected
             if ($uploadSpeed === 0 && $downloadSpeed === 0) {
@@ -86,6 +94,9 @@ class CustomerSpeedLimitController extends Controller
                 RadReply::where('username', $networkUser->username)
                     ->where('attribute', 'Mikrotik-Rate-Limit')
                     ->delete();
+                
+                // Delete speed limit config
+                CustomerSpeedLimit::where('user_id', $customer->id)->delete();
 
                 $this->logAction($customer, 'Speed limit removed - managed by router');
 
@@ -98,6 +109,11 @@ class CustomerSpeedLimitController extends Controller
                 return back()->withErrors(['error' => 'Upload and download speeds must be greater than 0']);
             }
 
+            // Validate temporary with expiry
+            if ($isTemporary && !$expiresAt) {
+                return back()->withErrors(['error' => 'Expiry date is required for temporary speed changes']);
+            }
+
             // Format: upload/download (in Kbps)
             $rateLimit = "{$uploadSpeed}k/{$downloadSpeed}k";
 
@@ -107,8 +123,22 @@ class CustomerSpeedLimitController extends Controller
                 ['op' => ':=', 'value' => $rateLimit]
             );
 
+            // Store speed limit configuration
+            CustomerSpeedLimit::updateOrCreate(
+                ['user_id' => $customer->id],
+                [
+                    'upload_speed' => $uploadSpeed,
+                    'download_speed' => $downloadSpeed,
+                    'is_temporary' => $isTemporary,
+                    'expires_at' => $expiresAt,
+                    'created_by' => auth()->id(),
+                ]
+            );
+
             // Log action
-            $this->logAction($customer, "Speed limit updated to {$uploadSpeed}Kbps upload / {$downloadSpeed}Kbps download");
+            $type = $isTemporary ? 'temporary' : 'permanent';
+            $expiryInfo = $isTemporary && $expiresAt ? " (expires at {$expiresAt})" : '';
+            $this->logAction($customer, "Speed limit updated to {$uploadSpeed}Kbps upload / {$downloadSpeed}Kbps download ({$type}){$expiryInfo}");
 
             DB::commit();
 
@@ -183,10 +213,13 @@ class CustomerSpeedLimitController extends Controller
 
         DB::beginTransaction();
         try {
-            // Remove custom rate limit
+            // Remove custom rate limit from RADIUS
             RadReply::where('username', $networkUser->username)
                 ->where('attribute', 'Mikrotik-Rate-Limit')
                 ->delete();
+
+            // Delete speed limit configuration from database
+            CustomerSpeedLimit::where('user_id', $customer->id)->delete();
 
             // Log action
             $this->logAction($customer, 'Speed limit removed - now managed by router');

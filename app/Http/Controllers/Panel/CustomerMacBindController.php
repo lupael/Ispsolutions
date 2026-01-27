@@ -6,9 +6,16 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerMacAddress;
+use App\Models\MikrotikRouter;
+use App\Models\NetworkUser;
+use App\Models\RadCheck;
 use App\Models\User;
+use App\Services\AuditLogService;
+use App\Services\MikrotikService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CustomerMacBindController extends Controller
 {
@@ -27,7 +34,7 @@ class CustomerMacBindController extends Controller
     /**
      * Store a new MAC address binding.
      */
-    public function store(Request $request, User $customer)
+    public function store(Request $request, User $customer, AuditLogService $auditLogService)
     {
         $request->validate([
             'mac_address' => 'required|string',
@@ -53,17 +60,55 @@ class CustomerMacBindController extends Controller
             return back()->withErrors(['mac_address' => 'This MAC address is already bound to this customer.']);
         }
 
-        CustomerMacAddress::create([
-            'user_id' => $customer->id,
-            'mac_address' => $formattedMac,
-            'device_name' => $request->input('device_name'),
-            'notes' => $request->input('notes'),
-            'status' => 'active',
-            'first_seen_at' => now(),
-            'added_by' => Auth::id(),
-        ]);
+        DB::beginTransaction();
+        try {
+            $macBinding = CustomerMacAddress::create([
+                'user_id' => $customer->id,
+                'mac_address' => $formattedMac,
+                'device_name' => $request->input('device_name'),
+                'notes' => $request->input('notes'),
+                'status' => 'active',
+                'first_seen_at' => now(),
+                'added_by' => Auth::id(),
+            ]);
 
-        return back()->with('success', 'MAC address bound successfully.');
+            // Integrate with RADIUS MAC authentication
+            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
+            if ($networkUser && $networkUser->username) {
+                try {
+                    // Add MAC to RADIUS radcheck table for MAC authentication
+                    RadCheck::updateOrCreate(
+                        [
+                            'username' => $networkUser->username,
+                            'attribute' => 'Calling-Station-Id',
+                            'value' => $formattedMac,
+                        ],
+                        [
+                            'op' => '==',
+                        ]
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Failed to add MAC to RADIUS', [
+                        'username' => $networkUser->username,
+                        'mac' => $formattedMac,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // Audit logging
+            $auditLogService->logCreated($macBinding, $macBinding->toArray());
+
+            DB::commit();
+            return back()->with('success', 'MAC address bound successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to add MAC binding', [
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+            ]);
+            return back()->withErrors(['error' => 'Failed to add MAC binding.']);
+        }
     }
 
     /**
@@ -85,11 +130,78 @@ class CustomerMacBindController extends Controller
     /**
      * Remove MAC address binding.
      */
-    public function destroy(User $customer, CustomerMacAddress $macAddress)
-    {
-        $macAddress->delete();
+    public function destroy(
+        User $customer,
+        CustomerMacAddress $macAddress,
+        MikrotikService $mikrotikService,
+        AuditLogService $auditLogService
+    ) {
+        DB::beginTransaction();
+        try {
+            $macAddressValue = $macAddress->mac_address;
 
-        return back()->with('success', 'MAC address binding removed successfully.');
+            // Get network user for RADIUS integration
+            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
+
+            // Integrate with RADIUS MAC authentication
+            if ($networkUser && $networkUser->username) {
+                try {
+                    // Remove MAC from RADIUS radcheck table
+                    RadCheck::where('username', $networkUser->username)
+                        ->where('attribute', 'Calling-Station-Id')
+                        ->where('value', $macAddressValue)
+                        ->delete();
+                } catch (\Exception $e) {
+                    Log::warning('Failed to remove MAC from RADIUS', [
+                        'username' => $networkUser->username,
+                        'mac' => $macAddressValue,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // Clear MikroTik MAC binding if applicable
+            if ($networkUser) {
+                try {
+                    $router = MikrotikRouter::where('is_active', true)->first();
+                    
+                    if ($router && $mikrotikService->connectRouter($router->id)) {
+                        // Disconnect any active sessions with this MAC
+                        $sessions = $mikrotikService->getActiveSessions($router->id);
+                        
+                        foreach ($sessions as $session) {
+                            if (isset($session['caller-id']) && strtolower($session['caller-id']) === strtolower($macAddressValue)) {
+                                $mikrotikService->disconnectSession($session['id']);
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to clear MikroTik MAC binding', [
+                        'mac' => $macAddressValue,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // Delete the MAC address binding
+            $macAddress->delete();
+
+            // Audit logging
+            $auditLogService->logDeleted($macAddress, [
+                'mac_address' => $macAddressValue,
+                'customer_id' => $customer->id,
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'MAC address binding removed successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to remove MAC binding', [
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+            ]);
+            return back()->withErrors(['error' => 'Failed to remove MAC binding.']);
+        }
     }
 
     /**

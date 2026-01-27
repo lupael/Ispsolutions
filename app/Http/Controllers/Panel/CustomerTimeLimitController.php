@@ -6,8 +6,13 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerTimeLimit;
+use App\Models\NetworkUser;
+use App\Models\RadReply;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CustomerTimeLimitController extends Controller
 {
@@ -26,7 +31,7 @@ class CustomerTimeLimitController extends Controller
     /**
      * Update or create time limit for a customer.
      */
-    public function update(Request $request, User $customer)
+    public function update(Request $request, User $customer, AuditLogService $auditLogService)
     {
         $this->authorize('editSpeedLimit', $customer);
         
@@ -39,32 +44,87 @@ class CustomerTimeLimitController extends Controller
             'auto_disconnect_on_limit' => 'boolean',
         ]);
 
-        $timeLimit = $customer->timeLimit;
+        DB::beginTransaction();
+        try {
+            $timeLimit = $customer->timeLimit;
+            $oldValues = $timeLimit ? $timeLimit->toArray() : [];
 
-        if ($timeLimit) {
-            $timeLimit->update($request->only([
-                'daily_minutes_limit',
-                'monthly_minutes_limit',
-                'session_duration_limit',
-                'allowed_start_time',
-                'allowed_end_time',
-                'auto_disconnect_on_limit',
-            ]));
-        } else {
-            CustomerTimeLimit::create([
-                'user_id' => $customer->id,
-                'daily_minutes_limit' => $request->input('daily_minutes_limit'),
-                'monthly_minutes_limit' => $request->input('monthly_minutes_limit'),
-                'session_duration_limit' => $request->input('session_duration_limit'),
-                'allowed_start_time' => $request->input('allowed_start_time'),
-                'allowed_end_time' => $request->input('allowed_end_time'),
-                'auto_disconnect_on_limit' => $request->input('auto_disconnect_on_limit', true),
-                'day_reset_date' => now()->startOfDay(),
-                'month_reset_date' => now()->startOfMonth(),
+            if ($timeLimit) {
+                $timeLimit->update($request->only([
+                    'daily_minutes_limit',
+                    'monthly_minutes_limit',
+                    'session_duration_limit',
+                    'allowed_start_time',
+                    'allowed_end_time',
+                    'auto_disconnect_on_limit',
+                ]));
+            } else {
+                $timeLimit = CustomerTimeLimit::create([
+                    'user_id' => $customer->id,
+                    'daily_minutes_limit' => $request->input('daily_minutes_limit'),
+                    'monthly_minutes_limit' => $request->input('monthly_minutes_limit'),
+                    'session_duration_limit' => $request->input('session_duration_limit'),
+                    'allowed_start_time' => $request->input('allowed_start_time'),
+                    'allowed_end_time' => $request->input('allowed_end_time'),
+                    'auto_disconnect_on_limit' => $request->input('auto_disconnect_on_limit', true),
+                    'day_reset_date' => now()->startOfDay(),
+                    'month_reset_date' => now()->startOfMonth(),
+                ]);
+            }
+
+            // Update RADIUS attributes for session timeout
+            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
+            if ($networkUser && $networkUser->username) {
+                $this->updateRadiusTimeLimits($networkUser->username, $timeLimit);
+            }
+
+            // Audit logging
+            $auditLogService->logUpdated($timeLimit, $oldValues, $timeLimit->toArray());
+
+            DB::commit();
+            return back()->with('success', 'Time limit updated successfully. Customer needs to reconnect for changes to take effect.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update time limit', [
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+            ]);
+            return back()->withErrors(['error' => 'Failed to update time limit.']);
+        }
+    }
+
+    /**
+     * Update RADIUS attributes for time limits.
+     */
+    protected function updateRadiusTimeLimits(string $username, CustomerTimeLimit $timeLimit): void
+    {
+        try {
+            // Update Session-Timeout attribute (for max session duration)
+            if ($timeLimit->session_duration_limit > 0) {
+                $timeoutSeconds = $timeLimit->session_duration_limit * 60;
+                RadReply::updateOrCreate(
+                    ['username' => $username, 'attribute' => 'Session-Timeout'],
+                    ['op' => ':=', 'value' => (string) $timeoutSeconds]
+                );
+            } else {
+                // Remove if no limit
+                RadReply::where('username', $username)
+                    ->where('attribute', 'Session-Timeout')
+                    ->delete();
+            }
+
+            // Update Idle-Timeout attribute (disconnect after idle period)
+            $idleTimeoutSeconds = (int) config('radius.idle_timeout_seconds', 300);
+            RadReply::updateOrCreate(
+                ['username' => $username, 'attribute' => 'Idle-Timeout'],
+                ['op' => ':=', 'value' => (string) $idleTimeoutSeconds]
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to update RADIUS time limits', [
+                'username' => $username,
+                'error' => $e->getMessage(),
             ]);
         }
-
-        return back()->with('success', 'Time limit updated successfully.');
     }
 
     /**

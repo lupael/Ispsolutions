@@ -1085,6 +1085,14 @@ Route::prefix('panel/customers/{customer}/speed-limit')->name('panel.customers.s
     Route::delete('/', [\App\Http\Controllers\Panel\CustomerSpeedLimitController::class, 'destroy'])->name('destroy');
 });
 
+// Customer FUP (Fair Usage Policy)
+Route::prefix('panel/customers/{customer}/fup')->name('panel.customers.fup.')->middleware(['auth', 'can:manage-customers'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Panel\CustomerFupController::class, 'show'])->name('show');
+    Route::post('/activate', [\App\Http\Controllers\Panel\CustomerFupController::class, 'activate'])->name('activate');
+    Route::post('/deactivate', [\App\Http\Controllers\Panel\CustomerFupController::class, 'deactivate'])->name('deactivate');
+    Route::post('/reset', [\App\Http\Controllers\Panel\CustomerFupController::class, 'reset'])->name('reset');
+});
+
 // Advance Payments
 Route::prefix('panel/customers/{customer}/advance-payments')->name('panel.customers.advance-payments.')->middleware(['auth', 'can:manage-payments'])->group(function () {
     Route::get('/', [\App\Http\Controllers\Panel\AdvancePaymentController::class, 'index'])->name('index');

@@ -809,6 +809,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get customer speed limit.
+     */
+    public function speedLimit(): HasOne
+    {
+        return $this->hasOne(CustomerSpeedLimit::class);
+    }
+
+    /**
      * Get customer advance payments.
      */
     public function advancePayments(): HasMany
