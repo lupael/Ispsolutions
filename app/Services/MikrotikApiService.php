@@ -35,9 +35,11 @@ class MikrotikApiService
     {
         try {
             $endpoint = $this->menuToEndpoint($menu);
-            $url = "http://{$router->ip_address}:{$router->api_port}/api{$endpoint}";
+            $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
+            $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}";
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
+            $response = Http::withBasicAuth($router->username, $router->password)
+                ->timeout(config('services.mikrotik.timeout', 30))
                 ->get($url, $query);
 
             if ($response->successful()) {
@@ -82,13 +84,15 @@ class MikrotikApiService
     {
         try {
             $endpoint = $this->menuToEndpoint($menu);
-            $url = "http://{$router->ip_address}:{$router->api_port}/api{$endpoint}/add";
+            $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
+            $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}/add";
 
             $successCount = 0;
             $failedCount = 0;
 
             foreach ($rows as $row) {
-                $response = Http::timeout(config('services.mikrotik.timeout', 30))
+                $response = Http::withBasicAuth($router->username, $router->password)
+                    ->timeout(config('services.mikrotik.timeout', 30))
                     ->post($url, $row);
 
                 if ($response->successful()) {
@@ -98,7 +102,7 @@ class MikrotikApiService
                     Log::warning('Failed to add row to MikroTik', [
                         'router_id' => $router->id,
                         'menu' => $menu,
-                        'row' => $row,
+                        'row_keys' => array_keys($row),
                         'status' => $response->status(),
                     ]);
                 }
@@ -137,19 +141,21 @@ class MikrotikApiService
     {
         try {
             $endpoint = $this->menuToEndpoint($menu);
-            $url = "http://{$router->ip_address}:{$router->api_port}/api{$endpoint}/set";
+            $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
+            $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}/set";
 
             // Merge row identifier with new data
             $payload = array_merge($row, $data);
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
+            $response = Http::withBasicAuth($router->username, $router->password)
+                ->timeout(config('services.mikrotik.timeout', 30))
                 ->put($url, $payload);
 
             if ($response->successful()) {
                 Log::info('Successfully edited row on MikroTik', [
                     'router_id' => $router->id,
                     'menu' => $menu,
-                    'row' => $row,
+                    'row_keys' => array_keys($row),
                 ]);
 
                 return true;
@@ -158,7 +164,7 @@ class MikrotikApiService
             Log::warning('Failed to edit row on MikroTik', [
                 'router_id' => $router->id,
                 'menu' => $menu,
-                'row' => $row,
+                'row_keys' => array_keys($row),
                 'status' => $response->status(),
             ]);
 
@@ -167,7 +173,7 @@ class MikrotikApiService
             Log::error('Error editing row on MikroTik', [
                 'router_id' => $router->id,
                 'menu' => $menu,
-                'row' => $row,
+                'row_keys' => array_keys($row),
                 'error' => $e->getMessage(),
             ]);
 
@@ -188,7 +194,8 @@ class MikrotikApiService
     {
         try {
             $endpoint = $this->menuToEndpoint($menu);
-            $baseUrl = "http://{$router->ip_address}:{$router->api_port}/api{$endpoint}/remove";
+            $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
+            $baseUrl = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}/remove";
 
             $successCount = 0;
             $failedCount = 0;
@@ -196,9 +203,10 @@ class MikrotikApiService
             foreach ($rows as $row) {
                 // Build query string from row identifiers
                 $queryParams = http_build_query($row);
-                $url = $baseUrl . '?' . $queryParams;
+                $url = $baseUrl.'?'.$queryParams;
 
-                $response = Http::timeout(config('services.mikrotik.timeout', 30))
+                $response = Http::withBasicAuth($router->username, $router->password)
+                    ->timeout(config('services.mikrotik.timeout', 30))
                     ->delete($url);
 
                 if ($response->successful()) {
@@ -208,7 +216,7 @@ class MikrotikApiService
                     Log::warning('Failed to remove row from MikroTik', [
                         'router_id' => $router->id,
                         'menu' => $menu,
-                        'row' => $row,
+                        'row_keys' => array_keys($row),
                         'status' => $response->status(),
                     ]);
                 }
@@ -245,9 +253,11 @@ class MikrotikApiService
     public function ttyWrite(MikrotikRouter $router, string $command, array $params = []): mixed
     {
         try {
-            $url = "http://{$router->ip_address}:{$router->api_port}/api/terminal";
+            $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
+            $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api/terminal";
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
+            $response = Http::withBasicAuth($router->username, $router->password)
+                ->timeout(config('services.mikrotik.timeout', 30))
                 ->post($url, [
                     'command' => $command,
                     'params' => $params,
@@ -290,24 +300,10 @@ class MikrotikApiService
      */
     private function menuToEndpoint(string $menu): string
     {
-        // Remove leading slash if present
-        $menu = ltrim($menu, '/');
+        // Normalize menu path: remove any leading/trailing slashes
+        $menu = trim($menu, '/');
 
-        // Convert menu path to API endpoint
-        $conversions = [
-            'ip/pool' => '/ip/pool',
-            'ppp/profile' => '/ppp/profile',
-            'ppp/secret' => '/ppp/secret',
-            'ppp/active' => '/ppp/active',
-            'radius' => '/radius',
-            'radius/incoming' => '/radius/incoming',
-            'user' => '/user',
-            'interface' => '/interface',
-            'queue' => '/queue',
-            'firewall/filter' => '/firewall/filter',
-            'firewall/nat' => '/firewall/nat',
-        ];
-
-        return $conversions[$menu] ?? '/' . $menu;
+        // Ensure a single leading slash in the API endpoint
+        return $menu === '' ? '/' : '/'.$menu;
     }
 }

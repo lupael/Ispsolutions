@@ -142,6 +142,14 @@ class RouterBackupService
      *
      * Parses backup data and applies configurations via MikroTik API.
      * Configurations are applied in a specific order to maintain dependencies.
+     *
+     * IMPORTANT NOTES:
+     * - This restore operation ADDS configurations to the router without clearing existing ones
+     * - Duplicate or conflicting configurations may cause restoration failures
+     * - For a clean restore, manually clear router configurations first or use router reset
+     * - RADIUS settings are critical - restoration will abort if RADIUS configuration fails
+     * - A pre-restore backup is automatically created for safety
+     * - Partial failures are logged with details about which sections succeeded/failed
      */
     public function restoreFromBackup(MikrotikRouter $router, RouterConfigurationBackup $backup): bool
     {
@@ -150,11 +158,20 @@ class RouterBackupService
                 throw new \Exception('Backup does not belong to this router');
             }
 
-            // Decrypt and parse backup data
-            $backupDataJson = $this->decryptBackupData($backup->backup_data);
+            // Decrypt and parse backup data with error handling
+            try {
+                $backupDataJson = $this->decryptBackupData($backup->backup_data);
+            } catch (\Exception $e) {
+                Log::error('Failed to decrypt backup data', [
+                    'router_id' => $router->id,
+                    'backup_id' => $backup->id,
+                ]);
+                throw new \Exception('Backup decryption failed. The backup may be corrupted or encrypted with a different key.');
+            }
+
             $backupData = json_decode($backupDataJson, true);
 
-            if (! $backupData) {
+            if (! $backupData || ! is_array($backupData)) {
                 throw new \Exception('Invalid backup data format');
             }
 
@@ -171,14 +188,16 @@ class RouterBackupService
             );
 
             if (! $preRestoreBackup) {
-                Log::warning('Could not create pre-restore backup, continuing anyway');
+                Log::warning('Could not create pre-restore backup, proceeding with caution');
             }
 
             // Track restoration progress
             $restored = [];
             $failed = [];
+            $warnings = [];
 
             // Restore configurations in order of dependencies
+            // Note: RADIUS settings must succeed for PPP authentication to work
             $sections = [
                 'ip_pools' => '/ip/pool',
                 'ppp_profiles' => '/ppp/profile',
@@ -194,6 +213,7 @@ class RouterBackupService
 
                         // Skip if no items to restore
                         if (empty($items)) {
+                            $warnings[] = "Section {$section} is empty in backup";
                             continue;
                         }
 
@@ -211,7 +231,13 @@ class RouterBackupService
                             Log::warning("Failed to restore {$section}", [
                                 'router_id' => $router->id,
                                 'count' => count($items),
+                                'note' => 'Some or all items in this section failed to restore. Check router for conflicts.',
                             ]);
+
+                            // Critical section failure - abort if RADIUS settings fail
+                            if ($section === 'radius_settings') {
+                                throw new \Exception('RADIUS settings restoration failed - aborting to prevent authentication issues');
+                            }
                         }
                     } catch (\Exception $e) {
                         $failed[$section] = $e->getMessage();
@@ -219,23 +245,39 @@ class RouterBackupService
                             'router_id' => $router->id,
                             'error' => $e->getMessage(),
                         ]);
+
+                        // Rethrow critical errors
+                        if ($section === 'radius_settings') {
+                            throw $e;
+                        }
                     }
                 }
             }
 
-            // Log overall results
-            $totalRestored = array_sum($restored);
+            // Calculate results
+            $totalRestored = array_sum(array_filter($restored, 'is_numeric'));
             $hasFailures = ! empty($failed);
+
+            // Check if backup was empty
+            if ($totalRestored === 0 && empty($failed)) {
+                Log::warning('Backup contained no restorable data', [
+                    'router_id' => $router->id,
+                    'backup_id' => $backup->id,
+                    'warnings' => $warnings,
+                ]);
+                throw new \Exception('Backup is empty - no configurations to restore');
+            }
 
             Log::info('Restore from backup completed', [
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
                 'restored_sections' => $restored,
                 'failed_sections' => $failed,
+                'warnings' => $warnings,
                 'total_restored' => $totalRestored,
             ]);
 
-            // Return true if at least some sections were restored and no critical failures
+            // Return true only if something was restored AND no failures occurred
             return $totalRestored > 0 && ! $hasFailures;
 
         } catch (\Exception $e) {
