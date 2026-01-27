@@ -167,8 +167,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const deviceSelect = document.getElementById('device_select');
     const nasIdInput = document.getElementById('nas_id');
     const routerIdInput = document.getElementById('router_id');
+    const form = deviceSelect ? deviceSelect.closest('form') : null;
 
-    if (deviceSelect) {
+    if (deviceSelect && nasIdInput && routerIdInput) {
         deviceSelect.addEventListener('change', function() {
             const value = this.value;
 
@@ -189,6 +190,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         routerIdInput.value = id;
                     }
                 }
+            }
+        });
+
+        // Trigger change event on page load if a device is already selected
+        if (deviceSelect.value) {
+            deviceSelect.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // Add form submit handler to ensure hidden fields are populated
+    if (form && nasIdInput && routerIdInput) {
+        form.addEventListener('submit', function(e) {
+            // Check if at least one hidden field has a value
+            if (!nasIdInput.value && !routerIdInput.value) {
+                e.preventDefault();
+                if (deviceSelect) {
+                    deviceSelect.setCustomValidity('Please select a NAS device or Mikrotik router before submitting.');
+                    deviceSelect.reportValidity();
+                    deviceSelect.focus();
+                }
+            } else if (deviceSelect) {
+                // Clear any previous custom validation message
+                deviceSelect.setCustomValidity('');
             }
         });
     }
