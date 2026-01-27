@@ -266,6 +266,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/notification-helper.js') }}" nonce="{{ csp_nonce() }}"></script>
 <script nonce="{{ csp_nonce() }}">
 function multiRouterConfig() {
     return {
@@ -347,18 +348,73 @@ function multiRouterConfig() {
         },
         
         previewConfiguration() {
-            // TODO: Implement preview functionality to show exact configuration
-            // that will be applied to each router before actual deployment
-            const configPreview = {
-                type: this.configurationType,
-                config: this.config[this.configurationType],
-                routers: this.selectedRouters.length
-            };
-            console.log('Configuration preview:', configPreview);
-            this.showNotification('Preview feature - Configuration details logged to console', 'info');
+            if (!this.configurationType) {
+                window.showNotification('Please select a configuration type to preview.', 'warning');
+                return;
+            }
+
+            if (!this.selectedRouters || this.selectedRouters.length === 0) {
+                window.showNotification('Please select at least one router to preview the configuration.', 'warning');
+                return;
+            }
+
+            const config = this.config[this.configurationType];
+            const routerNames = this.routers
+                .filter(r => this.selectedRouters.includes(r.id))
+                .map(r => r.name)
+                .join(', ');
+
+            const previewMessage =
+                `Configuration Preview\n\n` +
+                `Type: ${this.configurationType.toUpperCase()}\n` +
+                `Routers (${this.selectedRouters.length}): ${routerNames}\n\n` +
+                `Configuration:\n${JSON.stringify(config, null, 2)}`;
+
+            alert(previewMessage);
+            window.showNotification('Configuration preview displayed.', 'info');
         },
         
         async applyConfiguration() {
+            // Validate configuration fields before submission
+            const config = this.config[this.configurationType];
+            
+            if (this.configurationType === 'radius') {
+                if (!config.server_ip || !config.server_ip.trim()) {
+                    window.showNotification('RADIUS Server IP is required', 'error');
+                    return;
+                }
+                if (!config.port || config.port < 1 || config.port > 65535) {
+                    window.showNotification('Valid RADIUS Port (1-65535) is required', 'error');
+                    return;
+                }
+                if (!config.secret || !config.secret.trim()) {
+                    window.showNotification('RADIUS Secret is required', 'error');
+                    return;
+                }
+            } else if (this.configurationType === 'ppp') {
+                if (!config.profile_name || !config.profile_name.trim()) {
+                    window.showNotification('PPP Profile Name is required', 'error');
+                    return;
+                }
+                if (!config.local_address || !config.local_address.trim()) {
+                    window.showNotification('Local Address is required', 'error');
+                    return;
+                }
+                if (!config.remote_pool || !config.remote_pool.trim()) {
+                    window.showNotification('Remote Address Pool is required', 'error');
+                    return;
+                }
+            } else if (this.configurationType === 'firewall') {
+                if (!config.template) {
+                    window.showNotification('Firewall Template is required', 'error');
+                    return;
+                }
+                if (config.template === 'custom' && (!config.custom_rules || !config.custom_rules.trim())) {
+                    window.showNotification('Custom firewall rules are required when using custom template', 'error');
+                    return;
+                }
+            }
+            
             if (!confirm(`Are you sure you want to apply ${this.configurationType} configuration to ${this.selectedRouters.length} router(s)?`)) {
                 return;
             }
@@ -386,40 +442,21 @@ function multiRouterConfig() {
                     const data = await response.json();
                     this.results = data.results || [];
                     const successCount = this.results.filter(r => r.success).length;
-                    this.showNotification(
+                    window.showNotification(
                         `Configuration applied to ${successCount} of ${this.results.length} routers`,
                         successCount === this.results.length ? 'success' : 'warning'
                     );
                 } else {
-                    this.showNotification('Failed to apply configuration', 'error');
+                    window.showNotification('Failed to apply configuration', 'error');
                 }
             } catch (error) {
                 console.error('Error applying configuration:', error);
-                this.showNotification('Error applying configuration', 'error');
+                window.showNotification('Error applying configuration', 'error');
             } finally {
                 this.isApplying = false;
             }
         },
         
-        showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-yellow-500'
-            };
-            
-            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
     }
 }
 </script>

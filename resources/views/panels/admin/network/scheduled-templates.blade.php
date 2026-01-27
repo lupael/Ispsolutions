@@ -233,6 +233,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/notification-helper.js') }}" nonce="{{ csp_nonce() }}"></script>
 <script nonce="{{ csp_nonce() }}">
 function scheduledTemplates() {
     return {
@@ -313,6 +314,32 @@ function scheduledTemplates() {
         },
         
         async createSchedule() {
+            // Client-side validation
+            if (!this.newSchedule.name || !this.newSchedule.name.trim()) {
+                window.showNotification('Schedule name is required', 'error');
+                return;
+            }
+            
+            if (!this.newSchedule.config_type) {
+                window.showNotification('Configuration type is required', 'error');
+                return;
+            }
+            
+            if (!this.newSchedule.frequency) {
+                window.showNotification('Frequency is required', 'error');
+                return;
+            }
+            
+            if (!this.newSchedule.scheduled_at) {
+                window.showNotification('Schedule date and time is required', 'error');
+                return;
+            }
+            
+            if (!this.newSchedule.router_ids || this.newSchedule.router_ids.length === 0) {
+                window.showNotification('Please select at least one router', 'error');
+                return;
+            }
+            
             try {
                 const response = await fetch('/api/routers/scheduled-templates', {
                     method: 'POST',
@@ -328,16 +355,16 @@ function scheduledTemplates() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    this.showNotification('Schedule created successfully', 'success');
+                    window.showNotification('Schedule created successfully', 'success');
                     this.showCreateModal = false;
                     this.resetNewSchedule();
                     await this.loadSchedules();
                 } else {
-                    this.showNotification(data.message || 'Failed to create schedule', 'error');
+                    window.showNotification(data.message || 'Failed to create schedule', 'error');
                 }
             } catch (error) {
                 console.error('Error creating schedule:', error);
-                this.showNotification('Error creating schedule', 'error');
+                window.showNotification('Error creating schedule', 'error');
             }
         },
         
@@ -353,14 +380,14 @@ function scheduledTemplates() {
                 });
                 
                 const data = await response.json();
-                this.showNotification(data.message, data.success ? 'success' : 'error');
+                window.showNotification(data.message, data.success ? 'success' : 'error');
                 
                 if (data.success) {
                     await this.loadSchedules();
                 }
             } catch (error) {
                 console.error('Error toggling schedule:', error);
-                this.showNotification('Error toggling schedule', 'error');
+                window.showNotification('Error toggling schedule', 'error');
             }
         },
         
@@ -380,42 +407,93 @@ function scheduledTemplates() {
                 });
                 
                 const data = await response.json();
-                this.showNotification(data.message, data.success ? 'success' : 'error');
+                window.showNotification(data.message, data.success ? 'success' : 'error');
                 
                 if (data.success) {
                     await this.loadSchedules();
                 }
             } catch (error) {
                 console.error('Error deleting schedule:', error);
-                this.showNotification('Error deleting schedule', 'error');
+                window.showNotification('Error deleting schedule', 'error');
             }
         },
         
-        editSchedule(scheduleId) {
-            // TODO: Implement edit functionality to load schedule details into modal
+        async editSchedule(scheduleId) {
             const schedule = this.activeSchedules.find(s => s.id === scheduleId);
-            if (schedule) {
-                console.log('Editing schedule:', schedule);
-                this.showNotification(`Edit feature for schedule "${schedule.name}" - Details logged to console`, 'info');
+            if (!schedule) {
+                window.showNotification('Schedule not found', 'error');
+                return;
             }
+
+            // Populate the modal with existing schedule data for editing
+            this.newSchedule = {
+                name: schedule.name || '',
+                description: schedule.description || '',
+                config_type: schedule.config_type || '',
+                frequency: schedule.frequency || 'once',
+                scheduled_at: schedule.scheduled_at || '',
+                router_ids: schedule.router_ids || []
+            };
+            
+            this.showCreateModal = true;
+            window.showNotification(`Editing schedule: ${schedule.name}`, 'info');
         },
         
         viewHistory(scheduleId) {
-            // TODO: Implement history view to show execution history for this schedule
             const schedule = this.activeSchedules.find(s => s.id === scheduleId);
-            if (schedule) {
-                console.log('Viewing history for schedule:', schedule);
-                this.showNotification(`View history feature for schedule "${schedule.name}" - Details logged to console`, 'info');
+            if (!schedule) {
+                window.showNotification('Schedule not found', 'error');
+                return;
             }
+
+            // Filter execution history for this schedule
+            const historyEntries = this.completedExecutions.filter(e => e.schedule_id === scheduleId);
+            
+            if (!historyEntries.length) {
+                window.showNotification(`No execution history found for "${schedule.name}"`, 'info');
+                return;
+            }
+            
+            // Build a readable history summary
+            let message = `Execution History for "${schedule.name}":\n\n`;
+            historyEntries.slice(0, 10).forEach((entry, index) => {
+                const status = entry.status || 'Unknown';
+                const finishedAt = this.formatDateTime(entry.executed_at || entry.completed_at);
+                const result = entry.success_count && entry.total_count 
+                    ? `${entry.success_count}/${entry.total_count} succeeded` 
+                    : 'N/A';
+                message += `${index + 1}. ${status.toUpperCase()} - ${finishedAt} (${result})\n`;
+            });
+            
+            if (historyEntries.length > 10) {
+                message += `\n... and ${historyEntries.length - 10} more executions`;
+            }
+            
+            alert(message);
         },
         
         viewExecutionDetails(executionId) {
-            // TODO: Implement detailed view of execution results
             const execution = this.completedExecutions.find(e => e.id === executionId);
-            if (execution) {
-                console.log('Viewing execution details:', execution);
-                this.showNotification('View execution details - Details logged to console', 'info');
+            if (!execution) {
+                window.showNotification('Execution details not found', 'error');
+                return;
             }
+
+            const status = execution.status || 'unknown';
+            const executedAt = execution.executed_at || execution.completed_at || execution.started_at;
+            const scheduleName = execution.schedule_name || 'Unknown';
+            const successCount = execution.success_count || 0;
+            const totalCount = execution.total_count || 0;
+
+            const message = 
+                `Execution Details:\n\n` +
+                `Schedule: ${scheduleName}\n` +
+                `Status: ${status.toUpperCase()}\n` +
+                `Executed: ${this.formatDateTime(executedAt)}\n` +
+                `Results: ${successCount}/${totalCount} routers succeeded\n` +
+                `Configuration Type: ${execution.config_type || 'N/A'}`;
+
+            alert(message);
         },
         
         resetNewSchedule() {
@@ -434,25 +512,6 @@ function scheduledTemplates() {
             return new Date(timestamp).toLocaleString();
         },
         
-        showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-yellow-500'
-            };
-            
-            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
     }
 }
 </script>

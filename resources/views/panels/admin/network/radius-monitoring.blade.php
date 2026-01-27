@@ -228,6 +228,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/notification-helper.js') }}" nonce="{{ csp_nonce() }}"></script>
 <script nonce="{{ csp_nonce() }}">
 function radiusMonitoring() {
     return {
@@ -246,6 +247,18 @@ function radiusMonitoring() {
         
         async init() {
             await this.refreshStatus();
+            
+            // Setup cleanup when component is destroyed
+            this.$watch('$el', (el) => {
+                if (!el) {
+                    this.stopAutoRefresh();
+                }
+            });
+        },
+        
+        destroy() {
+            // Cleanup timer when component is destroyed
+            this.stopAutoRefresh();
         },
         
         async refreshStatus() {
@@ -267,7 +280,7 @@ function radiusMonitoring() {
                 }
             } catch (error) {
                 console.error('Error fetching RADIUS status:', error);
-                this.showNotification('Failed to fetch RADIUS status', 'error');
+                window.showNotification('Failed to fetch RADIUS status', 'error');
             } finally {
                 this.isRefreshing = false;
             }
@@ -307,14 +320,14 @@ function radiusMonitoring() {
                 });
                 
                 const data = await response.json();
-                this.showNotification(data.message, data.success ? 'success' : 'error');
+                window.showNotification(data.message, data.success ? 'success' : 'error');
                 
                 if (data.success) {
                     await this.refreshStatus();
                 }
             } catch (error) {
                 console.error('Test connection error:', error);
-                this.showNotification('Failed to test connection', 'error');
+                window.showNotification('Failed to test connection', 'error');
             }
         },
         
@@ -334,25 +347,6 @@ function radiusMonitoring() {
             return date.toLocaleDateString();
         },
         
-        showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-yellow-500'
-            };
-            
-            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
     }
 }
 </script>

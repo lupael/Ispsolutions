@@ -269,6 +269,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/notification-helper.js') }}" nonce="{{ csp_nonce() }}"></script>
 <script nonce="{{ csp_nonce() }}">
 function failoverTesting() {
     return {
@@ -332,7 +333,7 @@ function failoverTesting() {
         
         async runManualTest() {
             if (!this.selectedRouter) {
-                this.showNotification('Please select a router', 'warning');
+                window.showNotification('Please select a router', 'warning');
                 return;
             }
             
@@ -373,20 +374,23 @@ function failoverTesting() {
                     // Simulate test progress
                     await this.simulateTestProgress(data.test_id);
                 } else {
-                    this.showNotification('Failed to start test', 'error');
+                    window.showNotification('Failed to start test', 'error');
                     this.isRunningTest = false;
                     this.currentTest = null;
                 }
             } catch (error) {
                 console.error('Error running test:', error);
-                this.showNotification('Error running test', 'error');
+                window.showNotification('Error running test', 'error');
                 this.isRunningTest = false;
                 this.currentTest = null;
             }
         },
         
         async simulateTestProgress(testId) {
-            // Simulate test progress (in real implementation, poll server for progress)
+            // NOTE: This is a simulated progress display for UI demonstration purposes.
+            // In production, this should poll the server for actual test progress via an API endpoint
+            // like GET /api/routers/failover-tests/{testId}/progress
+            
             for (let i = 0; i < this.currentTest.steps.length; i++) {
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 this.currentTest.steps[i].status = 'running';
@@ -407,7 +411,7 @@ function failoverTesting() {
             this.isRunningTest = false;
             
             await this.loadHistory();
-            this.showNotification('Failover test completed successfully', 'success');
+            window.showNotification('Failover test completed successfully', 'success');
         },
         
         async saveSchedule() {
@@ -424,33 +428,52 @@ function failoverTesting() {
                 });
                 
                 const data = await response.json();
-                this.showNotification(data.message, data.success ? 'success' : 'error');
+                window.showNotification(data.message, data.success ? 'success' : 'error');
                 
                 if (data.success) {
                     this.showScheduleModal = false;
                 }
             } catch (error) {
                 console.error('Error saving schedule:', error);
-                this.showNotification('Error saving schedule', 'error');
+                window.showNotification('Error saving schedule', 'error');
             }
         },
         
         viewTestDetails(testId) {
-            // TODO: Implement detailed view showing all test steps and results
             const test = this.testHistory.find(t => t.id === testId);
-            if (test) {
-                console.log('Viewing test details:', test);
-                this.showNotification('View test details - Details logged to console', 'info');
+            if (!test) {
+                window.showNotification('Test details not found', 'error');
+                return;
             }
+            
+            const details = [
+                `Test Type: ${test.test_type || 'N/A'}`,
+                `Router: ${test.router_name || 'N/A'}`,
+                `Status: ${(test.result || test.status || 'unknown').toUpperCase()}`,
+                `Started: ${this.formatDateTime(test.started_at)}`,
+                test.completed_at ? `Completed: ${this.formatDateTime(test.completed_at)}` : null,
+                `Duration: ${test.duration || 'N/A'}s`
+            ].filter(Boolean).join('\n');
+            
+            alert(`Test Details:\n\n${details}`);
         },
         
-        rerunTest(testId) {
-            // TODO: Implement rerun functionality with same test configuration
-            const test = this.testHistory.find(t => t.id === testId);
-            if (test) {
-                console.log('Rerunning test with configuration:', test);
-                this.showNotification(`Rerun test feature - Would rerun ${test.test_type} test`, 'info');
+        async rerunTest(testId) {
+            const originalTest = this.testHistory.find(t => t.id === testId);
+            if (!originalTest) {
+                window.showNotification('Unable to rerun test: original test not found', 'error');
+                return;
             }
+            
+            // Set configuration based on original test
+            this.selectedRouter = originalTest.router_id || '';
+            this.testType = originalTest.test_type || 'radius-failover';
+            this.testDuration = originalTest.duration || 60;
+            this.autoRecover = true;
+            
+            // Run the test with same configuration
+            window.showNotification(`Rerunning ${originalTest.test_type} test for ${originalTest.router_name}`, 'info');
+            await this.runManualTest();
         },
         
         formatDateTime(timestamp) {
@@ -458,25 +481,6 @@ function failoverTesting() {
             return new Date(timestamp).toLocaleString();
         },
         
-        showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-yellow-500'
-            };
-            
-            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
     }
 }
 </script>

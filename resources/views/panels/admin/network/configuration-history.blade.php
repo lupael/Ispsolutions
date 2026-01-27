@@ -192,6 +192,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/notification-helper.js') }}" nonce="{{ csp_nonce() }}"></script>
 <script nonce="{{ csp_nonce() }}">
 function configurationHistory() {
     return {
@@ -264,7 +265,7 @@ function configurationHistory() {
                 }
             } catch (error) {
                 console.error('Error loading history:', error);
-                this.showNotification('Failed to load configuration history', 'error');
+                window.showNotification('Failed to load configuration history', 'error');
             } finally {
                 this.isLoading = false;
             }
@@ -291,7 +292,7 @@ function configurationHistory() {
                 } catch (error) {
                     console.error('Error loading diff:', error);
                     change.showDiff = false;
-                    this.showNotification('Failed to load diff', 'error');
+                    window.showNotification('Failed to load diff', 'error');
                 }
             }
         },
@@ -312,14 +313,14 @@ function configurationHistory() {
                 });
                 
                 const data = await response.json();
-                this.showNotification(data.message, data.success ? 'success' : 'error');
+                window.showNotification(data.message, data.success ? 'success' : 'error');
                 
                 if (data.success) {
                     await this.loadHistory();
                 }
             } catch (error) {
                 console.error('Error reverting change:', error);
-                this.showNotification('Failed to revert configuration', 'error');
+                window.showNotification('Failed to revert configuration', 'error');
             }
         },
         
@@ -342,25 +343,6 @@ function configurationHistory() {
             return new Date(timestamp).toLocaleString();
         },
         
-        showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-yellow-500'
-            };
-            
-            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
     }
 }
 </script>
