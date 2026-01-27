@@ -243,6 +243,7 @@ class RouterBackupService
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return false;
