@@ -22,16 +22,6 @@ class NotificationService
 
     /**
      * Send invoice generated notification
-     *
-     * @deprecated Use sendInvoiceGeneratedNotification() instead
-     */
-    public function sendInvoiceGenerated(Invoice $invoice): bool
-    {
-        return $this->sendInvoiceGeneratedNotification($invoice);
-    }
-
-    /**
-     * Send invoice generated notification
      */
     public function sendInvoiceGeneratedNotification(Invoice $invoice): bool
     {
@@ -63,16 +53,6 @@ class NotificationService
         }
 
         return $emailSent || $smsSent;
-    }
-
-    /**
-     * Send payment received notification
-     *
-     * @deprecated Use sendPaymentReceivedNotification(Invoice, int) instead
-     */
-    public function sendPaymentReceived(Payment $payment): bool
-    {
-        return $this->sendPaymentReceivedNotification($payment->invoice, $payment->amount);
     }
 
     /**

@@ -729,20 +729,6 @@ class AdminController extends Controller
     }
 
     /**
-     * Display MikroTik routers listing.
-     *
-     * @deprecated This is a legacy route. Use routers() method at panel.admin.network.routers instead.
-     * Displays paginated list of MikroTik routers for admin users with full management access.
-     * Includes 20 items per page with tenant isolation automatically applied via BelongsToTenant trait.
-     */
-    public function mikrotikRouters(): View
-    {
-        $routers = MikrotikRouter::latest()->paginate(20);
-
-        return view('panels.admin.mikrotik.index', compact('routers'));
-    }
-
-    /**
      * Display NAS devices listing.
      *
      * Displays paginated list of Network Access Server devices for admin users with full management access.
@@ -766,24 +752,6 @@ class AdminController extends Controller
         $devices = CiscoDevice::latest()->paginate(20);
 
         return view('panels.admin.cisco.index', compact('devices'));
-    }
-
-    /**
-     * Display OLT devices listing.
-     *
-     * Displays paginated list of Optical Line Terminal devices for admin users with full management access.
-     * Includes 20 items per page with tenant isolation automatically applied via BelongsToTenant trait.
-     */
-    /**
-     * Display OLT devices listing.
-     *
-     * @deprecated This is a legacy route. Use oltList() method at panel.admin.network.olt instead.
-     */
-    public function oltDevices(): View
-    {
-        $devices = Olt::latest()->paginate(20);
-
-        return view('panels.admin.olt.index', compact('devices'));
     }
 
     /**

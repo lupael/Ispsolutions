@@ -2,8 +2,25 @@
 
 This file lists documentation that has been consolidated, superseded, or is no longer maintained.
 
-**Last Updated**: 2026-01-23  
-**Status**: Phases 1 & 2 completed, documentation cleanup finished
+**Last Updated**: 2026-01-27  
+**Status**: Phases 1, 2, and 3 completed. Code cleanup for deprecated methods completed.
+
+---
+
+## ✅ New in v3.2: Deprecated Code Removal
+
+The following deprecated code has been removed in v3.2:
+
+### Removed Deprecated Methods
+- ✅ **NotificationService::sendInvoiceGenerated()** - Removed (replaced by sendInvoiceGeneratedNotification)
+- ✅ **NotificationService::sendPaymentReceived()** - Removed (replaced by sendPaymentReceivedNotification)
+- ✅ **AdminController::mikrotikRouters()** - Removed (replaced by routers() at panel.admin.network.routers)
+- ✅ **AdminController::oltDevices()** - Removed (replaced by oltList() at panel.admin.network.olt)
+
+### Maintained for Backward Compatibility
+- ⚠️ **User::networkUser()** relationship - Kept for backward compatibility (heavily used throughout codebase)
+  - While network credentials are now stored directly on User model, the NetworkUser relationship is still actively used in many controllers, exports, and accessors
+  - Cannot be removed without major refactoring
 
 ---
 
