@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- Handle database permission denied error (42000) for radacct queries ([064ba42](../../commit/064ba4281adcc7f675cacba2a9a79edf2c4aaebc))
 - Apply second round of code review feedback - documentation accuracy ([b2cfefc](../../commit/b2cfefc2945cee070f4e064841b2e0e0dcbbe0bb))
 - Consolidate staff sidebar to single "Routers" menu item ([5db716b](../../commit/5db716b6c2ec167b0f50325718123e2bd1f782a9))
 - Address code review feedback on documentation accuracy and UI consistency ([6ebd86d](../../commit/6ebd86d2e426df90d8f886dee628d090b6e5c4fc))
@@ -39,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ♻️ Code Refactoring
 
+- Reduce code duplication in error handling ([73e1091](../../commit/73e1091862db79fbccf98b705f6a8d3e9d20aa23))
 - Remove redundant tabs, unify all routers into single page with filtering ([26bb49f](../../commit/26bb49f2f00973c0d20a1c206bd20972eec64a46))
 - Extract router device tabs into reusable component ([d121f37](../../commit/d121f378ed4718bd9bc3dab8c234543422ceb857))
 
