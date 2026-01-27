@@ -156,6 +156,7 @@ class AdminController extends Controller
     {
         $users = User::with('roles')
             ->where('tenant_id', auth()->user()->tenant_id)
+            ->where('operator_level', '<', 100) // Exclude customers (operator_level = 100)
             ->latest()
             ->paginate(20);
 
