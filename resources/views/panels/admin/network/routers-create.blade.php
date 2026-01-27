@@ -69,8 +69,8 @@
                     </div>
 
                     <div>
-                        <label for="port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Management Port</label>
-                        <input type="number" id="port" name="port" placeholder="8728" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="api_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Management Port</label>
+                        <input type="number" id="api_port" name="port" placeholder="8728" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
 
                     <div>
