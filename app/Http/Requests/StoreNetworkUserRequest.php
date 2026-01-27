@@ -73,9 +73,14 @@ class StoreNetworkUserRequest extends FormRequest
      * Maps customer_* fields to standard User fields.
      *
      * Note: Fields like customer_phone, customer_address, installation_address, 
-     * mikrotik_router_id, and notes are validated but not stored in users table.
-     * They should be handled separately (e.g., in a related customer_details table)
-     * or stored via custom logic in the controller.
+     * mikrotik_router_id, notes, and start_date are validated but not stored in users table.
+     * 
+     * These fields should be:
+     * 1. Stored in a related customer_details/customer_metadata table, or
+     * 2. Handled by custom controller logic after user creation, or
+     * 3. Stored in a JSON meta field on the User model if needed
+     * 
+     * For now, access them via getAdditionalFields() method and handle in the controller.
      *
      * @return array<string, mixed>
      */
@@ -100,8 +105,9 @@ class StoreNetworkUserRequest extends FormRequest
             'expiry_date' => $validated['expiry_date'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
             
-            // Zone assignment
-            'zone_id' => null, // Can be set later if needed
+            // Zone assignment (can be set by controller if needed based on business logic)
+            // For example: based on area, router assignment, or package requirements
+            'zone_id' => null,
             
             // Set as customer (operator_level = 100)
             'operator_level' => 100,
