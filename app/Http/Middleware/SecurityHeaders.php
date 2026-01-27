@@ -38,9 +38,10 @@ class SecurityHeaders
         // Note: 'unsafe-eval' is required for Alpine.js to evaluate expressions in attributes like x-data, x-show, @click, etc.
         // Alpine.js uses Function() constructor which requires eval. While this slightly weakens CSP,
         // it's necessary for Alpine.js to work. Alternative would be to use Alpine's CSP build which has limitations.
+        // Note: 'unsafe-hashes' is required for inline event handlers (onclick, onerror, etc.) to work
         $response->headers->set('Content-Security-Policy',
             "default-src 'self'; " .
-            "script-src 'self' 'unsafe-eval' 'nonce-{$nonce}' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com static.cloudflareinsights.com; " .
+            "script-src 'self' 'unsafe-eval' 'unsafe-hashes' 'nonce-{$nonce}' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com static.cloudflareinsights.com; " .
             "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com fonts.bunny.net; " .
             "font-src 'self' fonts.gstatic.com fonts.bunny.net cdnjs.cloudflare.com cdn.jsdelivr.net; " .
             "img-src 'self' data: https:; " .
