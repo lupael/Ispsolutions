@@ -231,7 +231,12 @@
 <script nonce="{{ $cspNonce }}">
 function firmwareUpdates() {
     // Cache CSRF token to avoid repeated DOM queries
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenElement ? csrfTokenElement.content : '';
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found. API requests may fail.');
+    }
     
     // Helper to get auth headers
     const getAuthHeaders = () => ({
