@@ -21,7 +21,7 @@ use Illuminate\View\View;
 
 class CustomerWizardController extends Controller
 {
-    private const TOTAL_STEPS = 7;
+    private const TOTAL_STEPS = 4;
 
     public function __construct(
         private MikrotikService $mikrotikService,
@@ -94,9 +94,6 @@ class CustomerWizardController extends Controller
             2 => $this->showStep2($tempCustomer, $data),
             3 => $this->showStep3($tempCustomer, $data),
             4 => $this->showStep4($tempCustomer, $data),
-            5 => $this->showStep5($tempCustomer, $data),
-            6 => $this->showStep6($tempCustomer, $data),
-            7 => $this->showStep7($tempCustomer, $data),
         };
     }
 
@@ -121,9 +118,6 @@ class CustomerWizardController extends Controller
             2 => $this->processStep2($request, $tempCustomer),
             3 => $this->processStep3($request, $tempCustomer),
             4 => $this->processStep4($request, $tempCustomer),
-            5 => $this->processStep5($request, $tempCustomer),
-            6 => $this->processStep6($request, $tempCustomer),
-            7 => $this->processStep7($request, $tempCustomer),
         };
     }
 
@@ -289,92 +283,14 @@ class CustomerWizardController extends Controller
             return redirect()->back()->with('success', 'Draft saved successfully.');
         }
 
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 5]);
+        // Complete the customer creation process
+        return $this->completeCustomerCreation($request, $tempCustomer);
     }
 
     /**
-     * Step 5: Custom Fields
+     * Complete customer creation with suspended status.
      */
-    private function showStep5(TempCustomer $tempCustomer, array $data): View
-    {
-        // Check if there are any custom fields configured
-        // For now, we'll skip this step automatically
-        return view('panels.shared.customers.wizard.step5', [
-            'tempCustomer' => $tempCustomer,
-            'data' => $data,
-            'currentStep' => 5,
-            'totalSteps' => self::TOTAL_STEPS,
-        ]);
-    }
-
-    private function processStep5(Request $request, TempCustomer $tempCustomer): RedirectResponse
-    {
-        // Process custom fields if any
-        $customFields = $request->input('custom_fields', []);
-
-        $tempCustomer->setStepData(5, ['custom_fields' => $customFields]);
-        $tempCustomer->save();
-
-        if ($request->input('action') === 'save_draft') {
-            return redirect()->back()->with('success', 'Draft saved successfully.');
-        }
-
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 6]);
-    }
-
-    /**
-     * Step 6: Initial Payment
-     */
-    private function showStep6(TempCustomer $tempCustomer, array $data): View
-    {
-        $allData = $tempCustomer->getAllData();
-        $packagePrice = $allData['package_price'] ?? 0;
-
-        return view('panels.shared.customers.wizard.step6', [
-            'tempCustomer' => $tempCustomer,
-            'data' => $data,
-            'packagePrice' => $packagePrice,
-            'currentStep' => 6,
-            'totalSteps' => self::TOTAL_STEPS,
-        ]);
-    }
-
-    private function processStep6(Request $request, TempCustomer $tempCustomer): RedirectResponse
-    {
-        $validated = $request->validate([
-            'payment_amount' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:cash,bank_transfer,card,mobile_money,other',
-            'payment_reference' => 'nullable|string|max:255',
-            'payment_notes' => 'nullable|string|max:500',
-        ]);
-
-        $tempCustomer->setStepData(6, $validated);
-        $tempCustomer->save();
-
-        if ($request->input('action') === 'save_draft') {
-            return redirect()->back()->with('success', 'Draft saved successfully.');
-        }
-
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 7]);
-    }
-
-    /**
-     * Step 7: Review & Confirmation
-     */
-    private function showStep7(TempCustomer $tempCustomer, array $data): View
-    {
-        $allData = $tempCustomer->getAllData();
-
-        return view('panels.shared.customers.wizard.step7', [
-            'tempCustomer' => $tempCustomer,
-            'data' => $data,
-            'allData' => $allData,
-            'currentStep' => 7,
-            'totalSteps' => self::TOTAL_STEPS,
-        ]);
-    }
-
-    private function processStep7(Request $request, TempCustomer $tempCustomer): RedirectResponse
+    private function completeCustomerCreation(Request $request, TempCustomer $tempCustomer): RedirectResponse
     {
         try {
             DB::beginTransaction();
@@ -407,7 +323,7 @@ class CustomerWizardController extends Controller
                 // Network service fields
                 'service_type' => $allData['connection_type'] ?? null,
                 'connection_type' => $allData['connection_type'] ?? null,
-                'status' => 'active',
+                'status' => 'suspended', // Create with suspended status
                 'zone_id' => $allData['zone_id'] ?? null,
             ]);
 
@@ -449,43 +365,6 @@ class CustomerWizardController extends Controller
                 'due_date' => $startDate->copy()->addDays(7),
             ]);
 
-            // Create payment if amount > 0
-            if (isset($allData['payment_amount']) && $allData['payment_amount'] > 0) {
-                $payment = Payment::create([
-                    'tenant_id' => getCurrentTenantId(),
-                    'payment_number' => $this->billingService->generatePaymentNumber(),
-                    'user_id' => $customer->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $allData['payment_amount'],
-                    'payment_method' => $allData['payment_method'],
-                    'transaction_id' => $allData['payment_reference'] ?? null,
-                    'status' => 'completed',
-                    'paid_at' => now(),
-                    'collected_by' => $allData['collected_by'] ?? auth()->id(),
-                    'notes' => $allData['payment_notes'] ?? 'Initial payment via wizard',
-                ]);
-
-                // Update invoice status if fully paid
-                if ($allData['payment_amount'] >= $package->price) {
-                    $invoice->update([
-                        'status' => 'paid',
-                        'paid_at' => now(),
-                    ]);
-                }
-
-                // Update customer wallet balance if overpaid
-                if ($allData['payment_amount'] > $package->price) {
-                    $customer->wallet_balance = $allData['payment_amount'] - $package->price;
-                    $customer->save();
-                }
-            }
-
-            // Set network user expiry date if it was created
-            if (isset($networkUser) && $networkUser) {
-                $networkUser->expiry_date = $endDate;
-                $networkUser->save();
-            }
-
             // Clean up temp customer data
             $tempCustomer->delete();
             $request->session()->forget('wizard_session_id');
@@ -493,7 +372,7 @@ class CustomerWizardController extends Controller
             DB::commit();
 
             return redirect()->route('panel.admin.customers.show', $customer)
-                ->with('success', 'Customer created successfully! Username: ' . $username);
+                ->with('success', 'Customer created successfully with suspended status. Username: ' . $username . '. Activate service by paying the invoice.');
         } catch (\Exception $e) {
             DB::rollBack();
             logger()->error('Customer wizard completion failed: ' . $e->getMessage());
