@@ -63,7 +63,7 @@ class SearchController extends Controller
 
         return $customerQuery
             ->with(['tenant:id,company_name', 'currentPackage:id,name'])
-            ->select('id', 'name', 'email', 'username', 'tenant_id', 'is_active', 'service_package_id', 'created_by')
+            ->select('id', 'name', 'email', 'username', 'tenant_id', 'is_active', 'service_package_id')
             ->latest()
             ->limit(20)
             ->get();
@@ -91,7 +91,7 @@ class SearchController extends Controller
 
         return $invoiceQuery
             ->with(['user:id,name,email,username', 'package:id,name'])
-            ->select('id', 'invoice_number', 'user_id', 'package_id', 'total_amount', 'status', 'due_date', 'tenant_id', 'created_by')
+            ->select('id', 'invoice_number', 'user_id', 'package_id', 'total_amount', 'status', 'due_date', 'tenant_id')
             ->latest()
             ->limit(20)
             ->get();
