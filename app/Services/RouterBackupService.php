@@ -131,11 +131,13 @@ class RouterBackupService
     /**
      * Restore configuration from backup
      * 
-     * Note: This is a placeholder implementation. Full restore functionality requires:
-     * 1. Parsing the backup JSON data structure
-     * 2. Applying configurations in the correct order via MikroTik API
-     * 3. Handling conflicts and validation
-     * This should be implemented based on specific backup format and requirements.
+     * This implementation restores configurations from backup data stored in the database.
+     * The backup data is expected to be in JSON format containing router configuration.
+     * 
+     * @param MikrotikRouter $router The router to restore configuration to
+     * @param RouterConfigurationBackup $backup The backup to restore from
+     * @return bool True if restore was successful, false otherwise
+     * @throws \Exception If backup doesn't belong to the router
      */
     public function restoreFromBackup(MikrotikRouter $router, RouterConfigurationBackup $backup): bool
     {
@@ -144,25 +146,137 @@ class RouterBackupService
                 throw new \Exception('Backup does not belong to this router');
             }
 
-            // Implementation depends on router API
-            Log::warning('Restore from backup called - placeholder implementation', [
+            Log::info('Starting restore from backup', [
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
+                'backup_type' => $backup->backup_type,
                 'notes' => $backup->notes,
             ]);
 
-            // TODO: Implement actual restore logic via MikroTik API
-            // This would involve:
-            // 1. Parsing $backup->backup_data JSON
-            // 2. Applying each configuration section via MikroTik API
-            // 3. Validating the restored configuration
+            // Decrypt the backup data
+            if (!$backup->backup_data) {
+                throw new \Exception('Backup data is empty or invalid');
+            }
+
+            $backupData = $this->decryptBackupData($backup->backup_data);
+            $config = json_decode($backupData, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Failed to parse backup data: ' . json_last_error_msg());
+            }
+
+            // Validate backup structure
+            if (!isset($config['router_id']) || $config['router_id'] != $router->id) {
+                throw new \Exception('Backup router ID does not match target router');
+            }
+
+            // Initialize MikrotikService
+            $mikrotikService = app(MikrotikService::class);
             
-            throw new \Exception('Restore from backup is not yet implemented');
+            // Connect to the router
+            if (!$mikrotikService->connectRouter($router->id)) {
+                throw new \Exception('Failed to connect to router');
+            }
+
+            $restored = [];
+            $failed = [];
+
+            // Restore PPP Profiles if present in backup
+            if (isset($config['ppp_profiles']) && is_array($config['ppp_profiles'])) {
+                foreach ($config['ppp_profiles'] as $profile) {
+                    try {
+                        if ($mikrotikService->createPppProfile($router->id, $profile)) {
+                            $restored[] = 'Profile: ' . ($profile['name'] ?? 'unknown');
+                        } else {
+                            $failed[] = 'Profile: ' . ($profile['name'] ?? 'unknown');
+                        }
+                    } catch (\Exception $e) {
+                        $failed[] = 'Profile: ' . ($profile['name'] ?? 'unknown') . ' - ' . $e->getMessage();
+                    }
+                }
+            }
+
+            // Restore IP Pools if present in backup
+            if (isset($config['ip_pools']) && is_array($config['ip_pools'])) {
+                foreach ($config['ip_pools'] as $pool) {
+                    try {
+                        if ($mikrotikService->createIpPool($router->id, $pool)) {
+                            $restored[] = 'IP Pool: ' . ($pool['name'] ?? 'unknown');
+                        } else {
+                            $failed[] = 'IP Pool: ' . ($pool['name'] ?? 'unknown');
+                        }
+                    } catch (\Exception $e) {
+                        $failed[] = 'IP Pool: ' . ($pool['name'] ?? 'unknown') . ' - ' . $e->getMessage();
+                    }
+                }
+            }
+
+            // Restore PPP Secrets (users) if present in backup
+            if (isset($config['ppp_secrets']) && is_array($config['ppp_secrets'])) {
+                foreach ($config['ppp_secrets'] as $secret) {
+                    try {
+                        // Create a copy with router_id to avoid modifying original array
+                        $secretData = array_merge($secret, ['router_id' => $router->id]);
+                        if ($mikrotikService->createPppoeUser($secretData)) {
+                            $restored[] = 'PPP Secret: ' . ($secret['username'] ?? 'unknown');
+                        } else {
+                            $failed[] = 'PPP Secret: ' . ($secret['username'] ?? 'unknown');
+                        }
+                    } catch (\Exception $e) {
+                        $failed[] = 'PPP Secret: ' . ($secret['username'] ?? 'unknown') . ' - ' . $e->getMessage();
+                    }
+                }
+            }
+
+            // Restore Queues if present in backup
+            if (isset($config['queues']) && is_array($config['queues'])) {
+                foreach ($config['queues'] as $queue) {
+                    try {
+                        if ($mikrotikService->createQueue($router->id, $queue)) {
+                            $restored[] = 'Queue: ' . ($queue['name'] ?? 'unknown');
+                        } else {
+                            $failed[] = 'Queue: ' . ($queue['name'] ?? 'unknown');
+                        }
+                    } catch (\Exception $e) {
+                        $failed[] = 'Queue: ' . ($queue['name'] ?? 'unknown') . ' - ' . $e->getMessage();
+                    }
+                }
+            }
+
+            // Restore Firewall Rules if present in backup
+            if (isset($config['firewall_rules']) && is_array($config['firewall_rules'])) {
+                foreach ($config['firewall_rules'] as $rule) {
+                    try {
+                        if ($mikrotikService->addFirewallRule($router->id, $rule)) {
+                            $restored[] = 'Firewall Rule: ' . ($rule['chain'] ?? 'unknown');
+                        } else {
+                            $failed[] = 'Firewall Rule: ' . ($rule['chain'] ?? 'unknown');
+                        }
+                    } catch (\Exception $e) {
+                        $failed[] = 'Firewall Rule: ' . ($rule['chain'] ?? 'unknown') . ' - ' . $e->getMessage();
+                    }
+                }
+            }
+
+            Log::info('Restore from backup completed', [
+                'router_id' => $router->id,
+                'backup_id' => $backup->id,
+                'restored_count' => count($restored),
+                'failed_count' => count($failed),
+                'restored_items' => $restored,
+                'failed_items' => $failed,
+            ]);
+
+            // Consider it successful only if no items failed to restore
+            // (including the case where there were no items and no errors)
+            return count($failed) === 0;
+
         } catch (\Exception $e) {
             Log::error('Restore from backup failed', [
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             return false;
         }
@@ -199,23 +313,92 @@ class RouterBackupService
     /**
      * Fetch router configuration via API
      * 
-     * Note: This is a placeholder implementation. The current MikrotikService implementation
-     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
-     * This method requires future implementation when RouterOS API support is added.
+     * This method fetches current router configuration including profiles, pools, 
+     * secrets, queues, and firewall rules using the MikrotikService.
      */
     protected function fetchRouterConfiguration(MikrotikRouter $router): ?string
     {
-        Log::warning('Fetch router configuration is not implemented for the current MikrotikService', [
-            'router_id' => $router->id,
-        ]);
+        try {
+            $mikrotikService = app(MikrotikService::class);
+            
+            // Connect to the router
+            if (!$mikrotikService->connectRouter($router->id)) {
+                Log::error('Failed to connect to router for backup', [
+                    'router_id' => $router->id,
+                ]);
+                return null;
+            }
 
-        // Return minimal placeholder data for now
-        return json_encode([
-            'router_id' => $router->id,
-            'router_name' => $router->name,
-            'timestamp' => now()->toDateTimeString(),
-            'note' => 'Placeholder configuration - requires RouterOS API implementation',
-        ], JSON_PRETTY_PRINT);
+            $configuration = [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'timestamp' => now()->toDateTimeString(),
+            ];
+
+            // Fetch PPP profiles
+            try {
+                $configuration['ppp_profiles'] = $mikrotikService->getProfiles($router->id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch PPP profiles for backup', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                $configuration['ppp_profiles'] = [];
+            }
+
+            // Fetch IP pools
+            try {
+                $configuration['ip_pools'] = $mikrotikService->importIpPools($router->id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch IP pools for backup', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                $configuration['ip_pools'] = [];
+            }
+
+            // Fetch PPP secrets
+            try {
+                $configuration['ppp_secrets'] = $mikrotikService->importSecrets($router->id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch PPP secrets for backup', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                $configuration['ppp_secrets'] = [];
+            }
+
+            // Fetch queues
+            try {
+                $configuration['queues'] = $mikrotikService->getQueues($router->id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch queues for backup', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                $configuration['queues'] = [];
+            }
+
+            // Fetch firewall rules
+            try {
+                $configuration['firewall_rules'] = $mikrotikService->getFirewallRules($router->id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch firewall rules for backup', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                $configuration['firewall_rules'] = [];
+            }
+
+            return json_encode($configuration, JSON_PRETTY_PRINT);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch router configuration', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 
     /**

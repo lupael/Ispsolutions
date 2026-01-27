@@ -69,33 +69,27 @@
                 ]
             ],
             [
-                'label' => 'Network Devices',
-                'icon' => 'server',
+                'label' => 'Network',
+                'icon' => 'network',
                 'children' => [
                     ['label' => 'Routers', 'route' => 'panel.admin.network.routers'],
                     ['label' => 'All Devices', 'route' => 'panel.admin.network.devices'],
                     ['label' => 'Device Monitors', 'route' => 'panel.admin.network.device-monitors'],
                     ['label' => 'Devices Map', 'route' => 'panel.admin.network.devices.map'],
-                ]
-            ],
-            [
-                'label' => 'Network',
-                'icon' => 'network',
-                'children' => [
                     ['label' => 'IPv4 Pools', 'route' => 'panel.admin.network.ipv4-pools'],
                     ['label' => 'IPv6 Pools', 'route' => 'panel.admin.network.ipv6-pools'],
                     ['label' => 'IP Pool Migration', 'route' => 'panel.admin.ip-pools.migrate'],
                     ['label' => 'PPPoE Profiles', 'route' => 'panel.admin.network.pppoe-profiles'],
                     ['label' => 'Ping Test', 'route' => 'panel.admin.network.ping-test'],
-                ]
-            ],
-            [
-                'label' => 'OLT Management',
-                'icon' => 'lightning',
-                'children' => [
                     ['label' => 'OLT Devices', 'route' => 'panel.admin.network.olt'],
                     ['label' => 'ONU Devices', 'route' => 'panel.admin.network.onu.index'],
                     ['label' => 'OLT Dashboard', 'route' => 'panel.admin.olt.dashboard'],
+                ]
+            ],
+            [
+                'label' => 'OLT Advanced',
+                'icon' => 'lightning',
+                'children' => [
                     ['label' => 'Templates', 'route' => 'panel.admin.olt.templates'],
                     ['label' => 'SNMP Traps', 'route' => 'panel.admin.olt.snmp-traps'],
                     ['label' => 'Firmware', 'route' => 'panel.admin.olt.firmware'],

@@ -109,12 +109,16 @@ class CustomerCacheService
             $selectColumns = [
                 'id',
                 'tenant_id',
+                'name',
+                'email',
+                'mobile',
                 'username',
                 'name',
                 'email',
                 'phone',
                 'service_package_id',
                 'status',
+                'operator_level',
             ];
             
             // Add columns only if they exist in the table
@@ -124,6 +128,7 @@ class CustomerCacheService
                 'connection_type',
                 'service_type',
                 'billing_type',
+                'service_type',
                 'device_type',
                 'mac_address',
                 'ip_address',
@@ -170,6 +175,8 @@ class CustomerCacheService
 
     /**
      * Fetch online status from radacct table.
+     * 
+     * Note: After NetworkUser migration, we now query users table for usernames.
      */
     private function fetchOnlineStatus(array $customerIds): array
     {
