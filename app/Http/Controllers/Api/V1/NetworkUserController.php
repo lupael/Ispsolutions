@@ -65,25 +65,18 @@ class NetworkUserController extends Controller
      */
     public function store(StoreNetworkUserRequest $request): JsonResponse
     {
-        $data = $request->validated();
-        $password = $data['radius_password'] ?? $data['password'] ?? null;
+        // Use the new transform method to get properly mapped data
+        $userData = $request->transformForUserModel();
         
-        // Map package_id to service_package_id
-        if (isset($data['package_id'])) {
-            $data['service_package_id'] = $data['package_id'];
-            unset($data['package_id']);
-        }
+        // Get additional fields that might need special handling
+        $additionalFields = $request->getAdditionalFields();
         
-        $data['operator_level'] = 100;
-        $data['radius_password'] = $password;
-        unset($data['password']); // Don't use the hashed password field
-        
-        $user = User::create($data);
+        $user = User::create($userData);
 
         // Sync to RADIUS using User's method (observer will handle this automatically)
         // But we'll call it explicitly for immediate sync
-        if ($password && $user->username) {
-            $user->syncToRadius(['password' => $password]);
+        if ($userData['radius_password'] && $user->username) {
+            $user->syncToRadius(['password' => $userData['radius_password']]);
         }
 
         return response()->json([

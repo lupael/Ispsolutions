@@ -23,7 +23,7 @@ class BulkActionRequest extends FormRequest
     {
         return [
             'ids' => 'required|array|min:1',
-            'ids.*' => 'required|integer|min:1',
+            'ids.*' => 'required|integer|min:1|exists:users,id',
             'action' => 'required|string|in:activate,deactivate,suspend,delete,lock,unlock,generate_invoice',
             'confirm' => 'accepted',
         ];
@@ -39,6 +39,7 @@ class BulkActionRequest extends FormRequest
             'ids.array' => 'Invalid selection format.',
             'ids.min' => 'Please select at least one item.',
             'ids.*.integer' => 'Invalid item ID.',
+            'ids.*.exists' => 'One or more selected users do not exist.',
             'action.required' => 'Please select an action to perform.',
             'action.in' => 'Invalid action selected.',
             'confirm.accepted' => 'Please confirm the action.',
