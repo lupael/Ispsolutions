@@ -6,6 +6,13 @@
     'routers' => [],
 ])
 
+@php
+    // Get the network user if available
+    $networkUser = $customer->networkUser ?? null;
+    $macAddress = $customer->macAddresses->first()?->mac_address ?? '';
+    $ipAddress = $customer->ipAllocations->first()?->ip_address ?? '';
+@endphp
+
 <div x-data="customerDetailsEditor()" class="space-y-6">
     <!-- General Information Section -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -24,18 +31,18 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                         <select name="status" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="active" {{ $customer->status === 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="suspended" {{ $customer->status === 'suspended' ? 'selected' : '' }}>Suspended</option>
-                            <option value="inactive" {{ $customer->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="active" {{ optional($networkUser)->status === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="suspended" {{ optional($networkUser)->status === 'suspended' ? 'selected' : '' }}>Suspended</option>
+                            <option value="inactive" {{ optional($networkUser)->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Type</label>
-                        <input type="text" name="service_type" value="{{ $customer->service_type }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" readonly>
+                        <input type="text" name="service_type" value="{{ optional($networkUser)->service_type }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" readonly>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer Name</label>
-                        <input type="text" name="customer_name" value="{{ $customer->customer_name ?? '' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="customer_name" value="{{ $customer->name ?? '' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mobile</label>
@@ -50,7 +57,7 @@
                         <select name="zone_id" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="">Select Zone</option>
                             @foreach($zones as $zone)
-                                <option value="{{ $zone->id }}" {{ $customer->zone_id == $zone->id ? 'selected' : '' }}>{{ $zone->name }}</option>
+                                <option value="{{ $zone->id }}" {{ optional($networkUser)->zone_id == $zone->id ? 'selected' : '' }}>{{ $zone->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -79,7 +86,7 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
-                        <input type="text" name="username" value="{{ $customer->username }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="username" value="{{ optional($networkUser)->username }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div x-data="{ showPassword: false }">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
@@ -145,15 +152,15 @@
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Package Name</label>
-                    <input type="text" value="{{ $customer->currentPackage->name ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                    <input type="text" value="{{ optional(optional($networkUser)->package)->name ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Update</label>
-                    <input type="text" value="{{ $customer->updated_at->format('M d, Y') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                    <input type="text" value="{{ optional($networkUser)->updated_at?->format('M d, Y') ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valid Until</label>
-                    <input type="text" value="{{ $customer->expiry_date ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                    <input type="text" value="{{ optional($networkUser)->expiry_date ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
                 </div>
             </div>
         </div>
@@ -178,13 +185,13 @@
                         <select name="router_id" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="">Select Router</option>
                             @foreach($routers as $router)
-                                <option value="{{ $router->id }}" {{ $customer->router_id == $router->id ? 'selected' : '' }}>{{ $router->name }}</option>
+                                <option value="{{ $router->id }}" {{ optional($networkUser)->router_id == $router->id ? 'selected' : '' }}>{{ $router->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IP Address</label>
-                        <input type="text" name="ip_address" value="{{ $customer->ip_address ?? '' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="ip_address" value="{{ $ipAddress }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                 </div>
             </form>
@@ -207,11 +214,11 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">MAC Address</label>
-                        <input type="text" name="mac_address" value="{{ $customer->mac_address ?? '' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="00:00:00:00:00:00">
+                        <input type="text" name="mac_address" value="{{ $macAddress }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="00:00:00:00:00:00">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">MAC Bind Status</label>
-                        <input type="text" value="{{ $customer->mac_bind_enabled ? 'Enabled' : 'Disabled' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                        <input type="text" value="{{ $customer->macAddresses->isNotEmpty() ? 'Enabled' : 'Disabled' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
                     </div>
                 </div>
             </form>
@@ -233,7 +240,7 @@
             <form id="comments-form" @input="markDirty('comments')">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-                    <textarea name="comments" rows="4" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Add any notes or comments about this customer...">{{ $customer->comments ?? '' }}</textarea>
+                    <textarea name="comments" rows="4" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Add any notes or comments about this customer...">{{ optional($networkUser)->comments ?? '' }}</textarea>
                 </div>
             </form>
         </div>
