@@ -238,7 +238,7 @@ class BillingService
     /**
      * Generate unique payment number
      */
-    protected function generatePaymentNumber(): string
+    public function generatePaymentNumber(): string
     {
         return 'PAY-' . date('Ymd') . '-' . str_pad(Payment::whereDate('created_at', today())->count() + 1, 5, '0', STR_PAD_LEFT);
     }
