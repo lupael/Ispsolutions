@@ -62,20 +62,32 @@ class AdminController extends Controller
                 ->whereNotNull('username')
                 ->whereIn('username', function ($subQuery) {
                     $subQuery->select('username')
+                        ->distinct()
                         ->from('radius.radacct')
                         ->whereNull('acctstoptime');
                 })
                 ->count();
 
             // Calculate offline as total minus online for better performance
+            // Note: This includes customers who have never connected (no radacct entries)
             $offlineCustomers = $totalNetworkCustomers - $onlineCustomers;
         } catch (\Illuminate\Database\QueryException $e) {
-            // Handle case where radacct table doesn't exist
-            Log::warning('Unable to query radacct table for online/offline status', [
-                'error' => $e->getMessage(),
-            ]);
-            $onlineCustomers = 0;
-            $offlineCustomers = 0;
+            // Only swallow "table not found" (SQLSTATE 42S02); rethrow other database errors
+            $sqlState = $e->getCode();
+            if ($sqlState === '42S02' || str_contains($e->getMessage(), '42S02')) {
+                Log::warning('Unable to query radacct table for online/offline status (table not found)', [
+                    'sql_state' => $sqlState,
+                    'error' => $e->getMessage(),
+                ]);
+                $onlineCustomers = 0;
+                $offlineCustomers = 0;
+            } else {
+                Log::error('Database error while querying radacct table for online/offline status', [
+                    'sql_state' => $sqlState,
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
         }
 
         $stats = [
