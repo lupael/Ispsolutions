@@ -51,6 +51,12 @@ class AdminController extends Controller
 
         // Calculate online/offline customers with error handling for radacct table
         try {
+            // Base query for customers with network service
+            $totalNetworkCustomers = User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->whereNotNull('username')
+                ->count();
+            
             $onlineCustomers = User::where('operator_level', 100)
                 ->whereNotNull('service_type')
                 ->whereNotNull('username')
@@ -60,15 +66,9 @@ class AdminController extends Controller
                         ->whereNull('acctstoptime');
                 })
                 ->count();
-            $offlineCustomers = User::where('operator_level', 100)
-                ->whereNotNull('service_type')
-                ->whereNotNull('username')
-                ->whereNotIn('username', function ($subQuery) {
-                    $subQuery->select('username')
-                        ->from('radius.radacct')
-                        ->whereNull('acctstoptime');
-                })
-                ->count();
+            
+            // Calculate offline as total minus online for better performance
+            $offlineCustomers = $totalNetworkCustomers - $onlineCustomers;
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle case where radacct table doesn't exist
             Log::warning('Unable to query radacct table for online/offline status', [
