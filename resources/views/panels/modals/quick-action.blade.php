@@ -8,7 +8,7 @@
             <i class="fas fa-check-circle me-2"></i>
             Are you sure you want to activate this customer?
         </div>
-        <form id="quickActionForm" action="/panel/customers/{{ $customer->id }}/quick-action/activate" method="POST">
+        <form id="quickActionForm" action="{{ route('panel.customers.quick-action.execute', ['customer' => $customer->id, 'action' => 'activate']) }}" method="POST">
             @csrf
             <div class="form-group mb-3">
                 <label for="notes" class="form-label">Notes (optional)</label>
@@ -25,7 +25,7 @@
             <i class="fas fa-exclamation-triangle me-2"></i>
             Are you sure you want to suspend this customer? They will lose access to services.
         </div>
-        <form id="quickActionForm" action="/panel/customers/{{ $customer->id }}/quick-action/suspend" method="POST">
+        <form id="quickActionForm" action="{{ route('panel.customers.quick-action.execute', ['customer' => $customer->id, 'action' => 'suspend']) }}" method="POST">
             @csrf
             <div class="form-group mb-3">
                 <label for="reason" class="form-label">Reason <span class="text-danger">*</span></label>
@@ -53,7 +53,7 @@
             <i class="fas fa-info-circle me-2"></i>
             Quick recharge for {{ $customer->username }}
         </div>
-        <form id="quickActionForm" action="/panel/customers/{{ $customer->id }}/quick-action/recharge" method="POST">
+        <form id="quickActionForm" action="{{ route('panel.customers.quick-action.execute', ['customer' => $customer->id, 'action' => 'recharge']) }}" method="POST">
             @csrf
             <div class="form-group mb-3">
                 <label for="amount" class="form-label">Amount <span class="text-danger">*</span></label>
