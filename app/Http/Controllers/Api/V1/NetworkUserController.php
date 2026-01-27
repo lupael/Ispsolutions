@@ -134,7 +134,7 @@ class NetworkUserController extends Controller
             ],
             'service_type' => 'sometimes|in:pppoe,hotspot,static,static_ip',
             'package_id' => 'nullable|exists:packages,id',
-            'status' => 'nullable|in:active,suspended,expired,inactive',
+            'status' => 'nullable|in:active,suspended,inactive',
         ]);
 
         if ($validator->fails()) {

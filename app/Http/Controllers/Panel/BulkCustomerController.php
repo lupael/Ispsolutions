@@ -145,7 +145,7 @@ class BulkCustomerController extends Controller
 
         $updatedCount = 0;
         foreach ($customers as $customer) {
-            $customer->package_id = $packageId;
+            $customer->service_package_id = $packageId;
             if ($customer->save()) {
                 $updatedCount++;
             }

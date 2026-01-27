@@ -18,18 +18,21 @@ Successfully eliminated the `NetworkUser` model/table and integrated all network
   - `device_type` - Device identifier
   - `mac_address` - MAC address for binding
   - `ip_address` - Assigned IP address
-  - `status` - active, inactive, suspended
+  - `status` - active, inactive, suspended, expired
   - `expiry_date` - Service expiration date
   - `zone_id` - Network zone assignment (conditional FK)
 
 **Migration: `2026_01_27_041729_migrate_network_user_data_to_users_table.php`**
 - Safely copies all data from `network_users` to `users` table
+- Uses chunked processing (1000 records/batch) for memory efficiency
 - Preserves all network credentials and settings
 - Database-agnostic implementation
+- down() is a no-op to prevent data loss
 
-**Migration: `2026_01_27_042924_drop_network_users_table.php`**
-- Drops the obsolete `network_users` table
-- Only to be run after data verification
+**Drop Migration (Future Release)**
+- NetworkUser model and table remain active for backward compatibility
+- Drop table migration will be introduced in a future release
+- Allows staged deprecation approach where existing code continues to work
 
 ### ✅ Model Updates
 

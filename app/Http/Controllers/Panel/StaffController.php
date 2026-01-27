@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\CiscoDevice;
 use App\Models\MikrotikRouter;
 use App\Models\Nas;
-use App\Models\NetworkUser;
 use App\Models\Olt;
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\View\View;
 
 class StaffController extends Controller
@@ -21,7 +21,7 @@ class StaffController extends Controller
     public function dashboard(): View
     {
         $stats = [
-            'assigned_customers' => User::where('operator_level', 100)->count(),
+            'assigned_users' => User::where('operator_level', 100)->count(),
             'pending_tickets' => Ticket::where('status', Ticket::STATUS_PENDING)->count(),
         ];
 

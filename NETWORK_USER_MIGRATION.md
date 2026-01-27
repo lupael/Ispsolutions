@@ -96,8 +96,10 @@ php artisan migrate --path=database/migrations/2026_01_27_041729_migrate_network
 # Step 3: VERIFY DATA INTEGRITY
 # Check that all network_users data exists in users table
 
-# Step 4: Drop network_users table (only after verification)
-php artisan migrate --path=database/migrations/2026_01_27_042924_drop_network_users_table.php
+# Step 4: Drop network_users table (future release)
+# Note: The drop table migration is not included in this PR for staged deprecation
+# The NetworkUser model and table remain active for backward compatibility
+# Drop migration will be introduced in a future release after all usages are migrated
 ```
 
 ### 2. Verify Data Migration

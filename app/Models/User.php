@@ -1012,7 +1012,7 @@ class User extends Authenticatable
     public function isNetworkCustomer(): bool
     {
         return $this->operator_level === 100 && 
-               in_array($this->service_type, ['pppoe', 'hotspot', 'static', 'vpn']);
+               in_array($this->service_type, ['pppoe', 'hotspot', 'static', 'static_ip', 'vpn']);
     }
 
     /**

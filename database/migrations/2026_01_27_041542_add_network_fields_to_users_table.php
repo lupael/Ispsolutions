@@ -56,7 +56,7 @@ return new class extends Migration
             
             // Service status and expiry
             if (!Schema::hasColumn('users', 'status')) {
-                $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('is_active');
+                $table->enum('status', ['active', 'inactive', 'suspended', 'expired'])->default('active')->after('is_active');
                 $table->index('status');
             }
             

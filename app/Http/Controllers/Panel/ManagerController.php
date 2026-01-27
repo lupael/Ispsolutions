@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
 use App\Models\NetworkUserSession;
+use App\Models\User;
 use Illuminate\View\View;
 
 class ManagerController extends Controller
@@ -19,7 +19,7 @@ class ManagerController extends Controller
         $tenantId = auth()->user()->tenant_id;
 
         $stats = [
-            'total_customers' => User::where('tenant_id', $tenantId)
+            'total_network_users' => User::where('tenant_id', $tenantId)
                 ->where('operator_level', 100)->count(),
             'active_sessions' => NetworkUserSession::where('tenant_id', $tenantId)
                 ->whereNull('end_time')->count(),
