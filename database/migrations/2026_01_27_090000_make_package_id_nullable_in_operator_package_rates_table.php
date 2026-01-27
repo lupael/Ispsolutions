@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -17,27 +18,23 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop the foreign key constraint temporarily
         Schema::table('operator_package_rates', function (Blueprint $table) {
-            // Drop the foreign key constraint
             $table->dropForeign(['package_id']);
-            
-            // Drop the old unique constraint that includes package_id
-            $table->dropUnique('unique_tenant_operator_package');
         });
 
-        Schema::table('operator_package_rates', function (Blueprint $table) {
-            // Make package_id nullable
-            $table->unsignedBigInteger('package_id')->nullable()->change();
-        });
+        // Make package_id nullable using raw SQL (avoids needing doctrine/dbal)
+        DB::statement('ALTER TABLE `operator_package_rates` MODIFY `package_id` BIGINT UNSIGNED NULL');
 
+        // Re-add foreign key constraint with nullable support
         Schema::table('operator_package_rates', function (Blueprint $table) {
-            // Re-add foreign key constraint with nullable support
             $table->foreign('package_id')
                 ->references('id')
                 ->on('packages')
                 ->onDelete('cascade');
             
             // Add unique constraint for master package based records (new system)
+            // Keep the old unique constraint for legacy records (MySQL allows multiple NULLs in UNIQUE)
             $table->unique(['tenant_id', 'operator_id', 'master_package_id'], 'unique_tenant_operator_master_package');
         });
     }
@@ -47,28 +44,33 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Check if there are any NULL package_id rows
+        $nullCount = DB::table('operator_package_rates')
+            ->whereNull('package_id')
+            ->count();
+
+        if ($nullCount > 0) {
+            throw new \RuntimeException(
+                "Cannot rollback: {$nullCount} row(s) with NULL package_id exist. " .
+                "Delete or update these rows before rolling back this migration."
+            );
+        }
+
+        // Drop constraints
         Schema::table('operator_package_rates', function (Blueprint $table) {
-            // Drop the foreign key constraint
             $table->dropForeign(['package_id']);
-            
-            // Drop the new unique constraint
             $table->dropUnique('unique_tenant_operator_master_package');
         });
 
-        Schema::table('operator_package_rates', function (Blueprint $table) {
-            // Revert package_id to non-nullable
-            $table->unsignedBigInteger('package_id')->nullable(false)->change();
-        });
+        // Revert package_id to non-nullable using raw SQL
+        DB::statement('ALTER TABLE `operator_package_rates` MODIFY `package_id` BIGINT UNSIGNED NOT NULL');
 
+        // Re-add foreign key constraint
         Schema::table('operator_package_rates', function (Blueprint $table) {
-            // Re-add foreign key constraint
             $table->foreign('package_id')
                 ->references('id')
                 ->on('packages')
                 ->onDelete('cascade');
-            
-            // Re-add the old unique constraint
-            $table->unique(['tenant_id', 'operator_id', 'package_id'], 'unique_tenant_operator_package');
         });
     }
 };
