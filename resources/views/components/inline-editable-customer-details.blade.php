@@ -275,7 +275,7 @@ function customerDetailsEditor() {
             const data = Object.fromEntries(formData.entries());
             
             try {
-                const updateUrl = form.dataset.updateUrl || '{{ route("panel.admin.customers.update", $customer->id) }}';
+                const updateUrl = form.dataset.updateUrl || '{{ route("panel.admin.customers.partial-update", $customer->id) }}';
                 const response = await fetch(updateUrl, {
                     method: 'PATCH',
                     headers: {
