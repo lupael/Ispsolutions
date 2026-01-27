@@ -101,7 +101,7 @@ class StoreNetworkUserRequest extends FormRequest
             
             // Network authentication fields
             'username' => $validated['username'],
-            'password' => $validated['password'], // Laravel will hash this via User::$casts
+            'password' => $validated['password'], // Laravel will hash via User::casts()
             'radius_password' => $validated['password'], // Store plain for RADIUS
             'service_type' => $validated['service_type'],
             'service_package_id' => $validated['package_id'],
