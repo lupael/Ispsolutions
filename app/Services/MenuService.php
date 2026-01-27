@@ -221,7 +221,7 @@ class MenuService
                 'title' => 'Network Management',
                 'icon' => 'ki-abstract-26',
                 'children' => [
-                    ['title' => 'Network Users', 'route' => 'panel.admin.network-users'],
+                    ['title' => 'Customers', 'route' => 'panel.admin.customers'],
                     ['title' => 'MikroTik', 'route' => 'panel.admin.mikrotik'],
                     ['title' => 'NAS Devices', 'route' => 'panel.admin.nas'],
                     ['title' => 'OLT Devices', 'route' => 'panel.admin.olt'],
@@ -270,9 +270,9 @@ class MenuService
                 'route' => 'panel.manager.dashboard',
             ],
             [
-                'title' => 'Network Users',
+                'title' => 'Customers',
                 'icon' => 'ki-profile-user',
-                'route' => 'panel.manager.network-users',
+                'route' => 'panel.manager.customers.index',
             ],
             [
                 'title' => 'Sessions',
@@ -358,11 +358,13 @@ class MenuService
                 'icon' => 'ki-home-3',
                 'route' => 'panel.staff.dashboard',
             ],
-            [
-                'title' => 'Network Users',
-                'icon' => 'ki-profile-user',
-                'route' => 'panel.staff.network-users',
-            ],
+            // Note: Staff role doesn't have direct customer management access
+            // Customers are managed through admin/manager panels
+            // [
+            //     'title' => 'Customers',
+            //     'icon' => 'ki-profile-user',
+            //     'route' => 'panel.staff.customers',
+            // ],
             [
                 'title' => 'Tickets',
                 'icon' => 'ki-message-text-2',

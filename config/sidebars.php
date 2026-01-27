@@ -539,12 +539,14 @@ return [
             'icon' => 'bi-speedometer2',
             'route' => 'panel.staff.dashboard',
         ],
-        [
-            'key' => 'network_users',
-            'label' => 'Network Users',
-            'icon' => 'bi-people',
-            'route' => 'panel.staff.network-users',
-        ],
+        // Note: Staff role doesn't have direct customer management access
+        // Customers are managed through admin/manager panels
+        // [
+        //     'key' => 'customers',
+        //     'label' => 'Customers',
+        //     'icon' => 'bi-people',
+        //     'route' => 'panel.staff.customers',
+        // ],
         [
             'key' => 'tickets',
             'label' => 'Support Tickets',
