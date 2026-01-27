@@ -30,37 +30,93 @@
 
     <!-- Overall RADIUS Status Summary -->
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <x-info-box 
-            title="RADIUS Connected" 
-            :value="radiusStats.connected || 0"
-            icon="check"
-            color="green"
-            subtitle="Routers with active RADIUS"
-        />
-        
-        <x-info-box 
-            title="RADIUS Disconnected" 
-            :value="radiusStats.disconnected || 0"
-            icon="alert"
-            color="red"
-            subtitle="Need attention"
-        />
-        
-        <x-info-box 
-            title="Hybrid Mode" 
-            :value="radiusStats.hybrid || 0"
-            icon="switch"
-            color="blue"
-            subtitle="Failover enabled"
-        />
-        
-        <x-info-box 
-            title="Active Sessions" 
-            :value="radiusStats.activeSessions || 0"
-            icon="users"
-            color="purple"
-            subtitle="Current RADIUS sessions"
-        />
+        <!-- RADIUS Connected -->
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">RADIUS Connected</dt>
+                            <dd class="mt-1">
+                                <div class="text-3xl font-semibold text-gray-900 dark:text-gray-100" x-text="radiusStats.connected || 0"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Routers with active RADIUS</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RADIUS Disconnected -->
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">RADIUS Disconnected</dt>
+                            <dd class="mt-1">
+                                <div class="text-3xl font-semibold text-gray-900 dark:text-gray-100" x-text="radiusStats.disconnected || 0"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Need attention</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hybrid Mode -->
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Hybrid Mode</dt>
+                            <dd class="mt-1">
+                                <div class="text-3xl font-semibold text-gray-900 dark:text-gray-100" x-text="radiusStats.hybrid || 0"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Failover enabled</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Sessions -->
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Active Sessions</dt>
+                            <dd class="mt-1">
+                                <div class="text-3xl font-semibold text-gray-900 dark:text-gray-100" x-text="radiusStats.activeSessions || 0"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Current RADIUS sessions</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Router RADIUS Status Table -->

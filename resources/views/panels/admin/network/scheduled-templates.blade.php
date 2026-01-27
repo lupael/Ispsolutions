@@ -392,15 +392,30 @@ function scheduledTemplates() {
         },
         
         editSchedule(scheduleId) {
-            alert('Edit functionality would load the schedule details into the modal for editing');
+            // TODO: Implement edit functionality to load schedule details into modal
+            const schedule = this.activeSchedules.find(s => s.id === scheduleId);
+            if (schedule) {
+                console.log('Editing schedule:', schedule);
+                this.showNotification(`Edit feature for schedule "${schedule.name}" - Details logged to console`, 'info');
+            }
         },
         
         viewHistory(scheduleId) {
-            alert('View history functionality would show execution history for this schedule');
+            // TODO: Implement history view to show execution history for this schedule
+            const schedule = this.activeSchedules.find(s => s.id === scheduleId);
+            if (schedule) {
+                console.log('Viewing history for schedule:', schedule);
+                this.showNotification(`View history feature for schedule "${schedule.name}" - Details logged to console`, 'info');
+            }
         },
         
         viewExecutionDetails(executionId) {
-            alert('View execution details functionality would show detailed results of this execution');
+            // TODO: Implement detailed view of execution results
+            const execution = this.completedExecutions.find(e => e.id === executionId);
+            if (execution) {
+                console.log('Viewing execution details:', execution);
+                this.showNotification('View execution details - Details logged to console', 'info');
+            }
         },
         
         resetNewSchedule() {

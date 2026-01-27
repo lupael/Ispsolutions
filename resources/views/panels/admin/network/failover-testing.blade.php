@@ -436,11 +436,21 @@ function failoverTesting() {
         },
         
         viewTestDetails(testId) {
-            alert('View test details functionality would show detailed information about this test');
+            // TODO: Implement detailed view showing all test steps and results
+            const test = this.testHistory.find(t => t.id === testId);
+            if (test) {
+                console.log('Viewing test details:', test);
+                this.showNotification('View test details - Details logged to console', 'info');
+            }
         },
         
         rerunTest(testId) {
-            alert('Rerun test functionality would rerun this specific test configuration');
+            // TODO: Implement rerun functionality with same test configuration
+            const test = this.testHistory.find(t => t.id === testId);
+            if (test) {
+                console.log('Rerunning test with configuration:', test);
+                this.showNotification(`Rerun test feature - Would rerun ${test.test_type} test`, 'info');
+            }
         },
         
         formatDateTime(timestamp) {

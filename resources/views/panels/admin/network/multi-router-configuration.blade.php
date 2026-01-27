@@ -347,7 +347,15 @@ function multiRouterConfig() {
         },
         
         previewConfiguration() {
-            alert('Preview feature: This would show you the exact configuration that will be applied to each router.');
+            // TODO: Implement preview functionality to show exact configuration
+            // that will be applied to each router before actual deployment
+            const configPreview = {
+                type: this.configurationType,
+                config: this.config[this.configurationType],
+                routers: this.selectedRouters.length
+            };
+            console.log('Configuration preview:', configPreview);
+            this.showNotification('Preview feature - Configuration details logged to console', 'info');
         },
         
         async applyConfiguration() {
