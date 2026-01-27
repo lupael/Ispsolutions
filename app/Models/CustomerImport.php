@@ -15,6 +15,7 @@ class CustomerImport extends Model
     protected $fillable = [
         'operator_id',
         'nas_id',
+        'router_id',
         'status',
         'total_count',
         'success_count',
@@ -57,6 +58,14 @@ class CustomerImport extends Model
     public function nas(): BelongsTo
     {
         return $this->belongsTo(Nas::class);
+    }
+
+    /**
+     * Get the Mikrotik router.
+     */
+    public function router(): BelongsTo
+    {
+        return $this->belongsTo(MikrotikRouter::class, 'router_id');
     }
 
     /**

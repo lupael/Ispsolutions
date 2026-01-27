@@ -32,7 +32,7 @@ class ImportPppCustomersJob implements ShouldQueue
      */
     public function __construct(
         public int $operatorId,
-        public int $nasId,
+        public ?int $nasId,
         public array $options
     ) {
     }
@@ -42,17 +42,27 @@ class ImportPppCustomersJob implements ShouldQueue
      */
     public function handle(MikrotikService $mikrotikService): void
     {
+        // Determine router_id from either direct router_id or nas_id
+        $routerId = $this->options['router_id'] ?? null;
+        
         // Check for duplicate import
-        $existingImport = CustomerImport::where('operator_id', $this->operatorId)
-            ->where('nas_id', $this->nasId)
+        $query = CustomerImport::where('operator_id', $this->operatorId)
             ->whereDate('created_at', today())
-            ->where('status', 'in_progress')
-            ->first();
+            ->where('status', 'in_progress');
+        
+        if ($routerId) {
+            $query->where('router_id', $routerId);
+        } elseif ($this->nasId) {
+            $query->where('nas_id', $this->nasId);
+        }
+        
+        $existingImport = $query->first();
 
         if ($existingImport) {
             Log::warning('Duplicate import detected, skipping', [
                 'operator_id' => $this->operatorId,
                 'nas_id' => $this->nasId,
+                'router_id' => $routerId,
             ]);
             return;
         }
@@ -61,6 +71,7 @@ class ImportPppCustomersJob implements ShouldQueue
         $import = CustomerImport::create([
             'operator_id' => $this->operatorId,
             'nas_id' => $this->nasId,
+            'router_id' => $routerId,
             'status' => 'in_progress',
             'total_count' => 0,
             'success_count' => 0,
@@ -69,10 +80,16 @@ class ImportPppCustomersJob implements ShouldQueue
         ]);
 
         try {
-            // Get router from NAS
-            $router = MikrotikRouter::where('nas_id', $this->nasId)->first();
-            if (!$router) {
-                throw new \Exception('Router not found for NAS');
+            // Get router - either directly by router_id or via NAS
+            if ($routerId) {
+                $router = MikrotikRouter::findOrFail($routerId);
+            } elseif ($this->nasId) {
+                $router = MikrotikRouter::where('nas_id', $this->nasId)->first();
+                if (!$router) {
+                    throw new \Exception('Router not found for NAS');
+                }
+            } else {
+                throw new \Exception('Neither router_id nor nas_id provided');
             }
 
             // Connect to router
@@ -134,6 +151,7 @@ class ImportPppCustomersJob implements ShouldQueue
             Log::info('PPP customers import completed', [
                 'operator_id' => $this->operatorId,
                 'nas_id' => $this->nasId,
+                'router_id' => $routerId,
                 'total' => count($secrets),
                 'success' => $successCount,
                 'failed' => $failedCount,
@@ -148,6 +166,7 @@ class ImportPppCustomersJob implements ShouldQueue
             Log::error('PPP customers import job failed', [
                 'operator_id' => $this->operatorId,
                 'nas_id' => $this->nasId,
+                'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
 

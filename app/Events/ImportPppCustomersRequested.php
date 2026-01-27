@@ -17,7 +17,7 @@ class ImportPppCustomersRequested
      */
     public function __construct(
         public int $operatorId,
-        public int $nasId,
+        public ?int $nasId,
         public array $options = []
     ) {
     }
@@ -28,6 +28,7 @@ class ImportPppCustomersRequested
     public function getOptions(): array
     {
         return array_merge([
+            'router_id' => null,
             'filter_disabled' => true,
             'generate_bills' => false,
             'package_id' => null,

@@ -36,8 +36,8 @@
                 <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">Import Instructions</h3>
                 <div class="mt-2 text-sm text-blue-700 dark:text-blue-400">
                     <ul class="list-disc list-inside space-y-1">
-                        <li>Select a NAS device from your configured RADIUS servers</li>
-                        <li>The system will fetch all PPPoE accounts from the selected NAS</li>
+                        <li>Select a NAS device or Mikrotik router from your configured devices</li>
+                        <li>The system will fetch all PPPoE accounts from the selected device</li>
                         <li>Choose a default package for imported customers (optional)</li>
                         <li>Review and confirm before importing</li>
                     </ul>
@@ -54,14 +54,27 @@
             <div class="space-y-6">
                 <!-- NAS Device Selection -->
                 <div>
-                    <label for="nas_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select NAS Device *</label>
-                    <select name="nas_id" id="nas_id" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Choose a NAS device...</option>
-                        @foreach($nasDevices ?? [] as $nas)
-                            <option value="{{ $nas->id }}">{{ $nas->nasname }} ({{ $nas->shortname }})</option>
-                        @endforeach
+                    <label for="device_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select NAS Device or Router *</label>
+                    <select name="device_select" id="device_select" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Choose a device...</option>
+                        @if($nasDevices && $nasDevices->count() > 0)
+                            <optgroup label="NAS Devices">
+                                @foreach($nasDevices as $nas)
+                                    <option value="nas-{{ $nas->id }}">{{ $nas->nasname }} ({{ $nas->shortname }}) - NAS</option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+                        @if($routers && $routers->count() > 0)
+                            <optgroup label="Mikrotik Routers">
+                                @foreach($routers as $router)
+                                    <option value="router-{{ $router->id }}">{{ $router->name }} ({{ $router->ip_address }}) - Router</option>
+                                @endforeach
+                            </optgroup>
+                        @endif
                     </select>
-                    <p class="mt-1 text-sm text-gray-500">Select the NAS device to import PPPoE customers from</p>
+                    <input type="hidden" name="nas_id" id="nas_id" value="">
+                    <input type="hidden" name="router_id" id="router_id" value="">
+                    <p class="mt-1 text-sm text-gray-500">Select the NAS device or Mikrotik router to import PPPoE customers from</p>
                 </div>
 
                 <!-- Default Package -->
@@ -148,4 +161,32 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deviceSelect = document.getElementById('device_select');
+    const nasIdInput = document.getElementById('nas_id');
+    const routerIdInput = document.getElementById('router_id');
+    
+    if (deviceSelect) {
+        deviceSelect.addEventListener('change', function() {
+            const value = this.value;
+            
+            // Clear both hidden fields
+            nasIdInput.value = '';
+            routerIdInput.value = '';
+            
+            if (value) {
+                const [type, id] = value.split('-');
+                
+                if (type === 'nas') {
+                    nasIdInput.value = id;
+                } else if (type === 'router') {
+                    routerIdInput.value = id;
+                }
+            }
+        });
+    }
+});
+</script>
 @endsection

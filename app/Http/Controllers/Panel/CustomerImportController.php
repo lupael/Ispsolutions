@@ -28,7 +28,7 @@ class CustomerImportController extends Controller
 
         // Get recent imports
         $recentImports = CustomerImport::where('operator_id', auth()->id())
-            ->with(['nas'])
+            ->with(['nas', 'router'])
             ->latest()
             ->take(10)
             ->get();
@@ -42,32 +42,52 @@ class CustomerImportController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nas_id' => 'required|integer|exists:nas,id',
+            'nas_id' => 'nullable|integer|exists:nas,id',
+            'router_id' => 'nullable|integer|exists:mikrotik_routers,id',
             'filter_disabled' => 'nullable|boolean',
             'generate_bills' => 'nullable|boolean',
             'package_id' => 'nullable|integer|exists:packages,id',
         ]);
 
+        // Ensure either nas_id or router_id is provided
+        if (empty($validated['nas_id']) && empty($validated['router_id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Either NAS device or Mikrotik router must be selected.',
+            ], 422);
+        }
+
         try {
+            // Determine which ID to use for duplicate check
+            $deviceId = $validated['nas_id'] ?? $validated['router_id'];
+            $deviceType = isset($validated['nas_id']) ? 'nas' : 'router';
+
             // Check for duplicate import today
-            $existingImport = CustomerImport::where('operator_id', auth()->id())
-                ->where('nas_id', $validated['nas_id'])
+            $query = CustomerImport::where('operator_id', auth()->id())
                 ->whereDate('created_at', today())
-                ->where('status', 'in_progress')
-                ->first();
+                ->where('status', 'in_progress');
+            
+            if ($deviceType === 'nas') {
+                $query->where('nas_id', $deviceId);
+            } else {
+                $query->where('router_id', $deviceId);
+            }
+            
+            $existingImport = $query->first();
 
             if ($existingImport) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'An import is already in progress for this NAS today.',
+                    'message' => 'An import is already in progress for this device today.',
                 ], 422);
             }
 
             // Dispatch event
             event(new ImportPppCustomersRequested(
                 auth()->id(),
-                $validated['nas_id'],
+                $validated['nas_id'] ?? null,
                 [
+                    'router_id' => $validated['router_id'] ?? null,
                     'filter_disabled' => $validated['filter_disabled'] ?? true,
                     'generate_bills' => $validated['generate_bills'] ?? false,
                     'package_id' => $validated['package_id'] ?? null,
