@@ -23,7 +23,15 @@ class BulkCustomerController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'customer_ids' => 'required|array|min:1',
-            'customer_ids.*' => 'required|integer|exists:users,id',
+            'customer_ids.*' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if (!User::where('id', $value)->where('operator_level', 100)->exists()) {
+                        $fail('The selected customer is invalid.');
+                    }
+                }
+            ],
             'action' => 'required|string|in:change_package,change_operator,suspend,activate,update_expiry',
             'package_id' => 'required_if:action,change_package|exists:packages,id',
             'operator_id' => 'required_if:action,change_operator|exists:users,id',

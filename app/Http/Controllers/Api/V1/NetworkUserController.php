@@ -31,7 +31,7 @@ class NetworkUserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = User::select([
-            'id', 'username', 'email', 'service_type',
+            'id', 'name', 'username', 'email', 'service_type',
             'package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
         ])->where('operator_level', 100)
@@ -90,7 +90,7 @@ class NetworkUserController extends Controller
     public function show(int $id): JsonResponse
     {
         $user = User::select([
-            'id', 'username', 'email', 'service_type',
+            'id', 'name', 'username', 'email', 'service_type',
             'package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
         ])->where('operator_level', 100)
@@ -110,7 +110,19 @@ class NetworkUserController extends Controller
         $user = User::where('operator_level', 100)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'email' => 'nullable|email|unique:users,email,' . $id,
+            'email' => [
+                'nullable',
+                'email',
+                function ($attribute, $value, $fail) use ($id) {
+                    $exists = User::where('email', $value)
+                        ->where('operator_level', 100)
+                        ->where('id', '!=', $id)
+                        ->exists();
+                    if ($exists) {
+                        $fail('The email has already been taken.');
+                    }
+                }
+            ],
             'service_type' => 'sometimes|in:pppoe,hotspot,static_ip',
             'package_id' => 'nullable|exists:packages,id',
             'status' => 'nullable|in:active,suspended,expired',
