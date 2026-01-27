@@ -183,7 +183,15 @@ function oltDashboard() {
         },
         async loadData() {
             try {
-                const response = await fetch('/api/v1/olt/');
+                const response = await fetch('/api/v1/olt/', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    credentials: 'same-origin'
+                });
                 const data = await response.json();
                 
                 if (data.success) {
