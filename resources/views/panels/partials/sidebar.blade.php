@@ -205,9 +205,7 @@
                 'label' => 'Network Devices',
                 'icon' => 'server',
                 'children' => [
-                    ['label' => 'MikroTik Routers', 'route' => 'panel.staff.mikrotik'],
-                    ['label' => 'NAS Devices', 'route' => 'panel.staff.nas'],
-                    ['label' => 'Cisco Devices', 'route' => 'panel.staff.cisco'],
+                    ['label' => 'Routers', 'route' => 'panel.staff.mikrotik'],
                     ['label' => 'OLT Devices', 'route' => 'panel.staff.olt'],
                 ]
             ],
