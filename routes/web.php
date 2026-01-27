@@ -17,6 +17,7 @@ use App\Http\Controllers\Panel\RouterBackupController;
 use App\Http\Controllers\Panel\RouterConfigurationController;
 use App\Http\Controllers\Panel\RouterFailoverController;
 use App\Http\Controllers\Panel\RouterProvisioningController;
+use App\Http\Controllers\Panel\SearchController;
 use App\Http\Controllers\Panel\StaffController;
 use App\Http\Controllers\Panel\SuperAdminController;
 use App\Http\Controllers\Panel\TicketController;
@@ -202,6 +203,9 @@ Route::get('/demo10', function () {
 | Role-Based Panel Routes
 |--------------------------------------------------------------------------
 */
+
+// Global Search Route - accessible to all authenticated users
+Route::get('/panel/search', [SearchController::class, 'search'])->middleware(['auth'])->name('panel.search');
 
 // Super Admin Panel
 Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['auth', 'role:super-admin'])->group(function () {
