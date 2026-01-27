@@ -173,9 +173,7 @@
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                <a href="{{ route('panel.admin.network-users.show', $networkUser->id) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline">
-                                                    {{ $networkUser->username }}
-                                                </a>
+                                                {{ $networkUser->username }}
                                             </div>
                                             @if($networkUser->customer_name)
                                                 <div class="text-sm text-gray-500 dark:text-gray-400">

@@ -182,22 +182,25 @@ async function testOltConnection() {
     const button = document.getElementById('testConnectionBtn');
     const originalHTML = button.innerHTML;
     
-    // Show loading state
+    // Show temporary loading state to prevent repeated clicks
     button.disabled = true;
-    button.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Testing...';
+    button.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Checking...';
     
-    try {
-        // For OLT, we'll do a basic connectivity check
-        // Since there's no ID yet during creation, we can't use the full test-connection endpoint
-        // Instead, show a helpful message
-        alert('⚠️ Connection Test\n\nBasic connectivity will be verified when you save the OLT device.\n\nIP Address: ' + ipAddress + '\nPort: ' + (telnetPort || 23));
-    } catch (error) {
-        // Fallback to basic ping test if API endpoint doesn't exist
-        alert('⚠️ Test Connection\n\nBasic connectivity check will be performed when you save the device.\n\nIP Address: ' + ipAddress);
-    } finally {
-        button.disabled = false;
-        button.innerHTML = originalHTML;
-    }
+    // NOTE: No live network test is performed from this form.
+    // Connectivity will be verified by the backend when the OLT device is saved.
+    const portToShow = telnetPort || 23;
+    alert(
+        'Connection Information\n\n' +
+        'No live connection test is performed at this stage.\n' +
+        'Connectivity will be verified when you save the OLT device.\n\n' +
+        'IP Address: ' + ipAddress + '\n' +
+        'Port: ' + portToShow +
+        (username ? '\nUsername: ' + username : '') +
+        (password ? '\n(Password provided)' : '')
+    );
+    
+    button.disabled = false;
+    button.innerHTML = originalHTML;
 }
 </script>
 @endpush
