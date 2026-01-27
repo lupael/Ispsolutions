@@ -122,6 +122,10 @@
                             View Details
                         </a>
                         <div class="flex space-x-2">
+                            <a href="{{ route('panel.admin.packages.profiles', $package->id) }}" class="text-sm text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300" title="Associate PPPoE Profiles">
+                                Profiles
+                            </a>
+                            <span class="text-gray-300 dark:text-gray-600">|</span>
                             <a href="{{ route('panel.admin.packages.edit', $package->id) }}" class="text-sm text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                                 Edit
                             </a>

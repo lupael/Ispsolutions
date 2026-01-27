@@ -125,6 +125,24 @@
                     </div>
                 </div>
 
+                <!-- PPP Profile Association Note -->
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">PPPoE Profile Association</h4>
+                            <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                                <p class="mb-2">After creating this package, you'll need to associate it with PPPoE profiles on your routers.</p>
+                                <p class="text-xs italic">💡 You can do this from the "All Packages" page by clicking on the package and selecting "Associate Profiles".</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Form Actions -->
                 <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <a href="{{ route('panel.admin.packages') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
