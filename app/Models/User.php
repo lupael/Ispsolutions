@@ -119,6 +119,14 @@ class User extends Authenticatable
         'billing_contact_name',
         'billing_contact_email',
         'billing_contact_phone',
+        // Customer contact fields
+        'phone',
+        'mobile',
+        'address',
+        'city',
+        'state',
+        'postal_code',
+        'country',
         // Network service fields (previously in NetworkUser)
         'username',
         'radius_password',
