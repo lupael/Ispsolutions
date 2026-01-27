@@ -230,6 +230,65 @@
 
 <script nonce="{{ $cspNonce }}">
 function firmwareUpdates() {
+    // Cache CSRF token to avoid repeated DOM queries
+    const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenElement ? csrfTokenElement.content : '';
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found. API requests may fail.');
+    }
+    
+    // Helper to get auth headers
+    const getAuthHeaders = () => ({
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    // Helper to parse error response body
+    const parseErrorResponse = async (response) => {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const errorData = await response.json();
+                if (errorData && typeof errorData === 'object') {
+                    errorMessage += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                }
+            } else {
+                const textData = await response.text();
+                if (textData) {
+                    errorMessage += ` - ${textData.substring(0, 200)}`;
+                }
+            }
+        } catch (parseError) {
+            // If parsing fails, use statusText as fallback
+            if (response.statusText) {
+                errorMessage += ` - ${response.statusText}`;
+            }
+        }
+        return errorMessage;
+    };
+    
+    // Helper for authenticated fetch
+    const fetchJson = async (url, options = {}) => {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...getAuthHeaders(),
+                ...(options.headers || {})
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+            const errorMessage = await parseErrorResponse(response);
+            throw new Error(errorMessage);
+        }
+        
+        return response.json();
+    };
+    
     return {
         updates: [],
         olts: [],
@@ -283,16 +342,7 @@ function firmwareUpdates() {
         },
         async loadOlts() {
             try {
-                const response = await fetch('/api/v1/olt/', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                    },
-                    credentials: 'same-origin'
-                });
-                const data = await response.json();
+                const data = await fetchJson('/api/v1/olt/');
                 if (data.success) {
                     this.olts = data.data;
                 }

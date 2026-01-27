@@ -256,6 +256,65 @@
 
 <script nonce="{{ $cspNonce }}">
 function onuMonitor(oltId) {
+    // Cache CSRF token to avoid repeated DOM queries
+    const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenElement ? csrfTokenElement.content : '';
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found. API requests may fail.');
+    }
+    
+    // Helper to get auth headers
+    const getAuthHeaders = () => ({
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+    });
+    
+    // Helper to parse error response body
+    const parseErrorResponse = async (response) => {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const errorData = await response.json();
+                if (errorData && typeof errorData === 'object') {
+                    errorMessage += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                }
+            } else {
+                const textData = await response.text();
+                if (textData) {
+                    errorMessage += ` - ${textData.substring(0, 200)}`;
+                }
+            }
+        } catch (parseError) {
+            // If parsing fails, use statusText as fallback
+            if (response.statusText) {
+                errorMessage += ` - ${response.statusText}`;
+            }
+        }
+        return errorMessage;
+    };
+    
+    // Helper for authenticated fetch
+    const fetchJson = async (url, options = {}) => {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...getAuthHeaders(),
+                ...(options.headers || {})
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+            const errorMessage = await parseErrorResponse(response);
+            throw new Error(errorMessage);
+        }
+        
+        return response.json();
+    };
+    
     return {
         oltId: oltId,
         onus: [],
@@ -283,21 +342,14 @@ function onuMonitor(oltId) {
         },
         async loadData() {
             try {
-                const response = await fetch(`/api/v1/olt/${this.oltId}/monitor-onus`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                    },
-                    credentials: 'same-origin'
-                });
-                const data = await response.json();
+                const data = await fetchJson(`/api/v1/olt/${this.oltId}/monitor-onus`);
                 
                 if (data.success) {
                     this.onus = data.data.onus;
                     this.summary = data.data.summary;
                     this.lastUpdated = new Date().toLocaleTimeString();
+                } else {
+                    console.error('API returned error:', data.message || 'Unknown error');
                 }
             } catch (error) {
                 console.error('Failed to load ONU data:', error);
@@ -333,34 +385,31 @@ function onuMonitor(oltId) {
         },
         async refreshOnu(onuId) {
             try {
-                const response = await fetch(`/api/v1/olt/onu/${onuId}/refresh`, {
+                const data = await fetchJson(`/api/v1/olt/onu/${onuId}/refresh`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Content-Type': 'application/json'
                     }
                 });
-                const data = await response.json();
                 
                 if (data.success) {
                     this.loadData();
                 }
             } catch (error) {
                 console.error('Refresh failed:', error);
+                alert('Refresh failed: ' + error.message);
             }
         },
         async authorizeOnu(onuId) {
             if (!confirm('Authorize this ONU?')) return;
             
             try {
-                const response = await fetch(`/api/v1/olt/onu/${onuId}/authorize`, {
+                const data = await fetchJson(`/api/v1/olt/onu/${onuId}/authorize`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Content-Type': 'application/json'
                     }
                 });
-                const data = await response.json();
                 
                 alert(data.message);
                 if (data.success) {
@@ -368,24 +417,24 @@ function onuMonitor(oltId) {
                 }
             } catch (error) {
                 console.error('Authorization failed:', error);
+                alert('Authorization failed: ' + error.message);
             }
         },
         async rebootOnu(onuId) {
             if (!confirm('Reboot this ONU?')) return;
             
             try {
-                const response = await fetch(`/api/v1/olt/onu/${onuId}/reboot`, {
+                const data = await fetchJson(`/api/v1/olt/onu/${onuId}/reboot`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Content-Type': 'application/json'
                     }
                 });
-                const data = await response.json();
                 
                 alert(data.message);
             } catch (error) {
                 console.error('Reboot failed:', error);
+                alert('Reboot failed: ' + error.message);
             }
         },
         async bulkOperation(operation) {
@@ -397,18 +446,16 @@ function onuMonitor(oltId) {
             if (!confirm(`Perform ${operation} on ${this.selectedOnus.length} ONUs?`)) return;
             
             try {
-                const response = await fetch('/api/v1/olt/onu/bulk-operations', {
+                const data = await fetchJson('/api/v1/olt/onu/bulk-operations', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         onu_ids: this.selectedOnus,
                         operation: operation
                     })
                 });
-                const data = await response.json();
                 
                 alert(data.message);
                 this.bulkOperationsModal = false;
@@ -417,6 +464,7 @@ function onuMonitor(oltId) {
                 this.loadData();
             } catch (error) {
                 console.error('Bulk operation failed:', error);
+                alert('Bulk operation failed: ' + error.message);
             }
         }
     }
