@@ -616,11 +616,11 @@ class User extends Authenticatable
 
     /**
      * Check if this user can create an Operator.
-     * Developers, Super Admins, and Admins can create Operators.
+     * Only Developers and Admins can create Operators (not Super Admins).
      */
     public function canCreateOperator(): bool
     {
-        return $this->operator_level <= 20; // Developer, Super Admin, or Admin
+        return $this->isDeveloper() || $this->isAdmin();
     }
 
     /**
