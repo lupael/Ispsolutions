@@ -48,7 +48,6 @@
                 'icon' => 'box',
                 'children' => [
                     ['label' => 'All Packages', 'route' => 'panel.admin.packages'],
-                    ['label' => 'Create Package', 'route' => 'panel.admin.packages.create'],
                     ['label' => 'Master Packages', 'route' => 'panel.admin.master-packages.index'],
                     ['label' => 'Operator Packages', 'route' => 'panel.admin.operator-packages.index'],
                 ]
