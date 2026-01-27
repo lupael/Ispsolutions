@@ -134,17 +134,17 @@ class BulkOperationsController extends Controller
             DB::transaction(function () use ($ids, &$successCount, &$failedCount) {
                 foreach ($ids as $id) {
                     try {
-                        $user = User::where('operator_level', 100)
+                        $customer = User::where('operator_level', 100)
                             ->with('package')->findOrFail($id);
 
-                        if (! $user->package) {
+                        if (! $customer->package) {
                             $failedCount++;
 
                             continue;
                         }
 
-                        // Check if user already has a pending invoice
-                        $existingInvoice = Invoice::where('user_id', $user->id)
+                        // Check if customer already has a pending invoice
+                        $existingInvoice = Invoice::where('user_id', $customer->id)
                             ->whereIn('status', ['pending', 'overdue'])
                             ->exists();
 
@@ -156,13 +156,13 @@ class BulkOperationsController extends Controller
 
                         // Generate invoice
                         $invoice = Invoice::create([
-                            'tenant_id' => $user->tenant_id,
-                            'user_id' => $user->id,
-                            'package_id' => $user->package_id,
+                            'tenant_id' => $customer->tenant_id,
+                            'user_id' => $customer->id,
+                            'package_id' => $customer->package_id,
                             'invoice_number' => $this->generateInvoiceNumber(),
-                            'amount' => $user->package->price_monthly,
-                            'tax_amount' => $user->package->price_monthly * 0.15, // 15% tax
-                            'total_amount' => $user->package->price_monthly * 1.15,
+                            'amount' => $customer->package->price_monthly,
+                            'tax_amount' => $customer->package->price_monthly * 0.15, // 15% tax
+                            'total_amount' => $customer->package->price_monthly * 1.15,
                             'billing_period_start' => now(),
                             'billing_period_end' => now()->addMonth(),
                             'due_date' => now()->addDays(7),
@@ -171,7 +171,7 @@ class BulkOperationsController extends Controller
 
                         $successCount++;
                     } catch (\Exception $e) {
-                        Log::error("Failed to generate invoice for user ID {$id}: " . $e->getMessage());
+                        Log::error("Failed to generate invoice for customer ID {$id}: " . $e->getMessage());
                         $failedCount++;
                     }
                 }

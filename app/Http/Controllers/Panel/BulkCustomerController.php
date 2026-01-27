@@ -170,7 +170,8 @@ class BulkCustomerController extends Controller
 
         $updatedCount = 0;
         foreach ($customers as $customer) {
-            $customer->operator_id = $operatorId;
+            // Transfer customer to new operator
+            $customer->created_by = $operatorId;
             if ($customer->save()) {
                 $updatedCount++;
             }

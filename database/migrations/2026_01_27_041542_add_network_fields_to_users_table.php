@@ -67,7 +67,7 @@ return new class extends Migration
             }
             
             // Zone assignment for network management
-            if (!Schema::hasColumn('users', 'zone_id')) {
+            if (!Schema::hasColumn('users', 'zone_id') && Schema::hasTable('zones')) {
                 $table->foreignId('zone_id')->nullable()->after('tenant_id')->constrained('zones')->nullOnDelete();
                 $table->index('zone_id');
             }
