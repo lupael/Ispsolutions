@@ -12,10 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('mikrotik_routers', function (Blueprint $table) {
-            $table->enum('api_status', ['online', 'offline', 'warning', 'unknown'])->default('unknown')->after('password');
-            $table->timestamp('last_checked_at')->nullable()->after('api_status');
-            $table->text('last_error')->nullable()->after('last_checked_at');
-            $table->integer('response_time_ms')->nullable()->after('last_error')->comment('API response time in milliseconds');
+            // Add api_status column if it doesn't exist
+            if (!Schema::hasColumn('mikrotik_routers', 'api_status')) {
+                $table->enum('api_status', ['online', 'offline', 'warning', 'unknown'])->default('unknown')->after('password');
+            }
+            
+            // Add last_checked_at column if it doesn't exist
+            if (!Schema::hasColumn('mikrotik_routers', 'last_checked_at')) {
+                $table->timestamp('last_checked_at')->nullable()->after('api_status');
+            }
+            
+            // Add last_error column if it doesn't exist
+            if (!Schema::hasColumn('mikrotik_routers', 'last_error')) {
+                $table->text('last_error')->nullable()->after('last_checked_at');
+            }
+            
+            // Add response_time_ms column if it doesn't exist
+            if (!Schema::hasColumn('mikrotik_routers', 'response_time_ms')) {
+                $table->integer('response_time_ms')->nullable()->after('last_error')->comment('API response time in milliseconds');
+            }
         });
     }
 

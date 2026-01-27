@@ -296,6 +296,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     // IP Pool Migration
     Route::get('/ip-pools/migrate', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'index'])->name('ip-pools.migrate');
     Route::post('/ip-pools/migrate/validate', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'validateMigration'])->name('ip-pools.migrate.validate');
+    Route::post('/ip-pools/migrate/start', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'start'])->name('ip-pools.migrate.start');
     Route::get('/ip-pools/migration-progress/{migrationId}', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'index'])->name('ip-pools.migration-progress');
 
     // Network Device Management - Legacy routes (kept for backward compatibility)
