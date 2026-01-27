@@ -43,14 +43,17 @@ class SecurityFeaturesTest extends TestCase
         // Verify connect-src includes required domains for external resources (e.g., source maps)
         $this->assertStringContainsString('connect-src', $cspHeader);
         
-        // Verify nonce is present
+        // Verify nonce is present in script-src (for inline scripts)
         $this->assertStringContainsString("'nonce-", $cspHeader);
         
-        // Verify unsafe-hashes is present for inline event handlers and style attributes
+        // Verify unsafe-hashes is present in script-src for inline event handlers
         $this->assertStringContainsString("'unsafe-hashes'", $cspHeader);
         
-        // Verify style-src has unsafe-hashes for inline style attributes
-        $this->assertMatchesRegularExpression("/style-src[^;]*'unsafe-hashes'/", $cspHeader);
+        // Verify style-src has unsafe-inline (without nonce) to allow all inline styles
+        $this->assertMatchesRegularExpression("/style-src[^;]*'unsafe-inline'/", $cspHeader);
+        
+        // Verify style-src does NOT have nonce (nonce would cause unsafe-inline to be ignored)
+        $this->assertDoesNotMatchRegularExpression("/style-src[^;]*'nonce-/", $cspHeader);
     }
 
     public function test_csp_nonce_helper_works(): void
