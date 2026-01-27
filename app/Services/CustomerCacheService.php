@@ -156,8 +156,6 @@ class CustomerCacheService
                 ->map(function ($customer) {
                     // Add computed attributes
                     $customer->online_status = false; // Will be populated separately
-                    // Map service_package_id to package_id for compatibility
-                    $customer->package_id = $customer->service_package_id;
                     return $customer;
                 });
         } catch (\Exception $e) {

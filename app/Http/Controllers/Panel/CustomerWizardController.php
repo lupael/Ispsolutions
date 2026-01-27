@@ -372,7 +372,8 @@ class CustomerWizardController extends Controller
             DB::commit();
 
             return redirect()->route('panel.admin.customers.show', $customer)
-                ->with('success', 'Customer created successfully with suspended status. Username: ' . $username . '. Activate service by paying the invoice.');
+                ->with('success', 'Customer created successfully!')
+                ->with('info', "Username: {$username}. Service is suspended until invoice payment.");
         } catch (\Exception $e) {
             DB::rollBack();
             logger()->error('Customer wizard completion failed: ' . $e->getMessage());

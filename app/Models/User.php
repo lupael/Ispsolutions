@@ -886,6 +886,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Get package_id accessor for backward compatibility with deprecated NetworkUser model.
+     * Maps service_package_id to package_id for services expecting the old field name.
+     */
+    public function getPackageIdAttribute()
+    {
+        return $this->service_package_id;
+    }
+
+    /**
      * Get sessions from network user (for backward compatibility)
      * 
      * Note: Returns empty collection if networkUser relationship isn't loaded.
