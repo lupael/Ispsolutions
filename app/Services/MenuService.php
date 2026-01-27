@@ -221,7 +221,7 @@ class MenuService
                 'title' => 'Network Management',
                 'icon' => 'ki-abstract-26',
                 'children' => [
-                    ['title' => 'Network Users', 'route' => 'panel.admin.network-users'],
+                    ['title' => 'Customers', 'route' => 'panel.admin.customers'],
                     ['title' => 'MikroTik', 'route' => 'panel.admin.mikrotik'],
                     ['title' => 'NAS Devices', 'route' => 'panel.admin.nas'],
                     ['title' => 'OLT Devices', 'route' => 'panel.admin.olt'],
@@ -270,9 +270,9 @@ class MenuService
                 'route' => 'panel.manager.dashboard',
             ],
             [
-                'title' => 'Network Users',
+                'title' => 'Customers',
                 'icon' => 'ki-profile-user',
-                'route' => 'panel.manager.network-users',
+                'route' => 'panel.manager.customers',
             ],
             [
                 'title' => 'Sessions',
@@ -359,9 +359,9 @@ class MenuService
                 'route' => 'panel.staff.dashboard',
             ],
             [
-                'title' => 'Network Users',
+                'title' => 'Customers',
                 'icon' => 'ki-profile-user',
-                'route' => 'panel.staff.network-users',
+                'route' => 'panel.staff.customers',
             ],
             [
                 'title' => 'Tickets',

@@ -540,10 +540,10 @@ return [
             'route' => 'panel.staff.dashboard',
         ],
         [
-            'key' => 'network_users',
-            'label' => 'Network Users',
+            'key' => 'customers',
+            'label' => 'Customers',
             'icon' => 'bi-people',
-            'route' => 'panel.staff.network-users',
+            'route' => 'panel.staff.customers',
         ],
         [
             'key' => 'tickets',
