@@ -33,6 +33,7 @@ use App\Services\PdfExportService;
 use App\Services\PdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -888,22 +889,63 @@ class AdminController extends Controller
     public function customersStore(Request $request)
     {
         $validated = $request->validate([
-            'username' => 'required|string|min:3|max:255|unique:network_users,username|regex:/^[a-zA-Z0-9_-]+$/',
+            'username' => 'required|string|min:3|max:255|unique:users,username|regex:/^[a-zA-Z0-9_-]+$/',
             'password' => 'required|string|min:8',
             'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
             'package_id' => 'required|exists:packages,id',
             'status' => 'required|in:active,inactive,suspended',
+            'customer_name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255|unique:users,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'ip_address' => 'nullable|ip',
+            'mac_address' => 'nullable|string|max:17|regex:/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Hash the password and set is_active to true by default
-        $validated['password'] = bcrypt($validated['password']);
-        $validated['is_active'] = true;
+        try {
+            DB::beginTransaction();
 
-        // Create the network user
-        NetworkUser::create($validated);
+            // Create customer user with network credentials
+            $customer = User::create([
+                'tenant_id' => auth()->user()->tenant_id,
+                'name' => $validated['customer_name'] ?? $validated['username'],
+                'email' => $validated['email'] ?? $validated['username'] . '@local.customer',
+                'username' => $validated['username'],
+                'password' => bcrypt($validated['password']), // Hashed for app login
+                'radius_password' => $validated['password'], // Plain text for RADIUS
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'operator_level' => 100, // Customer level
+                'is_active' => true,
+                'activated_at' => now(),
+                'created_by' => auth()->id(),
+                'service_package_id' => $validated['package_id'],
+                // Network service fields
+                'service_type' => $validated['service_type'],
+                'status' => $validated['status'],
+                'ip_address' => $validated['ip_address'] ?? null,
+                'mac_address' => $validated['mac_address'] ?? null,
+            ]);
 
-        return redirect()->route('panel.admin.customers')
-            ->with('success', 'Customer created successfully.');
+            // Assign customer role
+            $customer->assignRole('customer');
+
+            // Note: RADIUS provisioning now happens automatically via UserObserver
+            // The observer will sync customer to RADIUS when created
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.customers')
+                ->with('success', 'Customer created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create customer: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create customer. Please try again.');
+        }
     }
 
     /**
