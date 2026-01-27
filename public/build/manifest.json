@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CHuIQ01K.css",
+    "file": "assets/app-DbdC15tX.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,9 +9,15 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Jq0WpCnz.js",
+    "file": "assets/app-C_K9D335.js",
     "name": "app",
     "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/bulk-selection.js": {
+    "file": "assets/bulk-selection-B5krLgZg.js",
+    "name": "bulk-selection",
+    "src": "resources/js/bulk-selection.js",
     "isEntry": true
   }
 }
