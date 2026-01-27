@@ -15,16 +15,20 @@ class IpAllocation extends Model
 
     protected $fillable = [
         'subnet_id',
+        'user_id',
         'ip_address',
         'mac_address',
         'username',
         'allocated_at',
         'released_at',
         'status',
+        'allocation_type',
+        'tenant_id',
     ];
 
     protected $casts = [
         'subnet_id' => 'integer',
+        'user_id' => 'integer',
         'allocated_at' => 'datetime',
         'released_at' => 'datetime',
         'created_at' => 'datetime',
@@ -34,6 +38,11 @@ class IpAllocation extends Model
     public function subnet(): BelongsTo
     {
         return $this->belongsTo(IpSubnet::class, 'subnet_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function history(): HasMany
