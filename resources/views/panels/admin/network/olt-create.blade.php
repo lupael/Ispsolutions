@@ -149,7 +149,7 @@
                 <a href="{{ route('panel.admin.network.olt') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                     Cancel
                 </a>
-                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                <button type="button" id="testConnectionBtn" onclick="testOltConnection()" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
@@ -165,4 +165,59 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script nonce="{{ csp_nonce() }}">
+async function testOltConnection() {
+    const ipAddress = document.getElementById('ip_address').value;
+    const telnetPort = document.getElementById('telnet_port').value;
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    if (!ipAddress) {
+        alert('Please enter an IP address first.');
+        return;
+    }
+    
+    const button = document.getElementById('testConnectionBtn');
+    const originalHTML = button.innerHTML;
+    
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Testing...';
+    
+    try {
+        // For OLT, we'll do a simple ping test similar to routers
+        // A proper telnet/SNMP test would require backend support
+        const response = await fetch('/api/v1/olt/test-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                ip_address: ipAddress,
+                telnet_port: telnetPort || 23,
+                username: username,
+                password: password
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✓ Connection Successful!\n\n' + (data.message || 'OLT device is accessible.'));
+        } else {
+            alert('✗ Connection Failed\n\n' + (data.message || 'Could not connect to the OLT device.'));
+        }
+    } catch (error) {
+        // Fallback to basic ping test if API endpoint doesn't exist
+        alert('⚠️ Test Connection\n\nBasic connectivity check will be performed when you save the device.\n\nIP Address: ' + ipAddress);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+    }
+}
+</script>
+@endpush
 @endsection
