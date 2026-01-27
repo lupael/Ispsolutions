@@ -241,7 +241,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
 });
 
 // Admin Panel
-Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:admin'])->group(function () {
+Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('users.create');
@@ -771,7 +771,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
 });
 
 // Sales Manager Panel
-Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware(['auth', 'role:sales-manager'])->group(function () {
+Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware(['auth', 'tenant', 'role:sales-manager'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\SalesManagerController::class, 'dashboard'])->name('dashboard');
 
     // Admin (ISP Client) Management
@@ -798,7 +798,7 @@ Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware([
 });
 
 // Manager Panel
-Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'role:manager'])->group(function () {
+Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'tenant', 'role:manager'])->group(function () {
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
     Route::get('/network-users', [ManagerController::class, 'networkUsers'])->name('network-users');
     Route::get('/sessions', [ManagerController::class, 'sessions'])->name('sessions');
@@ -809,7 +809,7 @@ Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'rol
 });
 
 // Operator Panel
-Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 'role:operator'])->group(function () {
+Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 'tenant', 'role:operator'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\OperatorController::class, 'dashboard'])->name('dashboard');
     Route::get('/sub-operators', [\App\Http\Controllers\Panel\OperatorController::class, 'subOperators'])->name('sub-operators.index');
     Route::get('/customers', [\App\Http\Controllers\Panel\OperatorController::class, 'customers'])->name('customers.index');
@@ -826,7 +826,7 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 'r
 });
 
 // Sub-Operator Panel
-Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['auth', 'role:sub-operator'])->group(function () {
+Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['auth', 'tenant', 'role:sub-operator'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\SubOperatorController::class, 'dashboard'])->name('dashboard');
     Route::get('/customers', [\App\Http\Controllers\Panel\SubOperatorController::class, 'customers'])->name('customers.index');
     Route::get('/bills', [\App\Http\Controllers\Panel\SubOperatorController::class, 'bills'])->name('bills.index');
@@ -838,7 +838,7 @@ Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['a
 });
 
 // Accountant Panel
-Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth', 'role:accountant'])->group(function () {
+Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth', 'tenant', 'role:accountant'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\AccountantController::class, 'dashboard'])->name('dashboard');
     Route::get('/reports/income-expense', [\App\Http\Controllers\Panel\AccountantController::class, 'incomeExpenseReport'])->name('reports.income-expense');
     Route::get('/reports/payments', [\App\Http\Controllers\Panel\AccountantController::class, 'paymentHistory'])->name('reports.payments');
@@ -851,7 +851,7 @@ Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth'
 });
 
 // Staff Panel
-Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:staff'])->group(function () {
+Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'tenant', 'role:staff'])->group(function () {
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
     Route::get('/tickets', [StaffController::class, 'tickets'])->name('tickets');
@@ -868,7 +868,7 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:st
 });
 
 // Card Distributor Panel
-Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'role:card-distributor'])->group(function () {
+Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'tenant', 'role:card-distributor'])->group(function () {
     Route::get('/dashboard', [CardDistributorController::class, 'dashboard'])->name('dashboard');
     Route::get('/cards', [CardDistributorController::class, 'cards'])->name('cards');
     Route::get('/sales', [CardDistributorController::class, 'sales'])->name('sales');
@@ -877,7 +877,7 @@ Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middle
 });
 
 // Customer Panel
-Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'role:customer'])->group(function () {
+Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'tenant', 'role:customer'])->group(function () {
     Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
     Route::put('/profile', [CustomerController::class, 'updateProfile'])->name('profile.update');
