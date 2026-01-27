@@ -49,6 +49,35 @@ class AdminController extends Controller
         // Exclude developer and super-admin from user counts
         $excludedRoleSlugs = ['developer', 'super-admin'];
 
+        // Calculate online/offline customers with error handling for radacct table
+        try {
+            $onlineCustomers = User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->whereNotNull('username')
+                ->whereIn('username', function ($subQuery) {
+                    $subQuery->select('username')
+                        ->from('radius.radacct')
+                        ->whereNull('acctstoptime');
+                })
+                ->count();
+            $offlineCustomers = User::where('operator_level', 100)
+                ->whereNotNull('service_type')
+                ->whereNotNull('username')
+                ->whereNotIn('username', function ($subQuery) {
+                    $subQuery->select('username')
+                        ->from('radius.radacct')
+                        ->whereNull('acctstoptime');
+                })
+                ->count();
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle case where radacct table doesn't exist
+            Log::warning('Unable to query radacct table for online/offline status', [
+                'error' => $e->getMessage(),
+            ]);
+            $onlineCustomers = 0;
+            $offlineCustomers = 0;
+        }
+
         $stats = [
             'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                 $query->whereIn('slug', $excludedRoleSlugs);
@@ -87,14 +116,8 @@ class AdminController extends Controller
                 ->whereDate('expiry_date', today())
                 ->count(),
             // Additional customer statistics (now using User model)
-            'online_customers' => User::where('operator_level', 100)
-                ->whereNotNull('service_type')
-                ->has('radiusSessions')
-                ->count(),
-            'offline_customers' => User::where('operator_level', 100)
-                ->whereNotNull('service_type')
-                ->doesntHave('radiusSessions')
-                ->count(),
+            'online_customers' => $onlineCustomers,
+            'offline_customers' => $offlineCustomers,
             'suspended_customers' => User::where('operator_level', 100)
                 ->where('status', 'suspended')
                 ->count(),
