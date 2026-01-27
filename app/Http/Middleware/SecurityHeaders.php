@@ -38,7 +38,7 @@ class SecurityHeaders
         // Note: 'unsafe-eval' is required for Alpine.js to evaluate expressions in attributes like x-data, x-show, @click, etc.
         // Alpine.js uses Function() constructor which requires eval. While this slightly weakens CSP,
         // it's necessary for Alpine.js to work. Alternative would be to use Alpine's CSP build which has limitations.
-        // Note: 'unsafe-hashes' is required for inline event handlers (onclick, onerror, etc.) and inline style attributes to work
+        // Note: 'unsafe-hashes' is required in script-src for inline event handlers (onclick, onerror, etc.)
         // Note: For style-src, we use 'unsafe-inline' without nonce to allow all inline styles (both <style> tags and style="" attributes)
         // When nonce is present in style-src, 'unsafe-inline' is ignored per CSP spec, blocking inline style attributes
         $response->headers->set('Content-Security-Policy',
