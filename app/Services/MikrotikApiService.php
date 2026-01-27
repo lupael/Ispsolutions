@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Log;
  * Provides generic methods for interacting with MikroTik RouterOS API.
  * This service acts as an adapter providing the expected interface
  * for router operations, wrapping HTTP API calls to the router.
+ *
+ * SECURITY NOTE:
+ * Current implementation uses HTTP for compatibility with test/dev environments.
+ * For production use, configure routers to use HTTPS and update the protocol
+ * in the URL construction methods below. Ensure certificate validation is enabled.
  */
 class MikrotikApiService
 {
@@ -175,7 +180,7 @@ class MikrotikApiService
      *
      * @param MikrotikRouter $router The router to modify
      * @param string $menu The menu path
-     * @param array $rows Array of rows to remove
+     * @param array $rows Array of rows to remove (typically containing 'id' or 'name' identifiers)
      *
      * @return bool True if successful
      */
@@ -183,14 +188,18 @@ class MikrotikApiService
     {
         try {
             $endpoint = $this->menuToEndpoint($menu);
-            $url = "http://{$router->ip_address}:{$router->api_port}/api{$endpoint}/remove";
+            $baseUrl = "http://{$router->ip_address}:{$router->api_port}/api{$endpoint}/remove";
 
             $successCount = 0;
             $failedCount = 0;
 
             foreach ($rows as $row) {
+                // Build query string from row identifiers
+                $queryParams = http_build_query($row);
+                $url = $baseUrl . '?' . $queryParams;
+
                 $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                    ->delete($url, $row);
+                    ->delete($url);
 
                 if ($response->successful()) {
                     $successCount++;
@@ -299,6 +308,6 @@ class MikrotikApiService
             'firewall/nat' => '/firewall/nat',
         ];
 
-        return $conversions[$menu] ?? '/' . str_replace('/', '/', $menu);
+        return $conversions[$menu] ?? '/' . $menu;
     }
 }
