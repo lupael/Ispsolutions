@@ -66,13 +66,13 @@ class CustomerImportController extends Controller
             $query = CustomerImport::where('operator_id', auth()->id())
                 ->whereDate('created_at', today())
                 ->where('status', 'in_progress');
-            
+
             if ($deviceType === 'nas') {
                 $query->where('nas_id', $deviceId);
             } else {
                 $query->where('router_id', $deviceId);
             }
-            
+
             $existingImport = $query->first();
 
             if ($existingImport) {

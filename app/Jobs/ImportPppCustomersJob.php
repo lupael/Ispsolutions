@@ -25,6 +25,7 @@ class ImportPppCustomersJob implements ShouldQueue
     use SerializesModels;
 
     public int $timeout = 1800; // 30 minutes
+
     public int $tries = 1; // Don't retry to avoid duplicates
 
     /**
@@ -34,8 +35,7 @@ class ImportPppCustomersJob implements ShouldQueue
         public int $operatorId,
         public ?int $nasId,
         public array $options
-    ) {
-    }
+    ) {}
 
     /**
      * Execute the job.
@@ -44,18 +44,18 @@ class ImportPppCustomersJob implements ShouldQueue
     {
         // Determine router_id from either direct router_id or nas_id
         $routerId = $this->options['router_id'] ?? null;
-        
+
         // Check for duplicate import
         $query = CustomerImport::where('operator_id', $this->operatorId)
             ->whereDate('created_at', today())
             ->where('status', 'in_progress');
-        
+
         if ($routerId) {
             $query->where('router_id', $routerId);
         } elseif ($this->nasId) {
             $query->where('nas_id', $this->nasId);
         }
-        
+
         $existingImport = $query->first();
 
         if ($existingImport) {
@@ -64,6 +64,7 @@ class ImportPppCustomersJob implements ShouldQueue
                 'nas_id' => $this->nasId,
                 'router_id' => $routerId,
             ]);
+
             return;
         }
 
@@ -85,7 +86,7 @@ class ImportPppCustomersJob implements ShouldQueue
                 $router = MikrotikRouter::findOrFail($routerId);
             } elseif ($this->nasId) {
                 $router = MikrotikRouter::where('nas_id', $this->nasId)->first();
-                if (!$router) {
+                if (! $router) {
                     throw new \Exception('Router not found for NAS');
                 }
             } else {
@@ -93,18 +94,18 @@ class ImportPppCustomersJob implements ShouldQueue
             }
 
             // Connect to router
-            if (!$mikrotikService->connectRouter($router->id)) {
+            if (! $mikrotikService->connectRouter($router->id)) {
                 throw new \Exception('Failed to connect to router');
             }
 
             // Fetch PPP secrets from router
             $secrets = $this->fetchPppSecretsFromRouter($router->id, $mikrotikService);
-            
+
             $import->update(['total_count' => count($secrets)]);
 
             // Resolve tenant from operator
             $operator = User::find($this->operatorId);
-            if (!$operator) {
+            if (! $operator) {
                 throw new \Exception('Operator not found');
             }
             $tenantId = $operator->tenant_id;
@@ -181,10 +182,10 @@ class ImportPppCustomersJob implements ShouldQueue
     {
         // In production, this would use actual RouterOS API
         // For now, return mock data for demonstration
-        
+
         // Example implementation:
         // return $mikrotikService->getPppSecrets($routerId, $this->options['filter_disabled']);
-        
+
         return [];
     }
 
@@ -206,7 +207,7 @@ class ImportPppCustomersJob implements ShouldQueue
                     'email' => $secret['email'] ?? null,
                     'password' => bcrypt($secret['password']),
                     'role_id' => $this->getCustomerRoleId(),
-                    'is_active' => !($secret['disabled'] ?? false),
+                    'is_active' => ! ($secret['disabled'] ?? false),
                 ]
             );
 
@@ -218,6 +219,7 @@ class ImportPppCustomersJob implements ShouldQueue
             if ($existingNetworkUser) {
                 // Skip if already exists
                 DB::rollBack();
+
                 return;
             }
 
@@ -230,11 +232,11 @@ class ImportPppCustomersJob implements ShouldQueue
                 'service_type' => 'pppoe',
                 'package_id' => $this->options['package_id'] ?? null,
                 'status' => ($secret['disabled'] ?? false) ? 'inactive' : 'active',
-                'is_active' => !($secret['disabled'] ?? false),
+                'is_active' => ! ($secret['disabled'] ?? false),
             ]);
 
             // Generate initial bill if requested
-            if ($this->options['generate_bills'] && !($secret['disabled'] ?? false)) {
+            if ($this->options['generate_bills'] && ! ($secret['disabled'] ?? false)) {
                 // Call billing service to generate bill
                 // This would be implemented based on your billing logic
             }

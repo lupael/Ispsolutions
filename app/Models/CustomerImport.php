@@ -40,8 +40,11 @@ class CustomerImport extends Model
      * Status constants.
      */
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_FAILED = 'failed';
 
     /**
@@ -102,6 +105,7 @@ class CustomerImport extends Model
         }
 
         $processed = $this->success_count + $this->failed_count;
+
         return round(($processed / $this->total_count) * 100, 2);
     }
 }

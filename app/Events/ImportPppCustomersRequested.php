@@ -19,8 +19,7 @@ class ImportPppCustomersRequested
         public int $operatorId,
         public ?int $nasId,
         public array $options = []
-    ) {
-    }
+    ) {}
 
     /**
      * Get import options.
