@@ -51,6 +51,7 @@ class SuperAdminController extends Controller
             ->whereDoesntHave('roles', function ($query) {
                 $query->where('slug', 'developer');
             })
+            ->where('operator_level', '<', 100) // Exclude customers (operator_level = 100)
             ->where(function ($query) use ($superAdmin) {
                 // Show users in tenants created by this Super Admin
                 $query->whereIn('tenant_id', function ($q) use ($superAdmin) {

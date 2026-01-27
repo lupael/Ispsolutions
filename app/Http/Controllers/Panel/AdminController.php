@@ -156,6 +156,7 @@ class AdminController extends Controller
     {
         $users = User::with('roles')
             ->where('tenant_id', auth()->user()->tenant_id)
+            ->where('operator_level', '<', 100) // Exclude customers (operator_level = 100)
             ->latest()
             ->paginate(20);
 
@@ -3270,6 +3271,8 @@ class AdminController extends Controller
         // Store original admin ID in session
         session(['impersonate_by' => $currentUser->id]);
         session(['impersonate_at' => now()]);
+        session(['impersonating' => true]);
+        session(['impersonated_user_name' => $operator->name]);
 
         // Log audit if AuditLog model exists
         try {
@@ -3350,14 +3353,14 @@ class AdminController extends Controller
             ($currentUser && property_exists($currentUser, 'tenant_id') && $admin->tenant_id !== $currentUser->tenant_id)
         ) {
             // Clear impersonation data and do not restore an invalid or unauthorized admin account
-            session()->forget(['impersonate_by', 'impersonate_at']);
+            session()->forget(['impersonate_by', 'impersonate_at', 'impersonating', 'impersonated_user_name']);
 
             return redirect()->route('panel.admin.dashboard')
                 ->with('error', 'Unable to restore the original admin account.');
         }
 
         // Clear impersonation session data before switching back
-        session()->forget(['impersonate_by', 'impersonate_at']);
+        session()->forget(['impersonate_by', 'impersonate_at', 'impersonating', 'impersonated_user_name']);
 
         auth()->loginUsingId($admin->id);
 
