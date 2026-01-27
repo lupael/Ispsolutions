@@ -285,7 +285,15 @@ function performanceMetrics(oltId) {
         async loadMetrics() {
             try {
                 // Get latest metrics
-                const statsResponse = await fetch(`/api/v1/olt/${this.oltId}/statistics`);
+                const statsResponse = await fetch(`/api/v1/olt/${this.oltId}/statistics`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    credentials: 'same-origin'
+                });
                 const statsData = await statsResponse.json();
                 
                 if (statsData.success) {
@@ -293,7 +301,15 @@ function performanceMetrics(oltId) {
                 }
 
                 // Get port utilization
-                const portResponse = await fetch(`/api/v1/olt/${this.oltId}/port-utilization`);
+                const portResponse = await fetch(`/api/v1/olt/${this.oltId}/port-utilization`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    credentials: 'same-origin'
+                });
                 const portData = await portResponse.json();
                 
                 if (portData.success) {

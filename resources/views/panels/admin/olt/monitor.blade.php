@@ -283,7 +283,15 @@ function onuMonitor(oltId) {
         },
         async loadData() {
             try {
-                const response = await fetch(`/api/v1/olt/${this.oltId}/monitor-onus`);
+                const response = await fetch(`/api/v1/olt/${this.oltId}/monitor-onus`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    credentials: 'same-origin'
+                });
                 const data = await response.json();
                 
                 if (data.success) {
