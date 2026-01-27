@@ -21,7 +21,7 @@ class PackageProfileController extends Controller
     public function index(Package $package): View
     {
         // Check if user can view packages
-        abort_unless(auth()->user()->hasRole(['admin', 'superadmin']), 403);
+        abort_unless(auth()->user()->hasAnyRole(['admin', 'superadmin']), 403);
 
         // Get all routers
         $routers = MikrotikRouter::where('status', 'active')->get();
@@ -53,7 +53,7 @@ class PackageProfileController extends Controller
     public function update(Request $request, Package $package): RedirectResponse
     {
         // Check if user can manage packages
-        abort_unless(auth()->user()->hasRole(['admin', 'superadmin']), 403);
+        abort_unless(auth()->user()->hasAnyRole(['admin', 'superadmin']), 403);
 
         $validated = $request->validate([
             'mappings' => 'required|array',

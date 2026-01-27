@@ -3255,7 +3255,7 @@ class AdminController extends Controller
         $currentUser = auth()->user();
 
         // Only allow super-admins and admins to impersonate
-        if (! $currentUser->hasRole(['super-admin', 'admin'])) {
+        if (! $currentUser->hasAnyRole(['super-admin', 'admin'])) {
             abort(403, 'Unauthorized to impersonate users.');
         }
 
@@ -3299,7 +3299,7 @@ class AdminController extends Controller
 
         if (method_exists($operator, 'hasRole')) {
             // Keep admins / super-admins on the admin dashboard
-            if ($operator->hasRole(['super-admin', 'admin'])) {
+            if ($operator->hasAnyRole(['super-admin', 'admin'])) {
                 $redirectRoute = 'panel.admin.dashboard';
                 // Send operators to their own dashboard if route exists
             } elseif ($operator->hasRole('operator')) {
@@ -3346,7 +3346,7 @@ class AdminController extends Controller
 
         if (
             ! $admin ||
-            ! $admin->hasRole(['super-admin', 'admin']) ||
+            ! $admin->hasAnyRole(['super-admin', 'admin']) ||
             ($currentUser && property_exists($currentUser, 'tenant_id') && $admin->tenant_id !== $currentUser->tenant_id)
         ) {
             // Clear impersonation data and do not restore an invalid or unauthorized admin account
