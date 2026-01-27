@@ -17,6 +17,7 @@ class RouterBackupService
     {
         $this->mikrotikApiService = $mikrotikApiService;
     }
+
     /**
      * Create a pre-change backup before making configuration changes
      */
@@ -24,8 +25,8 @@ class RouterBackupService
     {
         try {
             $backupData = $this->fetchRouterConfiguration($router);
-            
-            if (!$backupData) {
+
+            if (! $backupData) {
                 return null;
             }
 
@@ -43,6 +44,7 @@ class RouterBackupService
                 'reason' => $reason,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -54,8 +56,8 @@ class RouterBackupService
     {
         try {
             $backupData = $this->fetchRouterConfiguration($router);
-            
-            if (!$backupData) {
+
+            if (! $backupData) {
                 return null;
             }
 
@@ -78,6 +80,7 @@ class RouterBackupService
                 'name' => $name,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -98,7 +101,7 @@ class RouterBackupService
 
     /**
      * Backup PPP secrets from router
-     * 
+     *
      * Note: This is a placeholder implementation. The current MikrotikService implementation
      * is HTTP-based and does not expose a RouterOS API client with a comm() method.
      * This method requires future implementation when RouterOS API support is added.
@@ -114,7 +117,7 @@ class RouterBackupService
 
     /**
      * Mirror customers from database to router (sync all users)
-     * 
+     *
      * Note: This is a placeholder implementation. The current MikrotikService implementation
      * is HTTP-based and does not expose a RouterOS API client with a comm() method.
      * This method requires future implementation when RouterOS API support is added.
@@ -124,7 +127,7 @@ class RouterBackupService
         Log::warning('Mirror customers to router is not fully implemented for the current MikrotikService', [
             'router_id' => $router->id,
         ]);
-        
+
         return [
             'success' => false,
             'error' => 'Mirror functionality requires RouterOS API implementation',
@@ -136,7 +139,7 @@ class RouterBackupService
 
     /**
      * Restore configuration from backup
-     * 
+     *
      * Parses backup data and applies configurations via MikroTik API.
      * Configurations are applied in a specific order to maintain dependencies.
      */
@@ -151,7 +154,7 @@ class RouterBackupService
             $backupDataJson = $this->decryptBackupData($backup->backup_data);
             $backupData = json_decode($backupDataJson, true);
 
-            if (!$backupData) {
+            if (! $backupData) {
                 throw new \Exception('Invalid backup data format');
             }
 
@@ -167,7 +170,7 @@ class RouterBackupService
                 "Pre-restore backup before restoring backup #{$backup->id}"
             );
 
-            if (!$preRestoreBackup) {
+            if (! $preRestoreBackup) {
                 Log::warning('Could not create pre-restore backup, continuing anyway');
             }
 
@@ -188,7 +191,7 @@ class RouterBackupService
                 if (isset($backupData[$section]) && is_array($backupData[$section])) {
                     try {
                         $items = $backupData[$section];
-                        
+
                         // Skip if no items to restore
                         if (empty($items)) {
                             continue;
@@ -196,7 +199,7 @@ class RouterBackupService
 
                         // Restore items to router
                         $success = $this->mikrotikApiService->addMktRows($router, $menu, $items);
-                        
+
                         if ($success) {
                             $restored[$section] = count($items);
                             Log::info("Restored {$section}", [
@@ -222,7 +225,7 @@ class RouterBackupService
 
             // Log overall results
             $totalRestored = array_sum($restored);
-            $hasFailures = !empty($failed);
+            $hasFailures = ! empty($failed);
 
             Log::info('Restore from backup completed', [
                 'router_id' => $router->id,
@@ -233,14 +236,15 @@ class RouterBackupService
             ]);
 
             // Return true if at least some sections were restored and no critical failures
-            return $totalRestored > 0 && !$hasFailures;
-            
+            return $totalRestored > 0 && ! $hasFailures;
+
         } catch (\Exception $e) {
             Log::error('Restore from backup failed', [
                 'router_id' => $router->id,
                 'backup_id' => $backup->id,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -266,7 +270,7 @@ class RouterBackupService
     public function cleanupOldBackups(MikrotikRouter $router, int $retentionDays = 30): int
     {
         $cutoffDate = now()->subDays($retentionDays);
-        
+
         return RouterConfigurationBackup::where('router_id', $router->id)
             ->where('backup_type', 'scheduled')
             ->where('created_at', '<', $cutoffDate)

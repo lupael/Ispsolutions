@@ -23,6 +23,7 @@ class MikrotikApiService
      * @param MikrotikRouter $router The router to query
      * @param string $menu The menu path (e.g., '/ip/pool', '/ppp/profile')
      * @param array $query Optional query filters
+     *
      * @return array Array of rows from the router
      */
     public function getMktRows(MikrotikRouter $router, string $menu, array $query = []): array
@@ -69,6 +70,7 @@ class MikrotikApiService
      * @param MikrotikRouter $router The router to modify
      * @param string $menu The menu path
      * @param array $rows Array of rows to add
+     *
      * @return bool True if successful
      */
     public function addMktRows(MikrotikRouter $router, string $menu, array $rows): bool
@@ -123,6 +125,7 @@ class MikrotikApiService
      * @param string $menu The menu path
      * @param array $row Identifier for the row to edit
      * @param array $data New data for the row
+     *
      * @return bool True if successful
      */
     public function editMktRow(MikrotikRouter $router, string $menu, array $row, array $data): bool
@@ -173,6 +176,7 @@ class MikrotikApiService
      * @param MikrotikRouter $router The router to modify
      * @param string $menu The menu path
      * @param array $rows Array of rows to remove
+     *
      * @return bool True if successful
      */
     public function removeMktRows(MikrotikRouter $router, string $menu, array $rows): bool
@@ -226,6 +230,7 @@ class MikrotikApiService
      * @param MikrotikRouter $router The router to execute command on
      * @param string $command The command to execute
      * @param array $params Optional command parameters
+     *
      * @return mixed Command output or null on failure
      */
     public function ttyWrite(MikrotikRouter $router, string $command, array $params = []): mixed
@@ -271,6 +276,7 @@ class MikrotikApiService
      * Convert MikroTik menu path to API endpoint.
      *
      * @param string $menu Menu path (e.g., '/ip/pool', '/ppp/profile')
+     *
      * @return string API endpoint path
      */
     private function menuToEndpoint(string $menu): string

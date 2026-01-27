@@ -12,11 +12,11 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class MikrotikImportService
 {
     protected MikrotikService $mikrotikService;
+
     protected MikrotikApiService $mikrotikApiService;
 
     public function __construct(MikrotikService $mikrotikService, MikrotikApiService $mikrotikApiService)
@@ -27,7 +27,7 @@ class MikrotikImportService
 
     /**
      * Import IP pools in bulk with CIDR/range support.
-     * 
+     *
      * Supported formats:
      * - CIDR notation: 192.168.1.0/24
      * - Hyphen ranges: 192.168.1.1-254
@@ -48,7 +48,7 @@ class MikrotikImportService
             foreach ($data['pools'] as $poolData) {
                 try {
                     $ipList = $this->parseIpRange($poolData['ip_range']);
-                    
+
                     foreach ($ipList as $ip) {
                         IpPool::create([
                             'name' => $poolData['name'] ?? "Pool-{$ip}",
@@ -69,7 +69,7 @@ class MikrotikImportService
             }
 
             DB::commit();
-            
+
             return [
                 'success' => true,
                 'imported' => $imported,
@@ -126,18 +126,18 @@ class MikrotikImportService
     {
         [$ip, $prefix] = explode('/', $cidr);
         $ips = [];
-        
+
         // Convert IP to long
         $ipLong = ip2long($ip);
         $netmask = ~((1 << (32 - $prefix)) - 1);
         $network = $ipLong & $netmask;
         $broadcast = $network | ~$netmask;
-        
+
         // Generate IPs (skip network and broadcast addresses)
         for ($i = $network + 1; $i < $broadcast; $i++) {
             $ips[] = long2ip($i);
         }
-        
+
         return $ips;
     }
 
@@ -147,20 +147,20 @@ class MikrotikImportService
     private function parseHyphenRange(string $range): array
     {
         preg_match('/^(\d+\.\d+\.\d+\.)(\d+)-(\d+)$/', $range, $matches);
-        
+
         if (count($matches) !== 4) {
             throw new \InvalidArgumentException("Invalid IP range format: {$range}");
         }
-        
+
         $prefix = $matches[1];
         $start = (int) $matches[2];
         $end = (int) $matches[3];
-        
+
         $ips = [];
         for ($i = $start; $i <= $end; $i++) {
             $ips[] = $prefix . $i;
         }
-        
+
         return $ips;
     }
 
@@ -170,10 +170,10 @@ class MikrotikImportService
     public function importPppProfiles(int $routerId): array
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         try {
             // Connect to router
-            if (!$this->mikrotikService->connectRouter($routerId)) {
+            if (! $this->mikrotikService->connectRouter($routerId)) {
                 throw new \Exception('Failed to connect to router');
             }
 
@@ -246,7 +246,7 @@ class MikrotikImportService
 
         try {
             // Connect to router
-            if (!$this->mikrotikService->connectRouter($routerId)) {
+            if (! $this->mikrotikService->connectRouter($routerId)) {
                 throw new \Exception('Failed to connect to router');
             }
 
@@ -287,11 +287,11 @@ class MikrotikImportService
                         'service_type' => 'pppoe',
                         'package_id' => $secretData['package_id'] ?? null,
                         'status' => $secretData['disabled'] ? 'inactive' : 'active',
-                        'is_active' => !$secretData['disabled'],
+                        'is_active' => ! $secretData['disabled'],
                     ]);
 
                     // Generate initial bill if requested
-                    if ($generateBills && !$secretData['disabled']) {
+                    if ($generateBills && ! $secretData['disabled']) {
                         // This would call BillingService to generate bill
                         // Skipped for brevity
                     }
@@ -333,12 +333,12 @@ class MikrotikImportService
     {
         $pools = IpPool::where('tenant_id', $tenantId)->get();
         $csv = "id,name,ip_address,subnet_mask,gateway,pool_type,status,created_at\n";
-        
+
         foreach ($pools as $pool) {
             $csv .= "{$pool->id},{$pool->name},{$pool->ip_address},{$pool->subnet_mask},{$pool->gateway},{$pool->pool_type},{$pool->status},{$pool->created_at}\n";
         }
 
-        $filename = "ip_pools_backup_" . date('Y-m-d_His') . ".csv";
+        $filename = 'ip_pools_backup_' . date('Y-m-d_His') . '.csv';
         Storage::disk('local')->put("imports/backups/{$filename}", $csv);
     }
 
@@ -349,12 +349,12 @@ class MikrotikImportService
     {
         $profiles = MikrotikProfile::where('tenant_id', $tenantId)->get();
         $csv = "id,name,router_id,local_address,remote_address,rate_limit,created_at\n";
-        
+
         foreach ($profiles as $profile) {
             $csv .= "{$profile->id},{$profile->name},{$profile->router_id},{$profile->local_address},{$profile->remote_address},{$profile->rate_limit},{$profile->created_at}\n";
         }
 
-        $filename = "ppp_profiles_backup_" . date('Y-m-d_His') . ".csv";
+        $filename = 'ppp_profiles_backup_' . date('Y-m-d_His') . '.csv';
         Storage::disk('local')->put("imports/backups/{$filename}", $csv);
     }
 
@@ -365,12 +365,12 @@ class MikrotikImportService
     {
         $customers = NetworkUser::where('tenant_id', $tenantId)->get();
         $csv = "id,username,user_id,service_type,package_id,status,is_active,created_at\n";
-        
+
         foreach ($customers as $customer) {
             $csv .= "{$customer->id},{$customer->username},{$customer->user_id},{$customer->service_type},{$customer->package_id},{$customer->status},{$customer->is_active},{$customer->created_at}\n";
         }
 
-        $filename = "customers_backup_" . date('Y-m-d_His') . ".csv";
+        $filename = 'customers_backup_' . date('Y-m-d_His') . '.csv';
         Storage::disk('local')->put("imports/backups/{$filename}", $csv);
     }
 
@@ -381,9 +381,10 @@ class MikrotikImportService
     {
         try {
             $router = MikrotikRouter::find($routerId);
-            
-            if (!$router) {
+
+            if (! $router) {
                 Log::error('Router not found for fetching profiles', ['router_id' => $routerId]);
+
                 return [];
             }
 
@@ -408,6 +409,7 @@ class MikrotikImportService
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -419,9 +421,10 @@ class MikrotikImportService
     {
         try {
             $router = MikrotikRouter::find($routerId);
-            
-            if (!$router) {
+
+            if (! $router) {
                 Log::error('Router not found for fetching secrets', ['router_id' => $routerId]);
+
                 return [];
             }
 
@@ -431,7 +434,7 @@ class MikrotikImportService
             // Filter disabled secrets if requested
             if ($filterDisabled) {
                 $secrets = array_filter($secrets, function ($secret) {
-                    return !isset($secret['disabled']) || $secret['disabled'] !== 'yes';
+                    return ! isset($secret['disabled']) || $secret['disabled'] !== 'yes';
                 });
             }
 
@@ -453,6 +456,7 @@ class MikrotikImportService
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
