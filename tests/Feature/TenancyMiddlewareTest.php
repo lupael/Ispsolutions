@@ -57,9 +57,10 @@ class TenancyMiddlewareTest extends TestCase
         $this->assertEquals($tenant->id, $this->tenancyService->getCurrentTenantId());
     }
 
-    public function test_middleware_returns_404_for_unknown_tenant(): void
+    public function test_middleware_returns_404_for_unknown_tenant_on_non_panel_routes(): void
     {
-        $request = Request::create('http://unknown-tenant.com/dashboard', 'GET');
+        // Panel routes should work without tenant, but other routes should not
+        $request = Request::create('http://unknown-tenant.com/some-other-route', 'GET');
         $middleware = new ResolveTenant($this->tenancyService);
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
@@ -83,6 +84,28 @@ class TenancyMiddlewareTest extends TestCase
         $this->assertNull($this->tenancyService->getCurrentTenantId());
     }
 
+    public function test_middleware_allows_panel_routes_without_tenant(): void
+    {
+        $panelRoutes = [
+            'http://unknown.com/panel/admin/dashboard',
+            'http://unknown.com/panel/operator/dashboard',
+            'http://unknown.com/panel/manager/dashboard',
+        ];
+
+        $middleware = new ResolveTenant($this->tenancyService);
+
+        foreach ($panelRoutes as $url) {
+            $request = Request::create($url, 'GET');
+
+            $response = $middleware->handle($request, function ($req) {
+                return response('OK');
+            });
+
+            $this->assertEquals(200, $response->getStatusCode(), "Failed for URL: {$url}");
+            $this->assertNull($this->tenancyService->getCurrentTenantId());
+        }
+    }
+
     public function test_middleware_does_not_resolve_inactive_tenant(): void
     {
         Tenant::factory()->create([
@@ -90,7 +113,8 @@ class TenancyMiddlewareTest extends TestCase
             'status' => 'inactive',
         ]);
 
-        $request = Request::create('http://inactive-isp.com/dashboard', 'GET');
+        // For non-panel routes, inactive tenant should cause 404
+        $request = Request::create('http://inactive-isp.com/some-other-route', 'GET');
         $middleware = new ResolveTenant($this->tenancyService);
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
@@ -98,5 +122,25 @@ class TenancyMiddlewareTest extends TestCase
         $middleware->handle($request, function ($req) {
             return response('OK');
         });
+    }
+
+    public function test_middleware_allows_panel_routes_with_inactive_tenant(): void
+    {
+        Tenant::factory()->create([
+            'domain' => 'inactive-isp.com',
+            'status' => 'inactive',
+        ]);
+
+        // Panel routes should work even with inactive tenant (tenant won't be resolved)
+        $request = Request::create('http://inactive-isp.com/panel/admin/dashboard', 'GET');
+        $middleware = new ResolveTenant($this->tenancyService);
+
+        $response = $middleware->handle($request, function ($req) {
+            return response('OK');
+        });
+
+        $this->assertEquals(200, $response->getStatusCode());
+        // Tenant should not be resolved since it's inactive
+        $this->assertNull($this->tenancyService->getCurrentTenantId());
     }
 }
