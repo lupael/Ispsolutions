@@ -34,14 +34,14 @@ class CustomerFilterService
         // Filter by connection type
         if (!empty($filters['connection_type'])) {
             $filtered = $filtered->filter(function ($customer) use ($filters) {
-                return $customer->connection_type === $filters['connection_type'];
+                return isset($customer->connection_type) && $customer->connection_type === $filters['connection_type'];
             });
         }
 
         // Filter by billing type
         if (!empty($filters['billing_type'])) {
             $filtered = $filtered->filter(function ($customer) use ($filters) {
-                return $customer->billing_type === $filters['billing_type'];
+                return isset($customer->billing_type) && $customer->billing_type === $filters['billing_type'];
             });
         }
 
@@ -76,7 +76,7 @@ class CustomerFilterService
         // Filter by device type
         if (!empty($filters['device_type'])) {
             $filtered = $filtered->filter(function ($customer) use ($filters) {
-                return $customer->device_type === $filters['device_type'];
+                return isset($customer->device_type) && $customer->device_type === $filters['device_type'];
             });
         }
 

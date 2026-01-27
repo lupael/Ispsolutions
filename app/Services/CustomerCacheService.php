@@ -81,29 +81,43 @@ class CustomerCacheService
     private function fetchCustomers(int $tenantId): Collection
     {
         try {
+            // Build the select array dynamically based on available columns
+            $selectColumns = [
+                'id',
+                'user_id',
+                'tenant_id',
+                'username',
+                'package_id',
+                'status',
+            ];
+            
+            // Add columns only if they exist in the table
+            $availableColumns = \Illuminate\Support\Facades\Schema::getColumnListing('network_users');
+            $optionalColumns = [
+                'expiry_date',
+                'connection_type',
+                'billing_type',
+                'device_type',
+                'mac_address',
+                'ip_address',
+                'is_active',
+                'created_at',
+                'updated_at',
+            ];
+            
+            foreach ($optionalColumns as $column) {
+                if (in_array($column, $availableColumns)) {
+                    $selectColumns[] = $column;
+                }
+            }
+            
             return NetworkUser::where('tenant_id', $tenantId)
                 ->with([
                     'package:id,name,price,bandwidth_download,bandwidth_upload',
                     'user:id,name,mobile,email,zone_id,created_at',
                     'user.zone:id,name',
                 ])
-                ->select([
-                    'id',
-                    'user_id',
-                    'tenant_id',
-                    'username',
-                    'package_id',
-                    'status',
-                    'expiry_date',
-                    'connection_type',
-                    'billing_type',
-                    'device_type',
-                    'mac_address',
-                    'ip_address',
-                    'is_active',
-                    'created_at',
-                    'updated_at',
-                ])
+                ->select($selectColumns)
                 ->get()
                 ->map(function ($customer) {
                     // Add computed attributes
