@@ -843,6 +843,185 @@ class AdminController extends Controller
     }
 
     /**
+     * Partial update for inline editing (AJAX).
+     * Accepts User ID and partial field updates for different sections.
+     */
+    public function customersPartialUpdate(Request $request, $id)
+    {
+        try {
+            // Load User model (not NetworkUser) since $id is User ID from the show page
+            $user = User::with('networkUser')->findOrFail($id);
+            
+            if (!$user->networkUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Network user not found for this customer.'
+                ], 404);
+            }
+
+            $networkUser = $user->networkUser;
+            
+            // Authorize the action
+            $this->authorize('update', $user);
+
+            // Handle different section updates based on provided fields
+            $updated = false;
+
+            // General Information section
+            if ($request->has(['status', 'customer_name', 'phone', 'email', 'zone_id'])) {
+                $validated = $request->validate([
+                    'status' => 'sometimes|in:active,inactive,suspended',
+                    'zone_id' => 'nullable|exists:zones,id',
+                ]);
+                
+                if (isset($validated['status'])) {
+                    $networkUser->update(['status' => $validated['status']]);
+                    $updated = true;
+                }
+                
+                if ($request->has('zone_id')) {
+                    $networkUser->update(['zone_id' => $validated['zone_id']]);
+                    $updated = true;
+                }
+                
+                // Update User model fields
+                $userValidated = $request->validate([
+                    'customer_name' => 'sometimes|string|max:255',
+                    'phone' => 'sometimes|string|max:20',
+                    'email' => 'sometimes|email|max:255',
+                ]);
+                
+                if (!empty($userValidated)) {
+                    $user->update([
+                        'name' => $userValidated['customer_name'] ?? $user->name,
+                        'phone' => $userValidated['phone'] ?? $user->phone,
+                        'email' => $userValidated['email'] ?? $user->email,
+                    ]);
+                    $updated = true;
+                }
+            }
+
+            // Credentials section
+            if ($request->has(['username', 'password'])) {
+                $validated = $request->validate([
+                    'username' => 'sometimes|string|min:3|max:255|unique:network_users,username,' . $networkUser->id . '|regex:/^[a-zA-Z0-9_-]+$/',
+                    'password' => 'nullable|string|min:8',
+                ]);
+                
+                $updateData = [];
+                if (isset($validated['username'])) {
+                    $updateData['username'] = $validated['username'];
+                }
+                if (!empty($validated['password'])) {
+                    $updateData['password'] = bcrypt($validated['password']);
+                }
+                
+                if (!empty($updateData)) {
+                    $networkUser->update($updateData);
+                    $updated = true;
+                }
+            }
+
+            // Address section
+            if ($request->has(['address', 'city', 'zip_code', 'state'])) {
+                $validated = $request->validate([
+                    'address' => 'nullable|string|max:500',
+                    'city' => 'nullable|string|max:100',
+                    'zip_code' => 'nullable|string|max:20',
+                    'state' => 'nullable|string|max:100',
+                ]);
+                
+                $user->update($validated);
+                $updated = true;
+            }
+
+            // Network section
+            if ($request->has(['router_id', 'ip_address'])) {
+                $validated = $request->validate([
+                    'router_id' => 'nullable|exists:mikrotik_routers,id',
+                    'ip_address' => 'nullable|ip',
+                ]);
+                
+                if (isset($validated['router_id'])) {
+                    $networkUser->update(['router_id' => $validated['router_id']]);
+                    $updated = true;
+                }
+                
+                // Handle IP address - update or create IpAllocation
+                if (isset($validated['ip_address'])) {
+                    $ipAllocation = $user->ipAllocations()->first();
+                    if ($ipAllocation) {
+                        $ipAllocation->update(['ip_address' => $validated['ip_address']]);
+                    } else {
+                        $user->ipAllocations()->create([
+                            'ip_address' => $validated['ip_address'],
+                            'username' => $networkUser->username,
+                        ]);
+                    }
+                    $updated = true;
+                }
+            }
+
+            // MAC address section
+            if ($request->has('mac_address')) {
+                $validated = $request->validate([
+                    'mac_address' => 'nullable|string|max:17',
+                ]);
+                
+                if (!empty($validated['mac_address'])) {
+                    $macAddress = $user->macAddresses()->first();
+                    if ($macAddress) {
+                        $macAddress->update(['mac_address' => $validated['mac_address']]);
+                    } else {
+                        $user->macAddresses()->create(['mac_address' => $validated['mac_address']]);
+                    }
+                    $updated = true;
+                }
+            }
+
+            // Comments section
+            if ($request->has('comments')) {
+                $validated = $request->validate([
+                    'comments' => 'nullable|string|max:1000',
+                ]);
+                
+                $networkUser->update(['comments' => $validated['comments']]);
+                $updated = true;
+            }
+
+            if (!$updated) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid fields provided for update.'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Changes saved successfully.'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to update this customer.'
+            ], 403);
+        } catch (\Exception $e) {
+            \Log::error('Failed to update customer: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update customer. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
      * Remove the specified customer.
      *
      * @param int $id
@@ -899,7 +1078,17 @@ class AdminController extends Controller
             $onu = \App\Models\Onu::where('network_user_id', $customer->networkUser->id)->with('olt')->first();
         }
 
-        return view('panels.admin.customers.show', compact('customer', 'onu'));
+        // Load additional data for inline editing
+        $packages = ServicePackage::select('id', 'name')->orderBy('name')->get();
+        $operators = \App\Models\User::where('role', 'operator')
+            ->orWhere('role', 'sub-operator')
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+        $zones = \App\Models\Zone::select('id', 'name')->orderBy('name')->get();
+        $routers = \App\Models\MikrotikRouter::select('id', 'name', 'ip_address')->orderBy('name')->get();
+
+        return view('panels.admin.customers.show', compact('customer', 'onu', 'packages', 'operators', 'zones', 'routers'));
     }
 
     /**

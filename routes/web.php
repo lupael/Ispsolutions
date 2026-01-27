@@ -320,6 +320,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::get('/customers/bulk-update', [AdminController::class, 'bulkUpdateUsers'])->name('customers.bulk-update');
     Route::get('/customers/{id}/edit', [AdminController::class, 'customersEdit'])->name('customers.edit');
     Route::put('/customers/{id}', [AdminController::class, 'customersUpdate'])->name('customers.update');
+    Route::patch('/customers/{id}/partial', [AdminController::class, 'customersPartialUpdate'])->name('customers.partial-update');
     Route::delete('/customers/{id}', [AdminController::class, 'customersDestroy'])->middleware('password.confirm')->name('customers.destroy');
     Route::post('/customers/{id}/suspend', [AdminController::class, 'customersSuspend'])->name('customers.suspend');
     Route::post('/customers/{id}/activate', [AdminController::class, 'customersActivate'])->name('customers.activate');

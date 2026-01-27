@@ -236,8 +236,14 @@
         </div>
     </div>
 
-    <!-- Tabbed Customer Details -->
-    <x-tabbed-customer-details :customer="$customer" :onu="$onu ?? null" />
+    <!-- Inline Editable Customer Details -->
+    <x-inline-editable-customer-details 
+        :customer="$customer" 
+        :packages="$packages ?? []"
+        :operators="$operators ?? []"
+        :zones="$zones ?? []"
+        :routers="$routers ?? []"
+    />
 </div>
 
 @push('scripts')
