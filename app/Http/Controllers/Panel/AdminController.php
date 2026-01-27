@@ -890,7 +890,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'username' => 'required|string|min:3|max:255|unique:users,username|regex:/^[a-zA-Z0-9_-]+$/',
             'password' => 'required|string|min:8',
-            'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
+            'service_type' => 'required|in:pppoe,hotspot,cable-tv,static_ip,other',
             'package_id' => 'required|exists:packages,id',
             'status' => 'required|in:active,inactive,suspended',
             'customer_name' => 'nullable|string|max:255',
@@ -899,7 +899,6 @@ class AdminController extends Controller
             'address' => 'nullable|string|max:500',
             'ip_address' => 'nullable|ip',
             'mac_address' => 'nullable|string|max:17|regex:/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/',
-            'notes' => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -935,6 +934,11 @@ class AdminController extends Controller
 
             DB::commit();
 
+            // Clear customer cache to ensure new customer appears immediately
+            if (class_exists('\App\Services\CustomerCacheService')) {
+                \Cache::tags(['customers'])->flush();
+            }
+
             return redirect()->route('panel.admin.customers')
                 ->with('success', 'Customer created successfully.');
         } catch (\Exception $e) {
@@ -943,7 +947,7 @@ class AdminController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create customer. Please try again.');
+                ->with('error', 'Failed to create customer: ' . $e->getMessage());
         }
     }
 

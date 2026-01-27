@@ -77,7 +77,7 @@
                         <option value="pppoe" {{ old('service_type') == 'pppoe' ? 'selected' : '' }}>PPPoE (Point-to-Point Protocol over Ethernet)</option>
                         <option value="hotspot" {{ old('service_type') == 'hotspot' ? 'selected' : '' }}>Hotspot (WiFi Access)</option>
                         <option value="cable-tv" {{ old('service_type') == 'cable-tv' ? 'selected' : '' }}>Cable TV Subscription</option>
-                        <option value="static-ip" {{ old('service_type') == 'static-ip' ? 'selected' : '' }}>Static IP (Dedicated IP Address)</option>
+                        <option value="static_ip" {{ old('service_type') == 'static_ip' ? 'selected' : '' }}>Static IP (Dedicated IP Address)</option>
                         <option value="other" {{ old('service_type') == 'other' ? 'selected' : '' }}>Other Services</option>
                     </select>
                     <p class="mt-1 text-sm text-gray-500">Choose the type of service for this customer</p>

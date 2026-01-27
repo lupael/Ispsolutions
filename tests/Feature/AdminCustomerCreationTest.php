@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\NetworkUser;
-use App\Models\Package;
 use App\Models\Role;
 use App\Models\ServicePackage;
 use App\Models\Tenant;
