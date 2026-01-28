@@ -83,7 +83,9 @@ class OperatorPackageController extends Controller
     {
         $validated = $request->validate([
             'master_package_id' => 'required|exists:master_packages,id',
-            'operator_price' => 'required|numeric|min:0',
+            'operator_price' => 'required|numeric|min:1',
+        ], [
+            'operator_price.min' => __('packages.min_price_warning', ['min' => 1]),
         ]);
 
         $user = Auth::user();

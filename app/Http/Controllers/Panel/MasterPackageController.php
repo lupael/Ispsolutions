@@ -339,4 +339,46 @@ class MasterPackageController extends Controller
 
         return response()->json($stats);
     }
+
+    /**
+     * Show package hierarchy tree view
+     */
+    public function hierarchy(Request $request): View
+    {
+        $hierarchyService = app(\App\Services\PackageHierarchyService::class);
+        
+        // Build package tree
+        $packages = Package::with(['users', 'parentPackage', 'childPackages'])
+            ->orderBy('price', 'asc')
+            ->get();
+        
+        $packageTree = $hierarchyService->buildTree($packages);
+        
+        return view($this->getViewPrefix() . '.hierarchy', compact('packageTree'));
+    }
+
+    /**
+     * Show package comparison view
+     */
+    public function comparison(Request $request): View
+    {
+        // Get package IDs from query string
+        $packageIds = $request->input('packages', []);
+        
+        if (is_string($packageIds)) {
+            $packageIds = explode(',', $packageIds);
+        }
+        
+        // Load packages for comparison (max 4)
+        $packages = Package::whereIn('id', $packageIds)
+            ->take(4)
+            ->get();
+        
+        // Get all packages for selection
+        $allPackages = Package::where('status', 'active')
+            ->orderBy('price', 'asc')
+            ->get();
+        
+        return view($this->getViewPrefix() . '.comparison', compact('packages', 'allPackages'));
+    }
 }

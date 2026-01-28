@@ -12,6 +12,8 @@ use App\Models\Package;
 use App\Models\PackageChangeRequest;
 use App\Models\RadReply;
 use App\Models\User;
+use App\Services\PackageUpgradeService;
+use App\Services\PackageHierarchyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +22,17 @@ use Illuminate\View\View;
 
 class CustomerPackageChangeController extends Controller
 {
+    protected PackageUpgradeService $upgradeService;
+    protected PackageHierarchyService $hierarchyService;
+
+    public function __construct(
+        PackageUpgradeService $upgradeService,
+        PackageHierarchyService $hierarchyService
+    ) {
+        $this->upgradeService = $upgradeService;
+        $this->hierarchyService = $hierarchyService;
+    }
+
     /**
      * Show the form for changing customer package.
      */
@@ -35,7 +48,15 @@ class CustomerPackageChangeController extends Controller
 
         $networkUser = NetworkUser::where('user_id', $customer->id)->first();
 
-        return view('panels.admin.customers.change-package', compact('customer', 'packages', 'networkUser'));
+        // Get upgrade options and recommendations
+        $upgradeOptions = $this->upgradeService->getUpgradeOptions($customer);
+
+        return view('panels.admin.customers.change-package', compact(
+            'customer',
+            'packages',
+            'networkUser',
+            'upgradeOptions'
+        ));
     }
 
     /**
@@ -46,27 +67,49 @@ class CustomerPackageChangeController extends Controller
         $customer = User::findOrFail($id);
         $this->authorize('changePackage', $customer);
 
-        $request->validate([
+        $validated = $request->validate([
             'package_id' => 'required|exists:packages,id',
             'effective_date' => 'required|date',
             'prorate' => 'boolean',
             'reason' => 'nullable|string|max:500',
         ]);
 
+        $newPackage = Package::findOrFail($request->package_id);
+
+        // Validate package availability and status
+        if ($newPackage->status !== 'active') {
+            return back()->withErrors(['package_id' => __('Selected package is not active')]);
+        }
+
+        if (!$newPackage->is_active) {
+            return back()->withErrors(['package_id' => __('Selected package is not available')]);
+        }
+
+        // Validate upgrade eligibility using the service
+        $eligibility = $this->upgradeService->validateUpgradeEligibility($customer, $newPackage);
+        if (!$eligibility['eligible']) {
+            return back()->withErrors(['package_id' => implode(' ', $eligibility['errors'])]);
+        }
+
+        // Show warnings if any (but don't block)
+        if (!empty($eligibility['warnings'])) {
+            session()->flash('warnings', $eligibility['warnings']);
+        }
+
         DB::beginTransaction();
         try {
             $networkUser = NetworkUser::where('user_id', $customer->id)->firstOrFail();
-            $newPackage = Package::findOrFail($request->package_id);
             $oldPackage = $networkUser->package;
 
             if ($oldPackage && $oldPackage->id === $newPackage->id) {
                 return back()->with('error', 'Customer is already on this package');
             }
 
-            // Calculate prorated amount
+            // Calculate prorated amount using the upgrade service
             $proratedAmount = 0;
             if ($request->prorate && $oldPackage) {
-                $proratedAmount = $this->calculateProration($customer, $oldPackage, $newPackage);
+                $costDetails = $this->upgradeService->calculateProratedCost($customer, $newPackage);
+                $proratedAmount = $costDetails['upgrade_cost'] ?? 0;
             }
 
             // Create package change request
