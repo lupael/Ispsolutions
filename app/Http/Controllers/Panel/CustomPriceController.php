@@ -43,12 +43,26 @@ class CustomPriceController extends Controller
     {
         $request->validate([
             'package_id' => 'required|exists:packages,id',
-            'custom_price' => 'required|numeric|min:0',
+            'custom_price' => 'required|numeric|min:1',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'reason' => 'nullable|string|max:255',
             'valid_from' => 'nullable|date',
             'valid_until' => 'nullable|date|after:valid_from',
+        ], [
+            'custom_price.min' => 'Custom price must be at least 1.',
         ]);
+
+        // Validate that both custom_price and discount_percentage are not set together
+        if ($request->filled('discount_percentage') && $request->input('discount_percentage') > 0) {
+            $package = Package::findOrFail($request->input('package_id'));
+            $calculatedPrice = $package->price * (1 - $request->input('discount_percentage') / 100);
+            
+            if (abs($calculatedPrice - $request->input('custom_price')) > 0.01) {
+                return back()->withErrors([
+                    'discount_percentage' => 'When using discount percentage, custom price should match the calculated discounted amount.',
+                ])->withInput();
+            }
+        }
 
         // Check if custom price already exists for this package
         $exists = $customer->customPrices()
@@ -92,13 +106,27 @@ class CustomPriceController extends Controller
     public function update(Request $request, User $customer, CustomPrice $customPrice)
     {
         $request->validate([
-            'custom_price' => 'required|numeric|min:0',
+            'custom_price' => 'required|numeric|min:1',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'reason' => 'nullable|string|max:255',
             'valid_from' => 'nullable|date',
             'valid_until' => 'nullable|date|after:valid_from',
             'is_active' => 'boolean',
+        ], [
+            'custom_price.min' => 'Custom price must be at least 1.',
         ]);
+
+        // Validate that both custom_price and discount_percentage are not conflicting
+        if ($request->filled('discount_percentage') && $request->input('discount_percentage') > 0) {
+            $package = $customPrice->package;
+            $calculatedPrice = $package->price * (1 - $request->input('discount_percentage') / 100);
+            
+            if (abs($calculatedPrice - $request->input('custom_price')) > 0.01) {
+                return back()->withErrors([
+                    'discount_percentage' => 'When using discount percentage, custom price should match the calculated discounted amount.',
+                ])->withInput();
+            }
+        }
 
         $customPrice->update($request->only([
             'custom_price',

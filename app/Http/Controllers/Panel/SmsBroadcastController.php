@@ -42,10 +42,13 @@ class SmsBroadcastController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string|max:1000|max:160', // SMS character limit
             'recipient_type' => 'required|in:all,customers,operators,active_customers,inactive_customers,specific_zone',
             'zone_id' => 'required_if:recipient_type,specific_zone|exists:zones,id',
             'scheduled_at' => 'nullable|date|after:now',
+        ], [
+            'message.max' => 'SMS message cannot exceed 160 characters (standard SMS limit).',
+            'scheduled_at.after' => 'Scheduled time must be in the future.',
         ]);
 
         $filters = [];
