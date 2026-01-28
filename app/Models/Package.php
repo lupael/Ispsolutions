@@ -218,14 +218,11 @@ class Package extends Model
     /**
      * Get total octet limit in bytes
      * Task 4.4: Add total_octet_limit accessor
+     * Note: data_limit is already stored in bytes
      */
     public function getTotalOctetLimitAttribute(): ?int
     {
-        if (!$this->data_limit) {
-            return null;
-        }
-        
-        // Convert MB to bytes
-        return $this->data_limit * 1024 * 1024;
+        // data_limit is already stored in bytes, return as-is
+        return $this->data_limit;
     }
 }

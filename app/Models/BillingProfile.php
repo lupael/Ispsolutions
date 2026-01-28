@@ -157,37 +157,11 @@ class BillingProfile extends Model
     }
 
     /**
-     * Get minimum validity with fallback
-     * Task 2.3: Add minimum validity with fallback
-     */
-    public function getMinimumValidityAttribute(): int
-    {
-        $value = $this->attributes['minimum_validity'] ?? 1;
-        return $value > 0 ? $value : 1;
-    }
-
-    /**
      * Enhanced grace period calculation
      * Task 2.4: Enhance grace period calculation
      */
     public function gracePeriod(): int
     {
-        $graceDays = $this->grace_period_days ?? 0;
-        
-        // Handle month-end edge cases
-        if ($this->type === 'monthly' && $this->billing_day) {
-            $currentDay = now()->day;
-            $billingDay = $this->billing_day;
-            
-            // If billing day is after month end (e.g., 31st in February)
-            // adjust grace period accordingly
-            $daysInMonth = now()->daysInMonth;
-            if ($billingDay > $daysInMonth) {
-                // Use last day of month
-                $effectiveBillingDay = $daysInMonth;
-            }
-        }
-        
-        return max($graceDays, 0);
+        return max($this->grace_period_days ?? 0, 0);
     }
 }

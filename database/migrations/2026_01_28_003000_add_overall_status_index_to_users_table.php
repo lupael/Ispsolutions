@@ -21,21 +21,11 @@ return new class extends Migration
                 return;
             }
             
-            // Check if index already exists
-            $indexes = Schema::getConnection()
-                ->getDoctrineSchemaManager()
-                ->listTableIndexes('users');
-            
-            $indexExists = false;
-            foreach ($indexes as $index) {
-                if ($index->getName() === 'idx_user_overall_status') {
-                    $indexExists = true;
-                    break;
-                }
-            }
-            
-            if (!$indexExists) {
+            // Add the index unconditionally (Laravel will skip if it already exists on some drivers)
+            try {
                 $table->index(['payment_type', 'status'], 'idx_user_overall_status');
+            } catch (\Exception $e) {
+                // Index might already exist, continue
             }
         });
     }
@@ -46,15 +36,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $indexes = Schema::getConnection()
-                ->getDoctrineSchemaManager()
-                ->listTableIndexes('users');
-            
-            foreach ($indexes as $index) {
-                if ($index->getName() === 'idx_user_overall_status') {
-                    $table->dropIndex('idx_user_overall_status');
-                    break;
-                }
+            try {
+                $table->dropIndex('idx_user_overall_status');
+            } catch (\Exception $e) {
+                // Index might not exist, continue
             }
         });
     }

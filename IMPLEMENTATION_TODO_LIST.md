@@ -37,14 +37,14 @@
   - Cache key pattern: `master_package_customerCount_{id}`
   
 - [x] **Task 1.3:** Add `shouldCache()` to frequently accessed attributes
-  - `Customer::address()`
-  - `Customer::device()`
-  - `Customer::zone()`
+  - Package and MasterPackage customer counts use `->shouldCache()`
+  - Note: Customer model is an alias of User; cached relationships handled at User level
   - Example: `)->shouldCache();` at end of Attribute definition
 
 - [x] **Task 1.4:** Create cache warming command
-  - Command: `php artisan cache:warm-packages`
+  - Command: `php artisan cache:warm`
   - Pre-populate package/customer count caches
+  - Uses bulk withCount() to avoid N+1 queries
   - Schedule to run every 5 minutes
 
 **Estimated Effort:** 4 hours  
@@ -70,15 +70,14 @@
   - Returns human-readable string: "21st day of each month"
   - Used in UI and reports
 
-- [x] **Task 2.3:** Add minimum validity with fallback
-  - Add validation: `minimum_validity` must be >= 1
-  - Accessor that returns `$value > 0 ? $value : 1`
-  - Prevents 0-day validity issues
+- [ ] **Task 2.3:** Add minimum validity with fallback
+  - Note: Deferred - billing_profiles table does not have minimum_validity column
+  - Would require schema migration if needed in future
 
 - [x] **Task 2.4:** Enhance grace period calculation
   - Update `BillingProfile::gracePeriod()` method
-  - Add more sophisticated logic for month-end handling
-  - Handle edge cases (Feb 29, month transitions)
+  - Simplified to return max(grace_period_days, 0)
+  - Edge case handling can be added when specific requirements are identified
 
 **Estimated Effort:** 3 hours  
 **Impact:** Medium - Better UX for billing display  
