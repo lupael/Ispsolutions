@@ -114,8 +114,9 @@
     <!-- Quick Filters -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Filters</h3>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('panel.admin.customers') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <a href="{{ route('panel.admin.customers') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 {{ !request('status') ? 'bg-indigo-50 border-indigo-300 text-indigo-700 dark:bg-indigo-900/20 dark:border-indigo-600' : '' }}">
                     All Customers
                 </a>
                 <a href="{{ route('panel.admin.customers.online') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -138,6 +139,45 @@
                     </svg>
                     Import Requests
                 </a>
+            </div>
+            
+            <!-- Task 15.3: Add status filter sidebar with count badges -->
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase">By Overall Status</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_active']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 rounded-md text-sm hover:bg-green-100 dark:hover:bg-green-900/30 {{ request('overall_status') === 'prepaid_active' ? 'ring-2 ring-green-500' : '' }}">
+                        <span class="text-green-700 dark:text-green-300">Prepaid Active</span>
+                    </a>
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_active']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm hover:bg-blue-100 dark:hover:bg-blue-900/30 {{ request('overall_status') === 'postpaid_active' ? 'ring-2 ring-blue-500' : '' }}">
+                        <span class="text-blue-700 dark:text-blue-300">Postpaid Active</span>
+                    </a>
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_suspended']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 rounded-md text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 {{ request('overall_status') === 'prepaid_suspended' ? 'ring-2 ring-orange-500' : '' }}">
+                        <span class="text-orange-700 dark:text-orange-300">Prepaid Suspended</span>
+                    </a>
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_suspended']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 rounded-md text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 {{ request('overall_status') === 'postpaid_suspended' ? 'ring-2 ring-orange-500' : '' }}">
+                        <span class="text-orange-700 dark:text-orange-300">Postpaid Suspended</span>
+                    </a>
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_expired']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-md text-sm hover:bg-red-100 dark:hover:bg-red-900/30 {{ request('overall_status') === 'prepaid_expired' ? 'ring-2 ring-red-500' : '' }}">
+                        <span class="text-red-700 dark:text-red-300">Prepaid Expired</span>
+                    </a>
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_expired']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-md text-sm hover:bg-red-100 dark:hover:bg-red-900/30 {{ request('overall_status') === 'postpaid_expired' ? 'ring-2 ring-red-500' : '' }}">
+                        <span class="text-red-700 dark:text-red-300">Postpaid Expired</span>
+                    </a>
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_inactive']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/20 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/30 {{ request('overall_status') === 'prepaid_inactive' ? 'ring-2 ring-gray-500' : '' }}">
+                        <span class="text-gray-700 dark:text-gray-300">Prepaid Inactive</span>
+                    </a>
+                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_inactive']) }}" 
+                       class="flex items-center justify-between px-3 py-2 border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/20 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/30 {{ request('overall_status') === 'postpaid_inactive' ? 'ring-2 ring-gray-500' : '' }}">
+                        <span class="text-gray-700 dark:text-gray-300">Postpaid Inactive</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -189,7 +229,7 @@
                                 Package
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Status
+                                Overall Status
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Created
@@ -235,18 +275,23 @@
                                     <div class="text-sm text-gray-900 dark:text-gray-100">{{ $customer->package->name ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($customer->status === 'active')
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            Active
-                                        </span>
-                                    @elseif($customer->status === 'suspended')
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                            Suspended
-                                        </span>
+                                    <!-- Task 15.2: Update customer list table with overall_status -->
+                                    @if($customer->overall_status)
+                                        <x-customer-status-badge :status="$customer->overall_status" />
                                     @else
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            Inactive
-                                        </span>
+                                        @if($customer->status === 'active')
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                Active
+                                            </span>
+                                        @elseif($customer->status === 'suspended')
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                                Suspended
+                                            </span>
+                                        @else
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                                Inactive
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
