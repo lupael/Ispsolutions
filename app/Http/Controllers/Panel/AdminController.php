@@ -856,6 +856,8 @@ class AdminController extends Controller
             'balance_max',
             'online_status',
             'search',
+            'has_child_accounts', // Task 7.3: Filter for parent accounts (customers with children)
+            'parent_id', // Task 7.3: Filter by specific parent to show child accounts
         ]);
 
         $filteredCustomers = $filterService->applyFilters($allCustomers, $filters);

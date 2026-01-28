@@ -195,6 +195,23 @@ class CustomerFilterService
             });
         }
 
+        // Filter by parent account (show only customers with child accounts)
+        // Task 7.3: Integrated reseller filtering into existing customer management
+        if (!empty($filters['has_child_accounts'])) {
+            $filtered = $filtered->filter(function ($customer) {
+                return isset($customer->parent_id) === false && 
+                       isset($customer->childAccounts) && 
+                       count($customer->childAccounts) > 0;
+            });
+        }
+
+        // Filter by specific parent (show child accounts of a parent)
+        if (!empty($filters['parent_id'])) {
+            $filtered = $filtered->filter(function ($customer) use ($filters) {
+                return $customer->parent_id == $filters['parent_id'];
+            });
+        }
+
         // Filter by search query (name, mobile, username)
         if (!empty($filters['search'])) {
             $searchTerm = strtolower($filters['search']);
