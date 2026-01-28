@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 2026-01-27
+## [Unreleased] - 2026-01-28
 
 ### ✨ Features
 
+- implement customer actions enhancements phases 1-3 ([7184094](../../commit/7184094a001beafcf94b41d97140cbeea7c239e5))
+- Complete Phase 13 with UI implementations for all future enhancement features ([d1a00f5](../../commit/d1a00f53f3fc313f24443b045226181b485e14c2))
 - Add Customer model as type alias for User (operator_level=100) ([e3cc9c6](../../commit/e3cc9c67c1bf337b174d5cf99000674ab220184a))
 - Complete Phase 10-12 - Testing, Documentation, Security & mark all phases complete ([13c21e2](../../commit/13c21e268df83a27b9e6feaecf0e380014289ef6))
 - Add billing section Blade views for customer billing management ([7535978](../../commit/7535978275114889c0ca2df255a13b2a932bd5f5))
@@ -18,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- Update cache TTL to 2.5min and correct terminology (operator not group_admin/reseller) ([3083021](../../commit/308302139f5d1c4c7a7fa136b6f78be4f05b5731))
+- Address code review feedback - add validation, remove duplication, implement placeholder functions ([4b67f8b](../../commit/4b67f8b64f5dce0af80fb2c35e7187601abeca91))
+- remove non-existent mikrotikRouter relationship references ([87d937d](../../commit/87d937dc77098bb32fd11306a40d7b4eff081a8d))
+- add MikrotikRouter imports for consistency ([d421bc0](../../commit/d421bc0eb99780cb7df750e3915e9ade4bdc6926))
+- address code review feedback ([4f3427c](../../commit/4f3427c5c7c5148859f5e2c37ed19b938e08eb6c))
 - Handle database permission denied error (42000) for radacct queries ([064ba42](../../commit/064ba4281adcc7f675cacba2a9a79edf2c4aaebc))
 - Apply second round of code review feedback - documentation accuracy ([b2cfefc](../../commit/b2cfefc2945cee070f4e064841b2e0e0dcbbe0bb))
 - Consolidate staff sidebar to single "Routers" menu item ([5db716b](../../commit/5db716b6c2ec167b0f50325718123e2bd1f782a9))
@@ -31,6 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 📚 Documentation
 
+- Fix documentation references and timeline inconsistencies ([3a258dc](../../commit/3a258dcb584a3bd8f8f707fe1cecec9902e94f1d))
+- Add executive summary and complete reference system analysis ([50e7f2a](../../commit/50e7f2a6ccd70cab0ec146876b67b6302a1c9b6b))
+- Fix MikroTik capitalization and add quick reference guide ([513227b](../../commit/513227bc9a9c29ef608d0f359c2467d8ffb8b011))
+- Add comprehensive reference system analysis and implementation plan ([7e39ce2](../../commit/7e39ce2264afe37e3b9b045f0bba6c20868134b4))
+- Add quick start README for feature enhancement project ([0519d1c](../../commit/0519d1c9a5beeb5f7d19d393cf0f439dcceac80c))
+- Add comprehensive navigation index for feature enhancement documentation ([631a496](../../commit/631a4962f72119fd68bbda5879c7fb4089b80a3b))
+- Complete ISP billing system analysis with implementation plans ([1b18cce](../../commit/1b18cce5bd745c76ebfc60bc8ea4d8546c1ead17))
+- add implementation completion summary ([38ac977](../../commit/38ac9779e2c57ec170b47fc86023da1af576a37a))
+- Add comprehensive Phase 13 implementation summary ([c6b2601](../../commit/c6b260190996e4eca81c2bd41105a7f130cefaa0))
+- Add summary of legacy and deprecated code check ([07b73f5](../../commit/07b73f5d5419e5b648db758391b7ce2cafdc5a0d))
 - Update documentation to reflect removal of NAS category from filter ([7e3a07f](../../commit/7e3a07f0537ebf04c1cd29a0d43131c599cc8ee0))
 - Refine wording to avoid redundant categorization ([b8adb5a](../../commit/b8adb5ad24a95f244e918bf4367f4450575b2f0a))
 - Add clarification about incomplete tasks being optional enhancements ([4a595e5](../../commit/4a595e5da8b69ce4a9711d4057154f41bd7d7a13))
@@ -40,6 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ♻️ Code Refactoring
 
+- Integrate parent account filtering into existing customer management ([e5cbbc9](../../commit/e5cbbc96b29a6f0714a942c011d723f286ad549b))
+- Improve Alpine.js integration and replace placeholder alerts with proper implementations ([df35b39](../../commit/df35b3935a3bed6f91a57e95e2844ddee27c2292))
 - Reduce code duplication in error handling ([73e1091](../../commit/73e1091862db79fbccf98b705f6a8d3e9d20aa23))
 - Remove redundant tabs, unify all routers into single page with filtering ([26bb49f](../../commit/26bb49f2f00973c0d20a1c206bd20972eec64a46))
 - Extract router device tabs into reusable component ([d121f37](../../commit/d121f378ed4718bd9bc3dab8c234543422ceb857))
