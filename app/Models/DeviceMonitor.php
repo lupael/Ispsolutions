@@ -37,6 +37,7 @@ class DeviceMonitor extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'group_admin_id',
         'monitorable_type',
         'monitorable_id',
         'status',
@@ -74,6 +75,15 @@ class DeviceMonitor extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Get the group admin for this device monitor
+     * Task 10.2: Add groupAdmin() relationship
+     */
+    public function groupAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'group_admin_id');
     }
 
     /**
@@ -149,5 +159,26 @@ class DeviceMonitor extends Model
         }
 
         return implode(' ', $parts);
+    }
+
+    /**
+     * Scope a query by group admin
+     * Task 10.3: Add device monitoring delegation
+     */
+    public function scopeByGroupAdmin($query, int $groupAdminId)
+    {
+        return $query->where('group_admin_id', $groupAdminId);
+    }
+
+    /**
+     * Scope a query to only include devices monitored by a specific admin or their group
+     * Task 10.3: Add device monitoring delegation
+     */
+    public function scopeForAdmin($query, int $userId)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->where('group_admin_id', $userId)
+              ->orWhereNull('group_admin_id');
+        });
     }
 }

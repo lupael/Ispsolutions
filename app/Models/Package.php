@@ -20,6 +20,7 @@ class Package extends Model
         'tenant_id',
         'operator_id',
         'master_package_id',
+        'parent_package_id',
         'operator_package_rate_id',
         'name',
         'description',
@@ -64,6 +65,40 @@ class Package extends Model
     public function masterPackage(): BelongsTo
     {
         return $this->belongsTo(MasterPackage::class, 'master_package_id');
+    }
+
+    /**
+     * Get the parent package
+     * Task 8.2: Add relationships to Package model
+     */
+    public function parentPackage(): BelongsTo
+    {
+        return $this->belongsTo(Package::class, 'parent_package_id');
+    }
+
+    /**
+     * Get child packages
+     * Task 8.2: Add relationships to Package model
+     */
+    public function childPackages(): HasMany
+    {
+        return $this->hasMany(Package::class, 'parent_package_id');
+    }
+
+    /**
+     * Check if this package has a parent
+     */
+    public function hasParent(): bool
+    {
+        return $this->parent_package_id !== null;
+    }
+
+    /**
+     * Check if this package has children
+     */
+    public function hasChildren(): bool
+    {
+        return $this->childPackages()->exists();
     }
 
     public function operatorPackageRate(): BelongsTo

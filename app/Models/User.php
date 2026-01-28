@@ -85,6 +85,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'language',
+        'parent_id',
         'tenant_id',
         'service_package_id',
         'is_active',
@@ -242,6 +244,32 @@ class User extends Authenticatable
     public function networkUser(): HasOne
     {
         return $this->hasOne(NetworkUser::class, 'user_id');
+    }
+
+    /**
+     * Get the parent customer (reseller)
+     * Task 7.2: Add relationships to Customer model
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    /**
+     * Get child customer accounts
+     * Task 7.2: Add relationships to Customer model
+     */
+    public function childAccounts(): HasMany
+    {
+        return $this->hasMany(User::class, 'parent_id');
+    }
+
+    /**
+     * Check if user is a reseller (has child accounts)
+     */
+    public function isReseller(): bool
+    {
+        return $this->childAccounts()->exists();
     }
 
     /**
@@ -1094,5 +1122,106 @@ class User extends Authenticatable
             },
             default => null,
         };
+    }
+
+    /**
+     * Get remaining validity with timezone support
+     * Task 9.1: Add timezone support to validity calculations
+     * Task 9.2: Add "today is last payment date" detection
+     * Task 9.3: Add past tense for expired accounts
+     *
+     * @return string
+     */
+    public function getRemainingValidityAttribute(): string
+    {
+        if (!$this->expiry_date) {
+            return __('billing.no_expiry');
+        }
+
+        // Task 9.1: Use timezone from config or user preference
+        $timezone = $this->timezone ?? config('app.timezone', 'UTC');
+        $now = now($timezone);
+        $expiryDate = \Carbon\Carbon::parse($this->expiry_date)->timezone($timezone);
+
+        // Task 9.2: Check if today is the last payment date
+        if ($expiryDate->isToday()) {
+            return __('billing.expires_today');
+        }
+
+        // Task 9.3: Use past tense for expired accounts
+        if ($expiryDate->isPast()) {
+            $daysAgo = $now->diffInDays($expiryDate);
+            return __('billing.expired_on', [
+                'days' => $daysAgo,
+                'date' => $expiryDate->format('Y-m-d')
+            ]);
+        }
+
+        // Future expiration
+        $daysRemaining = $now->diffInDays($expiryDate);
+        
+        if ($daysRemaining <= 1) {
+            return __('billing.expires_tomorrow');
+        }
+        
+        return __('billing.will_expire', [
+            'days' => $daysRemaining,
+            'date' => $expiryDate->format('Y-m-d')
+        ]);
+    }
+
+    /**
+     * Check if expiry is approaching (within warning period)
+     * Task 9.4: Add expiration warnings
+     *
+     * @param int $days Days before expiry to warn
+     * @return bool
+     */
+    public function isExpiryApproaching(int $days = 7): bool
+    {
+        if (!$this->expiry_date) {
+            return false;
+        }
+
+        $expiryDate = \Carbon\Carbon::parse($this->expiry_date);
+        $now = now();
+
+        return $expiryDate->isFuture() && $now->diffInDays($expiryDate) <= $days;
+    }
+
+    /**
+     * Get expiry warning level
+     * Task 9.4: Add expiration warnings
+     *
+     * @return string|null urgent/warning/info
+     */
+    public function getExpiryWarningLevelAttribute(): ?string
+    {
+        if (!$this->expiry_date) {
+            return null;
+        }
+
+        $expiryDate = \Carbon\Carbon::parse($this->expiry_date);
+        $now = now();
+
+        if ($expiryDate->isPast()) {
+            return 'urgent';
+        }
+
+        $daysRemaining = $now->diffInDays($expiryDate);
+
+        if ($daysRemaining <= 1) {
+            return 'urgent';
+        }
+
+        if ($daysRemaining <= 3) {
+            return 'warning';
+        }
+
+        if ($daysRemaining <= 7) {
+            return 'info';
+        }
+
+        return null;
     }
 }
