@@ -138,3 +138,75 @@ if (! function_exists('csp_nonce')) {
         return request()->attributes->get('csp_nonce', '');
     }
 }
+
+if (! function_exists('ordinal')) {
+    /**
+     * Format a number with ordinal suffix (1 -> "1st", 21 -> "21st")
+     * Reference: REFERENCE_SYSTEM_QUICK_GUIDE.md - Quick Win #2
+     */
+    function ordinal(int $number): string
+    {
+        return \App\Helpers\DateHelper::ordinal($number);
+    }
+}
+
+if (! function_exists('dayWithOrdinal')) {
+    /**
+     * Format a day of the month with ordinal suffix (21 -> "21st day")
+     */
+    function dayWithOrdinal(int $day): string
+    {
+        return \App\Helpers\DateHelper::dayWithOrdinal($day);
+    }
+}
+
+if (! function_exists('billingDayText')) {
+    /**
+     * Format a billing day with full text (21 -> "21st day of each month")
+     */
+    function billingDayText(int $day): string
+    {
+        return \App\Helpers\DateHelper::billingDayText($day);
+    }
+}
+
+if (! function_exists('relativeTime')) {
+    /**
+     * Get relative time until a date ("Expires in 5 days", "Expired 3 days ago")
+     */
+    function relativeTime(\Carbon\Carbon|string $date, bool $short = false): string
+    {
+        return \App\Helpers\DateHelper::relativeTime($date, $short);
+    }
+}
+
+if (! function_exists('expiryText')) {
+    /**
+     * Get expiry status text with relative time ("Expires in 5 days")
+     */
+    function expiryText(?\Carbon\Carbon $expiryDate, bool $short = false): string
+    {
+        return \App\Helpers\DateHelper::expiryText($expiryDate, $short);
+    }
+}
+
+if (! function_exists('gracePeriodText')) {
+    /**
+     * Get grace period display text ("5 days grace period")
+     */
+    function gracePeriodText(int $days): string
+    {
+        return \App\Helpers\DateHelper::gracePeriodText($days);
+    }
+}
+
+if (! function_exists('durationText')) {
+    /**
+     * Format duration in seconds to human-readable format (3h 25m 10s)
+     */
+    function durationText(int $seconds, bool $short = false): string
+    {
+        return \App\Helpers\DateHelper::duration($seconds, $short);
+    }
+}
+

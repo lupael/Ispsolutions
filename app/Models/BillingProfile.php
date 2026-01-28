@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Helpers\DateHelper;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -113,30 +114,18 @@ class BillingProfile extends Model
     public function getDueDateWithOrdinal(): string
     {
         $day = $this->billing_day ?? 1;
-        $suffix = $this->getOrdinalSuffix($day);
         
-        return "{$day}{$suffix} day";
+        return DateHelper::dayWithOrdinal($day);
     }
 
     /**
      * Get ordinal suffix for a number
+     * 
+     * @deprecated Use DateHelper::getOrdinalSuffix() instead
      */
     private function getOrdinalSuffix(int $number): string
     {
-        $lastDigit = $number % 10;
-        $lastTwoDigits = $number % 100;
-        
-        // Handle special cases (11th, 12th, 13th)
-        if ($lastTwoDigits >= 11 && $lastTwoDigits <= 13) {
-            return 'th';
-        }
-        
-        return match ($lastDigit) {
-            1 => 'st',
-            2 => 'nd',
-            3 => 'rd',
-            default => 'th',
-        };
+        return DateHelper::getOrdinalSuffix($number);
     }
 
     /**
