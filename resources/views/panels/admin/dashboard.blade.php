@@ -116,6 +116,31 @@
         </div>
     </div>
 
+    <!-- Task 18: Dashboard Enhancements - New Widgets -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Task 18.1: Overall Status Distribution Widget -->
+        @if(isset($statusDistribution) && $statusDistribution->isNotEmpty())
+            <x-customer-status-widget :statusDistribution="$statusDistribution" />
+        @endif
+
+        <!-- Task 18.4: Payment Collection Widget -->
+        @if(isset($paymentStats))
+            <x-payment-collection-widget :paymentStats="$paymentStats" />
+        @endif
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Task 18.2: Expiring Customers Widget -->
+        @if(isset($expiringCustomers))
+            <x-expiring-customers-widget :expiringCustomers="$expiringCustomers" :days="7" />
+        @endif
+
+        <!-- Task 18.3: Low-Performing Packages Widget -->
+        @if(isset($lowPerformingPackages))
+            <x-low-performing-packages-widget :packages="$lowPerformingPackages" :threshold="5" />
+        @endif
+    </div>
+
     <!-- Billing Statistics Widget -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">

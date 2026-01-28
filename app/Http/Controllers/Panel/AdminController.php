@@ -148,7 +148,61 @@ class AdminController extends Controller
                 ->count(),
         ];
 
-        return view('panels.admin.dashboard', compact('stats'));
+        // Task 18: Dashboard Enhancements - Add widget data
+        
+        // Task 18.1: Overall status distribution
+        $statusDistribution = collect();
+        if (class_exists(\App\Enums\CustomerOverallStatus::class)) {
+            $customers = User::where('operator_level', 100)->get();
+            foreach ($customers as $customer) {
+                $status = $customer->overall_status;
+                if ($status) {
+                    $statusKey = $status->value;
+                    $statusDistribution[$statusKey] = ($statusDistribution[$statusKey] ?? 0) + 1;
+                }
+            }
+        }
+
+        // Task 18.2: Expiring customers (next 7 days)
+        $expiringCustomers = User::where('operator_level', 100)
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '>=', now())
+            ->whereDate('expiry_date', '<=', now()->addDays(7))
+            ->with('package', 'billingProfile')
+            ->orderBy('expiry_date', 'asc')
+            ->limit(10)
+            ->get();
+
+        // Task 18.3: Low-performing packages (fewer than 5 customers)
+        $lowPerformingPackages = Package::withCount('users')
+            ->having('users_count', '<', 5)
+            ->orderBy('users_count', 'asc')
+            ->limit(10)
+            ->get();
+
+        // Task 18.4: Payment collection statistics
+        $paymentStats = [
+            'total_billed' => $stats['total_billed_amount'] ?? 0,
+            'total_collected' => Payment::where('status', 'success')->sum('amount'),
+            'total_due' => Invoice::where('status', 'unpaid')->sum('total_amount') + 
+                           Invoice::where('status', 'overdue')->sum('total_amount'),
+            'customers_paid' => Payment::whereDate('payment_date', '>=', now()->startOfMonth())
+                ->where('status', 'success')
+                ->distinct('user_id')
+                ->count('user_id'),
+            'customers_unpaid' => Invoice::where('status', 'unpaid')
+                ->orWhere('status', 'overdue')
+                ->distinct('user_id')
+                ->count('user_id'),
+        ];
+
+        return view('panels.admin.dashboard', compact(
+            'stats', 
+            'statusDistribution', 
+            'expiringCustomers', 
+            'lowPerformingPackages', 
+            'paymentStats'
+        ));
     }
 
     /**
