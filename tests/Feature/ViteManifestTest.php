@@ -7,7 +7,7 @@ use Tests\TestCase;
 class ViteManifestTest extends TestCase
 {
     /**
-     * Test that Vite manifest file exists
+     * Test that Vite manifest file exists and is readable
      *
      * @return void
      */
@@ -16,6 +16,7 @@ class ViteManifestTest extends TestCase
         $manifestPath = public_path('build/manifest.json');
         
         $this->assertFileExists($manifestPath, 'Vite manifest.json should exist at public/build/manifest.json');
+        $this->assertFileIsReadable($manifestPath, 'Vite manifest.json should be readable');
     }
 
     /**
@@ -26,7 +27,10 @@ class ViteManifestTest extends TestCase
     public function test_vite_manifest_is_valid_json()
     {
         $manifestPath = public_path('build/manifest.json');
+        $this->assertFileIsReadable($manifestPath, 'Vite manifest.json should be readable');
+        
         $manifestContent = file_get_contents($manifestPath);
+        $this->assertNotFalse($manifestContent, 'Vite manifest.json should be readable');
         
         $manifest = json_decode($manifestContent, true);
         
@@ -41,9 +45,7 @@ class ViteManifestTest extends TestCase
      */
     public function test_vite_manifest_contains_required_entries()
     {
-        $manifestPath = public_path('build/manifest.json');
-        $manifestContent = file_get_contents($manifestPath);
-        $manifest = json_decode($manifestContent, true);
+        $manifest = $this->getManifest();
         
         // Check for main entry points defined in vite.config.js
         $this->assertArrayHasKey('resources/css/app.css', $manifest, 'Manifest should contain app.css entry');
@@ -58,9 +60,7 @@ class ViteManifestTest extends TestCase
      */
     public function test_vite_manifest_assets_exist()
     {
-        $manifestPath = public_path('build/manifest.json');
-        $manifestContent = file_get_contents($manifestPath);
-        $manifest = json_decode($manifestContent, true);
+        $manifest = $this->getManifest();
         
         foreach ($manifest as $key => $entry) {
             if (isset($entry['file'])) {
@@ -77,13 +77,37 @@ class ViteManifestTest extends TestCase
      */
     public function test_app_layout_renders_without_vite_errors()
     {
-        // This test requires authentication, so we'll just check if Vite can be loaded
-        // by creating a simple view that uses @vite directive
+        $manifest = $this->getManifest();
         
+        // Verify manifest is valid and has the required structure
+        $this->assertIsArray($manifest);
+        $this->assertNotEmpty($manifest);
+        
+        // Verify all referenced asset files exist
+        foreach ($manifest as $entry) {
+            if (isset($entry['file'])) {
+                $assetPath = public_path('build/' . $entry['file']);
+                $this->assertFileExists($assetPath);
+            }
+        }
+    }
+
+    /**
+     * Helper method to read and parse the Vite manifest
+     *
+     * @return array
+     */
+    private function getManifest(): array
+    {
         $manifestPath = public_path('build/manifest.json');
-        $this->assertFileExists($manifestPath);
+        $this->assertFileIsReadable($manifestPath, 'Vite manifest.json should be readable');
         
-        // If manifest exists and is valid, Vite helper should work
-        $this->assertTrue(true, 'Vite manifest is properly configured');
+        $manifestContent = file_get_contents($manifestPath);
+        $this->assertNotFalse($manifestContent, 'Should be able to read manifest file');
+        
+        $manifest = json_decode($manifestContent, true);
+        $this->assertIsArray($manifest, 'Manifest should be valid JSON');
+        
+        return $manifest;
     }
 }

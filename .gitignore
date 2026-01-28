@@ -20,6 +20,10 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 # Build assets are now tracked for deployment
+# NOTE: Typically, build artifacts should be generated during deployment via CI/CD.
+# However, this project tracks built assets for simpler deployment scenarios where
+# build pipelines are not available. For production deployments with CI/CD, consider
+# uncommenting the line below and running 'npm run build' as part of the deployment process.
 # /public/build/*
 # Docker
 /docker/data
