@@ -165,7 +165,9 @@ class OperatorPackageController extends Controller
         }
 
         $validated = $request->validate([
-            'operator_price' => 'required|numeric|min:0',
+            'operator_price' => 'required|numeric|min:1',
+        ], [
+            'operator_price.min' => 'Operator price must be at least $1.',
         ]);
 
         $masterPackage = $operatorRate->masterPackage;
@@ -252,7 +254,9 @@ class OperatorPackageController extends Controller
 
         $validated = $request->validate([
             'sub_operator_id' => 'required|exists:users,id',
-            'sub_operator_price' => 'required|numeric|min:0',
+            'sub_operator_price' => 'required|numeric|min:1',
+        ], [
+            'sub_operator_price.min' => 'Sub-operator price must be at least $1.',
         ]);
 
         // Validate sub-operator price doesn't exceed operator price
