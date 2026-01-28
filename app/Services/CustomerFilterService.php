@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\NetworkUser;
+use App\Enums\CustomerOverallStatus;
 use Illuminate\Support\Collection;
 
 class CustomerFilterService
@@ -12,11 +13,12 @@ class CustomerFilterService
     /**
      * Apply filters to customer collection.
      * 
-     * Supports 15+ filter types:
+     * Supports 16+ filter types:
      * - connection_type
      * - billing_type
      * - status (active/suspended/expired)
      * - payment_status
+     * - overall_status (combined payment_type + status)
      * - zone_id
      * - package_id
      * - device_type
@@ -56,6 +58,15 @@ class CustomerFilterService
         if (!empty($filters['payment_status'])) {
             $filtered = $filtered->filter(function ($customer) use ($filters) {
                 return $customer->payment_status === $filters['payment_status'];
+            });
+        }
+
+        // Filter by overall status (combines payment_type and status)
+        if (!empty($filters['overall_status'])) {
+            $filtered = $filtered->filter(function ($customer) use ($filters) {
+                // Get customer's overall status
+                $overallStatus = $customer->overall_status ?? null;
+                return $overallStatus && $overallStatus->value === $filters['overall_status'];
             });
         }
 
@@ -209,6 +220,7 @@ class CustomerFilterService
             'billing_types' => $this->getBillingTypes(),
             'statuses' => $this->getStatuses(),
             'payment_statuses' => $this->getPaymentStatuses(),
+            'overall_statuses' => $this->getOverallStatuses(),
             'device_types' => $this->getDeviceTypes(),
         ];
     }
@@ -259,6 +271,23 @@ class CustomerFilterService
             'paid' => 'Paid',
             'pending' => 'Pending',
             'overdue' => 'Overdue',
+        ];
+    }
+
+    /**
+     * Get overall statuses (combined payment_type + status).
+     */
+    private function getOverallStatuses(): array
+    {
+        return [
+            CustomerOverallStatus::PREPAID_ACTIVE->value => __('Prepaid - Active'),
+            CustomerOverallStatus::PREPAID_SUSPENDED->value => __('Prepaid - Suspended'),
+            CustomerOverallStatus::PREPAID_EXPIRED->value => __('Prepaid - Expired'),
+            CustomerOverallStatus::PREPAID_INACTIVE->value => __('Prepaid - Inactive'),
+            CustomerOverallStatus::POSTPAID_ACTIVE->value => __('Postpaid - Active'),
+            CustomerOverallStatus::POSTPAID_SUSPENDED->value => __('Postpaid - Suspended'),
+            CustomerOverallStatus::POSTPAID_EXPIRED->value => __('Postpaid - Expired'),
+            CustomerOverallStatus::POSTPAID_INACTIVE->value => __('Postpaid - Inactive'),
         ];
     }
 
