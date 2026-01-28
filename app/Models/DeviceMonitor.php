@@ -37,7 +37,7 @@ class DeviceMonitor extends Model
      */
     protected $fillable = [
         'tenant_id',
-        'group_admin_id',
+        'operator_id',
         'monitorable_type',
         'monitorable_id',
         'status',
@@ -78,12 +78,12 @@ class DeviceMonitor extends Model
     }
 
     /**
-     * Get the group admin for this device monitor
-     * Task 10.2: Add groupAdmin() relationship
+     * Get the operator for this device monitor
+     * Task 10.2: Add operator() relationship
      */
-    public function groupAdmin(): BelongsTo
+    public function operator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'group_admin_id');
+        return $this->belongsTo(User::class, 'operator_id');
     }
 
     /**
@@ -162,23 +162,23 @@ class DeviceMonitor extends Model
     }
 
     /**
-     * Scope a query by group admin
+     * Scope a query by operator
      * Task 10.3: Add device monitoring delegation
      */
-    public function scopeByGroupAdmin($query, int $groupAdminId)
+    public function scopeByOperator($query, int $operatorId)
     {
-        return $query->where('group_admin_id', $groupAdminId);
+        return $query->where('operator_id', $operatorId);
     }
 
     /**
-     * Scope a query to only include devices monitored by a specific admin or their group
+     * Scope a query to only include devices monitored by a specific operator or unassigned
      * Task 10.3: Add device monitoring delegation
      */
-    public function scopeForAdmin($query, int $userId)
+    public function scopeForOperator($query, int $userId)
     {
         return $query->where(function ($q) use ($userId) {
-            $q->where('group_admin_id', $userId)
-              ->orWhereNull('group_admin_id');
+            $q->where('operator_id', $userId)
+              ->orWhereNull('operator_id');
         });
     }
 }

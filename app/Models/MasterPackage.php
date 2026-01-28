@@ -149,7 +149,7 @@ class MasterPackage extends Model
         return Attribute::make(
             get: fn () => Cache::remember(
                 "master_package_customerCount_{$this->id}",
-                300, // TTL: 300 seconds (5 minutes)
+                150, // TTL: 150 seconds (2.5 minutes)
                 fn () => $this->packages()->withCount('networkUsers')->get()->sum('network_users_count')
             )
         )->shouldCache();

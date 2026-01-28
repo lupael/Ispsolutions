@@ -247,7 +247,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the parent customer (reseller)
+     * Get the parent operator/sub-operator
      * Task 7.2: Add relationships to Customer model
      */
     public function parent(): BelongsTo
@@ -256,7 +256,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get child customer accounts
+     * Get child operator/sub-operator accounts
      * Task 7.2: Add relationships to Customer model
      */
     public function childAccounts(): HasMany
@@ -265,7 +265,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is a reseller (has child accounts)
+     * Check if user has child accounts (operates as parent operator)
      */
     public function isReseller(): bool
     {

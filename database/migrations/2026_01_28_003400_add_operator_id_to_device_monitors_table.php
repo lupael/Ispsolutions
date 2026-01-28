@@ -9,18 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      * 
-     * Task 10.1: Add group_admin_id to device_monitors table
+     * Task 10.1: Add operator_id to device_monitors table
      */
     public function up(): void
     {
         Schema::table('device_monitors', function (Blueprint $table) {
-            if (!Schema::hasColumn('device_monitors', 'group_admin_id')) {
-                $table->foreignId('group_admin_id')
+            if (!Schema::hasColumn('device_monitors', 'operator_id')) {
+                $table->foreignId('operator_id')
                     ->nullable()
                     ->after('tenant_id')
                     ->constrained('users')
                     ->nullOnDelete();
-                $table->index('group_admin_id');
+                $table->index('operator_id');
             }
         });
     }
@@ -31,10 +31,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('device_monitors', function (Blueprint $table) {
-            if (Schema::hasColumn('device_monitors', 'group_admin_id')) {
-                $table->dropForeign(['group_admin_id']);
-                $table->dropIndex(['group_admin_id']);
-                $table->dropColumn('group_admin_id');
+            if (Schema::hasColumn('device_monitors', 'operator_id')) {
+                $table->dropForeign(['operator_id']);
+                $table->dropIndex(['operator_id']);
+                $table->dropColumn('operator_id');
             }
         });
     }

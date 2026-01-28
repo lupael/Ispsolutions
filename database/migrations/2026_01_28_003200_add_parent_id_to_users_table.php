@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      * 
-     * Task 7.1: Add parent_id column to customers table (users table)
+     * Task 7.1: Add parent_id column to users table (for operator/sub-operator hierarchy)
      */
     public function up(): void
     {
