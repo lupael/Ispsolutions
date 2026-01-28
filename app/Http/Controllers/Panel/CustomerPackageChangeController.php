@@ -76,12 +76,14 @@ class CustomerPackageChangeController extends Controller
 
         $newPackage = Package::findOrFail($request->package_id);
 
-        // Validate package availability and status
+        // Validate package status (active)
         if ($newPackage->status !== 'active') {
             return back()->withErrors(['package_id' => __('Selected package is not active')]);
         }
 
-        if (!$newPackage->is_active) {
+        // Note: is_active attribute may not exist on all Package models
+        // Only check if the attribute is present
+        if (isset($newPackage->is_active) && !$newPackage->is_active) {
             return back()->withErrors(['package_id' => __('Selected package is not available')]);
         }
 

@@ -81,11 +81,11 @@ class PackageUpgradeService
             ];
         }
 
-        // Get remaining days
+        // Get remaining days (ensure non-negative)
         $expiryDate = $customer->expiry_date ?? now();
         $remainingDays = max(0, now()->diffInDays($expiryDate, false));
 
-        // Calculate prorated amounts
+        // Calculate prorated amounts (prevent division by zero)
         $currentDailyRate = $currentPackage->price / max(1, $currentPackage->validity_days);
         $newDailyRate = $newPackage->price / max(1, $newPackage->validity_days);
 

@@ -75,54 +75,57 @@
 </div>
 
 <!-- Hidden input for copying -->
-<input type="hidden" id="address-copy-input" value="{{ $formattedAddress }}">
+<input type="hidden" id="address-copy-input-{{ $customer->id }}" value="{{ $formattedAddress }}">
 
 <script>
-function copyAddress() {
-    const input = document.getElementById('address-copy-input');
-    const address = input.value;
-    
-    // Use modern clipboard API
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(address).then(() => {
-            showCopySuccess();
-        }).catch(err => {
+(function() {
+    // Scoped to avoid global namespace pollution
+    window.copyAddressFor{{ $customer->id }} = function() {
+        const input = document.getElementById('address-copy-input-{{ $customer->id }}');
+        const address = input.value;
+        
+        // Use modern clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(address).then(() => {
+                showCopySuccessFor{{ $customer->id }}();
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                fallbackCopyFor{{ $customer->id }}(address);
+            });
+        } else {
+            fallbackCopyFor{{ $customer->id }}(address);
+        }
+    };
+
+    function fallbackCopyFor{{ $customer->id }}(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showCopySuccessFor{{ $customer->id }}();
+        } catch (err) {
             console.error('Failed to copy: ', err);
-            fallbackCopy(address);
-        });
-    } else {
-        fallbackCopy(address);
+        }
+        document.body.removeChild(textarea);
     }
-}
 
-function fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-        document.execCommand('copy');
-        showCopySuccess();
-    } catch (err) {
-        console.error('Failed to copy: ', err);
-    }
-    document.body.removeChild(textarea);
-}
-
-function showCopySuccess() {
-    // Create a temporary success message
-    const message = document.createElement('div');
-    message.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300';
-    message.textContent = '{{ __('customers.address_copied') }}';
-    document.body.appendChild(message);
-    
-    setTimeout(() => {
-        message.style.opacity = '0';
+    function showCopySuccessFor{{ $customer->id }}() {
+        // Create a temporary success message
+        const message = document.createElement('div');
+        message.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300';
+        message.textContent = '{{ __('customers.address_copied') }}';
+        document.body.appendChild(message);
+        
         setTimeout(() => {
-            document.body.removeChild(message);
-        }, 300);
-    }, 2000);
-}
+            message.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(message);
+            }, 300);
+        }, 2000);
+    }
+})();
 </script>

@@ -92,7 +92,7 @@ class CustomerActivityService
         $packageChanges = AuditLog::where('auditable_type', User::class)
             ->where('auditable_id', $customer->id)
             ->where('event', 'updated')
-            ->whereJsonContains('new_values->service_package_id', fn($value) => true)
+            ->whereNotNull(DB::raw("JSON_EXTRACT(new_values, '$.service_package_id')"))
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();

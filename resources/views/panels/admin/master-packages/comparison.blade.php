@@ -63,7 +63,7 @@
                 
                 @if($packages->count() >= 2)
                     <div class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ $packages->count() }} {{ __('packages selected for comparison') }}
+                        {{ __(':count packages selected for comparison', ['count' => $packages->count()]) }}
                     </div>
                 @endif
             </form>

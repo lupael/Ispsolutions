@@ -71,7 +71,7 @@
                 <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                History
+                {{ __('History') }}
             </button>
             <button @click="activeTab = 'activity'; window.location.hash = 'activity'" 
                     :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'activity', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'activity' }"

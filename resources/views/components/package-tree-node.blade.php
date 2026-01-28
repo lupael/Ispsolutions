@@ -48,7 +48,7 @@
                         ${{ number_format($node['price'], 2) }}
                     </span>
                     <span class="text-gray-500 dark:text-gray-400">
-                        {{ $node['customer_count'] }} {{ __('packages.customers_using_package', ['count' => $node['customer_count']]) }}
+                        {{ __('packages.customers_using_package', ['count' => $node['customer_count']]) }}
                     </span>
                 </div>
             </div>
