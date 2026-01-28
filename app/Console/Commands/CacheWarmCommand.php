@@ -97,14 +97,14 @@ class CacheWarmCommand extends Command
         // Use withCount to avoid N+1 queries
         $packagesWithCounts = Package::where('tenant_id', $tenantId)
             ->where('status', 'active')
-            ->withCount('networkUsers')
+            ->withCount('users')
             ->get();
         
         foreach ($packagesWithCounts as $package) {
             // Manually populate the cache with the count
             Cache::put(
                 "package_customerCount_{$package->id}",
-                $package->network_users_count,
+                $package->users_count,
                 150
             );
         }

@@ -52,6 +52,17 @@ class Package extends Model
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * Get users subscribed to this package
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class, 'service_package_id');
+    }
+
+    /**
+     * @deprecated Use users() instead. NetworkUser model is deprecated.
+     */
     public function networkUsers(): HasMany
     {
         return $this->hasMany(NetworkUser::class, 'package_id');
@@ -155,7 +166,7 @@ class Package extends Model
             get: fn () => Cache::remember(
                 "package_customerCount_{$this->id}",
                 150, // TTL: 150 seconds (2.5 minutes)
-                fn () => $this->networkUsers()->count()
+                fn () => $this->users()->count()
             )
         )->shouldCache();
     }
