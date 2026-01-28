@@ -290,10 +290,12 @@
   - `childAccounts()` - hasMany relationship
   - Already in reference system pattern
 
-- [ ] **Task 7.3:** Create reseller management UI
-  - View: `resources/views/admin/customers/resellers.blade.php`
-  - List customers with child accounts
-  - Show hierarchy tree
+- [x] **Task 7.3:** Create reseller management UI
+  - Created ResellerController
+  - Created resellers/index.blade.php view
+  - Added routes for reseller management
+  - Grid layout showing reseller stats and child counts
+  - Links to view details and child accounts
 
 - [ ] **Task 7.4:** Add reseller billing roll-up
   - Service: `ResellerBillingService`
@@ -603,10 +605,11 @@
   - Drag-and-drop reordering
   - Expand/collapse nodes
 
-- [ ] **Task 16.2:** Show customer count on package cards
-  - Display cached count
-  - Update frequency indicator
-  - Click to view customers
+- [x] **Task 16.2:** Show customer count on package cards
+  - Added customer_count column to master packages index
+  - Display cached count with info tooltip
+  - Update frequency indicator (2.5 minutes cache TTL)
+  - Click to view customers (via customer count attribute)
 
 - [ ] **Task 16.3:** Add package comparison view
   - Side-by-side package comparison
@@ -638,10 +641,12 @@
   - Map integration (Google Maps)
   - Copy to clipboard button
 
-- [ ] **Task 17.3:** Add online status indicator
-  - Real-time status badge
+- [x] **Task 17.3:** Add online status indicator
+  - Component: customer-online-status.blade.php (already exists)
+  - Real-time status badge with animated ping
   - Last seen timestamp
   - Connection history link
+  - Session details display
 
 - [ ] **Task 17.4:** Create customer activity feed
   - Recent payments
@@ -651,7 +656,7 @@
 
 **Estimated Effort:** 8 hours  
 **Impact:** Medium - Better customer overview
-**Status:** 🔄 PARTIAL (1/4 complete)
+**Status:** 🔄 IN PROGRESS (3/4 complete) - Task 17.3 already implemented
 
 ---
 
