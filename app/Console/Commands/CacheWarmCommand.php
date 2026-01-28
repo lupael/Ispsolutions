@@ -93,6 +93,13 @@ class CacheWarmCommand extends Command
         $this->cacheService->cachePackages($tenantId, $packages);
         $this->line("  - Cached {$packages->count()} packages");
 
+        // Task 1.4: Pre-populate package customer count caches
+        foreach ($packages as $package) {
+            // Access the customer_count attribute to trigger caching
+            $count = $package->customer_count;
+        }
+        $this->line("  - Cached customer counts for {$packages->count()} packages");
+
         // Warm payment gateways cache
         $gateways = PaymentGateway::where('tenant_id', $tenantId)
             ->where('is_active', true)

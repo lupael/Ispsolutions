@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Master Package Model
@@ -139,12 +141,18 @@ class MasterPackage extends Model
     }
 
     /**
-     * Get the count of customers using packages derived from this master package
-     * Note: This performs a database query. Consider eager loading or caching for performance.
+     * Get the count of customers using packages derived from this master package (cached)
+     * Task 1.2: Add caching to MasterPackage model customer count
      */
-    public function getCustomerCountAttribute(): int
+    protected function customerCount(): Attribute
     {
-        return $this->packages()->withCount('networkUsers')->get()->sum('network_users_count');
+        return Attribute::make(
+            get: fn () => Cache::remember(
+                "master_package_customerCount_{$this->id}",
+                300, // TTL: 300 seconds (5 minutes)
+                fn () => $this->packages()->withCount('networkUsers')->get()->sum('network_users_count')
+            )
+        )->shouldCache();
     }
 
     /**
@@ -185,5 +193,62 @@ class MasterPackage extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Convert validity to days
+     * Task 4.1: Add computed attributes to MasterPackage
+     */
+    public function getValidityInDaysAttribute(): int
+    {
+        return $this->validity_days ?? 0;
+    }
+
+    /**
+     * Convert validity to hours
+     * Task 4.1: Add computed attributes to MasterPackage
+     */
+    public function getValidityInHoursAttribute(): int
+    {
+        return ($this->validity_days ?? 0) * 24;
+    }
+
+    /**
+     * Convert validity to minutes
+     * Task 4.1: Add computed attributes to MasterPackage
+     */
+    public function getValidityInMinutesAttribute(): int
+    {
+        return ($this->validity_days ?? 0) * 24 * 60;
+    }
+
+    /**
+     * Get readable rate unit (Mbps/Kbps)
+     * Task 4.3: Add readable_rate_unit accessor
+     */
+    public function getReadableRateUnitAttribute(): string
+    {
+        // Determine if bandwidth is in Mbps or Kbps range
+        $download = $this->speed_download ?? 0;
+        
+        if ($download >= 1024) {
+            return 'Mbps';
+        }
+        
+        return 'Kbps';
+    }
+
+    /**
+     * Get total octet limit in bytes
+     * Task 4.4: Add total_octet_limit accessor
+     */
+    public function getTotalOctetLimitAttribute(): ?int
+    {
+        if (!$this->volume_limit) {
+            return null;
+        }
+        
+        // Convert MB to bytes
+        return $this->volume_limit * 1024 * 1024;
     }
 }

@@ -1062,4 +1062,37 @@ class User extends Authenticatable
     {
         return $this->status === 'active' && $this->is_active;
     }
+
+    /**
+     * Get overall status combining payment type and service status
+     * Task 3.2: Add overall_status computed attribute to Customer model
+     *
+     * @return \App\Enums\CustomerOverallStatus|null
+     */
+    public function getOverallStatusAttribute(): ?\App\Enums\CustomerOverallStatus
+    {
+        // Only for customers (operator_level 100)
+        if ($this->operator_level !== self::OPERATOR_LEVEL_CUSTOMER) {
+            return null;
+        }
+
+        $paymentType = $this->payment_type ?? 'postpaid';
+        $status = $this->status ?? 'inactive';
+
+        return match ($paymentType) {
+            'prepaid' => match ($status) {
+                'active' => \App\Enums\CustomerOverallStatus::PREPAID_ACTIVE,
+                'suspended' => \App\Enums\CustomerOverallStatus::PREPAID_SUSPENDED,
+                'expired' => \App\Enums\CustomerOverallStatus::PREPAID_EXPIRED,
+                default => \App\Enums\CustomerOverallStatus::PREPAID_INACTIVE,
+            },
+            'postpaid' => match ($status) {
+                'active' => \App\Enums\CustomerOverallStatus::POSTPAID_ACTIVE,
+                'suspended' => \App\Enums\CustomerOverallStatus::POSTPAID_SUSPENDED,
+                'expired' => \App\Enums\CustomerOverallStatus::POSTPAID_EXPIRED,
+                default => \App\Enums\CustomerOverallStatus::POSTPAID_INACTIVE,
+            },
+            default => null,
+        };
+    }
 }
