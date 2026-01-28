@@ -154,4 +154,49 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script nonce="{{ $cspNonce }}">
+    // Task 5.3: Add warning for low-priced packages
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const priceInput = document.getElementById('base_price');
+        const lowPriceThreshold = 10; // Configurable threshold
+
+        if (form && priceInput) {
+            form.addEventListener('submit', function(e) {
+                const price = parseFloat(priceInput.value);
+                
+                if (price > 0 && price < lowPriceThreshold) {
+                    e.preventDefault();
+                    
+                    if (confirm(`Warning: The package price is $${price.toFixed(2)}, which is below the recommended minimum of $${lowPriceThreshold}.\n\nAre you sure you want to create this package with a low price?`)) {
+                        // User confirmed, submit the form
+                        form.submit();
+                    }
+                }
+            });
+
+            // Real-time warning indicator
+            priceInput.addEventListener('input', function() {
+                const price = parseFloat(this.value);
+                const warningDiv = document.getElementById('price-warning');
+                
+                if (price > 0 && price < lowPriceThreshold) {
+                    if (!warningDiv) {
+                        const warning = document.createElement('div');
+                        warning.id = 'price-warning';
+                        warning.className = 'mt-1 p-2 bg-yellow-50 border border-yellow-400 text-yellow-700 text-xs rounded';
+                        warning.innerHTML = `<strong>⚠️ Warning:</strong> Price is below recommended minimum of $${lowPriceThreshold}`;
+                        this.parentElement.appendChild(warning);
+                    }
+                } else if (warningDiv) {
+                    warningDiv.remove();
+                }
+            });
+        }
+    });
+</script>
+@endpush
+
 @endsection

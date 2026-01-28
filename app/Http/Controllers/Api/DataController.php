@@ -160,6 +160,7 @@ class DataController extends Controller
 
     /**
      * Get packages data
+     * Task 4.5: Update API responses to include all validity formats
      */
     public function getPackages(Request $request): JsonResponse
     {
@@ -185,6 +186,18 @@ class DataController extends Controller
         }
 
         $packages = $query->paginate($request->get('per_page', 20));
+
+        // Enhance package data with validity formats
+        $packages->getCollection()->transform(function ($package) {
+            $package->validity_formats = [
+                'days' => $package->validity_in_days,
+                'hours' => $package->validity_in_hours,
+                'minutes' => $package->validity_in_minutes,
+            ];
+            $package->readable_rate_unit = $package->readable_rate_unit;
+            $package->total_octet_limit = $package->total_octet_limit;
+            return $package;
+        });
 
         return response()->json($packages);
     }
