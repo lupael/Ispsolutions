@@ -23,14 +23,11 @@ use Illuminate\View\View;
 class CustomerPackageChangeController extends Controller
 {
     protected PackageUpgradeService $upgradeService;
-    protected PackageHierarchyService $hierarchyService;
 
     public function __construct(
-        PackageUpgradeService $upgradeService,
-        PackageHierarchyService $hierarchyService
+        PackageUpgradeService $upgradeService
     ) {
         $this->upgradeService = $upgradeService;
-        $this->hierarchyService = $hierarchyService;
     }
 
     /**

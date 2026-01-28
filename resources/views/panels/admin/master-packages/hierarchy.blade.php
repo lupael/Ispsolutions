@@ -30,6 +30,6 @@
     </div>
 
     <!-- Package Hierarchy Tree -->
-    <x-package-hierarchy-tree :packages="null" />
+    <x-package-hierarchy-tree :packages="$packageTree" />
 </div>
 @endsection

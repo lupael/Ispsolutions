@@ -4,7 +4,12 @@
     // Check if customer has online status
     $isOnline = $customer->online_status ?? false;
     $currentSession = $isOnline ? $customer->getCurrentSession() : null;
-    $sessionDuration = $currentSession ? $customer->getSessionDuration() : 0;
+    
+    // Calculate session duration directly from session to avoid duplicate query
+    $sessionDuration = 0;
+    if ($currentSession && isset($currentSession->acctstarttime)) {
+        $sessionDuration = \Carbon\Carbon::parse($currentSession->acctstarttime)->diffInSeconds(\Carbon\Carbon::now());
+    }
 @endphp
 
 <div class="inline-flex items-center space-x-2">
@@ -47,22 +52,22 @@
     <!-- Session Details Tooltip/Popover -->
     <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">
         <div class="grid grid-cols-2 gap-2">
-            @if(isset($currentSession->nas_ip_address))
+            @if(isset($currentSession->nasipaddress))
                 <div>
                     <span class="font-medium">{{ __('NAS IP') }}:</span>
-                    {{ $currentSession->nas_ip_address }}
+                    {{ $currentSession->nasipaddress }}
                 </div>
             @endif
-            @if(isset($currentSession->framed_ip_address))
+            @if(isset($currentSession->framedipaddress))
                 <div>
                     <span class="font-medium">{{ __('IP Address') }}:</span>
-                    {{ $currentSession->framed_ip_address }}
+                    {{ $currentSession->framedipaddress }}
                 </div>
             @endif
-            @if(isset($currentSession->acct_start_time))
+            @if(isset($currentSession->acctstarttime))
                 <div>
                     <span class="font-medium">{{ __('Connected At') }}:</span>
-                    {{ \Carbon\Carbon::parse($currentSession->acct_start_time)->format('M d, H:i') }}
+                    {{ \Carbon\Carbon::parse($currentSession->acctstarttime)->format('M d, H:i') }}
                 </div>
             @endif
             <div>

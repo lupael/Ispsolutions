@@ -57,7 +57,7 @@
             @if($node['description'] || $node['bandwidth_download'])
                 <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">
                     @if($node['description'])
-                        <p class="mb-1">{{ Str::limit($node['description'], 80) }}</p>
+                        <p class="mb-1">{{ \Illuminate\Support\Str::limit($node['description'], 80) }}</p>
                     @endif
                     @if($node['bandwidth_download'])
                         <span class="inline-flex items-center">

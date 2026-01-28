@@ -128,7 +128,7 @@
                             </td>
                             @foreach($packagesToCompare as $package)
                                 <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                                    <span class="font-semibold">{{ $package->customerCount() }}</span>
+                                    <span class="font-semibold">{{ $package->customer_count }}</span>
                                     {{ __('customers') }}
                                 </td>
                             @endforeach

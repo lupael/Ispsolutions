@@ -33,7 +33,9 @@ class PackageUpgradeService
      */
     public function getUpgradeOptions(User $customer): array
     {
-        $currentPackage = $customer->servicePackage;
+        // Get the NetworkUser's package (Package model), not User's servicePackage (ServicePackage model)
+        $networkUser = $customer->networkUser;
+        $currentPackage = $networkUser?->package;
 
         if (!$currentPackage) {
             return [
@@ -73,7 +75,9 @@ class PackageUpgradeService
      */
     public function calculateProratedCost(User $customer, Package $newPackage): array
     {
-        $currentPackage = $customer->servicePackage;
+        // Get the NetworkUser's package (Package model), not User's servicePackage (ServicePackage model)
+        $networkUser = $customer->networkUser;
+        $currentPackage = $networkUser?->package;
         
         if (!$currentPackage) {
             return [
@@ -124,8 +128,12 @@ class PackageUpgradeService
         $errors = [];
         $warnings = [];
 
+        // Get the NetworkUser's package (Package model), not User's servicePackage
+        $networkUser = $customer->networkUser;
+        $currentPackage = $networkUser?->package;
+
         // Check if customer has a package
-        if (!$customer->service_package_id) {
+        if (!$currentPackage) {
             $errors[] = __('Customer does not have an active package');
         }
 
@@ -135,7 +143,6 @@ class PackageUpgradeService
         }
 
         // Check if it's actually an upgrade
-        $currentPackage = $customer->servicePackage;
         if ($currentPackage && $targetPackage->price < $currentPackage->price) {
             $warnings[] = __('This is a downgrade, not an upgrade');
         }
@@ -172,7 +179,10 @@ class PackageUpgradeService
         $eligibility = $this->validateUpgradeEligibility($customer, $targetPackage);
         $costDetails = $this->calculateProratedCost($customer, $targetPackage);
         
-        $currentPackage = $customer->servicePackage;
+        // Get the NetworkUser's package (Package model)
+        $networkUser = $customer->networkUser;
+        $currentPackage = $networkUser?->package;
+        
         $comparison = $currentPackage 
             ? $this->hierarchyService->calculateUpgrade($currentPackage, $targetPackage)
             : null;

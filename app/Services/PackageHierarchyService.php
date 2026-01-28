@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Package;
-use App\Models\MasterPackage;
 use Illuminate\Support\Collection;
 
 /**
@@ -50,13 +49,13 @@ class PackageHierarchyService
     /**
      * Build a package node with its children recursively
      */
-    protected function buildPackageNode(Package $package, Collection $indexed): array
+    protected function buildPackageNode(Package $package, Collection $indexed, int $level = 0): array
     {
         $node = [
             'id' => $package->id,
             'name' => $package->name,
             'price' => $package->price,
-            'customer_count' => $package->customerCount(),
+            'customer_count' => $package->customer_count, // Use attribute accessor, not method
             'status' => $package->status,
             'description' => $package->description,
             'bandwidth_upload' => $package->bandwidth_upload,
@@ -64,14 +63,13 @@ class PackageHierarchyService
             'validity_days' => $package->validity_days,
             'parent_id' => $package->parent_package_id,
             'children' => [],
-            'level' => 0,
+            'level' => $level,
         ];
 
         // Add children recursively
         $children = $indexed->filter(fn($p) => $p->parent_package_id === $package->id);
         foreach ($children as $child) {
-            $childNode = $this->buildPackageNode($child, $indexed);
-            $childNode['level'] = $node['level'] + 1;
+            $childNode = $this->buildPackageNode($child, $indexed, $level + 1);
             $node['children'][] = $childNode;
         }
 
