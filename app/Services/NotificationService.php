@@ -24,6 +24,9 @@ class NotificationService
 
     /**
      * Send invoice generated notification
+     * 
+     * NOTE: This method should ideally be called from a queued job to avoid blocking
+     * the main request with email retry delays.
      */
     public function sendInvoiceGeneratedNotification(Invoice $invoice): bool
     {
@@ -32,7 +35,8 @@ class NotificationService
 
         try {
             if ($invoice->user && $invoice->user->email) {
-                // Validate email format
+                // Note: Email validation should occur at form level during user creation
+                // This is a defensive check for data integrity
                 if (!filter_var($invoice->user->email, FILTER_VALIDATE_EMAIL)) {
                     Log::warning('Invalid email format for invoice notification', [
                         'invoice_id' => $invoice->id,
@@ -43,6 +47,7 @@ class NotificationService
                 }
 
                 // Retry logic for email sending
+                // IMPORTANT: Should be called from queue to avoid blocking
                 $maxRetries = config('mail.max_retries', 3);
                 $retryDelay = config('mail.retry_delay', 2); // seconds
                 
@@ -96,6 +101,9 @@ class NotificationService
 
     /**
      * Send payment received notification
+     * 
+     * NOTE: This method should ideally be called from a queued job to avoid blocking
+     * the main request with email retry delays.
      */
     public function sendPaymentReceivedNotification(Invoice $invoice, int $amount): bool
     {
@@ -104,7 +112,8 @@ class NotificationService
 
         try {
             if ($invoice->user && $invoice->user->email) {
-                // Validate email format
+                // Note: Email validation should occur at form level during user creation
+                // This is a defensive check for data integrity
                 if (!filter_var($invoice->user->email, FILTER_VALIDATE_EMAIL)) {
                     Log::warning('Invalid email format for payment notification', [
                         'invoice_id' => $invoice->id,
@@ -126,6 +135,7 @@ class NotificationService
                 $payment->user = $invoice->user;
 
                 // Retry logic for email sending
+                // IMPORTANT: Should be called from queue to avoid blocking
                 $maxRetries = config('mail.max_retries', 3);
                 $retryDelay = config('mail.retry_delay', 2); // seconds
                 

@@ -39,7 +39,7 @@ return [
     
     // Help text
     'Unique username for authentication (letters, numbers, - and _ only)' => 'প্রমাণীকরণের জন্য অনন্য ব্যবহারকারীর নাম (শুধুমাত্র অক্ষর, সংখ্যা, - এবং _)',
-    'Minimum 8 characters' => 'ন্যূনতম ৮ টি অক্ষর',
+    'Minimum 8 characters' => 'ন্যূনতম 8 টি অক্ষর',
     'Choose the type of service for this customer' => 'এই গ্রাহকের জন্য সেবার ধরন চয়ন করুন',
     
     // Customer status

@@ -71,11 +71,15 @@ class PackageProfileController extends Controller
                 ->withInput();
         }
 
-        // Validate that profile exists on the router
+        // Validate profiles exist (optimized: single query per router)
+        $routerIdsUnique = array_unique($routerIds);
+        $profilesByRouter = MikrotikProfile::whereIn('router_id', $routerIdsUnique)
+            ->get()
+            ->groupBy('router_id');
+        
         foreach ($validated['mappings'] as $mapping) {
-            $profileExists = MikrotikProfile::where('router_id', $mapping['router_id'])
-                ->where('name', $mapping['profile_name'])
-                ->exists();
+            $routerProfiles = $profilesByRouter->get($mapping['router_id'], collect());
+            $profileExists = $routerProfiles->contains('name', $mapping['profile_name']);
             
             if (!$profileExists) {
                 return redirect()

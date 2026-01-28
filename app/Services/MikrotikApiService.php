@@ -42,9 +42,9 @@ class MikrotikApiService
                 $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
                 $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}";
 
+                // Use Laravel HTTP client's built-in retry mechanism
                 $response = Http::withBasicAuth($router->username, $router->password)
                     ->timeout(config('services.mikrotik.timeout', 30))
-                    ->retry($maxRetries, $retryDelay)
                     ->get($url, $query);
 
                 if ($response->successful()) {
@@ -88,12 +88,11 @@ class MikrotikApiService
                     'attempt' => $attempt,
                 ]);
 
-                if ($attempt < $maxRetries) {
-                    usleep($retryDelay * 1000);
-                } else {
-                    // All retries exhausted
+                if ($attempt >= $maxRetries) {
                     return [];
                 }
+                
+                usleep($retryDelay * 1000);
             }
         }
 

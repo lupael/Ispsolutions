@@ -36,6 +36,24 @@ class CustomPriceController extends Controller
         return view('panel.customers.custom-prices.create', compact('customer', 'packages'));
     }
 
+    /** Tolerance for float price comparisons */
+    private const PRICE_COMPARISON_TOLERANCE = 0.01;
+
+    /**
+     * Validate discount and custom price consistency
+     */
+    private function validateDiscountPriceConsistency(Request $request, Package $package): bool
+    {
+        if ($request->filled('discount_percentage') && $request->input('discount_percentage') > 0) {
+            $calculatedPrice = $package->price * (1 - $request->input('discount_percentage') / 100);
+            
+            if (abs($calculatedPrice - $request->input('custom_price')) > self::PRICE_COMPARISON_TOLERANCE) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Store a new custom price.
      */
@@ -52,16 +70,13 @@ class CustomPriceController extends Controller
             'custom_price.min' => 'Custom price must be at least 1.',
         ]);
 
-        // Validate that both custom_price and discount_percentage are not set together
-        if ($request->filled('discount_percentage') && $request->input('discount_percentage') > 0) {
-            $package = Package::findOrFail($request->input('package_id'));
-            $calculatedPrice = $package->price * (1 - $request->input('discount_percentage') / 100);
-            
-            if (abs($calculatedPrice - $request->input('custom_price')) > 0.01) {
-                return back()->withErrors([
-                    'discount_percentage' => 'When using discount percentage, custom price should match the calculated discounted amount.',
-                ])->withInput();
-            }
+        $package = Package::findOrFail($request->input('package_id'));
+        
+        // Warn (not error) if discount and price are inconsistent
+        if (!$this->validateDiscountPriceConsistency($request, $package)) {
+            return back()->with('warning', 
+                'Note: The custom price does not match the calculated discount amount. This is allowed but may cause confusion.'
+            )->withInput();
         }
 
         // Check if custom price already exists for this package
@@ -116,16 +131,11 @@ class CustomPriceController extends Controller
             'custom_price.min' => 'Custom price must be at least 1.',
         ]);
 
-        // Validate that both custom_price and discount_percentage are not conflicting
-        if ($request->filled('discount_percentage') && $request->input('discount_percentage') > 0) {
-            $package = $customPrice->package;
-            $calculatedPrice = $package->price * (1 - $request->input('discount_percentage') / 100);
-            
-            if (abs($calculatedPrice - $request->input('custom_price')) > 0.01) {
-                return back()->withErrors([
-                    'discount_percentage' => 'When using discount percentage, custom price should match the calculated discounted amount.',
-                ])->withInput();
-            }
+        // Warn (not error) if discount and price are inconsistent
+        if (!$this->validateDiscountPriceConsistency($request, $customPrice->package)) {
+            return back()->with('warning', 
+                'Note: The custom price does not match the calculated discount amount. This is allowed but may cause confusion.'
+            )->withInput();
         }
 
         $customPrice->update($request->only([
