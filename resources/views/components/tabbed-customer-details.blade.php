@@ -6,7 +6,7 @@
 <div x-data="{ 
     activeTab: (() => {
         const hash = window.location.hash.substring(1);
-        const validTabs = ['profile', 'network', 'billing', 'sessions', 'history'];
+        const validTabs = ['profile', 'network', 'billing', 'sessions', 'history', 'activity'];
         return validTabs.includes(hash) ? hash : 'profile';
     })()
 }" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
@@ -73,6 +73,18 @@
                 </svg>
                 History
             </button>
+            <button @click="activeTab = 'activity'; window.location.hash = 'activity'" 
+                    :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'activity', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'activity' }"
+                    class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm focus:outline-none"
+                    role="tab"
+                    :aria-selected="activeTab === 'activity'"
+                    aria-controls="activity-panel"
+                    id="activity-tab">
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {{ __('customers.activity') }}
+            </button>
         </nav>
     </div>
 
@@ -121,6 +133,12 @@
                                     </dd>
                                 </div>
                                 <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('customers.online_status') }}</dt>
+                                    <dd class="mt-1">
+                                        <x-customer-online-status :customer="$customer" :showDetails="true" />
+                                    </dd>
+                                </div>
+                                <div>
                                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Service Type</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $customer->service_type === 'pppoe' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800' }}">
@@ -146,8 +164,10 @@
                                 @endif
                                 @if($customer->address)
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Address</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $customer->address }}</dd>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{{ __('customers.address') }}</dt>
+                                    <dd class="mt-1">
+                                        <x-customer-address-display :customer="$customer" :showMap="true" />
+                                    </dd>
                                 </div>
                                 @endif
                             </dl>
@@ -325,6 +345,19 @@
                 <p class="mt-2 text-gray-500 dark:text-gray-400">Change history will be loaded here</p>
                 <p class="text-sm text-gray-400 dark:text-gray-500">Status changes, package changes, and other modifications</p>
             </div>
+        </div>
+
+        <!-- Activity Tab -->
+        <div x-show="activeTab === 'activity'" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             style="display: none;"
+             role="tabpanel"
+             id="activity-panel"
+             aria-labelledby="activity-tab"
+             :aria-hidden="activeTab !== 'activity'">
+            <x-customer-activity-feed :customer="$customer" :limit="20" />
         </div>
     </div>
 </div>
