@@ -1,6 +1,6 @@
 @extends('panels.layouts.app')
 
-@section('title', 'Add New Customer')
+@section('title', __('Add New Customer'))
 
 @section('content')
 <div class="space-y-6">
@@ -9,15 +9,15 @@
         <div class="p-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Add New Customer</h1>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">Create a new network customer account</p>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ __('Add New Customer') }}</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">{{ __('Create a new network customer account') }}</p>
                 </div>
                 <div>
                     <a href="{{ route('panel.admin.customers') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        Back to List
+                        {{ __('Back to List') }}
                     </a>
                 </div>
             </div>
@@ -32,7 +32,7 @@
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <!-- Username -->
                 <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username *</label>
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Username') }} *</label>
                     <input 
                         type="text" 
                         name="username" 
@@ -43,7 +43,7 @@
                         pattern="[a-zA-Z0-9_-]+" 
                         value="{{ old('username') }}"
                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('username') border-red-500 @enderror">
-                    <p class="mt-1 text-sm text-gray-500">Unique username for authentication (letters, numbers, - and _ only)</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('Unique username for authentication (letters, numbers, - and _ only)') }}</p>
                     @error('username')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -51,7 +51,7 @@
 
                 <!-- Password -->
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password *</label>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Password') }} *</label>
                     <input 
                         type="password" 
                         name="password" 
@@ -59,7 +59,7 @@
                         required 
                         minlength="8"
                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('password') border-red-500 @enderror">
-                    <p class="mt-1 text-sm text-gray-500">Minimum 8 characters</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('Minimum 8 characters') }}</p>
                     @error('password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -67,20 +67,20 @@
 
                 <!-- Service Type -->
                 <div>
-                    <label for="service_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Service Type *</label>
+                    <label for="service_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Service Type') }} *</label>
                     <select 
                         name="service_type" 
                         id="service_type" 
                         required 
                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('service_type') border-red-500 @enderror">
-                        <option value="">Select Service Type</option>
-                        <option value="pppoe" {{ old('service_type') == 'pppoe' ? 'selected' : '' }}>PPPoE (Point-to-Point Protocol over Ethernet)</option>
-                        <option value="hotspot" {{ old('service_type') == 'hotspot' ? 'selected' : '' }}>Hotspot (WiFi Access)</option>
-                        <option value="cable-tv" {{ old('service_type') == 'cable-tv' ? 'selected' : '' }}>Cable TV Subscription</option>
-                        <option value="static_ip" {{ old('service_type') == 'static_ip' ? 'selected' : '' }}>Static IP (Dedicated IP Address)</option>
-                        <option value="other" {{ old('service_type') == 'other' ? 'selected' : '' }}>Other Services</option>
+                        <option value="">{{ __('Select Service Type') }}</option>
+                        <option value="pppoe" {{ old('service_type') == 'pppoe' ? 'selected' : '' }}>{{ __('PPPoE (Point-to-Point Protocol over Ethernet)') }}</option>
+                        <option value="hotspot" {{ old('service_type') == 'hotspot' ? 'selected' : '' }}>{{ __('Hotspot (WiFi Access)') }}</option>
+                        <option value="cable-tv" {{ old('service_type') == 'cable-tv' ? 'selected' : '' }}>{{ __('Cable TV Subscription') }}</option>
+                        <option value="static_ip" {{ old('service_type') == 'static_ip' ? 'selected' : '' }}>{{ __('Static IP (Dedicated IP Address)') }}</option>
+                        <option value="other" {{ old('service_type') == 'other' ? 'selected' : '' }}>{{ __('Other Services') }}</option>
                     </select>
-                    <p class="mt-1 text-sm text-gray-500">Choose the type of service for this customer</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('Choose the type of service for this customer') }}</p>
                     @error('service_type')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror

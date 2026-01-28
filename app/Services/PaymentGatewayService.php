@@ -22,20 +22,35 @@ class PaymentGatewayService
      */
     public function initiatePayment(Invoice $invoice, string $gatewaySlug, array $additionalData = []): array
     {
-        $gateway = PaymentGateway::where('slug', $gatewaySlug)
-            ->where('tenant_id', $invoice->tenant_id)
-            ->where('is_active', true)
-            ->firstOrFail();
+        try {
+            $gateway = PaymentGateway::where('slug', $gatewaySlug)
+                ->where('tenant_id', $invoice->tenant_id)
+                ->where('is_active', true)
+                ->firstOrFail();
 
-        $config = $gateway->configuration;
+            $config = $gateway->configuration;
 
-        return match ($gatewaySlug) {
-            'bkash' => $this->initiateBkashPayment($invoice, $config, $gateway->test_mode),
-            'nagad' => $this->initiateNagadPayment($invoice, $config, $gateway->test_mode),
-            'sslcommerz' => $this->initiateSSLCommerzPayment($invoice, $config, $gateway->test_mode),
-            'stripe' => $this->initiateStripePayment($invoice, $config, $gateway->test_mode),
-            default => throw new \Exception("Unsupported payment gateway: {$gatewaySlug}"),
-        };
+            // Validate gateway configuration
+            if (empty($config) || !is_array($config)) {
+                throw new \Exception("Payment gateway '{$gatewaySlug}' is not properly configured.");
+            }
+
+            return match ($gatewaySlug) {
+                'bkash' => $this->initiateBkashPayment($invoice, $config, $gateway->test_mode),
+                'nagad' => $this->initiateNagadPayment($invoice, $config, $gateway->test_mode),
+                'sslcommerz' => $this->initiateSSLCommerzPayment($invoice, $config, $gateway->test_mode),
+                'stripe' => $this->initiateStripePayment($invoice, $config, $gateway->test_mode),
+                default => throw new \Exception("Unsupported payment gateway: {$gatewaySlug}"),
+            };
+        } catch (\Exception $e) {
+            Log::error('Payment initiation failed', [
+                'invoice_id' => $invoice->id,
+                'gateway' => $gatewaySlug,
+                'error' => $e->getMessage(),
+            ]);
+            
+            throw $e;
+        }
     }
 
     /**
@@ -43,15 +58,69 @@ class PaymentGatewayService
      */
     public function processWebhook(string $gatewaySlug, array $payload): bool
     {
-        Log::info("Processing webhook for {$gatewaySlug}", $payload);
+        Log::info("Processing webhook for {$gatewaySlug}", [
+            'gateway' => $gatewaySlug,
+            'payload_keys' => array_keys($payload),
+        ]);
 
+        // Check for idempotency - prevent duplicate webhook processing
+        $transactionId = $this->extractTransactionId($gatewaySlug, $payload);
+        if ($transactionId && $this->isWebhookAlreadyProcessed($transactionId, $gatewaySlug)) {
+            Log::warning('Duplicate webhook detected', [
+                'gateway' => $gatewaySlug,
+                'transaction_id' => $transactionId,
+            ]);
+            return true; // Return true to acknowledge receipt
+        }
+
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $result = match ($gatewaySlug) {
+                'bkash' => $this->processBkashWebhook($payload),
+                'nagad' => $this->processNagadWebhook($payload),
+                'sslcommerz' => $this->processSSLCommerzWebhook($payload),
+                'stripe' => $this->processStripeWebhook($payload),
+                default => throw new \Exception("Unsupported payment gateway: {$gatewaySlug}"),
+            };
+
+            \Illuminate\Support\Facades\DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            
+            Log::error('Webhook processing failed - transaction rolled back', [
+                'gateway' => $gatewaySlug,
+                'error' => $e->getMessage(),
+                'transaction_id' => $transactionId ?? null,
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Extract transaction ID from webhook payload
+     */
+    protected function extractTransactionId(string $gatewaySlug, array $payload): ?string
+    {
         return match ($gatewaySlug) {
-            'bkash' => $this->processBkashWebhook($payload),
-            'nagad' => $this->processNagadWebhook($payload),
-            'sslcommerz' => $this->processSSLCommerzWebhook($payload),
-            'stripe' => $this->processStripeWebhook($payload),
-            default => throw new \Exception("Unsupported payment gateway: {$gatewaySlug}"),
+            'bkash' => $payload['trxID'] ?? null,
+            'nagad' => $payload['orderId'] ?? null,
+            'sslcommerz' => $payload['tran_id'] ?? null,
+            'stripe' => $payload['id'] ?? null,
+            default => null,
         };
+    }
+
+    /**
+     * Check if webhook has already been processed
+     */
+    protected function isWebhookAlreadyProcessed(string $transactionId, string $gatewaySlug): bool
+    {
+        return Payment::where('transaction_id', $transactionId)
+            ->where('gateway', $gatewaySlug)
+            ->exists();
     }
 
     /**

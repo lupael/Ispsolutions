@@ -33,42 +33,70 @@ class MikrotikApiService
      */
     public function getMktRows(MikrotikRouter $router, string $menu, array $query = []): array
     {
-        try {
-            $endpoint = $this->menuToEndpoint($menu);
-            $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
-            $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}";
+        $maxRetries = config('services.mikrotik.max_retries', 3);
+        $retryDelay = config('services.mikrotik.retry_delay', 1000); // milliseconds
 
-            $response = Http::withBasicAuth($router->username, $router->password)
-                ->timeout(config('services.mikrotik.timeout', 30))
-                ->get($url, $query);
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $endpoint = $this->menuToEndpoint($menu);
+                $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
+                $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}";
 
-            if ($response->successful()) {
-                $data = $response->json();
-                Log::info('Successfully fetched rows from MikroTik', [
+                // Use Laravel HTTP client's built-in retry mechanism
+                $response = Http::withBasicAuth($router->username, $router->password)
+                    ->timeout(config('services.mikrotik.timeout', 30))
+                    ->get($url, $query);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    // Validate response structure
+                    if (!is_array($data)) {
+                        Log::warning('Invalid response structure from MikroTik', [
+                            'router_id' => $router->id,
+                            'menu' => $menu,
+                            'response_type' => gettype($data),
+                        ]);
+                        return [];
+                    }
+
+                    Log::info('Successfully fetched rows from MikroTik', [
+                        'router_id' => $router->id,
+                        'menu' => $menu,
+                        'count' => count($data),
+                        'attempt' => $attempt,
+                    ]);
+
+                    return $data;
+                }
+
+                Log::warning('Failed to fetch rows from MikroTik', [
                     'router_id' => $router->id,
                     'menu' => $menu,
-                    'count' => is_array($data) ? count($data) : 0,
+                    'status' => $response->status(),
+                    'attempt' => $attempt,
                 ]);
 
-                return is_array($data) ? $data : [];
+                if ($attempt < $maxRetries) {
+                    usleep($retryDelay * 1000);
+                }
+            } catch (\Exception $e) {
+                Log::error('Error fetching rows from MikroTik', [
+                    'router_id' => $router->id,
+                    'menu' => $menu,
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                ]);
+
+                if ($attempt >= $maxRetries) {
+                    return [];
+                }
+                
+                usleep($retryDelay * 1000);
             }
-
-            Log::warning('Failed to fetch rows from MikroTik', [
-                'router_id' => $router->id,
-                'menu' => $menu,
-                'status' => $response->status(),
-            ]);
-
-            return [];
-        } catch (\Exception $e) {
-            Log::error('Error fetching rows from MikroTik', [
-                'router_id' => $router->id,
-                'menu' => $menu,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [];
         }
+
+        return [];
     }
 
     /**

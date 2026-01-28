@@ -112,10 +112,12 @@ class MasterPackageController extends Controller
             'speed_download' => 'nullable|integer|min:0',
             'volume_limit' => 'nullable|integer|min:0',
             'validity_days' => 'required|integer|min:1',
-            'base_price' => 'required|numeric|min:0',
+            'base_price' => 'required|numeric|min:1',
             'visibility' => 'required|in:public,private',
             'is_trial_package' => 'boolean',
             'status' => 'required|in:active,inactive',
+        ], [
+            'base_price.min' => 'Package price must be at least 1 to prevent free packages.',
         ]);
 
         $user = Auth::user();
@@ -179,9 +181,11 @@ class MasterPackageController extends Controller
             'speed_download' => 'nullable|integer|min:0',
             'volume_limit' => 'nullable|integer|min:0',
             'validity_days' => 'required|integer|min:1',
-            'base_price' => 'required|numeric|min:0',
+            'base_price' => 'required|numeric|min:1',
             'visibility' => 'required|in:public,private',
             'status' => 'required|in:active,inactive',
+        ], [
+            'base_price.min' => 'Package price must be at least 1 to prevent free packages.',
         ]);
 
         $masterPackage->update($validated);
@@ -235,8 +239,10 @@ class MasterPackageController extends Controller
     {
         $validated = $request->validate([
             'operator_id' => 'required|exists:users,id',
-            'operator_price' => 'required|numeric|min:0',
+            'operator_price' => 'required|numeric|min:1',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
+        ], [
+            'operator_price.min' => 'Operator price must be at least 1.',
         ]);
 
         // Validate operator price doesn't exceed base price

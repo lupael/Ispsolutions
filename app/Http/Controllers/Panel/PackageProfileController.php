@@ -62,6 +62,33 @@ class PackageProfileController extends Controller
             'auto_apply' => 'boolean',
         ]);
 
+        // Validate no duplicate router mappings
+        $routerIds = array_column($validated['mappings'], 'router_id');
+        if (count($routerIds) !== count(array_unique($routerIds))) {
+            return redirect()
+                ->back()
+                ->withErrors(['mappings' => 'Cannot assign multiple profiles from the same router to one package.'])
+                ->withInput();
+        }
+
+        // Validate profiles exist (optimized: single query per router)
+        $routerIdsUnique = array_unique($routerIds);
+        $profilesByRouter = MikrotikProfile::whereIn('router_id', $routerIdsUnique)
+            ->get()
+            ->groupBy('router_id');
+        
+        foreach ($validated['mappings'] as $mapping) {
+            $routerProfiles = $profilesByRouter->get($mapping['router_id'], collect());
+            $profileExists = $routerProfiles->contains('name', $mapping['profile_name']);
+            
+            if (!$profileExists) {
+                return redirect()
+                    ->back()
+                    ->withErrors(['mappings' => "Profile '{$mapping['profile_name']}' does not exist on the selected router."])
+                    ->withInput();
+            }
+        }
+
         try {
             // Delete existing mappings
             $package->profileMappings()->delete();

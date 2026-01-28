@@ -36,6 +36,24 @@ class CustomPriceController extends Controller
         return view('panel.customers.custom-prices.create', compact('customer', 'packages'));
     }
 
+    /** Tolerance for float price comparisons */
+    private const PRICE_COMPARISON_TOLERANCE = 0.01;
+
+    /**
+     * Validate discount and custom price consistency
+     */
+    private function validateDiscountPriceConsistency(Request $request, Package $package): bool
+    {
+        if ($request->filled('discount_percentage') && $request->input('discount_percentage') > 0) {
+            $calculatedPrice = $package->price * (1 - $request->input('discount_percentage') / 100);
+            
+            if (abs($calculatedPrice - $request->input('custom_price')) > self::PRICE_COMPARISON_TOLERANCE) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Store a new custom price.
      */
@@ -43,12 +61,23 @@ class CustomPriceController extends Controller
     {
         $request->validate([
             'package_id' => 'required|exists:packages,id',
-            'custom_price' => 'required|numeric|min:0',
+            'custom_price' => 'required|numeric|min:1',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'reason' => 'nullable|string|max:255',
             'valid_from' => 'nullable|date',
             'valid_until' => 'nullable|date|after:valid_from',
+        ], [
+            'custom_price.min' => 'Custom price must be at least 1.',
         ]);
+
+        $package = Package::findOrFail($request->input('package_id'));
+        
+        // Warn (not error) if discount and price are inconsistent
+        if (!$this->validateDiscountPriceConsistency($request, $package)) {
+            return back()->with('warning', 
+                'Note: The custom price does not match the calculated discount amount. This is allowed but may cause confusion.'
+            )->withInput();
+        }
 
         // Check if custom price already exists for this package
         $exists = $customer->customPrices()
@@ -92,13 +121,22 @@ class CustomPriceController extends Controller
     public function update(Request $request, User $customer, CustomPrice $customPrice)
     {
         $request->validate([
-            'custom_price' => 'required|numeric|min:0',
+            'custom_price' => 'required|numeric|min:1',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'reason' => 'nullable|string|max:255',
             'valid_from' => 'nullable|date',
             'valid_until' => 'nullable|date|after:valid_from',
             'is_active' => 'boolean',
+        ], [
+            'custom_price.min' => 'Custom price must be at least 1.',
         ]);
+
+        // Warn (not error) if discount and price are inconsistent
+        if (!$this->validateDiscountPriceConsistency($request, $customPrice->package)) {
+            return back()->with('warning', 
+                'Note: The custom price does not match the calculated discount amount. This is allowed but may cause confusion.'
+            )->withInput();
+        }
 
         $customPrice->update($request->only([
             'custom_price',
