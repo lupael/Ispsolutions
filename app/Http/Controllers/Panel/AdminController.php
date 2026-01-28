@@ -149,7 +149,7 @@ class AdminController extends Controller
         ];
 
         // Task 18: Dashboard Enhancements - Add widget data
-        
+
         // Task 18.1: Overall status distribution
         $statusDistribution = collect();
         if (class_exists(\App\Enums\CustomerOverallStatus::class)) {
@@ -184,7 +184,7 @@ class AdminController extends Controller
         $paymentStats = [
             'total_billed' => $stats['total_billed_amount'] ?? 0,
             'total_collected' => Payment::where('status', 'success')->sum('amount'),
-            'total_due' => Invoice::where('status', 'unpaid')->sum('total_amount') + 
+            'total_due' => Invoice::where('status', 'unpaid')->sum('total_amount') +
                            Invoice::where('status', 'overdue')->sum('total_amount'),
             'customers_paid' => Payment::whereDate('payment_date', '>=', now()->startOfMonth())
                 ->where('status', 'success')
@@ -197,10 +197,10 @@ class AdminController extends Controller
         ];
 
         return view('panels.admin.dashboard', compact(
-            'stats', 
-            'statusDistribution', 
-            'expiringCustomers', 
-            'lowPerformingPackages', 
+            'stats',
+            'statusDistribution',
+            'expiringCustomers',
+            'lowPerformingPackages',
             'paymentStats'
         ));
     }
@@ -1345,11 +1345,11 @@ class AdminController extends Controller
                     try {
                         // Get first active router
                         $router = MikrotikRouter::where('is_active', true)->first();
-                        
+
                         if ($router && $mikrotikService->connectRouter($router->id)) {
                             // Get active sessions
                             $sessions = $mikrotikService->getActiveSessions($router->id);
-                            
+
                             foreach ($sessions as $session) {
                                 if (isset($session['name']) && $session['name'] === $customer->username) {
                                     $mikrotikService->disconnectSession($session['id']);
@@ -1458,7 +1458,7 @@ class AdminController extends Controller
                     try {
                         // Sync user to RADIUS with proper attributes from package
                         $attributes = [];
-                        
+
                         if ($customer->package) {
                             // Add speed limit attributes
                             if ($customer->package->bandwidth_upload && $customer->package->bandwidth_download) {
@@ -1485,7 +1485,7 @@ class AdminController extends Controller
                     try {
                         // Get first active router
                         $router = MikrotikRouter::where('is_active', true)->first();
-                        
+
                         if ($router && $mikrotikService->connectRouter($router->id)) {
                             // Check if user exists on router, update if exists, create if not
                             try {
@@ -4238,9 +4238,10 @@ class AdminController extends Controller
         ]);
 
         try {
-            // TODO: Integrate with MikrotikService to apply actual configuration
-            // Currently this is a placeholder that validates the request structure
-            // but does not push configuration to the router
+            // Prepare configuration data for the router
+            $config = [
+                $validated['config_type'] => $validated['settings'],
+            ];
 
             \Log::info('Mikrotik configuration request', [
                 'router_id' => $router->id,
@@ -4249,13 +4250,30 @@ class AdminController extends Controller
                 'settings' => $validated['settings'],
             ]);
 
+            // Apply configuration using MikrotikService
+            $mikrotikService = app(MikrotikService::class);
+            $success = $mikrotikService->configureRouter($router->id, $config);
+
+            if ($success) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Configuration applied successfully to ' . $router->name,
+                    'router' => $router->name,
+                    'config_type' => $validated['config_type'],
+                ], 200);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Configuration feature is not yet fully implemented. Configuration validation passed but changes were not applied to the router.',
+                'message' => 'Failed to apply configuration to the router. Please check the router connection and try again.',
                 'router' => $router->name,
-                'note' => 'Integration with MikrotikService is required to apply actual configuration.',
-            ], 501);
+            ], 400);
         } catch (\Exception $e) {
+            \Log::error('Mikrotik configuration error', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to process configuration: ' . $e->getMessage(),

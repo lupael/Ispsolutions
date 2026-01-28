@@ -47,6 +47,16 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
+            // Validate router IP to prevent SSRF attacks
+            if (! $this->isValidRouterIpAddress($router->ip_address)) {
+                Log::error('Router IP address validation failed - potential SSRF attempt', [
+                    'router_id' => $routerId,
+                    'ip_address' => $router->ip_address,
+                ]);
+
+                return false;
+            }
+
             // Test connection to router (using HTTP API for mock server)
             $response = Http::timeout(config('services.mikrotik.timeout', 30))
                 ->get("http://{$router->ip_address}:{$router->api_port}/health");
@@ -783,6 +793,16 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
+            // Validate router IP to prevent SSRF attacks
+            if (! $this->isValidRouterIpAddress($router->ip_address)) {
+                Log::error('Router IP address validation failed - potential SSRF attempt', [
+                    'router_id' => $routerId,
+                    'ip_address' => $router->ip_address,
+                ]);
+
+                return false;
+            }
+
             DB::beginTransaction();
 
             $response = Http::timeout(config('services.mikrotik.timeout', 60))
@@ -1102,5 +1122,50 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         }
+    }
+
+    /**
+     * Validate router IP address to prevent SSRF attacks
+     *
+     * This method checks if the router IP address is safe to connect to
+     * by blocking private IP ranges, localhost, and other potentially
+     * dangerous addresses.
+     *
+     * @param string $ipAddress The IP address to validate
+     *
+     * @return bool True if the IP is safe, false otherwise
+     */
+    private function isValidRouterIpAddress(string $ipAddress): bool
+    {
+        // Allow localhost for testing/development
+        if (in_array($ipAddress, ['localhost', '127.0.0.1', '::1'])) {
+            // Only allow in non-production environments
+            return config('app.env') !== 'production';
+        }
+
+        // Validate IP format
+        if (! filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+            Log::warning('Invalid IP address format', ['ip' => $ipAddress]);
+
+            return false;
+        }
+
+        // Block private IP ranges to prevent SSRF to internal network
+        // Allow configuration override for legitimate internal routers
+        $allowPrivateIps = config('services.mikrotik.allow_private_ips', false);
+
+        if (! $allowPrivateIps) {
+            // Check if IP is in private ranges
+            if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                Log::warning('Blocked connection to private/reserved IP address', [
+                    'ip' => $ipAddress,
+                    'hint' => 'Set services.mikrotik.allow_private_ips=true in config to allow internal IPs',
+                ]);
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }
