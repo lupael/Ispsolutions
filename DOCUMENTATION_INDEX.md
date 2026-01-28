@@ -1,7 +1,7 @@
 # ISP Solution Documentation
 
 **Version:** 1.0.0  
-**Last Updated:** 2026-01-26
+**Last Updated:** 2026-01-28
 
 ---
 
@@ -145,6 +145,11 @@ Key steps:
 ---
 
 ## 📚 Additional Resources
+
+### Reference System Analysis ⭐ NEW
+- **[REFERENCE_SYSTEM_IMPLEMENTATION_TODO.md](REFERENCE_SYSTEM_IMPLEMENTATION_TODO.md)** - Comprehensive TODO list from reference ISP system analysis
+- **[REFERENCE_SYSTEM_FEATURE_COMPARISON.md](REFERENCE_SYSTEM_FEATURE_COMPARISON.md)** - Feature-by-feature comparison with reference system
+- **[REFERENCE_SYSTEM_ANALYSIS.md](REFERENCE_SYSTEM_ANALYSIS.md)** - Original analysis of 10 reference files
 
 ### Reference Documents
 - **[PANELS_SPECIFICATION.md](PANELS_SPECIFICATION.md)** - Panel specifications
