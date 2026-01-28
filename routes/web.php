@@ -8,6 +8,7 @@ use App\Http\Controllers\Panel\CableTvController;
 use App\Http\Controllers\Panel\CardDistributorController;
 use App\Http\Controllers\Panel\CustomerController;
 use App\Http\Controllers\Panel\DeveloperController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Panel\ManagerController;
 use App\Http\Controllers\Panel\MasterPackageController;
 use App\Http\Controllers\Panel\NasController;
@@ -35,6 +36,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+// Language switcher route (Task 6.2)
+Route::post('/language/switch', [LanguageController::class, 'switch'])->middleware('auth')->name('language.switch');
 
 // Password confirmation routes
 Route::middleware('auth')->group(function () {

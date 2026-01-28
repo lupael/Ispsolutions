@@ -164,4 +164,17 @@ class BillingProfile extends Model
     {
         return max($this->grace_period_days ?? 0, 0);
     }
+
+    /**
+     * Get minimum validity with fallback
+     * Task 2.3: Add minimum validity with fallback
+     * Note: No minimum_validity column in billing_profiles table,
+     * so this provides a default of 1 day as fallback
+     */
+    public function getMinimumValidityAttribute(): int
+    {
+        // Default minimum validity is 1 day
+        // This can be extended when minimum_validity column is added
+        return 1;
+    }
 }

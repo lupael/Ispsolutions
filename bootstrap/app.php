@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Add global middleware
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
+            \App\Http\Middleware\SetLocale::class, // Task 6.2: Set locale based on user preference
         ]);
 
         // Add CSRF verification middleware
