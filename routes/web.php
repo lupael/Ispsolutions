@@ -980,6 +980,10 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     Route::get('/commands/list', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'getCommands'])->name('commands.list');
 
     // Master Packages (3-tier hierarchy)
+    // Package Hierarchy and Comparison (Items 16-17) - Must come before resource route
+    Route::get('master-packages/hierarchy', [MasterPackageController::class, 'hierarchy'])->name('master-packages.hierarchy');
+    Route::get('master-packages/comparison', [MasterPackageController::class, 'comparison'])->name('master-packages.comparison');
+    
     Route::resource('master-packages', MasterPackageController::class);
     Route::get('/master-packages/{masterPackage}/assign', [MasterPackageController::class, 'assignToOperators'])->name('master-packages.assign');
     Route::post('/master-packages/{masterPackage}/assign', [MasterPackageController::class, 'storeOperatorAssignment'])->name('master-packages.store-assignment');
