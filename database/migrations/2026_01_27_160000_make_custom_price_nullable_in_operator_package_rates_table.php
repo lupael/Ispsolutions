@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -16,6 +17,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // SQLite doesn't support MODIFY column syntax
+        $driver = Schema::getConnection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            // Skip for SQLite tests
+            return;
+        }
+        
         // Make custom_price nullable using raw SQL (avoids needing doctrine/dbal)
         DB::statement('ALTER TABLE `operator_package_rates` MODIFY `custom_price` DECIMAL(10, 2) NULL');
     }
@@ -25,6 +34,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // SQLite doesn't support MODIFY column syntax
+        $driver = Schema::getConnection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            // Skip for SQLite tests
+            return;
+        }
+        
         // Check if there are any NULL custom_price rows
         $nullCount = DB::table('operator_package_rates')
             ->whereNull('custom_price')

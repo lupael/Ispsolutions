@@ -97,11 +97,11 @@ class SmsPaymentTest extends TestCase
         $response = $this->postJson('/api/sms-payments', [
             'sms_quantity' => 50, // Less than minimum 100
             'payment_method' => 'invalid_method',
-            'amount' => 0, // Less than minimum 1
+            // amount is not included in request as it's calculated server-side
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['sms_quantity', 'payment_method', 'amount']);
+        $response->assertJsonValidationErrors(['sms_quantity', 'payment_method']);
     }
 
     /**
