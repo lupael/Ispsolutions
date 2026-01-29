@@ -716,10 +716,12 @@ class AdminController extends Controller
             'description' => 'nullable|string',
             'bandwidth_up' => 'nullable|integer|min:0',
             'bandwidth_down' => 'nullable|integer|min:0',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:1',
             'billing_cycle' => 'required|in:monthly,quarterly,half_yearly,yearly',
             'validity_days' => 'nullable|integer|min:1',
             'status' => 'required|in:active,inactive',
+        ], [
+            'price.min' => 'Package price must be at least $1.',
         ]);
 
         // Tenant ID is automatically set by BelongsToTenant trait
@@ -753,10 +755,12 @@ class AdminController extends Controller
             'description' => 'nullable|string',
             'bandwidth_up' => 'nullable|integer|min:0',
             'bandwidth_down' => 'nullable|integer|min:0',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:1',
             'billing_cycle' => 'required|in:monthly,quarterly,half_yearly,yearly',
             'validity_days' => 'nullable|integer|min:1',
             'status' => 'required|in:active,inactive',
+        ], [
+            'price.min' => 'Package price must be at least $1.',
         ]);
 
         $package->update($validated);
@@ -3790,8 +3794,10 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'package_id' => 'required|exists:packages,id',
-            'custom_price' => 'required|numeric|min:0',
+            'custom_price' => 'required|numeric|min:1',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
+        ], [
+            'custom_price.min' => 'Custom price must be at least $1.',
         ]);
 
         $validated['operator_id'] = $operator->id;
