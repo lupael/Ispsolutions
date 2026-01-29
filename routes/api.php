@@ -260,6 +260,24 @@ Route::prefix('validate')->middleware(['auth'])->group(function () {
     Route::get('/static-ip', [\App\Http\Controllers\Api\ValidationController::class, 'checkStaticIp'])->name('api.validate.static-ip');
 });
 
+// SMS Payment API Routes
+Route::prefix('sms-payments')
+    ->middleware(['auth:sanctum', 'rate_limit:api'])
+    ->name('api.sms-payments.')
+    ->group(function () {
+        Route::get('/', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'store'])->name('store');
+        Route::get('/balance', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'balance'])->name('balance');
+        Route::get('/{smsPayment}', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'show'])->name('show');
+        Route::post('/{smsPayment}/complete', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'complete'])
+            ->middleware('role:admin,superadmin')
+            ->name('complete');
+    });
+
+// SMS Payment Webhook (no auth, no rate limit for payment gateway callbacks)
+Route::post('/sms-payments/webhook', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'webhook'])
+    ->name('api.sms-payments.webhook');
+
 // Router Management API Routes
 Route::prefix('routers')->middleware(['web', 'auth'])->group(function () {
     Route::post('{router}/test', [\App\Http\Controllers\Api\RouterController::class, 'testConnection'])
