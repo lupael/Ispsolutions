@@ -30,7 +30,9 @@ class CustomerBackupController extends Controller
     public function backupCustomer(Request $request, int $customerId): JsonResponse
     {
         try {
-            $customer = NetworkUser::with('package')->findOrFail($customerId);
+            $customer = NetworkUser::with('package')
+                ->where('tenant_id', getCurrentTenantId())
+                ->findOrFail($customerId);
 
             $routerId = $request->input('router_id');
 
@@ -207,7 +209,8 @@ class CustomerBackupController extends Controller
     public function removeCustomer(Request $request, int $customerId): JsonResponse
     {
         try {
-            $customer = NetworkUser::findOrFail($customerId);
+            $customer = NetworkUser::where('tenant_id', getCurrentTenantId())
+                ->findOrFail($customerId);
 
             $routerId = $request->input('router_id');
 
@@ -264,8 +267,8 @@ class CustomerBackupController extends Controller
             'password' => $customer->password, // Plain password for router
             'service' => 'pppoe',
             'profile' => $package?->mikrotik_profile ?? 'default',
-            'local-address' => config('mikrotik.ppp.local_address', '10.0.0.1'),
-            'remote-address' => $customer->static_ip ?? config('mikrotik.ppp.remote_address_pool', 'pool1'),
+            'local-address' => config('mikrotik.ppp_local_address', '10.0.0.1'),
+            'remote-address' => $customer->static_ip ?? 'pool1',
             'comment' => "Customer ID: {$customer->id}",
             'disabled' => $customer->status !== 'active' ? 'yes' : 'no',
         ];

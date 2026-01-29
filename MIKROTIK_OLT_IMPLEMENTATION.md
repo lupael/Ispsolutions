@@ -88,17 +88,25 @@ Existing Spatie backup integration maintained at `config/backup.php`
 ### 3.1 Multi-Vendor SNMP Support (OltSnmpService)
 **Location**: `app/Services/OltSnmpService.php`
 
+**Implementation Status**: The SNMP service is implemented and will function if the PHP SNMP extension is installed. If the extension is not available, the service gracefully falls back to SSH-based discovery.
+
 **Supported Vendors**:
 - VSOL (V-SOL)
 - Huawei
 - ZTE
 - BDCOM
 
+**Requirements**:
+- PHP SNMP extension must be installed (`php-snmp` package)
+- OLT must have SNMP configured (community string, version, port)
+- OLT must be accessible via SNMP from the server
+
 **Features**:
 - **ONU Discovery**: SNMP OID walks to discover ONUs
 - **RX/TX Power**: Real-time optical power monitoring
 - **Distance**: Distance monitoring for fiber links
 - **Auto-detection**: Automatic vendor detection from brand/model
+- **Graceful Fallback**: Falls back to SSH if SNMP is unavailable or fails
 
 **OID Mappings**:
 ```php

@@ -240,37 +240,106 @@ class OltSnmpService
 
     /**
      * Perform SNMP walk.
-     * This is a placeholder - real implementation would use PHP SNMP functions.
+     *
+     * NOTE: This requires the PHP SNMP extension to be installed.
+     * If the extension is not available, this will return an empty array.
      */
     private function snmpWalk(Olt $olt, string $oid): array
     {
-        // Placeholder implementation
-        // Real implementation would use: snmp2_real_walk() or snmp3_real_walk()
+        // Check if SNMP extension is available
+        if (! extension_loaded('snmp')) {
+            Log::warning('SNMP extension not loaded, cannot perform SNMP walk', [
+                'olt_id' => $olt->id,
+                'oid' => $oid,
+            ]);
 
-        Log::info('SNMP walk placeholder', [
-            'olt_id' => $olt->id,
-            'oid' => $oid,
-        ]);
+            return [];
+        }
 
-        // Return empty array for now
-        return [];
+        try {
+            $version = strtolower($olt->snmp_version ?? 'v2c');
+            $community = $olt->snmp_community;
+            $port = $olt->snmp_port ?? 161;
+
+            $result = match ($version) {
+                'v1' => @snmprealwalk($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
+                'v2c', 'v2' => @snmp2_real_walk($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
+                'v3' => [], // SNMPv3 requires additional parameters - not implemented yet
+                default => [],
+            };
+
+            if ($result === false) {
+                Log::warning('SNMP walk failed', [
+                    'olt_id' => $olt->id,
+                    'oid' => $oid,
+                    'error' => error_get_last()['message'] ?? 'Unknown error',
+                ]);
+
+                return [];
+            }
+
+            return $result ?: [];
+        } catch (\Exception $e) {
+            Log::error('SNMP walk exception', [
+                'olt_id' => $olt->id,
+                'oid' => $oid,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
     }
 
     /**
      * Perform SNMP get.
-     * This is a placeholder - real implementation would use PHP SNMP functions.
+     *
+     * NOTE: This requires the PHP SNMP extension to be installed.
+     * If the extension is not available, this will return null.
      */
     private function snmpGet(Olt $olt, string $oid): mixed
     {
-        // Placeholder implementation
-        // Real implementation would use: snmp2_get() or snmp3_get()
+        // Check if SNMP extension is available
+        if (! extension_loaded('snmp')) {
+            Log::warning('SNMP extension not loaded, cannot perform SNMP get', [
+                'olt_id' => $olt->id,
+                'oid' => $oid,
+            ]);
 
-        Log::info('SNMP get placeholder', [
-            'olt_id' => $olt->id,
-            'oid' => $oid,
-        ]);
+            return null;
+        }
 
-        return null;
+        try {
+            $version = strtolower($olt->snmp_version ?? 'v2c');
+            $community = $olt->snmp_community;
+            $port = $olt->snmp_port ?? 161;
+
+            $result = match ($version) {
+                'v1' => @snmpget($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
+                'v2c', 'v2' => @snmp2_get($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
+                'v3' => null, // SNMPv3 requires additional parameters - not implemented yet
+                default => null,
+            };
+
+            if ($result === false) {
+                Log::warning('SNMP get failed', [
+                    'olt_id' => $olt->id,
+                    'oid' => $oid,
+                    'error' => error_get_last()['message'] ?? 'Unknown error',
+                ]);
+
+                return null;
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('SNMP get exception', [
+                'olt_id' => $olt->id,
+                'oid' => $oid,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**

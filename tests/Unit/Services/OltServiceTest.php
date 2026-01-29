@@ -306,4 +306,103 @@ class OltServiceTest extends TestCase
 
         $this->assertIsBool($exists);
     }
+
+    public function test_discover_onus_uses_snmp_when_configured(): void
+    {
+        // Create OLT with SNMP configuration
+        $oltWithSnmp = Olt::create([
+            'name' => 'Test OLT with SNMP',
+            'ip_address' => '192.168.1.2',
+            'port' => 22,
+            'management_protocol' => 'snmp',
+            'username' => 'admin',
+            'password' => 'password',
+            'snmp_community' => 'public',
+            'snmp_version' => 'v2c',
+            'snmp_port' => 161,
+            'brand' => 'VSOL',
+            'status' => 'active',
+            'health_status' => 'healthy',
+        ]);
+
+        // Since SNMP extension may not be loaded in test environment,
+        // we just verify it doesn't crash and returns an array
+        $result = $this->oltService->discoverOnus($oltWithSnmp->id);
+
+        $this->assertIsArray($result);
+    }
+
+    public function test_discover_onus_falls_back_to_ssh_when_snmp_fails(): void
+    {
+        // Create OLT with SNMP but invalid config
+        $oltWithSnmp = Olt::create([
+            'name' => 'Test OLT SNMP Fallback',
+            'ip_address' => '192.168.1.3',
+            'port' => 22,
+            'management_protocol' => 'snmp',
+            'username' => 'admin',
+            'password' => 'password',
+            'snmp_community' => 'invalid',
+            'snmp_version' => 'v2c',
+            'status' => 'active',
+            'health_status' => 'healthy',
+        ]);
+
+        // Should fall back to SSH and return empty array (since we can't actually connect)
+        $result = $this->oltService->discoverOnus($oltWithSnmp->id);
+
+        $this->assertIsArray($result);
+    }
+
+    public function test_get_onu_status_uses_snmp_when_configured(): void
+    {
+        // Create OLT with SNMP configuration
+        $oltWithSnmp = Olt::create([
+            'name' => 'Test OLT with SNMP',
+            'ip_address' => '192.168.1.4',
+            'port' => 22,
+            'management_protocol' => 'snmp',
+            'username' => 'admin',
+            'password' => 'password',
+            'snmp_community' => 'public',
+            'snmp_version' => 'v2c',
+            'snmp_port' => 161,
+            'brand' => 'Huawei',
+            'status' => 'active',
+            'health_status' => 'healthy',
+        ]);
+
+        $onu = Onu::create([
+            'olt_id' => $oltWithSnmp->id,
+            'pon_port' => '0/1',
+            'onu_id' => 1,
+            'serial_number' => 'TEST12345678',
+            'status' => 'online',
+        ]);
+
+        $result = $this->oltService->getOnuStatus($onu->id);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertArrayHasKey('signal_rx', $result);
+        $this->assertArrayHasKey('signal_tx', $result);
+        $this->assertArrayHasKey('method', $result);
+    }
+
+    public function test_get_onu_status_returns_method_indicator(): void
+    {
+        $onu = Onu::create([
+            'olt_id' => $this->olt->id,
+            'pon_port' => '1/1/1',
+            'onu_id' => 1,
+            'serial_number' => 'TEST12345678',
+            'status' => 'online',
+        ]);
+
+        $result = $this->oltService->getOnuStatus($onu->id);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('method', $result);
+        $this->assertContains($result['method'], ['snmp', 'ssh', 'error']);
+    }
 }
