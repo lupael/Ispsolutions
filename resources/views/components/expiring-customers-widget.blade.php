@@ -21,10 +21,9 @@
         <div class="space-y-3 max-h-96 overflow-y-auto">
             @foreach($expiringCustomers as $customer)
                 @php
-                    use Carbon\Carbon;
                     $timezone = $customer->billingProfile?->timezone ?? config('app.timezone', 'UTC');
-                    $now = Carbon::now($timezone);
-                    $expiryDate = Carbon::parse($customer->expiry_date)->timezone($timezone);
+                    $now = \Carbon\Carbon::now($timezone);
+                    $expiryDate = \Carbon\Carbon::parse($customer->expiry_date)->timezone($timezone);
                     $daysRemaining = $now->diffInDays($expiryDate, false);
                     
                     if ($daysRemaining < 0) {
