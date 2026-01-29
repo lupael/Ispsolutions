@@ -48,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
         // );
 
         // Register policies
+        Gate::policy(\App\Models\User::class, \App\Policies\CustomerPolicy::class);
         Gate::policy(\App\Models\MikrotikRouter::class, \App\Policies\MikrotikRouterPolicy::class);
         Gate::policy(\App\Models\MikrotikPppoeUser::class, \App\Policies\NetworkDevicePolicy::class);
         Gate::policy(\App\Models\Nas::class, \App\Policies\NasPolicy::class);
