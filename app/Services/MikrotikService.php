@@ -905,12 +905,27 @@ class MikrotikService implements MikrotikServiceInterface
     {
         try {
             // Add or update PPPoE server configuration
-            $pppoeConfig = [
-                'interface' => $settings['interface'] ?? 'ether1',
-                'service-name' => $settings['service_name'] ?? 'pppoe-service',
-                'default-profile' => $settings['default_profile'] ?? 'default',
-            ];
+            $pppoeConfig = [];
 
+            if (array_key_exists('interface', $settings)) {
+                $pppoeConfig['interface'] = $settings['interface'];
+            }
+
+            if (array_key_exists('service_name', $settings)) {
+                $pppoeConfig['service-name'] = $settings['service_name'];
+            }
+
+            if (array_key_exists('default_profile', $settings)) {
+                $pppoeConfig['default-profile'] = $settings['default_profile'];
+            }
+
+            if (empty($pppoeConfig)) {
+                Log::warning('No PPPoE configuration settings provided', [
+                    'router_id' => $router->id,
+                ]);
+
+                return false;
+            }
             $result = $this->mikrotikApiService->addMktRows($router, '/interface/pppoe-server/server', [$pppoeConfig]);
 
             Log::info('PPPoE configuration applied', [
