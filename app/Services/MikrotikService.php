@@ -958,16 +958,87 @@ class MikrotikService implements MikrotikServiceInterface
     }
 
     /**
+     * Build and validate a firewall rule configuration.
+     *
+     * Returns a sanitized configuration array or null if the settings are invalid or unsafe.
+     */
+    private function buildValidatedFirewallConfig(array $settings): ?array
+    {
+        // Restrict chain and action to known-safe values
+        $allowedChains = ['input', 'forward', 'output'];
+        $allowedActions = ['accept', 'drop', 'reject', 'log'];
+
+        $chain = $settings['chain'] ?? 'forward';
+        $action = $settings['action'] ?? 'accept';
+
+        if (!in_array($chain, $allowedChains, true)) {
+            return null;
+        }
+
+        if (!in_array($action, $allowedActions, true)) {
+            return null;
+        }
+
+        // Extract optional scoping parameters
+        $srcAddress = $settings['src_address'] ?? null;
+        $dstAddress = $settings['dst_address'] ?? null;
+        $protocol = $settings['protocol'] ?? null;
+        $srcPort = $settings['src_port'] ?? null;
+        $dstPort = $settings['dst_port'] ?? null;
+
+        // Require the rule to be scoped by address or by protocol+port
+        $hasAddressScope = !empty($srcAddress) || !empty($dstAddress);
+        $hasProtocolPortScope = !empty($protocol) && (!empty($srcPort) || !empty($dstPort));
+
+        if (!$hasAddressScope && !$hasProtocolPortScope) {
+            // Unsafe: overly broad rule with no meaningful scope
+            return null;
+        }
+
+        // Build sanitized firewall configuration
+        $firewallConfig = [
+            'chain' => $chain,
+            'action' => $action,
+        ];
+
+        if ($srcAddress !== null) {
+            $firewallConfig['src-address'] = $srcAddress;
+        }
+
+        if ($dstAddress !== null) {
+            $firewallConfig['dst-address'] = $dstAddress;
+        }
+
+        if ($protocol !== null) {
+            $firewallConfig['protocol'] = $protocol;
+        }
+
+        if ($srcPort !== null) {
+            $firewallConfig['src-port'] = $srcPort;
+        }
+
+        if ($dstPort !== null) {
+            $firewallConfig['dst-port'] = $dstPort;
+        }
+
+        return $firewallConfig;
+    }
+
+    /**
      * Configure firewall rules.
      */
     private function configureFirewall(MikrotikRouter $router, array $settings): bool
     {
         try {
-            // Add firewall rule
-            $firewallConfig = [
-                'chain' => $settings['chain'] ?? 'forward',
-                'action' => $settings['action'] ?? 'accept',
-            ];
+            // Build and validate firewall rule configuration
+            $firewallConfig = $this->buildValidatedFirewallConfig($settings);
+            if ($firewallConfig === null) {
+                Log::error('Firewall configuration rejected due to invalid or unsafe settings', [
+                    'router_id' => $router->id,
+                    'settings' => $settings,
+                ]);
+                return false;
+            }
 
             $result = $this->mikrotikApiService->addMktRows($router, '/ip/firewall/filter', [$firewallConfig]);
 
