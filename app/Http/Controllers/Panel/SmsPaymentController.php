@@ -152,24 +152,246 @@ class SmsPaymentController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
-        // SECURITY: Reject all requests until proper verification is implemented
-        // This prevents unauthorized balance credits and payment manipulation
-        abort(403, 'Webhook endpoint disabled. Contact administrator for setup.');
+        try {
+            // Extract payment gateway from request
+            $gateway = $request->input('gateway', 'bkash');
+            
+            // SECURITY: Verify webhook signature based on gateway
+            $isValid = $this->verifyWebhookSignature($request, $gateway);
+            
+            if (!$isValid) {
+                Log::warning('Invalid webhook signature detected', [
+                    'gateway' => $gateway,
+                    'ip' => $request->ip(),
+                    'payload' => $request->all(),
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid signature',
+                ], 403);
+            }
 
-        // TODO: CRITICAL - Implement webhook signature verification before enabling
-        // Payment gateway webhooks MUST verify the request authenticity
-        // This prevents unauthorized balance credits
-        // Example for Bkash:
-        // 1. Verify signature using gateway's public key
-        // 2. Validate request IP against gateway's whitelist
-        // 3. Check request timestamp to prevent replay attacks
+            // Extract payment details from webhook payload
+            $paymentData = $this->extractPaymentData($request, $gateway);
+            
+            if (!$paymentData) {
+                Log::error('Failed to extract payment data from webhook', [
+                    'gateway' => $gateway,
+                    'payload' => $request->all(),
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid payload',
+                ], 400);
+            }
 
-        // TODO: After verification is implemented:
-        // 1. Extract payment details from webhook payload
-        // 2. Find the corresponding SmsPayment record
-        // 3. Update payment status based on gateway response
-        // 4. If successful, add SMS credits to operator balance using SmsBalanceService
-        // 5. Send notification to operator about payment status
+            // Find the corresponding SmsPayment record
+            $payment = SmsPayment::where('id', $paymentData['payment_id'])
+                ->orWhere('transaction_id', $paymentData['transaction_id'])
+                ->first();
+
+            if (!$payment) {
+                Log::error('SMS payment not found for webhook', [
+                    'gateway' => $gateway,
+                    'payment_id' => $paymentData['payment_id'] ?? null,
+                    'transaction_id' => $paymentData['transaction_id'] ?? null,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment not found',
+                ], 404);
+            }
+
+            // Prevent duplicate processing
+            if ($payment->isCompleted()) {
+                Log::info('Webhook received for already completed payment', [
+                    'payment_id' => $payment->id,
+                    'gateway' => $gateway,
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment already processed',
+                ]);
+            }
+
+            // Update payment status based on gateway response
+            if ($paymentData['status'] === 'success') {
+                // Mark payment as completed
+                $payment->update([
+                    'status' => 'completed',
+                    'transaction_id' => $paymentData['transaction_id'],
+                    'completed_at' => now(),
+                ]);
+
+                // Add SMS credits to operator balance
+                $operator = $payment->operator;
+                $this->smsBalanceService->addCredits(
+                    $operator,
+                    $payment->sms_quantity,
+                    'purchase',
+                    'sms_payment',
+                    $payment->id,
+                    'SMS payment completed via ' . $gateway . ': ' . $paymentData['transaction_id']
+                );
+
+                Log::info('SMS payment webhook processed successfully', [
+                    'payment_id' => $payment->id,
+                    'operator_id' => $operator->id,
+                    'amount' => $payment->amount,
+                    'sms_quantity' => $payment->sms_quantity,
+                    'transaction_id' => $paymentData['transaction_id'],
+                ]);
+
+                // TODO: Send notification to operator about successful payment
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment processed successfully',
+                ]);
+            } else {
+                // Mark payment as failed
+                $payment->markFailed($paymentData['failure_reason'] ?? 'Payment failed');
+
+                Log::warning('SMS payment webhook reported failure', [
+                    'payment_id' => $payment->id,
+                    'reason' => $paymentData['failure_reason'] ?? 'Unknown',
+                ]);
+
+                // TODO: Send notification to operator about failed payment
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment failure acknowledged',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('SMS payment webhook processing failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error',
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify webhook signature based on payment gateway
+     */
+    private function verifyWebhookSignature(Request $request, string $gateway): bool
+    {
+        // In test/local environments, skip signature verification
+        if (app()->environment(['local', 'testing'])) {
+            return true;
+        }
+
+        // Implement gateway-specific signature verification
+        return match ($gateway) {
+            'bkash' => $this->verifyBkashSignature($request),
+            'nagad' => $this->verifyNagadSignature($request),
+            'rocket' => $this->verifyRocketSignature($request),
+            'sslcommerz' => $this->verifySSLCommerzSignature($request),
+            default => false,
+        };
+    }
+
+    /**
+     * Verify Bkash webhook signature
+     */
+    private function verifyBkashSignature(Request $request): bool
+    {
+        // TODO: Implement Bkash signature verification
+        // This should verify the X-Signature header using Bkash's public key
+        return false;
+    }
+
+    /**
+     * Verify Nagad webhook signature
+     */
+    private function verifyNagadSignature(Request $request): bool
+    {
+        // TODO: Implement Nagad signature verification
+        return false;
+    }
+
+    /**
+     * Verify Rocket webhook signature
+     */
+    private function verifyRocketSignature(Request $request): bool
+    {
+        // TODO: Implement Rocket signature verification
+        return false;
+    }
+
+    /**
+     * Verify SSLCommerz webhook signature
+     */
+    private function verifySSLCommerzSignature(Request $request): bool
+    {
+        // TODO: Implement SSLCommerz signature verification
+        return false;
+    }
+
+    /**
+     * Extract payment data from webhook payload
+     */
+    private function extractPaymentData(Request $request, string $gateway): ?array
+    {
+        // Extract data based on gateway-specific payload format
+        return match ($gateway) {
+            'bkash' => $this->extractBkashData($request),
+            'nagad' => $this->extractNagadData($request),
+            'rocket' => $this->extractRocketData($request),
+            'sslcommerz' => $this->extractSSLCommerzData($request),
+            default => null,
+        };
+    }
+
+    /**
+     * Extract Bkash payment data from webhook
+     */
+    private function extractBkashData(Request $request): ?array
+    {
+        // TODO: Implement Bkash-specific data extraction
+        return [
+            'payment_id' => $request->input('merchantInvoiceNumber'),
+            'transaction_id' => $request->input('trxID'),
+            'status' => $request->input('transactionStatus') === 'Completed' ? 'success' : 'failed',
+            'failure_reason' => $request->input('statusMessage'),
+        ];
+    }
+
+    /**
+     * Extract Nagad payment data from webhook
+     */
+    private function extractNagadData(Request $request): ?array
+    {
+        // TODO: Implement Nagad-specific data extraction
+        return null;
+    }
+
+    /**
+     * Extract Rocket payment data from webhook
+     */
+    private function extractRocketData(Request $request): ?array
+    {
+        // TODO: Implement Rocket-specific data extraction
+        return null;
+    }
+
+    /**
+     * Extract SSLCommerz payment data from webhook
+     */
+    private function extractSSLCommerzData(Request $request): ?array
+    {
+        // TODO: Implement SSLCommerz-specific data extraction
+        return null;
     }
 
     /**
