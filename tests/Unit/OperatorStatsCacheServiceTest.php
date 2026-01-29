@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Services\OperatorStatsCacheService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
  * Test Operator Statistics Cache Service
  * 
+ * Tests focus on cache behavior - cache hits, invalidation, and TTL.
+ * Note: These are unit tests for the caching mechanism, not integration tests
+ * for the full aggregation logic (which would require database fixtures).
+ * 
  * Reference: REFERENCE_SYSTEM_QUICK_GUIDE.md - Quick Win #4
  */
 class OperatorStatsCacheServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private OperatorStatsCacheService $service;
 
     protected function setUp(): void
@@ -28,16 +29,20 @@ class OperatorStatsCacheServiceTest extends TestCase
     }
 
     /**
-     * Test getting dashboard stats with caching
+     * Test that dashboard stats use cache
      */
-    public function test_get_dashboard_stats_with_caching(): void
+    public function test_get_dashboard_stats_uses_cache(): void
     {
         $operatorId = 1;
+        $cacheKey = "operator_stats:dashboard:{$operatorId}";
 
-        // First call should hit database
+        // First call populates cache
         $stats = $this->service->getDashboardStats($operatorId);
         
-        // Second call should hit cache
+        // Verify cache was populated
+        $this->assertTrue(Cache::has($cacheKey));
+        
+        // Second call uses cache
         $cachedStats = $this->service->getDashboardStats($operatorId);
         
         $this->assertIsArray($stats);
@@ -48,35 +53,42 @@ class OperatorStatsCacheServiceTest extends TestCase
     }
 
     /**
-     * Test refreshing dashboard stats cache
+     * Test that refresh flag bypasses cache
      */
-    public function test_refresh_dashboard_stats_cache(): void
+    public function test_refresh_dashboard_stats_bypasses_cache(): void
     {
         $operatorId = 1;
+        $cacheKey = "operator_stats:dashboard:{$operatorId}";
 
-        // Get stats to populate cache
-        $this->service->getDashboardStats($operatorId);
+        // Populate cache with mock data
+        Cache::put($cacheKey, ['mock' => 'data'], 300);
         
         // Verify cache exists
-        $this->assertTrue(Cache::has("operator_stats:dashboard:{$operatorId}"));
+        $this->assertTrue(Cache::has($cacheKey));
         
-        // Refresh cache
+        // Refresh should clear and repopulate
         $stats = $this->service->getDashboardStats($operatorId, true);
         
         $this->assertIsArray($stats);
+        // Cache should still exist after refresh
+        $this->assertTrue(Cache::has($cacheKey));
     }
 
     /**
-     * Test getting customer stats with caching
+     * Test customer stats caching behavior
      */
-    public function test_get_customer_stats_with_caching(): void
+    public function test_get_customer_stats_uses_cache(): void
     {
         $operatorId = 1;
+        $cacheKey = "operator_stats:customers:{$operatorId}";
 
-        // First call should hit database
+        // First call populates cache
         $stats = $this->service->getCustomerStats($operatorId);
         
-        // Second call should hit cache
+        // Verify cache was populated
+        $this->assertTrue(Cache::has($cacheKey));
+        
+        // Second call uses cache
         $cachedStats = $this->service->getCustomerStats($operatorId);
         
         $this->assertIsArray($stats);
@@ -84,16 +96,20 @@ class OperatorStatsCacheServiceTest extends TestCase
     }
 
     /**
-     * Test getting revenue stats with caching
+     * Test revenue stats caching behavior
      */
-    public function test_get_revenue_stats_with_caching(): void
+    public function test_get_revenue_stats_uses_cache(): void
     {
         $operatorId = 1;
+        $cacheKey = "operator_stats:revenue:{$operatorId}";
 
-        // First call should hit database
+        // First call populates cache
         $stats = $this->service->getRevenueStats($operatorId);
         
-        // Second call should hit cache
+        // Verify cache was populated
+        $this->assertTrue(Cache::has($cacheKey));
+        
+        // Second call uses cache
         $cachedStats = $this->service->getRevenueStats($operatorId);
         
         $this->assertIsArray($stats);
@@ -101,7 +117,7 @@ class OperatorStatsCacheServiceTest extends TestCase
     }
 
     /**
-     * Test invalidating operator cache
+     * Test cache invalidation clears all operator caches
      */
     public function test_invalidate_operator_cache(): void
     {
@@ -127,7 +143,7 @@ class OperatorStatsCacheServiceTest extends TestCase
     }
 
     /**
-     * Test that stats contain expected structure
+     * Test dashboard stats return expected structure
      */
     public function test_dashboard_stats_structure(): void
     {
