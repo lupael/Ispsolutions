@@ -516,6 +516,8 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/test-connection', [RouterProvisioningController::class, 'testConnection'])->name('test-connection');
         Route::post('/backup', [RouterProvisioningController::class, 'backup'])->name('backup');
         Route::post('/rollback', [RouterProvisioningController::class, 'rollback'])->name('rollback');
+        Route::post('/radius', [RouterProvisioningController::class, 'provisionRadius'])->name('radius');
+        Route::post('/export-secrets', [RouterProvisioningController::class, 'exportPppSecrets'])->name('export-secrets');
         Route::get('/{routerId}/logs', [RouterProvisioningController::class, 'logs'])->name('logs');
         Route::get('/{routerId}/backups', [RouterProvisioningController::class, 'backups'])->name('backups');
         
@@ -611,6 +613,20 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/profiles', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'importProfiles'])->name('profiles');
         Route::post('/secrets', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'importSecrets'])->name('secrets');
         Route::post('/validate', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'validate'])->name('validate');
+    });
+    
+    // NAS NetWatch Routes - RADIUS Health Monitoring
+    Route::prefix('nas/netwatch')->name('nas.netwatch.')->group(function () {
+        Route::post('/routers/{router}/configure', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'configure'])->name('configure');
+        Route::delete('/routers/{router}', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'remove'])->name('remove');
+        Route::get('/routers/{router}/status', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'status'])->name('status');
+    });
+    
+    // Customer Backup Routes - Mirror to Router PPP Secrets
+    Route::prefix('customers/backup')->name('customers.backup.')->group(function () {
+        Route::post('/{customer}', [\App\Http\Controllers\Panel\CustomerBackupController::class, 'backupCustomer'])->name('single');
+        Route::post('/routers/{router}/all', [\App\Http\Controllers\Panel\CustomerBackupController::class, 'backupAllCustomers'])->name('all');
+        Route::delete('/{customer}', [\App\Http\Controllers\Panel\CustomerBackupController::class, 'removeCustomer'])->name('remove');
     });
     
     // Mikrotik Monitoring Routes
