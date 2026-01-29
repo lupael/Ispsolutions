@@ -5,7 +5,7 @@
 
 ## Summary
 
-✅ **SUCCESS**: Both Binary API (port 8728) and REST API (port 8777) are accessible on router 103.138.147.185
+✅ **SUCCESS**: Both Binary API (port 8728) and REST API (port 8777) are accessible on router [REDACTED_IP]
 
 ## Test Results
 
@@ -13,7 +13,7 @@
 
 **Connection Status**: ✅ TCP connection established
 ```bash
-curl --user "ispsolution1213:ispsolution1213" "http://103.138.147.185:8728"
+curl --user "[REDACTED_CREDENTIAL]:[REDACTED_CREDENTIAL]" "http://[REDACTED_IP]:8728"
 ```
 
 **Result**: 
@@ -30,19 +30,19 @@ curl --user "ispsolution1213:ispsolution1213" "http://103.138.147.185:8728"
 
 #### Test 2.1: System Identity
 ```bash
-curl --user "ispsolution1213:ispsolution1213" "http://103.138.147.185:8777/rest/system/identity"
+curl --user "[REDACTED_CREDENTIAL]:[REDACTED_CREDENTIAL]" "http://[REDACTED_IP]:8777/rest/system/identity"
 ```
 
 **Response**:
 ```json
-{"name":"4--ISPbills--kdc--103.138.147.185"}
+{"name":"[REDACTED_ROUTER_NAME]"}
 ```
 
 ✅ **SUCCESS**: Router identity retrieved successfully
 
 #### Test 2.2: PPP Profiles
 ```bash
-curl --user "ispsolution1213:ispsolution1213" "http://103.138.147.185:8777/rest/ppp/profile"
+curl --user "[REDACTED_CREDENTIAL]:[REDACTED_CREDENTIAL]" "http://[REDACTED_IP]:8777/rest/ppp/profile"
 ```
 
 **Response**: ✅ **23 PPP profiles successfully retrieved**, including:
@@ -72,11 +72,11 @@ curl --user "ispsolution1213:ispsolution1213" "http://103.138.147.185:8777/rest/
 
 ## Router Information
 
-- **Router Name**: 4--ISPbills--kdc--103.138.147.185
-- **IP Address**: 103.138.147.185
+- **Router Name**: [REDACTED_ROUTER_NAME]
+- **IP Address**: [REDACTED_IP]
 - **Binary API Port**: 8728 ✅ Open
 - **REST API Port**: 8777 ✅ Working
-- **Credentials**: ispsolution1213 / ispsolution1213 ✅ Valid
+- **Credentials**: [REDACTED_CREDENTIAL] / [REDACTED_CREDENTIAL] ✅ Valid
 - **Total PPP Profiles**: 23
 
 ## API Compatibility
@@ -118,11 +118,11 @@ use App\Models\MikrotikRouter;
 // Configure router
 $router = MikrotikRouter::create([
     'name' => '4--ISPbills--kdc',
-    'ip_address' => '103.138.147.185',
+    'ip_address' => '[REDACTED_IP]',
     'api_port' => 8777,        // REST API port
     'api_type' => 'rest',      // or 'auto' for auto-detection
-    'username' => 'ispsolution1213',
-    'password' => 'ispsolution1213',
+    'username' => '[REDACTED_CREDENTIAL]',
+    'password' => '[REDACTED_CREDENTIAL]',
 ]);
 
 // Import profiles
@@ -138,11 +138,11 @@ For maximum compatibility (works with v6 routers too):
 ```php
 $router = MikrotikRouter::create([
     'name' => '4--ISPbills--kdc',
-    'ip_address' => '103.138.147.185',
+    'ip_address' => '[REDACTED_IP]',
     'api_port' => 8728,        // Binary API port
     'api_type' => 'binary',    // or 'auto' 
-    'username' => 'ispsolution1213',
-    'password' => 'ispsolution1213',
+    'username' => '[REDACTED_CREDENTIAL]',
+    'password' => '[REDACTED_CREDENTIAL]',
 ]);
 
 $profiles = $apiService->getMktRows($router, '/ppp/profile');
@@ -170,13 +170,13 @@ php artisan tinker
 ```php
 // Create or update router
 $router = App\Models\MikrotikRouter::updateOrCreate(
-    ['ip_address' => '103.138.147.185'],
+    ['ip_address' => '[REDACTED_IP]'],
     [
         'name' => '4--ISPbills--kdc',
         'api_port' => 8777,
         'api_type' => 'rest',
-        'username' => 'ispsolution1213',
-        'password' => 'ispsolution1213',
+        'username' => '[REDACTED_CREDENTIAL]',
+        'password' => '[REDACTED_CREDENTIAL]',
         'status' => 'active',
     ]
 );
@@ -220,7 +220,7 @@ Array
 ✅ **Successfully import at least one PPP Profile from the provided Mikrotik IP**
 - **Status**: VERIFIED ✅
 - **Result**: 23 PPP profiles successfully retrieved
-- **Router**: 103.138.147.185
+- **Router**: [REDACTED_IP]
 - **Ports**: 8728 (Binary) and 8777 (REST) both working
 - **Credentials**: Validated and working
 
@@ -269,12 +269,12 @@ Both API types are working perfectly on the test router:
 - ✅ Credentials validated
 - ✅ PPP Profile import verified
 
-The ISP Solution dual API support is production-ready and can successfully import PPP profiles from the Mikrotik router at 103.138.147.185 using either API protocol.
+The ISP Solution dual API support is production-ready and can successfully import PPP profiles from the Mikrotik router at [REDACTED_IP] using either API protocol.
 
 ## Files
 
 - Test date: January 29, 2026
-- Router: 103.138.147.185
+- Router: [REDACTED_IP]
 - Binary API: port 8728 ✅
 - REST API: port 8777 ✅
 - PPP Profiles: 23 ✅

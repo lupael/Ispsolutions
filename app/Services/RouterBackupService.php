@@ -218,7 +218,10 @@ class RouterBackupService
                         }
 
                         // Restore items to router
-                        $success = $this->mikrotikApiService->addMktRows($router, $menu, $items);
+                        $result = $this->mikrotikApiService->addMktRows($router, $menu, $items);
+                        
+                        // Handle array result (new format) or bool (legacy)
+                        $success = is_array($result) ? ($result['success'] ?? false) : (bool) $result;
 
                         if ($success) {
                             $restored[$section] = count($items);
@@ -228,9 +231,17 @@ class RouterBackupService
                             ]);
                         } else {
                             $failed[$section] = count($items);
+                            
+                            // Log detailed errors if available
+                            $errorDetails = is_array($result) && isset($result['errors']) 
+                                ? $result['errors'] 
+                                : 'Unknown error';
+                            
                             Log::warning("Failed to restore {$section}", [
                                 'router_id' => $router->id,
                                 'count' => count($items),
+                                'failed_count' => is_array($result) ? ($result['failed'] ?? 0) : 0,
+                                'errors' => $errorDetails,
                                 'note' => 'Some or all items in this section failed to restore. Check router for conflicts.',
                             ]);
 

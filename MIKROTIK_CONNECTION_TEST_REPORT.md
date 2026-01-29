@@ -7,13 +7,13 @@
 **NEW**: System now supports both RouterOS v6 (Binary API) and v7 (REST API) with automatic detection.
 
 ## Objective
-Test connectivity to Mikrotik router at 103.138.147.185:8777 with credentials ispsolution1213/ispsolution1213 and verify PPP Profile import functionality.
+Test connectivity to Mikrotik router at [REDACTED_IP]:8777 with credentials [REDACTED_CREDENTIAL]/[REDACTED_CREDENTIAL] and verify PPP Profile import functionality.
 
 ## Test Environment
-- **Router IP**: 103.138.147.185
+- **Router IP**: [REDACTED_IP]
 - **API Port**: 8777 (REST API) / 8728 (Binary API)
-- **Username**: ispsolution1213
-- **Password**: ispsolution1213
+- **Username**: [REDACTED_USERNAME]
+- **Password**: [REDACTED_PASSWORD]
 - **Protocol**: HTTP REST API (v7+) or Binary API (v6/v7)
 
 ## Previous Test Results (REST API Only)
@@ -21,7 +21,7 @@ Test connectivity to Mikrotik router at 103.138.147.185:8777 with credentials is
 ### Connection Test Results
 
 **Test 1: Basic TCP Connectivity**
-- ✓ TCP connection to 103.138.147.185:8777 **ESTABLISHED**
+- ✓ TCP connection to [REDACTED_IP]:8777 **ESTABLISHED**
 - ✗ HTTP response **NOT RECEIVED** (connection hangs)
 - Timeout occurred after 60+ seconds
 
@@ -77,7 +77,7 @@ The system now supports **BOTH** API types:
 
 ## Updated Recommendations
 
-### For Router at 103.138.147.185
+### For Router at [REDACTED_IP]
 
 Since REST API (port 8777) is not responding, enable Binary API:
 
@@ -192,7 +192,7 @@ $router->save();
 ### Test Binary API Connection
 ```bash
 # Test from command line
-telnet 103.138.147.185 8728
+telnet [REDACTED_IP] 8728
 
 # Test from application
 php artisan tinker

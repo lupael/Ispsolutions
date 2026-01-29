@@ -10,7 +10,7 @@ This guide provides step-by-step instructions to test the fixes implemented for:
 - Access to the ISP Solution application
 - Admin/Super Admin credentials
 - MySQL/MariaDB access for database verification
-- (Optional) Access to test Mikrotik router at 103.138.147.185:8777
+- (Optional) Access to test Mikrotik router at [REDACTED_IP]:8777
 
 ---
 
@@ -111,10 +111,10 @@ Verify that Mikrotik API operations are properly logged with detailed error info
 2. **Trigger API Operation**
    - Go to Mikrotik Router Management
    - Select a router or add test router:
-     - IP: 103.138.147.185
+     - IP: [REDACTED_IP]
      - API Port: 8777
-     - Username: ispsolution1213
-     - Password: ispsolution1213
+     - Username: [REDACTED_CREDENTIAL]
+     - Password: [REDACTED_CREDENTIAL]
    - Try to import PPP Profiles or IP Pools
 
 3. **Monitor Logs**

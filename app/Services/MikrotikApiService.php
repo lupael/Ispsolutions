@@ -22,6 +22,12 @@ use Illuminate\Support\Facades\Log;
 class MikrotikApiService
 {
     protected RouterOSBinaryApiService $binaryApiService;
+    
+    /**
+     * Cache for detected API types to avoid repeated connection tests.
+     * Format: ['router_id' => 'binary|rest']
+     */
+    private array $apiTypeCache = [];
 
     public function __construct(RouterOSBinaryApiService $binaryApiService)
     {
@@ -69,6 +75,34 @@ class MikrotikApiService
         
         // Use REST API
         return $this->addMktRowsRest($router, $menu, $rows);
+    }
+
+    /**
+     * Add rows to a MikroTik menu (backward compatible boolean return).
+     * 
+     * @deprecated Use addMktRows() which returns detailed array results
+     *
+     * @param MikrotikRouter $router The router to modify
+     * @param string $menu The menu path
+     * @param array $rows Array of rows to add
+     *
+     * @return bool True if all rows were added successfully
+     */
+    public function addMktRowsBool(MikrotikRouter $router, string $menu, array $rows): bool
+    {
+        $result = $this->addMktRows($router, $menu, $rows);
+        
+        // Handle both array and bool responses for backward compatibility
+        if (is_bool($result)) {
+            return $result;
+        }
+        
+        if (is_array($result) && array_key_exists('success', $result)) {
+            return (bool) $result['success'];
+        }
+        
+        // Unexpected result: treat as failure
+        return false;
     }
 
     /**
@@ -139,6 +173,7 @@ class MikrotikApiService
 
     /**
      * Determine which API type to use for the router.
+     * Uses in-memory cache to avoid repeated connection tests.
      * 
      * @param MikrotikRouter $router Router instance
      * @return string 'binary' or 'rest'
@@ -155,14 +190,21 @@ class MikrotikApiService
             return 'rest';
         }
         
+        // Check cache first to avoid repeated connection tests
+        if (isset($this->apiTypeCache[$router->id])) {
+            return $this->apiTypeCache[$router->id];
+        }
+        
         // Auto-detect: prefer binary API (more reliable and compatible)
         // Try binary API first, fall back to REST if it fails
         if ($this->binaryApiService->testConnection($router)) {
             Log::info('Auto-detected binary API for router', ['router_id' => $router->id]);
+            $this->apiTypeCache[$router->id] = 'binary';
             return 'binary';
         }
         
         Log::info('Binary API failed, using REST API for router', ['router_id' => $router->id]);
+        $this->apiTypeCache[$router->id] = 'rest';
         return 'rest';
     }
 
@@ -538,11 +580,15 @@ class MikrotikApiService
         $sensitiveFields = ['password', 'secret', 'snmp-community', 'community', 'private-key'];
         $sanitized = $row;
         
-        foreach ($sensitiveFields as $field) {
-            if (isset($sanitized[$field])) {
-                $sanitized[$field] = '***REDACTED***';
+        foreach ($sanitized as $key => &$value) {
+            // Normalize key by converting underscores to hyphens for comparison
+            $normalizedKey = str_replace('_', '-', (string) $key);
+            
+            if (in_array($normalizedKey, $sensitiveFields, true)) {
+                $value = '***REDACTED***';
             }
         }
+        unset($value);
         
         return $sanitized;
     }

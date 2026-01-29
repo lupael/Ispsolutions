@@ -18,14 +18,29 @@ fi
 
 echo "Step 1: Installing Binary API Library"
 echo "--------------------------------------"
-echo "Running: composer require bencroker/routeros-api-php:^1.0"
-echo ""
 
-if composer require bencroker/routeros-api-php:^1.0; then
-    echo "✅ Binary API library installed successfully"
+# Check if dependency is already in composer.json
+if grep -q '"bencroker/routeros-api-php"' composer.json; then
+    echo "Detected bencroker/routeros-api-php in composer.json"
+    echo "Running: composer install"
+    echo ""
+
+    if composer install; then
+        echo "✅ Binary API library installed successfully (via composer install)"
+    else
+        echo "❌ Failed to install library. Check your composer setup."
+        exit 1
+    fi
 else
-    echo "❌ Failed to install library. Check your composer setup."
-    exit 1
+    echo "Running: composer require bencroker/routeros-api-php:^1.0"
+    echo ""
+
+    if composer require bencroker/routeros-api-php:^1.0; then
+        echo "✅ Binary API library installed successfully"
+    else
+        echo "❌ Failed to install library. Check your composer setup."
+        exit 1
+    fi
 fi
 
 echo ""
@@ -34,7 +49,16 @@ echo "-----------------------------------"
 echo "Adding api_type field to mikrotik_routers table..."
 echo ""
 
-if php artisan migrate --force; then
+# By default, run migrations interactively. To force non-interactive migrations,
+# set FORCE_MIGRATE=1 in the environment before running this script.
+if [ "${FORCE_MIGRATE:-0}" = "1" ]; then
+    MIGRATE_CMD="php artisan migrate --force"
+else
+    MIGRATE_CMD="php artisan migrate"
+fi
+
+echo "Running: $MIGRATE_CMD"
+if $MIGRATE_CMD; then
     echo "✅ Migration completed successfully"
 else
     echo "❌ Migration failed. Check database connection."
