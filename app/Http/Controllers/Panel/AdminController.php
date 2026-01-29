@@ -1284,7 +1284,45 @@ class AdminController extends Controller
         $zones = \App\Models\Zone::where('tenant_id', $tenantId)->select('id', 'name')->orderBy('name')->get();
         $routers = \App\Models\MikrotikRouter::where('tenant_id', $tenantId)->select('id', 'name', 'ip_address')->orderBy('name')->get();
 
-        return view('panels.admin.customers.show', compact('customer', 'onu', 'packages', 'operators', 'zones', 'routers'));
+        // Load recent activity data for tabs
+        $recentPayments = \App\Models\Payment::where('user_id', $customer->id)
+            ->where('tenant_id', $tenantId)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $recentInvoices = \App\Models\Invoice::where('user_id', $customer->id)
+            ->where('tenant_id', $tenantId)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $recentSmsLogs = \App\Models\SmsLog::where('user_id', $customer->id)
+            ->where('tenant_id', $tenantId)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $recentAuditLogs = \App\Models\AuditLog::where('auditable_type', 'App\Models\User')
+            ->where('auditable_id', $customer->id)
+            ->where('tenant_id', $tenantId)
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        return view('panels.admin.customers.show', compact(
+            'customer', 
+            'onu', 
+            'packages', 
+            'operators', 
+            'zones', 
+            'routers',
+            'recentPayments',
+            'recentInvoices',
+            'recentSmsLogs',
+            'recentAuditLogs'
+        ));
     }
 
     /**
@@ -1299,12 +1337,8 @@ class AdminController extends Controller
         AuditLogService $auditLogService
     ) {
         try {
-            $customer = NetworkUser::with(['user', 'package'])->findOrFail($id);
-
-            // Authorization check on the related User model
-            if ($customer->user) {
-                $this->authorize('suspend', $customer->user);
-            }
+            // Use helper method to find and authorize customer
+            $customer = $this->findAndAuthorizeCustomer($id, 'suspend');
 
             // Prevent suspending already suspended customers
             if ($customer->status === 'suspended') {
@@ -1436,12 +1470,8 @@ class AdminController extends Controller
         AuditLogService $auditLogService
     ) {
         try {
-            $customer = NetworkUser::with(['user', 'package'])->findOrFail($id);
-
-            // Authorization check on the related User model
-            if ($customer->user) {
-                $this->authorize('activate', $customer->user);
-            }
+            // Use helper method to find and authorize customer
+            $customer = $this->findAndAuthorizeCustomer($id, 'activate');
 
             // Prevent activating already active customers
             if ($customer->status === 'active') {
@@ -4678,5 +4708,52 @@ class AdminController extends Controller
                 'allocated_at' => $allocation->allocated_at ?? $allocation->created_at,
             ];
         })->toArray();
+    }
+
+    /**
+     * Helper method to find and authorize a customer by ID.
+     * Handles both User ID and NetworkUser ID cases.
+     * 
+     * @param mixed $id The customer ID (either User ID or NetworkUser ID)
+     * @param string $ability The authorization ability to check (e.g., 'suspend', 'activate')
+     * @return NetworkUser The NetworkUser instance
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException
+     */
+    private function findAndAuthorizeCustomer($id, string $ability): NetworkUser
+    {
+        $tenantId = auth()->user()->tenant_id;
+
+        // Try to find as NetworkUser first
+        $customer = NetworkUser::with(['user', 'package'])->where('tenant_id', $tenantId)->find($id);
+
+        // If not found as NetworkUser, try finding as User and get the related NetworkUser
+        if (! $customer) {
+            $user = User::where('tenant_id', $tenantId)->find($id);
+            if ($user) {
+                $customer = NetworkUser::with(['user', 'package'])
+                    ->where('user_id', $user->id)
+                    ->where('tenant_id', $tenantId)
+                    ->first();
+            }
+        }
+
+        if (! $customer) {
+            abort(response()->json([
+                'success' => false,
+                'message' => 'Customer not found or no network user configured.',
+            ], 404));
+        }
+
+        // Authorization check on the related User model
+        if (! $customer->user) {
+            abort(response()->json([
+                'success' => false,
+                'message' => 'Customer user account not found.',
+            ], 404));
+        }
+
+        $this->authorize($ability, $customer->user);
+
+        return $customer;
     }
 }
