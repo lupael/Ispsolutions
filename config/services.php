@@ -40,6 +40,7 @@ return [
         'default_port' => env('MIKROTIK_DEFAULT_PORT', 8728),
         'max_retries' => env('MIKROTIK_MAX_RETRIES', 3),
         'retry_delay' => env('MIKROTIK_RETRY_DELAY', 1000), // milliseconds
+        'allow_private_ips' => env('MIKROTIK_ALLOW_PRIVATE_IPS', true), // Allow RFC1918 IPs for internal routers
     ],
 
     'whatsapp' => [

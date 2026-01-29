@@ -140,7 +140,10 @@ class MikrotikRouter extends Model
      */
     public function disconnect(): void
     {
-        $this->update(['status' => 'offline']);
+        $this->update([
+            'api_status' => 'offline',
+            'last_checked_at' => now(),
+        ]);
         // Additional cleanup can be added here if needed
     }
 
@@ -155,8 +158,8 @@ class MikrotikRouter extends Model
             
             if ($connected) {
                 $this->update([
-                    'status' => 'online',
-                    'last_seen' => now()
+                    'api_status' => 'online',
+                    'last_checked_at' => now()
                 ]);
                 return true;
             }
@@ -179,9 +182,9 @@ class MikrotikRouter extends Model
         try {
             // Note: MikrotikService does not currently have getSystemResources() method
             // This is a placeholder for future implementation
-            // For now, we just update the last_seen timestamp
+            // For now, we just update the last_checked_at timestamp
             $this->update([
-                'last_seen' => now(),
+                'last_checked_at' => now(),
             ]);
             
             \Log::info("Router stats refresh placeholder called", [

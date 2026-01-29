@@ -62,6 +62,9 @@ class Olt extends Model
         'total_ports',
         'max_onus',
         'status',
+        'health_status',
+        'last_backup_at',
+        'last_health_check_at',
     ];
 
     /**

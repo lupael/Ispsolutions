@@ -1501,4 +1501,87 @@ class MikrotikService implements MikrotikServiceInterface
 
         return true;
     }
+
+    /**
+     * Get system resources (CPU, memory, uptime) from MikroTik router
+     * 
+     * Returns an array with keys: cpu-load, free-memory, total-memory, uptime
+     * 
+     * {@inheritDoc}
+     */
+    public function getResources(int $routerId): array
+    {
+        try {
+            $router = MikrotikRouter::find($routerId);
+
+            if (! $router) {
+                Log::error('Router not found', ['router_id' => $routerId]);
+
+                return [];
+            }
+
+            // Validate router IP to prevent SSRF attacks
+            if (! $this->isValidRouterIpAddress($router->ip_address)) {
+                Log::error('Router IP address validation failed - potential SSRF attempt', [
+                    'router_id' => $routerId,
+                    'ip_address' => $router->ip_address,
+                ]);
+
+                return [];
+            }
+
+            // Get system resources from MikroTik via API
+            $response = Http::timeout(config('services.mikrotik.timeout', 30))
+                ->get("http://{$router->ip_address}:{$router->api_port}/api/system/resource");
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                Log::info('System resources retrieved from MikroTik', [
+                    'router_id' => $routerId,
+                ]);
+
+                // Update router status
+                $router->update([
+                    'api_status' => 'online',
+                    'last_checked_at' => now(),
+                    'response_time_ms' => $response->transferStats && $response->transferStats->getTransferTime() ? (int)($response->transferStats->getTransferTime() * 1000) : null,
+                    'last_error' => null, // Clear previous error on success
+                ]);
+
+                return $data;
+            }
+
+            Log::error('Failed to get system resources from MikroTik', [
+                'router_id' => $routerId,
+                'status' => $response->status(),
+                'response' => $response->body(),
+            ]);
+
+            // Update router status to offline on failure
+            $router->update([
+                'api_status' => 'offline',
+                'last_checked_at' => now(),
+                'last_error' => 'Failed to get resources: HTTP ' . $response->status(),
+            ]);
+
+            return [];
+        } catch (\Exception $e) {
+            Log::error('Error getting system resources from MikroTik', [
+                'router_id' => $routerId,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Update router with error status
+            if (isset($router)) {
+                $router->update([
+                    'api_status' => 'offline',
+                    'last_checked_at' => now(),
+                    'last_error' => $e->getMessage(),
+                ]);
+            }
+
+            return [];
+        }
+    }
 }
