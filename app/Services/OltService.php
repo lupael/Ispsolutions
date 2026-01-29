@@ -148,11 +148,38 @@ class OltService implements OltServiceInterface
     public function discoverOnus(int $oltId): array
     {
         try {
+            $olt = Olt::findOrFail($oltId);
+
+            // Try SNMP discovery first if SNMP is configured
+            $oltSnmpService = app(\App\Services\OltSnmpService::class);
+            
+            if ($olt->snmp_community && $olt->snmp_version) {
+                Log::info('Attempting SNMP-based ONU discovery', [
+                    'olt_id' => $oltId,
+                    'vendor' => $olt->brand,
+                ]);
+                
+                $onus = $oltSnmpService->discoverOnusViaSNMP($olt);
+                
+                if (!empty($onus)) {
+                    Log::info('Successfully discovered ONUs via SNMP', [
+                        'olt_id' => $oltId,
+                        'count' => count($onus),
+                    ]);
+                    
+                    return $onus;
+                }
+                
+                Log::warning('SNMP discovery returned no results, falling back to SSH', [
+                    'olt_id' => $oltId,
+                ]);
+            }
+
+            // Fallback to SSH-based discovery
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
 
-            $olt = Olt::findOrFail($oltId);
             $connection = $this->connections[$oltId];
             $commands = $this->getVendorCommands($olt);
             $onus = [];
@@ -241,6 +268,35 @@ class OltService implements OltServiceInterface
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
 
+            // Try SNMP first if configured
+            $oltSnmpService = app(\App\Services\OltSnmpService::class);
+            
+            if ($onu->olt->snmp_community && $onu->olt->snmp_version) {
+                Log::info('Attempting SNMP-based ONU status retrieval', [
+                    'onu_id' => $onuId,
+                    'olt_id' => $onu->olt_id,
+                ]);
+                
+                $snmpStatus = $oltSnmpService->getOnuOpticalPower($onu);
+                
+                if ($snmpStatus['rx_power'] !== null || $snmpStatus['tx_power'] !== null) {
+                    return [
+                        'status' => $onu->status,
+                        'signal_rx' => $snmpStatus['rx_power'],
+                        'signal_tx' => $snmpStatus['tx_power'],
+                        'distance' => $snmpStatus['distance'],
+                        'uptime' => null,
+                        'last_update' => now()->toIso8601String(),
+                        'method' => 'snmp',
+                    ];
+                }
+                
+                Log::warning('SNMP status retrieval returned no data, falling back to SSH', [
+                    'onu_id' => $onuId,
+                ]);
+            }
+
+            // Fallback to SSH-based status retrieval
             if (! $this->ensureConnected($onu->olt_id)) {
                 throw new RuntimeException("Failed to connect to OLT {$onu->olt_id}");
             }
@@ -267,6 +323,7 @@ class OltService implements OltServiceInterface
                 'distance' => $onu->distance,
                 'uptime' => null,
                 'last_update' => now()->toIso8601String(),
+                'method' => 'ssh',
             ];
 
             return $status;
@@ -280,6 +337,7 @@ class OltService implements OltServiceInterface
                 'distance' => null,
                 'uptime' => null,
                 'last_update' => now()->toIso8601String(),
+                'method' => 'error',
             ];
         }
     }

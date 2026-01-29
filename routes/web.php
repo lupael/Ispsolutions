@@ -515,6 +515,8 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/test-connection', [RouterProvisioningController::class, 'testConnection'])->name('test-connection');
         Route::post('/backup', [RouterProvisioningController::class, 'backup'])->name('backup');
         Route::post('/rollback', [RouterProvisioningController::class, 'rollback'])->name('rollback');
+        Route::post('/radius', [RouterProvisioningController::class, 'provisionRadius'])->name('radius');
+        Route::post('/export-secrets', [RouterProvisioningController::class, 'exportPppSecrets'])->name('export-secrets');
         Route::get('/{routerId}/logs', [RouterProvisioningController::class, 'logs'])->name('logs');
         Route::get('/{routerId}/backups', [RouterProvisioningController::class, 'backups'])->name('backups');
         

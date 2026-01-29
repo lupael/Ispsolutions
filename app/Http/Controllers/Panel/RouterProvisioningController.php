@@ -371,4 +371,74 @@ class RouterProvisioningController extends Controller
             ], 404);
         }
     }
+
+    /**
+     * Provision RADIUS on router (first connect setup).
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function provisionRadius(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'router_id' => 'required|exists:mikrotik_routers,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $router = MikrotikRouter::with('nas')->findOrFail($request->router_id);
+            
+            $radiusProvisioningService = app(\App\Services\RouterRadiusProvisioningService::class);
+            $result = $radiusProvisioningService->provisionOnFirstConnect($router);
+
+            return response()->json($result);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RADIUS provisioning failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Export PPP secrets from router.
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function exportPppSecrets(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'router_id' => 'required|exists:mikrotik_routers,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $router = MikrotikRouter::findOrFail($request->router_id);
+            
+            $radiusProvisioningService = app(\App\Services\RouterRadiusProvisioningService::class);
+            $result = $radiusProvisioningService->exportPppSecrets($router);
+
+            return response()->json($result);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PPP secrets export failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }
