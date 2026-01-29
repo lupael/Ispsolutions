@@ -224,7 +224,7 @@ class MikrotikApiService
 
                 // Use Laravel HTTP client's built-in retry mechanism
                 $response = Http::withBasicAuth($router->username, $router->password)
-                    ->timeout(config('services.mikrotik.timeout', 60))
+                    ->timeout((int) config('services.mikrotik.timeout', 60))
                     ->get($url, $query);
 
                 if ($response->successful()) {
@@ -306,7 +306,7 @@ class MikrotikApiService
             foreach ($rows as $index => $row) {
                 try {
                     $response = Http::withBasicAuth($router->username, $router->password)
-                        ->timeout(config('services.mikrotik.timeout', 60))
+                        ->timeout((int) config('services.mikrotik.timeout', 60))
                         ->post($url, $row);
 
                     if ($response->successful()) {
@@ -409,7 +409,7 @@ class MikrotikApiService
             $payload = array_merge($row, $data);
 
             $response = Http::withBasicAuth($router->username, $router->password)
-                ->timeout(config('services.mikrotik.timeout', 60))
+                ->timeout((int) config('services.mikrotik.timeout', 60))
                 ->put($url, $payload);
 
             if ($response->successful()) {
@@ -467,7 +467,7 @@ class MikrotikApiService
                 $url = $baseUrl.'?'.$queryParams;
 
                 $response = Http::withBasicAuth($router->username, $router->password)
-                    ->timeout(config('services.mikrotik.timeout', 60))
+                    ->timeout((int) config('services.mikrotik.timeout', 60))
                     ->delete($url);
 
                 if ($response->successful()) {
@@ -518,7 +518,7 @@ class MikrotikApiService
             $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api/terminal";
 
             $response = Http::withBasicAuth($router->username, $router->password)
-                ->timeout(config('services.mikrotik.timeout', 60))
+                ->timeout((int) config('services.mikrotik.timeout', 60))
                 ->post($url, [
                     'command' => $command,
                     'params' => $params,

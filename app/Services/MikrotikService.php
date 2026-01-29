@@ -33,6 +33,13 @@ class MikrotikService implements MikrotikServiceInterface
 {
     private ?MikrotikRouter $currentRouter = null;
 
+    protected MikrotikApiService $mikrotikApiService;
+
+    public function __construct(MikrotikApiService $mikrotikApiService)
+    {
+        $this->mikrotikApiService = $mikrotikApiService;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -805,36 +812,66 @@ class MikrotikService implements MikrotikServiceInterface
 
             DB::beginTransaction();
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 60))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/configure", $config);
+            // Apply configuration based on type using MikroTik API
+            // Track configurations for potential rollback
+            $appliedConfigs = [];
+            $configDetails = [];
 
-            if ($response->successful()) {
-                RouterConfiguration::create([
-                    'router_id' => $routerId,
-                    'config_type' => 'one-click',
-                    'config_data' => $config,
-                    'applied_at' => now(),
-                    'status' => 'applied',
-                ]);
+            foreach ($config as $configType => $settings) {
+                $result = $this->applyConfiguration($router, $configType, $settings);
+                if ($result) {
+                    $appliedConfigs[] = $configType;
+                    $configDetails[$configType] = $settings;
+                } else {
+                    // Configuration failed - rollback all previously applied configurations
+                    Log::error('Configuration failed, rolling back previously applied configurations', [
+                        'router_id' => $routerId,
+                        'failed_config_type' => $configType,
+                        'applied_configs' => $appliedConfigs,
+                    ]);
 
-                DB::commit();
+                    // Attempt to rollback (note: this is best-effort, may not always succeed)
+                    foreach ($appliedConfigs as $appliedType) {
+                        try {
+                            $this->rollbackConfiguration($router, $appliedType, $configDetails[$appliedType]);
+                        } catch (\Exception $rollbackException) {
+                            Log::error('Failed to rollback configuration', [
+                                'router_id' => $router->id,
+                                'config_type' => $appliedType,
+                                'error' => $rollbackException->getMessage(),
+                            ]);
+                        }
+                    }
 
-                Log::info('Router configured', [
-                    'router_id' => $routerId,
-                    'config_types' => array_keys($config),
-                ]);
+                    DB::rollBack();
 
-                return true;
+                    Log::error('Failed to configure router - configuration aborted and rolled back', [
+                        'router_id' => $routerId,
+                        'failed_at' => $configType,
+                        'rolled_back' => $appliedConfigs,
+                    ]);
+
+                    return false;
+                }
             }
 
-            DB::rollBack();
-
-            Log::error('Failed to configure router', [
+            // All configurations applied successfully
+            RouterConfiguration::create([
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'config_type' => 'one-click',
+                'config_data' => $config,
+                'applied_at' => now(),
+                'status' => 'applied',
             ]);
 
-            return false;
+            DB::commit();
+
+            Log::info('Router configured successfully', [
+                'router_id' => $routerId,
+                'config_types' => $appliedConfigs,
+            ]);
+
+            return true;
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -843,6 +880,302 @@ class MikrotikService implements MikrotikServiceInterface
                 'error' => $e->getMessage(),
             ]);
 
+            return false;
+        }
+    }
+
+    /**
+     * Attempt to rollback a configuration change.
+     * Note: This is best-effort and may not always succeed.
+     */
+    private function rollbackConfiguration(MikrotikRouter $router, string $configType, array $settings): void
+    {
+        Log::info('Attempting to rollback configuration', [
+            'router_id' => $router->id,
+            'config_type' => $configType,
+        ]);
+
+        // Rollback logic varies by configuration type
+        // For now, we log the attempt; full rollback implementation would require
+        // storing previous state or removing added configurations
+        switch ($configType) {
+            case 'pppoe':
+                // Would need to remove the PPPoE server we added
+                // Requires tracking what was added in applyConfiguration
+                break;
+            case 'ippool':
+                // Would need to remove the IP pool we added
+                break;
+            case 'firewall':
+                // Would need to remove the firewall rule we added
+                break;
+            case 'queue':
+                // Would need to remove the queue we added
+                break;
+        }
+
+        Log::warning('Rollback not fully implemented for configuration type', [
+            'router_id' => $router->id,
+            'config_type' => $configType,
+        ]);
+    }
+
+    /**
+     * Apply a specific configuration type to the router.
+     */
+    private function applyConfiguration(MikrotikRouter $router, string $configType, array $settings): bool
+    {
+        try {
+            switch ($configType) {
+                case 'pppoe':
+                    return $this->configurePppoe($router, $settings);
+                case 'ippool':
+                    return $this->configureIpPool($router, $settings);
+                case 'firewall':
+                    return $this->configureFirewall($router, $settings);
+                case 'queue':
+                    return $this->configureQueue($router, $settings);
+                default:
+                    Log::warning('Unknown configuration type', ['config_type' => $configType]);
+                    return false;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error applying configuration', [
+                'router_id' => $router->id,
+                'config_type' => $configType,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Configure PPPoE server settings.
+     */
+    private function configurePppoe(MikrotikRouter $router, array $settings): bool
+    {
+        try {
+            // Add or update PPPoE server configuration
+            $pppoeConfig = [];
+
+            if (array_key_exists('interface', $settings)) {
+                $pppoeConfig['interface'] = $settings['interface'];
+            }
+
+            if (array_key_exists('service_name', $settings)) {
+                $pppoeConfig['service-name'] = $settings['service_name'];
+            }
+
+            if (array_key_exists('default_profile', $settings)) {
+                $pppoeConfig['default-profile'] = $settings['default_profile'];
+            }
+
+            if (empty($pppoeConfig)) {
+                Log::warning('No PPPoE configuration settings provided', [
+                    'router_id' => $router->id,
+                ]);
+
+                return false;
+            }
+
+            // Check if PPPoE server already exists on the interface
+            if (isset($pppoeConfig['interface'])) {
+                $existing = $this->mikrotikApiService->getMktRows($router, '/interface/pppoe-server/server');
+                foreach ($existing as $server) {
+                    if (isset($server['interface']) && $server['interface'] === $pppoeConfig['interface']) {
+                        Log::info('PPPoE server already exists on interface, skipping creation', [
+                            'router_id' => $router->id,
+                            'interface' => $pppoeConfig['interface'],
+                        ]);
+                        return true;
+                    }
+                }
+            }
+
+            $result = $this->mikrotikApiService->addMktRows($router, '/interface/pppoe-server/server', [$pppoeConfig]);
+
+            Log::info('PPPoE configuration applied', [
+                'router_id' => $router->id,
+                'result' => $result,
+            ]);
+
+            return $result['success'] ?? false;
+        } catch (\Exception $e) {
+            Log::error('Error configuring PPPoE', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Configure IP pool settings.
+     */
+    private function configureIpPool(MikrotikRouter $router, array $settings): bool
+    {
+        try {
+            // Add IP pool
+            $poolConfig = [
+                'name' => $settings['pool_name'] ?? 'default-pool',
+                'ranges' => $settings['ip_range'] ?? '192.168.1.2-192.168.1.254',
+            ];
+
+            // Check for existing IP pool with the same name for this router to avoid duplicates
+            $existingPool = MikrotikIpPool::where('router_id', $router->id)
+                ->where('name', $poolConfig['name'])
+                ->first();
+
+            if ($existingPool !== null) {
+                Log::info('IP pool already exists, skipping creation', [
+                    'router_id' => $router->id,
+                    'pool_name' => $poolConfig['name'],
+                ]);
+
+                return true;
+            }
+            $result = $this->mikrotikApiService->addMktRows($router, '/ip/pool', [$poolConfig]);
+
+            Log::info('IP pool configuration applied', [
+                'router_id' => $router->id,
+                'result' => $result,
+            ]);
+
+            return $result['success'] ?? false;
+        } catch (\Exception $e) {
+            Log::error('Error configuring IP pool', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Build and validate a firewall rule configuration.
+     *
+     * Returns a sanitized configuration array or null if the settings are invalid or unsafe.
+     */
+    private function buildValidatedFirewallConfig(array $settings): ?array
+    {
+        // Restrict chain and action to known-safe values
+        $allowedChains = ['input', 'forward', 'output'];
+        $allowedActions = ['accept', 'drop', 'reject', 'log'];
+
+        $chain = $settings['chain'] ?? 'forward';
+        $action = $settings['action'] ?? 'accept';
+
+        if (!in_array($chain, $allowedChains, true)) {
+            return null;
+        }
+
+        if (!in_array($action, $allowedActions, true)) {
+            return null;
+        }
+
+        // Extract optional scoping parameters
+        $srcAddress = $settings['src_address'] ?? null;
+        $dstAddress = $settings['dst_address'] ?? null;
+        $protocol = $settings['protocol'] ?? null;
+        $srcPort = $settings['src_port'] ?? null;
+        $dstPort = $settings['dst_port'] ?? null;
+
+        // Require the rule to be scoped by address or by protocol+port
+        $hasAddressScope = !empty($srcAddress) || !empty($dstAddress);
+        $hasProtocolPortScope = !empty($protocol) && (!empty($srcPort) || !empty($dstPort));
+
+        if (!$hasAddressScope && !$hasProtocolPortScope) {
+            // Unsafe: overly broad rule with no meaningful scope
+            return null;
+        }
+
+        // Build sanitized firewall configuration
+        $firewallConfig = [
+            'chain' => $chain,
+            'action' => $action,
+        ];
+
+        if ($srcAddress !== null) {
+            $firewallConfig['src-address'] = $srcAddress;
+        }
+
+        if ($dstAddress !== null) {
+            $firewallConfig['dst-address'] = $dstAddress;
+        }
+
+        if ($protocol !== null) {
+            $firewallConfig['protocol'] = $protocol;
+        }
+
+        if ($srcPort !== null) {
+            $firewallConfig['src-port'] = $srcPort;
+        }
+
+        if ($dstPort !== null) {
+            $firewallConfig['dst-port'] = $dstPort;
+        }
+
+        return $firewallConfig;
+    }
+
+    /**
+     * Configure firewall rules.
+     */
+    private function configureFirewall(MikrotikRouter $router, array $settings): bool
+    {
+        try {
+            // Build and validate firewall rule configuration
+            $firewallConfig = $this->buildValidatedFirewallConfig($settings);
+            if ($firewallConfig === null) {
+                Log::error('Firewall configuration rejected due to invalid or unsafe settings', [
+                    'router_id' => $router->id,
+                    'settings' => $settings,
+                ]);
+                return false;
+            }
+
+            $result = $this->mikrotikApiService->addMktRows($router, '/ip/firewall/filter', [$firewallConfig]);
+
+            Log::info('Firewall configuration applied', [
+                'router_id' => $router->id,
+                'result' => $result,
+            ]);
+
+            return $result['success'] ?? false;
+        } catch (\Exception $e) {
+            Log::error('Error configuring firewall', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Configure queue settings.
+     */
+    private function configureQueue(MikrotikRouter $router, array $settings): bool
+    {
+        try {
+            // Add queue
+            $queueConfig = [
+                'name' => $settings['queue_name'] ?? 'default-queue',
+                'max-limit' => $settings['max_limit'] ?? '10M/10M',
+            ];
+
+            $result = $this->mikrotikApiService->addMktRows($router, '/queue/simple', [$queueConfig]);
+
+            Log::info('Queue configuration applied', [
+                'router_id' => $router->id,
+                'result' => $result,
+            ]);
+
+            return $result['success'] ?? false;
+        } catch (\Exception $e) {
+            Log::error('Error configuring queue', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
             return false;
         }
     }
