@@ -171,7 +171,7 @@ class CustomerActivityService
      */
     protected function getTicketActivities(User $customer, int $limit): Collection
     {
-        $tickets = Ticket::where('user_id', $customer->id)
+        $tickets = Ticket::where('customer_id', $customer->id)
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
@@ -223,7 +223,7 @@ class CustomerActivityService
             'payments_total' => Payment::where('user_id', $customer->id)
                 ->where('created_at', '>=', $since)
                 ->sum('amount'),
-            'tickets_count' => Ticket::where('user_id', $customer->id)
+            'tickets_count' => Ticket::where('customer_id', $customer->id)
                 ->where('created_at', '>=', $since)
                 ->count(),
             'package_changes' => AuditLog::where('auditable_type', User::class)
