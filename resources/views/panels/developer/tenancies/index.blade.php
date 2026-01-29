@@ -60,6 +60,9 @@
                             </td>
                             <td>{{ $tenancy->created_at->format('Y-m-d') }}</td>
                             <td>
+                                <a href="{{ route('panel.developer.tenancies.edit', $tenancy->id) }}" class="btn btn-sm btn-primary me-1">
+                                    <i class="ki-filled ki-pencil"></i> Edit
+                                </a>
                                 <form action="{{ route('panel.developer.tenancies.toggle-status', $tenancy) }}" method="POST" class="d-inline">
                                     @csrf
                                     @if($tenancy->status === 'active')

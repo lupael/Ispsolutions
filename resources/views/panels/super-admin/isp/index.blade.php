@@ -60,8 +60,8 @@
                             </td>
                             <td>{{ $isp->created_at->format('Y-m-d') }}</td>
                             <td>
-                                <a href="#" class="btn btn-sm btn-outline-primary">
-                                    <i class="ki-filled ki-eye"></i> View
+                                <a href="{{ route('panel.super-admin.isp.edit', $isp->id) }}" class="btn btn-sm btn-primary">
+                                    <i class="ki-filled ki-pencil"></i> Edit
                                 </a>
                             </td>
                         </tr>
