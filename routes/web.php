@@ -598,6 +598,20 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/validate', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'validate'])->name('validate');
     });
     
+    // NAS NetWatch Routes - RADIUS Health Monitoring
+    Route::prefix('nas/netwatch')->name('nas.netwatch.')->group(function () {
+        Route::post('/routers/{router}/configure', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'configure'])->name('configure');
+        Route::delete('/routers/{router}', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'remove'])->name('remove');
+        Route::get('/routers/{router}/status', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'status'])->name('status');
+    });
+    
+    // Customer Backup Routes - Mirror to Router PPP Secrets
+    Route::prefix('customers/backup')->name('customers.backup.')->group(function () {
+        Route::post('/{customer}', [\App\Http\Controllers\Panel\CustomerBackupController::class, 'backupCustomer'])->name('single');
+        Route::post('/routers/{router}/all', [\App\Http\Controllers\Panel\CustomerBackupController::class, 'backupAllCustomers'])->name('all');
+        Route::delete('/{customer}', [\App\Http\Controllers\Panel\CustomerBackupController::class, 'removeCustomer'])->name('remove');
+    });
+    
     // Mikrotik Monitoring Routes
     Route::prefix('mikrotik')->name('mikrotik.')->group(function () {
         Route::get('/monitoring', [AdminController::class, 'mikrotikMonitoring'])->name('monitoring');
