@@ -291,6 +291,10 @@
     <x-tabbed-customer-details 
         :customer="$customer"
         :onu="$onu"
+        :recentPayments="$recentPayments ?? collect()"
+        :recentInvoices="$recentInvoices ?? collect()"
+        :recentSmsLogs="$recentSmsLogs ?? collect()"
+        :recentAuditLogs="$recentAuditLogs ?? collect()"
     />
 </div>
 

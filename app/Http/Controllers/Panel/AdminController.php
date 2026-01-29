@@ -1284,7 +1284,40 @@ class AdminController extends Controller
         $zones = \App\Models\Zone::where('tenant_id', $tenantId)->select('id', 'name')->orderBy('name')->get();
         $routers = \App\Models\MikrotikRouter::where('tenant_id', $tenantId)->select('id', 'name', 'ip_address')->orderBy('name')->get();
 
-        return view('panels.admin.customers.show', compact('customer', 'onu', 'packages', 'operators', 'zones', 'routers'));
+        // Load recent activity data for tabs
+        $recentPayments = \App\Models\Payment::where('user_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $recentInvoices = \App\Models\Invoice::where('user_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $recentSmsLogs = \App\Models\SmsLog::where('recipient_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $recentAuditLogs = \App\Models\AuditLog::where('model', 'User')
+            ->where('model_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        return view('panels.admin.customers.show', compact(
+            'customer', 
+            'onu', 
+            'packages', 
+            'operators', 
+            'zones', 
+            'routers',
+            'recentPayments',
+            'recentInvoices',
+            'recentSmsLogs',
+            'recentAuditLogs'
+        ));
     }
 
     /**

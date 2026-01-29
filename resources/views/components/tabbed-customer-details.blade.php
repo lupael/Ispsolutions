@@ -1,6 +1,10 @@
 @props([
     'customer',
     'onu' => null,
+    'recentPayments' => null,
+    'recentInvoices' => null,
+    'recentSmsLogs' => null,
+    'recentAuditLogs' => null,
 ])
 
 <div x-data="{ 
@@ -272,12 +276,81 @@
              aria-labelledby="billing-tab"
              :aria-hidden="activeTab !== 'billing'">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Billing Information</h3>
-            <div class="text-center py-8">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p class="mt-2 text-gray-500 dark:text-gray-400">Billing information will be loaded here</p>
-                <p class="text-sm text-gray-400 dark:text-gray-500">Invoices, payments, and billing history</p>
+            
+            <div class="space-y-6">
+                <!-- Recent Payments -->
+                <div>
+                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Recent Payments</h4>
+                    @if($recentPayments && $recentPayments->count() > 0)
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Method</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    @foreach($recentPayments as $payment)
+                                    <tr>
+                                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $payment->created_at->format('M d, Y') }}</td>
+                                        <td class="px-4 py-2 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">${{ number_format($payment->amount, 2) }}</td>
+                                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ ucfirst($payment->payment_method ?? 'N/A') }}</td>
+                                        <td class="px-4 py-2 whitespace-nowrap">
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $payment->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                {{ ucfirst($payment->status ?? 'pending') }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">No payment records found</p>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Recent Invoices -->
+                <div>
+                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Recent Invoices</h4>
+                    @if($recentInvoices && $recentInvoices->count() > 0)
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Invoice #</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    @foreach($recentInvoices as $invoice)
+                                    <tr>
+                                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $invoice->invoice_number ?? $invoice->id }}</td>
+                                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $invoice->created_at->format('M d, Y') }}</td>
+                                        <td class="px-4 py-2 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">${{ number_format($invoice->total_amount ?? $invoice->amount, 2) }}</td>
+                                        <td class="px-4 py-2 whitespace-nowrap">
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $invoice->status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                {{ ucfirst($invoice->status ?? 'unpaid') }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">No invoice records found</p>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -338,12 +411,89 @@
              aria-labelledby="history-tab"
              :aria-hidden="activeTab !== 'history'">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Change History</h3>
-            <div class="text-center py-8">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p class="mt-2 text-gray-500 dark:text-gray-400">Change history will be loaded here</p>
-                <p class="text-sm text-gray-400 dark:text-gray-500">Status changes, package changes, and other modifications</p>
+            
+            @if($recentAuditLogs && $recentAuditLogs->count() > 0)
+                <div class="space-y-3">
+                    @foreach($recentAuditLogs as $log)
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    @php
+                                        $iconColor = match($log->action) {
+                                            'created' => 'bg-green-100 text-green-600',
+                                            'updated' => 'bg-blue-100 text-blue-600',
+                                            'deleted' => 'bg-red-100 text-red-600',
+                                            'suspended' => 'bg-yellow-100 text-yellow-600',
+                                            'activated' => 'bg-green-100 text-green-600',
+                                            default => 'bg-gray-100 text-gray-600',
+                                        };
+                                    @endphp
+                                    <div class="rounded-full p-2 {{ $iconColor }}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {{ ucfirst(str_replace('_', ' ', $log->action)) }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $log->details ?? 'No details available' }}
+                                    </p>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                        {{ $log->created_at->diffForHumans() }} 
+                                        @if($log->user)
+                                            by {{ $log->user->name }}
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="mt-2 text-gray-500 dark:text-gray-400">No change history found</p>
+                </div>
+            @endif
+            
+            <!-- Link to SMS History as a separate section within History tab -->
+            <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">SMS History</h4>
+                @if($recentSmsLogs && $recentSmsLogs->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Message</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                @foreach($recentSmsLogs as $sms)
+                                <tr>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $sms->created_at->format('M d, Y h:i A') }}</td>
+                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{{ Str::limit($sms->message, 50) }}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $sms->status === 'sent' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ ucfirst($sms->status ?? 'pending') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center py-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">No SMS history found</p>
+                    </div>
+                @endif
             </div>
         </div>
 
