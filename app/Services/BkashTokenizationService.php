@@ -145,10 +145,13 @@ class BkashTokenizationService
             ]);
 
             // Create token record
+            // Note: Store the agreement token from response if available, otherwise use payment ID
+            $tokenValue = $data['agreementToken'] ?? $data['paymentID'];
+            
             $token = BkashToken::create([
                 'user_id' => $agreement->user_id,
                 'bkash_agreement_id' => $agreement->id,
-                'token' => $data['paymentID'], // Store payment ID as token
+                'token' => $tokenValue,
                 'token_type' => 'bearer',
                 'customer_msisdn' => $agreement->customer_msisdn,
                 'is_default' => ! BkashToken::where('user_id', $agreement->user_id)->exists(),
@@ -232,6 +235,14 @@ class BkashTokenizationService
             // Validate token
             if (! $token->isValid()) {
                 throw new \Exception('Token is invalid or expired');
+            }
+
+            // Ensure agreement relationship is loaded
+            $token->loadMissing('agreement');
+
+            // Check if agreement is still active
+            if (! $token->agreement || ! $token->agreement->isActive()) {
+                throw new \Exception('Agreement is no longer active');
             }
 
             // Get authorization token

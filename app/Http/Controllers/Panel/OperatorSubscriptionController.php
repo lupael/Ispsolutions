@@ -35,9 +35,14 @@ class OperatorSubscriptionController extends Controller
             abort(403, 'Unauthorized. Only operators can access subscriptions.');
         }
 
-        // Get operator's subscriptions
-        $subscriptions = OperatorSubscription::with('plan')
-            ->where('operator_id', $user->id)
+        // Build subscriptions query; admins/superadmins see all, others see only their own
+        $query = OperatorSubscription::with('plan');
+
+        if (! $user->hasAnyRole(['admin', 'superadmin'])) {
+            $query->where('operator_id', $user->id);
+        }
+
+        $subscriptions = $query
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -114,7 +119,7 @@ class OperatorSubscriptionController extends Controller
             // Calculate dates
             $startDate = now();
             $endDate = $startDate->copy()->addMonths($billingCycle);
-            $nextBillingDate = $endDate->copy();
+            $nextBillingDate = $endDate;
 
             // Create subscription
             $subscription = OperatorSubscription::create([
@@ -297,10 +302,25 @@ class OperatorSubscriptionController extends Controller
         // Mark payment as completed
         $payment->markCompleted();
 
-        // Renew subscription if needed
+        // Update subscription expiration based on this payment's billing period
         $subscription = $payment->subscription;
-        if ($subscription->isExpired() || ($subscription->expires_at && $subscription->expires_at->isPast())) {
-            $subscription->renew();
+        $billingPeriodEnd = $payment->billing_period_end ?? null;
+
+        if ($billingPeriodEnd) {
+            $currentExpiry = $subscription->expires_at;
+
+            // Only move the expiration date forward, never backwards
+            if (! $currentExpiry || $billingPeriodEnd->greaterThan($currentExpiry)) {
+                $subscription->expires_at = $billingPeriodEnd;
+                $subscription->save();
+            }
+        } else {
+            // We cannot safely adjust the expiration without billing period metadata
+            Log::warning('Completed subscription payment without billing period metadata; expires_at not updated', [
+                'payment_id' => $payment->id,
+                'subscription_id' => $subscription->id,
+                'completed_by' => $user->id,
+            ]);
         }
 
         Log::info('Subscription payment completed manually', [

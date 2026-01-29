@@ -171,9 +171,13 @@ class OperatorSubscription extends Model
      */
     public function renew(): void
     {
+        // Extend from current expiration when available to avoid shortening early renewals
+        $baseDate = $this->expires_at !== null ? $this->expires_at->copy() : now();
+        $newExpiry = $baseDate->addMonths($this->billing_cycle);
+
         $this->update([
-            'expires_at' => now()->addMonths($this->billing_cycle),
-            'next_billing_date' => now()->addMonths($this->billing_cycle),
+            'expires_at' => $newExpiry,
+            'next_billing_date' => $newExpiry,
             'status' => 'active',
         ]);
     }
@@ -187,7 +191,7 @@ class OperatorSubscription extends Model
             return null;
         }
 
-        return now()->diffInDays($this->expires_at, false);
+        return max(0, now()->diffInDays($this->expires_at, false));
     }
 
     /**
@@ -196,7 +200,7 @@ class OperatorSubscription extends Model
     public function isAboutToExpire(): bool
     {
         $daysUntilExpiration = $this->getDaysUntilExpiration();
-        return $daysUntilExpiration !== null && $daysUntilExpiration <= 7 && $daysUntilExpiration > 0;
+        return $daysUntilExpiration !== null && $daysUntilExpiration <= 7 && $daysUntilExpiration >= 0;
     }
 
     /**

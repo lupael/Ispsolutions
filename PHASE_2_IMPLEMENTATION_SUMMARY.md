@@ -439,13 +439,15 @@ Route::prefix('bkash-tokenization')->group(function () {
 - Testing - 0% (not started)
 - Documentation - 0% (not started)
 
-### Overall Progress
-**Backend: 90-95% Complete**  
-**Frontend: 0% Complete**  
-**Testing: 0% Complete**  
-**Documentation: 0% Complete**
+### Overall Progress (This PR Scope: Backend Only)
+**Backend (this PR): 90-95% Complete**  
+**Frontend (out of scope for this PR): 0% Complete**  
+**Testing (out of scope for this PR): 0% Complete**  
+**Documentation (out of scope for this PR): 0% Complete**
 
-**Overall Project: 40% Complete**
+_Note: Overall project completion (including frontend, testing, and documentation) is approximately 40%, but this is informational only and not part of the scope of this backend-focused PR._
+
+**Overall Project: ~40% Complete**
 
 ---
 

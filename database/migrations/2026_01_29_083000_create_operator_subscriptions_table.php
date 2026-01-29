@@ -28,7 +28,7 @@ return new class extends Migration
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('expires_at')->nullable()->comment('Subscription expiration date');
             $table->timestamp('cancelled_at')->nullable();
-            $table->integer('billing_cycle')->default(1)->comment('1=monthly, 3=quarterly, 12=yearly');
+            $table->integer('billing_cycle')->default(1)->comment('1=monthly, 3=quarterly, 6=semi-annual, 12=yearly');
             $table->date('next_billing_date')->nullable();
             $table->boolean('auto_renew')->default(true);
             $table->text('notes')->nullable();

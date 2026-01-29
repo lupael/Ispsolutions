@@ -10,6 +10,7 @@ use App\Models\SmsPayment;
 use App\Services\SmsBalanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -188,9 +189,20 @@ class SmsPaymentController extends Controller
             }
 
             // Find the corresponding SmsPayment record
-            $payment = SmsPayment::where('id', $paymentData['payment_id'])
-                ->orWhere('transaction_id', $paymentData['transaction_id'])
-                ->first();
+            $paymentId = $paymentData['payment_id'] ?? null;
+            $transactionId = $paymentData['transaction_id'] ?? null;
+
+            $payment = null;
+
+            // Prefer lookup by local payment ID if available
+            if ($paymentId !== null) {
+                $payment = SmsPayment::find($paymentId);
+            }
+
+            // Fallback to lookup by external transaction ID if needed
+            if (!$payment && $transactionId !== null) {
+                $payment = SmsPayment::where('transaction_id', $transactionId)->first();
+            }
 
             if (!$payment) {
                 Log::error('SMS payment not found for webhook', [
@@ -358,13 +370,10 @@ class SmsPaymentController extends Controller
      */
     private function extractBkashData(Request $request): ?array
     {
-        // TODO: Implement Bkash-specific data extraction
-        return [
-            'payment_id' => $request->input('merchantInvoiceNumber'),
-            'transaction_id' => $request->input('trxID'),
-            'status' => $request->input('transactionStatus') === 'Completed' ? 'success' : 'failed',
-            'failure_reason' => $request->input('statusMessage'),
-        ];
+        // TODO: Implement Bkash-specific data extraction when the exact webhook payload format is known.
+        // For now, return null so that Bkash webhooks are treated as unsupported/invalid
+        // rather than attempting to parse with incorrect or assumed field names.
+        return null;
     }
 
     /**

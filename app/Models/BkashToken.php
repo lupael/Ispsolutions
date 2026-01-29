@@ -93,16 +93,13 @@ class BkashToken extends Model
     }
 
     /**
-     * Set the encrypted token
+     * Set the encrypted token.
+     *
+     * Expects a plaintext token value and stores it encrypted.
      */
     public function setTokenAttribute(string $value): void
     {
-        // Only encrypt if it's not already encrypted
-        if (! str_starts_with($value, 'eyJpdiI6')) {
-            $this->attributes['token'] = Crypt::encryptString($value);
-        } else {
-            $this->attributes['token'] = $value;
-        }
+        $this->attributes['token'] = Crypt::encryptString($value);
     }
 
     /**
@@ -118,7 +115,7 @@ class BkashToken extends Model
      */
     public function isValid(): bool
     {
-        return ! $this->isExpired() && $this->agreement->isActive();
+        return ! $this->isExpired() && $this->agreement && $this->agreement->isActive();
     }
 
     /**
@@ -126,8 +123,10 @@ class BkashToken extends Model
      */
     public function markUsed(): void
     {
-        $this->increment('usage_count');
-        $this->update(['last_used_at' => now()]);
+        $this->update([
+            'usage_count'  => $this->usage_count + 1,
+            'last_used_at' => now(),
+        ]);
     }
 
     /**
@@ -220,10 +219,11 @@ class BkashToken extends Model
     {
         parent::boot();
 
-        // When creating a token, if is_default is true, unset others
-        static::creating(function ($token) {
+        // When a token has been created and is marked as default, unset others for the same user
+        static::created(function ($token) {
             if ($token->is_default) {
                 self::where('user_id', $token->user_id)
+                    ->where('id', '!=', $token->id)
                     ->update(['is_default' => false]);
             }
         });

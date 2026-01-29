@@ -22,9 +22,7 @@ class GenerateOperatorSubscriptionBills extends Command
      *
      * @var string
      */
-    protected $signature = 'operator-subscription:generate-bills 
-                            {--subscription_id= : Generate bill for a specific subscription}
-                            {--dry-run : Simulate billing without actually creating bills}';
+    protected $signature = 'operator-subscription:generate-bills {--subscription_id= : Generate bill for a specific subscription} {--dry-run : Simulate billing without actually creating bills}';
 
     /**
      * The console command description.
@@ -79,9 +77,12 @@ class GenerateOperatorSubscriptionBills extends Command
                 }
 
                 // Check if there's already a pending payment for this billing period
+                $billingWindowStart = $subscription->next_billing_date->copy()->subDay();
+                $billingWindowEnd = $subscription->next_billing_date->copy()->addDay();
+
                 $existingPayment = SubscriptionPayment::where('operator_subscription_id', $subscription->id)
                     ->where('status', 'pending')
-                    ->where('billing_period_start', $subscription->next_billing_date)
+                    ->whereBetween('billing_period_start', [$billingWindowStart, $billingWindowEnd])
                     ->first();
 
                 if ($existingPayment) {
