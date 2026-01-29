@@ -1503,6 +1503,10 @@ class MikrotikService implements MikrotikServiceInterface
     }
 
     /**
+     * Get system resources (CPU, memory, uptime) from MikroTik router
+     * 
+     * Returns an array with keys: cpu-load, free-memory, total-memory, uptime
+     * 
      * {@inheritDoc}
      */
     public function getResources(int $routerId): array
@@ -1512,6 +1516,16 @@ class MikrotikService implements MikrotikServiceInterface
 
             if (! $router) {
                 Log::error('Router not found', ['router_id' => $routerId]);
+
+                return [];
+            }
+
+            // Validate router IP to prevent SSRF attacks
+            if (! $this->isValidRouterIpAddress($router->ip_address)) {
+                Log::error('Router IP address validation failed - potential SSRF attempt', [
+                    'router_id' => $routerId,
+                    'ip_address' => $router->ip_address,
+                ]);
 
                 return [];
             }
@@ -1531,7 +1545,7 @@ class MikrotikService implements MikrotikServiceInterface
                 $router->update([
                     'api_status' => 'online',
                     'last_checked_at' => now(),
-                    'response_time_ms' => $response->transferStats?->getTransferTime() ? (int)($response->transferStats->getTransferTime() * 1000) : null,
+                    'response_time_ms' => $response->transferStats && $response->transferStats->getTransferTime() ? (int)($response->transferStats->getTransferTime() * 1000) : null,
                 ]);
 
                 return $data;

@@ -38,7 +38,7 @@ class MikrotikResourcesTest extends TestCase
         ]);
 
         Http::fake([
-            'localhost:8728/api/system/resource' => Http::response([
+            'http://localhost:8728/api/system/resource' => Http::response([
                 'cpu-load' => 15,
                 'free-memory' => 536870912,
                 'total-memory' => 1073741824,
@@ -67,7 +67,7 @@ class MikrotikResourcesTest extends TestCase
         ]);
 
         Http::fake([
-            'localhost:8728/api/system/resource' => Http::response([], 500),
+            'http://localhost:8728/api/system/resource' => Http::response([], 500),
         ]);
 
         $result = $this->mikrotikService->getResources($router->id);
@@ -89,7 +89,7 @@ class MikrotikResourcesTest extends TestCase
         ]);
 
         Http::fake([
-            'localhost:8728/api/system/resource' => Http::response([
+            'http://localhost:8728/api/system/resource' => Http::response([
                 'cpu-load' => 15,
                 'free-memory' => 536870912,
                 'total-memory' => 1073741824,
@@ -116,7 +116,7 @@ class MikrotikResourcesTest extends TestCase
         ]);
 
         Http::fake([
-            'localhost:8728/api/system/resource' => Http::response([], 500),
+            'http://localhost:8728/api/system/resource' => Http::response([], 500),
         ]);
 
         $this->mikrotikService->getResources($router->id);
