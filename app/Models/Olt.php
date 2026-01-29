@@ -45,15 +45,22 @@ class Olt extends Model
     protected $fillable = [
         'tenant_id',
         'name',
+        'brand',
         'ip_address',
         'port',
+        'telnet_port',
         'management_protocol',
         'username',
         'password',
         'snmp_community',
         'snmp_version',
+        'snmp_port',
         'model',
+        'firmware_version',
         'location',
+        'coverage_area',
+        'total_ports',
+        'max_onus',
         'status',
     ];
 
