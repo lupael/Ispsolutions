@@ -70,7 +70,7 @@ class CustomerActivityService
                 'color' => 'green',
                 'title' => __('Payment Received'),
                 'description' => __('Payment of :amount via :method', [
-                    'amount' => number_format($payment->amount, 2),
+                    'amount' => number_format((float) $payment->amount, 2),
                     'method' => $payment->payment_method ?? 'N/A',
                 ]),
                 'amount' => $payment->amount,
