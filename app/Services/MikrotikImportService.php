@@ -530,7 +530,7 @@ class MikrotikImportService
 
                     foreach ($ipList as $ip) {
                         IpPool::create([
-                            'name' => $poolData['name'] ?? "Pool-{$ip}",
+                            'name' => isset($poolData['name']) ? "{$poolData['name']}-{$ip}" : "Pool-{$ip}",
                             'ip_address' => $ip,
                             'subnet_mask' => '255.255.255.0', // Default, can be updated manually
                             'gateway' => null,
