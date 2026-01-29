@@ -419,7 +419,7 @@
                             <div class="flex items-start space-x-3">
                                 <div class="flex-shrink-0">
                                     @php
-                                        $iconColor = match($log->action) {
+                                        $iconColor = match($log->event) {
                                             'created' => 'bg-green-100 text-green-600',
                                             'updated' => 'bg-blue-100 text-blue-600',
                                             'deleted' => 'bg-red-100 text-red-600',
@@ -427,6 +427,19 @@
                                             'activated' => 'bg-green-100 text-green-600',
                                             default => 'bg-gray-100 text-gray-600',
                                         };
+                                        
+                                        // Build details from old and new values
+                                        $details = '';
+                                        if ($log->old_values && $log->new_values) {
+                                            $changes = [];
+                                            foreach ($log->new_values as $key => $newValue) {
+                                                $oldValue = $log->old_values[$key] ?? null;
+                                                if ($oldValue != $newValue) {
+                                                    $changes[] = ucfirst(str_replace('_', ' ', $key)) . ": {$oldValue} → {$newValue}";
+                                                }
+                                            }
+                                            $details = implode(', ', $changes);
+                                        }
                                     @endphp
                                     <div class="rounded-full p-2 {{ $iconColor }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,11 +449,13 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {{ ucfirst(str_replace('_', ' ', $log->action)) }}
+                                        {{ ucfirst(str_replace('_', ' ', $log->event)) }}
                                     </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $log->details ?? 'No details available' }}
-                                    </p>
+                                    @if($details)
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ $details }}
+                                        </p>
+                                    @endif
                                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                         {{ $log->created_at->diffForHumans() }} 
                                         @if($log->user)
