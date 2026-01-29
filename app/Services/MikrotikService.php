@@ -955,6 +955,19 @@ class MikrotikService implements MikrotikServiceInterface
                 'ranges' => $settings['ip_range'] ?? '192.168.1.2-192.168.1.254',
             ];
 
+            // Check for existing IP pool with the same name for this router to avoid duplicates
+            $existingPool = MikrotikIpPool::where('router_id', $router->id)
+                ->where('name', $poolConfig['name'])
+                ->first();
+
+            if ($existingPool !== null) {
+                Log::info('IP pool already exists, skipping creation', [
+                    'router_id' => $router->id,
+                    'pool_name' => $poolConfig['name'],
+                ]);
+
+                return true;
+            }
             $result = $this->mikrotikApiService->addMktRows($router, '/ip/pool', [$poolConfig]);
 
             Log::info('IP pool configuration applied', [
