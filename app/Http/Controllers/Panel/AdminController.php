@@ -1299,11 +1299,37 @@ class AdminController extends Controller
         AuditLogService $auditLogService
     ) {
         try {
-            $customer = NetworkUser::with(['user', 'package'])->findOrFail($id);
+            $tenantId = auth()->user()->tenant_id;
+
+            // Try to find as NetworkUser first
+            $customer = NetworkUser::with(['user', 'package'])->where('tenant_id', $tenantId)->find($id);
+
+            // If not found as NetworkUser, try finding as User and get the related NetworkUser
+            if (! $customer) {
+                $user = User::where('tenant_id', $tenantId)->find($id);
+                if ($user) {
+                    $customer = NetworkUser::with(['user', 'package'])
+                        ->where('user_id', $user->id)
+                        ->where('tenant_id', $tenantId)
+                        ->first();
+                }
+            }
+
+            if (! $customer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer not found or no network user configured.',
+                ], 404);
+            }
 
             // Authorization check on the related User model
             if ($customer->user) {
                 $this->authorize('suspend', $customer->user);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer user account not found.',
+                ], 404);
             }
 
             // Prevent suspending already suspended customers
@@ -1436,11 +1462,37 @@ class AdminController extends Controller
         AuditLogService $auditLogService
     ) {
         try {
-            $customer = NetworkUser::with(['user', 'package'])->findOrFail($id);
+            $tenantId = auth()->user()->tenant_id;
+
+            // Try to find as NetworkUser first
+            $customer = NetworkUser::with(['user', 'package'])->where('tenant_id', $tenantId)->find($id);
+
+            // If not found as NetworkUser, try finding as User and get the related NetworkUser
+            if (! $customer) {
+                $user = User::where('tenant_id', $tenantId)->find($id);
+                if ($user) {
+                    $customer = NetworkUser::with(['user', 'package'])
+                        ->where('user_id', $user->id)
+                        ->where('tenant_id', $tenantId)
+                        ->first();
+                }
+            }
+
+            if (! $customer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer not found or no network user configured.',
+                ], 404);
+            }
 
             // Authorization check on the related User model
             if ($customer->user) {
                 $this->authorize('activate', $customer->user);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer user account not found.',
+                ], 404);
             }
 
             // Prevent activating already active customers
