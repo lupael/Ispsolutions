@@ -11,9 +11,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * MikroTik API Service
  *
- * Provides generic methods for interacting with MikroTik RouterOS API.
- * This service acts as an adapter providing the expected interface
- * for router operations, wrapping HTTP API calls to the router.
+ * Provides unified interface for interacting with MikroTik RouterOS API.
+ * Supports both REST API (v7+) and Binary API (v6/v7) with automatic detection.
  *
  * SECURITY NOTE:
  * Current implementation uses HTTP for compatibility with test/dev environments.
@@ -22,8 +21,16 @@ use Illuminate\Support\Facades\Log;
  */
 class MikrotikApiService
 {
+    protected RouterOSBinaryApiService $binaryApiService;
+
+    public function __construct(RouterOSBinaryApiService $binaryApiService)
+    {
+        $this->binaryApiService = $binaryApiService;
+    }
+
     /**
      * Get rows from a MikroTik menu.
+     * Automatically selects the appropriate API based on router configuration.
      *
      * @param MikrotikRouter $router The router to query
      * @param string $menu The menu path (e.g., '/ip/pool', '/ppp/profile')
@@ -32,6 +39,137 @@ class MikrotikApiService
      * @return array Array of rows from the router
      */
     public function getMktRows(MikrotikRouter $router, string $menu, array $query = []): array
+    {
+        $apiType = $this->determineApiType($router);
+        
+        if ($apiType === 'binary') {
+            return $this->binaryApiService->getMktRows($router, $menu, $query);
+        }
+        
+        // Use REST API
+        return $this->getMktRowsRest($router, $menu, $query);
+    }
+
+    /**
+     * Add rows to a MikroTik menu.
+     *
+     * @param MikrotikRouter $router The router to modify
+     * @param string $menu The menu path
+     * @param array $rows Array of rows to add
+     *
+     * @return array Result array with success status, counts, and error details
+     */
+    public function addMktRows(MikrotikRouter $router, string $menu, array $rows): array
+    {
+        $apiType = $this->determineApiType($router);
+        
+        if ($apiType === 'binary') {
+            return $this->binaryApiService->addMktRows($router, $menu, $rows);
+        }
+        
+        // Use REST API
+        return $this->addMktRowsRest($router, $menu, $rows);
+    }
+
+    /**
+     * Edit a row in a MikroTik menu.
+     *
+     * @param MikrotikRouter $router The router to modify
+     * @param string $menu The menu path
+     * @param array $row Identifier for the row to edit
+     * @param array $data New data for the row
+     *
+     * @return bool True if successful
+     */
+    public function editMktRow(MikrotikRouter $router, string $menu, array $row, array $data): bool
+    {
+        $apiType = $this->determineApiType($router);
+        
+        if ($apiType === 'binary') {
+            return $this->binaryApiService->editMktRow($router, $menu, $row, $data);
+        }
+        
+        // Use REST API
+        return $this->editMktRowRest($router, $menu, $row, $data);
+    }
+
+    /**
+     * Remove rows from a MikroTik menu.
+     *
+     * @param MikrotikRouter $router The router to modify
+     * @param string $menu The menu path
+     * @param array $rows Array of rows to remove
+     *
+     * @return bool True if successful
+     */
+    public function removeMktRows(MikrotikRouter $router, string $menu, array $rows): bool
+    {
+        $apiType = $this->determineApiType($router);
+        
+        if ($apiType === 'binary') {
+            return $this->binaryApiService->removeMktRows($router, $menu, $rows);
+        }
+        
+        // Use REST API
+        return $this->removeMktRowsRest($router, $menu, $rows);
+    }
+
+    /**
+     * Execute a command on MikroTik router.
+     *
+     * @param MikrotikRouter $router The router to execute command on
+     * @param string $command The command to execute
+     * @param array $params Optional command parameters
+     *
+     * @return mixed Command output or null on failure
+     */
+    public function ttyWrite(MikrotikRouter $router, string $command, array $params = []): mixed
+    {
+        $apiType = $this->determineApiType($router);
+        
+        // Binary API doesn't have a direct equivalent, use REST if available
+        if ($apiType === 'binary') {
+            Log::warning('ttyWrite not supported via binary API, attempting REST API fallback', [
+                'router_id' => $router->id,
+            ]);
+        }
+        
+        return $this->ttyWriteRest($router, $command, $params);
+    }
+
+    /**
+     * Determine which API type to use for the router.
+     * 
+     * @param MikrotikRouter $router Router instance
+     * @return string 'binary' or 'rest'
+     */
+    private function determineApiType(MikrotikRouter $router): string
+    {
+        $apiType = $router->api_type ?? 'auto';
+        
+        if ($apiType === 'binary') {
+            return 'binary';
+        }
+        
+        if ($apiType === 'rest') {
+            return 'rest';
+        }
+        
+        // Auto-detect: prefer binary API (more reliable and compatible)
+        // Try binary API first, fall back to REST if it fails
+        if ($this->binaryApiService->testConnection($router)) {
+            Log::info('Auto-detected binary API for router', ['router_id' => $router->id]);
+            return 'binary';
+        }
+        
+        Log::info('Binary API failed, using REST API for router', ['router_id' => $router->id]);
+        return 'rest';
+    }
+
+    /**
+     * Get rows from a MikroTik menu using REST API.
+     */
+    private function getMktRowsRest(MikrotikRouter $router, string $menu, array $query = []): array
     {
         $maxRetries = config('services.mikrotik.max_retries', 3);
         $retryDelay = config('services.mikrotik.retry_delay', 1000); // milliseconds
@@ -108,7 +246,7 @@ class MikrotikApiService
      *
      * @return array Result array with success status, counts, and error details
      */
-    public function addMktRows(MikrotikRouter $router, string $menu, array $rows): array
+    private function addMktRowsRest(MikrotikRouter $router, string $menu, array $rows): array
     {
         $results = [
             'success' => true,
@@ -218,7 +356,7 @@ class MikrotikApiService
      *
      * @return bool True if successful
      */
-    public function editMktRow(MikrotikRouter $router, string $menu, array $row, array $data): bool
+    private function editMktRowRest(MikrotikRouter $router, string $menu, array $row, array $data): bool
     {
         try {
             $endpoint = $this->menuToEndpoint($menu);
@@ -271,7 +409,7 @@ class MikrotikApiService
      *
      * @return bool True if successful
      */
-    public function removeMktRows(MikrotikRouter $router, string $menu, array $rows): bool
+    private function removeMktRowsRest(MikrotikRouter $router, string $menu, array $rows): bool
     {
         try {
             $endpoint = $this->menuToEndpoint($menu);
@@ -331,7 +469,7 @@ class MikrotikApiService
      *
      * @return mixed Command output or null on failure
      */
-    public function ttyWrite(MikrotikRouter $router, string $command, array $params = []): mixed
+    private function ttyWriteRest(MikrotikRouter $router, string $command, array $params = []): mixed
     {
         try {
             $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
