@@ -13,7 +13,7 @@
     $ipAddress = $customer->ipAllocations->first()?->ip_address ?? '';
 @endphp
 
-<div x-data="customerDetailsEditor()" class="space-y-6">
+<div x-data="customerDetailsEditor({{ $customer->id }})" class="space-y-6">
     <!-- General Information Section -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
@@ -26,7 +26,7 @@
                     Save
                 </button>
             </div>
-            <form id="general-info-form" @input="markDirty('general')">
+            <form id="general-info-form" @input="markDirty('general')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
@@ -82,7 +82,7 @@
                     Save
                 </button>
             </div>
-            <form id="credentials-form" @input="markDirty('credentials')">
+            <form id="credentials-form" @input="markDirty('credentials')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
@@ -97,7 +97,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
-                                <svg x-show="showPassword" class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+                                <svg x-show="showPassword" class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                 </svg>
                             </button>
@@ -120,7 +120,7 @@
                     Save
                 </button>
             </div>
-            <form id="address-form" @input="markDirty('address')">
+            <form id="address-form" @input="markDirty('address')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Address</label>
@@ -178,7 +178,7 @@
                     Save
                 </button>
             </div>
-            <form id="network-form" @input="markDirty('network')">
+            <form id="network-form" @input="markDirty('network')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Router Name</label>
@@ -210,7 +210,7 @@
                     Save
                 </button>
             </div>
-            <form id="mac-form" @input="markDirty('mac')">
+            <form id="mac-form" @input="markDirty('mac')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">MAC Address</label>
@@ -237,7 +237,7 @@
                     Save
                 </button>
             </div>
-            <form id="comments-form" @input="markDirty('comments')">
+            <form id="comments-form" @input="markDirty('comments')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                     <textarea name="comments" rows="4" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Add any notes or comments about this customer...">{{ optional($networkUser)->comments ?? '' }}</textarea>
@@ -246,86 +246,3 @@
         </div>
     </div>
 </div>
-
-<script>
-function customerDetailsEditor() {
-    return {
-        sections: {
-            general: { isDirty: false },
-            credentials: { isDirty: false },
-            address: { isDirty: false },
-            network: { isDirty: false },
-            mac: { isDirty: false },
-            comments: { isDirty: false },
-        },
-        
-        markDirty(section) {
-            this.sections[section].isDirty = true;
-        },
-        
-        async saveSection(section) {
-            const formId = section === 'general' ? 'general-info-form' : `${section}-form`;
-            const form = document.getElementById(formId);
-            if (!form) {
-                console.error(`Form not found: ${formId}`);
-                return;
-            }
-            
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            try {
-                const updateUrl = form.dataset.updateUrl || '{{ route("panel.admin.customers.partial-update", $customer->id) }}';
-                const response = await fetch(updateUrl, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.ok) {
-                    this.sections[section].isDirty = false;
-                    this.showNotification('Changes saved successfully', 'success');
-                } else {
-                    this.showNotification('Failed to save changes', 'error');
-                }
-            } catch (error) {
-                console.error('Save error:', error);
-                this.showNotification('An error occurred while saving', 'error');
-            }
-        },
-        
-        showNotification(message, type) {
-            // Simple notification - can be enhanced with a better notification system
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-md shadow-lg z-50 ${
-                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-            }`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        },
-        
-        checkUnsavedChanges() {
-            return Object.values(this.sections).some(section => section.isDirty);
-        },
-        
-        init() {
-            // Warn on page leave if there are unsaved changes
-            window.addEventListener('beforeunload', (e) => {
-                if (this.checkUnsavedChanges()) {
-                    e.preventDefault();
-                    e.returnValue = 'You have unsaved changes. Would you like to save before leaving?';
-                    return e.returnValue;
-                }
-            });
-        }
-    }
-}
-</script>
