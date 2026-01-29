@@ -106,52 +106,97 @@ class MikrotikApiService
      * @param string $menu The menu path
      * @param array $rows Array of rows to add
      *
-     * @return bool True if successful
+     * @return array Result array with success status, counts, and error details
      */
-    public function addMktRows(MikrotikRouter $router, string $menu, array $rows): bool
+    public function addMktRows(MikrotikRouter $router, string $menu, array $rows): array
     {
+        $results = [
+            'success' => true,
+            'total' => count($rows),
+            'succeeded' => 0,
+            'failed' => 0,
+            'errors' => [],
+        ];
+
         try {
             $endpoint = $this->menuToEndpoint($menu);
             $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
             $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api{$endpoint}/add";
 
-            $successCount = 0;
-            $failedCount = 0;
+            foreach ($rows as $index => $row) {
+                try {
+                    $response = Http::withBasicAuth($router->username, $router->password)
+                        ->timeout(config('services.mikrotik.timeout', 30))
+                        ->post($url, $row);
 
-            foreach ($rows as $row) {
-                $response = Http::withBasicAuth($router->username, $router->password)
-                    ->timeout(config('services.mikrotik.timeout', 30))
-                    ->post($url, $row);
-
-                if ($response->successful()) {
-                    $successCount++;
-                } else {
-                    $failedCount++;
-                    Log::warning('Failed to add row to MikroTik', [
+                    if ($response->successful()) {
+                        $results['succeeded']++;
+                        Log::info('Successfully added row to MikroTik', [
+                            'router_id' => $router->id,
+                            'menu' => $menu,
+                            'row_index' => $index,
+                            'row_data' => array_keys($row),
+                        ]);
+                    } else {
+                        $results['failed']++;
+                        $errorMsg = "HTTP {$response->status()}: " . ($response->body() ?: 'Unknown error');
+                        $results['errors'][] = [
+                            'row_index' => $index,
+                            'row_data' => $row,
+                            'error' => $errorMsg,
+                        ];
+                        
+                        Log::warning('Failed to add row to MikroTik', [
+                            'router_id' => $router->id,
+                            'menu' => $menu,
+                            'row_index' => $index,
+                            'row_keys' => array_keys($row),
+                            'status' => $response->status(),
+                            'response_body' => $response->body(),
+                        ]);
+                    }
+                } catch (\Exception $rowException) {
+                    $results['failed']++;
+                    $results['errors'][] = [
+                        'row_index' => $index,
+                        'row_data' => $row,
+                        'error' => $rowException->getMessage(),
+                    ];
+                    
+                    Log::error('Exception while adding row to MikroTik', [
                         'router_id' => $router->id,
                         'menu' => $menu,
-                        'row_keys' => array_keys($row),
-                        'status' => $response->status(),
+                        'row_index' => $index,
+                        'error' => $rowException->getMessage(),
                     ]);
                 }
             }
 
-            Log::info('Added rows to MikroTik', [
+            $results['success'] = $results['failed'] === 0;
+
+            Log::info('Batch add operation to MikroTik completed', [
                 'router_id' => $router->id,
                 'menu' => $menu,
-                'success' => $successCount,
-                'failed' => $failedCount,
+                'total' => $results['total'],
+                'succeeded' => $results['succeeded'],
+                'failed' => $results['failed'],
             ]);
 
-            return $failedCount === 0;
+            return $results;
         } catch (\Exception $e) {
-            Log::error('Error adding rows to MikroTik', [
+            Log::error('Error in batch add operation to MikroTik', [
                 'router_id' => $router->id,
                 'menu' => $menu,
                 'error' => $e->getMessage(),
             ]);
 
-            return false;
+            return [
+                'success' => false,
+                'total' => count($rows),
+                'succeeded' => 0,
+                'failed' => count($rows),
+                'errors' => [['error' => $e->getMessage()]],
+            ];
         }
     }
 

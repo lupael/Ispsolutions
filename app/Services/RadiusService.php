@@ -239,6 +239,11 @@ class RadiusService implements RadiusServiceInterface
             $username = $data['username'] ?? '';
             $password = $data['password'] ?? '';
 
+            Log::debug('RADIUS authenticate: Checking credentials in database', [
+                'username' => $username,
+                'connection' => config('radius.connection', 'radius'),
+            ]);
+
             // Check if user exists and password matches
             $user = RadCheck::where('username', $username)
                 ->where('attribute', 'Cleartext-Password')
@@ -246,6 +251,10 @@ class RadiusService implements RadiusServiceInterface
                 ->first();
 
             if ($user) {
+                Log::info('RADIUS authenticate: User found and authenticated', [
+                    'username' => $username,
+                ]);
+                
                 return [
                     'success' => true,
                     'username' => $username,
@@ -253,20 +262,34 @@ class RadiusService implements RadiusServiceInterface
                 ];
             }
 
+            // Check if user exists at all
+            $userExists = RadCheck::where('username', $username)->exists();
+            
+            if ($userExists) {
+                Log::warning('RADIUS authenticate: User exists but password mismatch', [
+                    'username' => $username,
+                ]);
+            } else {
+                Log::warning('RADIUS authenticate: User not found in database', [
+                    'username' => $username,
+                ]);
+            }
+
             return [
                 'success' => false,
                 'username' => $username,
-                'message' => 'Authentication failed',
+                'message' => $userExists ? 'Invalid password' : 'User not found',
             ];
         } catch (\Exception $e) {
             Log::error('RADIUS authentication error', [
                 'username' => $data['username'] ?? 'unknown',
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Authentication error',
+                'message' => 'Authentication error: ' . $e->getMessage(),
             ];
         }
     }

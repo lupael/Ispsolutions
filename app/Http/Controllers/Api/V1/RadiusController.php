@@ -23,12 +23,26 @@ class RadiusController extends Controller
      */
     public function authenticate(Request $request): JsonResponse
     {
+        // Log incoming RADIUS authentication request
+        Log::info('RADIUS authentication request received', [
+            'username' => $request->input('username'),
+            'client_ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('RADIUS authentication validation failed', [
+                'username' => $request->input('username'),
+                'errors' => $validator->errors()->toArray(),
+                'client_ip' => $request->ip(),
+            ]);
+            
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
@@ -41,11 +55,22 @@ class RadiusController extends Controller
         ]);
 
         if (! $result['success']) {
+            Log::warning('RADIUS authentication failed', [
+                'username' => $request->username,
+                'client_ip' => $request->ip(),
+                'reason' => $result['message'] ?? 'Invalid credentials',
+            ]);
+            
             return response()->json([
                 'message' => 'Authentication failed',
                 'authenticated' => false,
             ], 401);
         }
+
+        Log::info('RADIUS authentication successful', [
+            'username' => $request->username,
+            'client_ip' => $request->ip(),
+        ]);
 
         return response()->json([
             'message' => 'Authentication successful',
@@ -59,6 +84,16 @@ class RadiusController extends Controller
      */
     public function accountingStart(Request $request): JsonResponse
     {
+        // Log incoming RADIUS accounting start request
+        Log::info('RADIUS accounting start request received', [
+            'username' => $request->input('username'),
+            'session_id' => $request->input('session_id'),
+            'nas_ip_address' => $request->input('nas_ip_address'),
+            'framed_ip_address' => $request->input('framed_ip_address'),
+            'client_ip' => $request->ip(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'username' => 'required|string',
             'session_id' => 'required|string',
@@ -70,6 +105,13 @@ class RadiusController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::warning('RADIUS accounting start validation failed', [
+                'username' => $request->input('username'),
+                'session_id' => $request->input('session_id'),
+                'errors' => $validator->errors()->toArray(),
+                'client_ip' => $request->ip(),
+            ]);
+            
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
@@ -79,10 +121,22 @@ class RadiusController extends Controller
         $success = $this->radiusService->accountingStart($validator->validated());
 
         if (! $success) {
+            Log::error('RADIUS accounting start failed', [
+                'username' => $request->username,
+                'session_id' => $request->session_id,
+                'client_ip' => $request->ip(),
+            ]);
+            
             return response()->json([
                 'message' => 'Failed to start accounting session',
             ], 400);
         }
+
+        Log::info('RADIUS accounting start successful', [
+            'username' => $request->username,
+            'session_id' => $request->session_id,
+            'client_ip' => $request->ip(),
+        ]);
 
         return response()->json([
             'message' => 'Accounting session started successfully',
@@ -94,6 +148,16 @@ class RadiusController extends Controller
      */
     public function accountingUpdate(Request $request): JsonResponse
     {
+        // Log incoming RADIUS accounting update request
+        Log::debug('RADIUS accounting update request received', [
+            'username' => $request->input('username'),
+            'session_id' => $request->input('session_id'),
+            'session_time' => $request->input('session_time'),
+            'input_octets' => $request->input('input_octets'),
+            'output_octets' => $request->input('output_octets'),
+            'client_ip' => $request->ip(),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'session_id' => 'required|string',
             'username' => 'required|string',
@@ -103,6 +167,12 @@ class RadiusController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::warning('RADIUS accounting update validation failed', [
+                'username' => $request->input('username'),
+                'session_id' => $request->input('session_id'),
+                'errors' => $validator->errors()->toArray(),
+            ]);
+            
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
@@ -112,6 +182,11 @@ class RadiusController extends Controller
         $success = $this->radiusService->accountingUpdate($validator->validated());
 
         if (! $success) {
+            Log::error('RADIUS accounting update failed', [
+                'username' => $request->username,
+                'session_id' => $request->session_id,
+            ]);
+            
             return response()->json([
                 'message' => 'Failed to update accounting session',
             ], 400);
@@ -127,6 +202,18 @@ class RadiusController extends Controller
      */
     public function accountingStop(Request $request): JsonResponse
     {
+        // Log incoming RADIUS accounting stop request
+        Log::info('RADIUS accounting stop request received', [
+            'username' => $request->input('username'),
+            'session_id' => $request->input('session_id'),
+            'session_time' => $request->input('session_time'),
+            'input_octets' => $request->input('input_octets'),
+            'output_octets' => $request->input('output_octets'),
+            'terminate_cause' => $request->input('terminate_cause'),
+            'client_ip' => $request->ip(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'session_id' => 'required|string',
             'username' => 'required|string',
@@ -137,6 +224,12 @@ class RadiusController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::warning('RADIUS accounting stop validation failed', [
+                'username' => $request->input('username'),
+                'session_id' => $request->input('session_id'),
+                'errors' => $validator->errors()->toArray(),
+            ]);
+            
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
@@ -146,10 +239,20 @@ class RadiusController extends Controller
         $success = $this->radiusService->accountingStop($validator->validated());
 
         if (! $success) {
+            Log::error('RADIUS accounting stop failed', [
+                'username' => $request->username,
+                'session_id' => $request->session_id,
+            ]);
+            
             return response()->json([
                 'message' => 'Failed to stop accounting session',
             ], 400);
         }
+
+        Log::info('RADIUS accounting stop successful', [
+            'username' => $request->username,
+            'session_id' => $request->session_id,
+        ]);
 
         return response()->json([
             'message' => 'Accounting session stopped successfully',
