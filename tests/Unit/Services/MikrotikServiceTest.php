@@ -20,7 +20,7 @@ class MikrotikServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->mikrotikService = new MikrotikService;
+        $this->mikrotikService = app(MikrotikService::class);
     }
 
     public function test_connect_router_successfully(): void
