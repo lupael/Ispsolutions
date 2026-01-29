@@ -24,13 +24,23 @@
         </div>
     </div>
 
+    <!-- Inline Editable Customer Details -->
+    <x-inline-editable-customer-details 
+        :customer="$customer" 
+        :packages="$packages ?? []"
+        :operators="$operators ?? []"
+        :zones="$zones ?? []"
+        :routers="$routers ?? []"
+    />
+
+
     <!-- Action Buttons Grid -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h2>
             
-            <!-- Actions organized in responsive grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <!-- Actions organized in responsive grid (max 3 columns) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     
                     <!-- Action 1: Edit - Always Visible -->
                     @if(auth()->user()->operator_level <= 20 || auth()->user()->can('update', $customer))
@@ -276,13 +286,15 @@
         </div>
     </div>
 
-    <!-- Inline Editable Customer Details -->
-    <x-inline-editable-customer-details 
-        :customer="$customer" 
-        :packages="$packages ?? []"
-        :operators="$operators ?? []"
-        :zones="$zones ?? []"
-        :routers="$routers ?? []"
+
+    <!-- Tabbed Customer Details (Profile, Network, Billing, Sessions, History, Activity) -->
+    <x-tabbed-customer-details 
+        :customer="$customer"
+        :onu="$onu"
+        :recentPayments="$recentPayments ?? collect()"
+        :recentInvoices="$recentInvoices ?? collect()"
+        :recentSmsLogs="$recentSmsLogs ?? collect()"
+        :recentAuditLogs="$recentAuditLogs ?? collect()"
     />
 </div>
 

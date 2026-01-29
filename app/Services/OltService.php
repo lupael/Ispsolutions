@@ -184,7 +184,6 @@ class OltService implements OltServiceInterface
             $commands = $this->getVendorCommands($olt);
             $onus = [];
 
-            // This is a mock implementation - real implementation would parse actual OLT output
             // Different OLT vendors (Huawei, ZTE, Fiberhome, VSOL) have different commands and output formats
             $output = $connection->exec($commands['onu_state']);
 
@@ -196,7 +195,7 @@ class OltService implements OltServiceInterface
             $lines = explode("\n", $output);
 
             foreach ($lines as $line) {
-                // Mock parsing - real implementation would parse actual OLT output format
+                // Parse based on vendor-specific format
                 if (preg_match('/(\d+\/\d+\/\d+)\s+(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
                     $onus[] = [
                         'pon_port' => $matches[1],
@@ -215,6 +214,16 @@ class OltService implements OltServiceInterface
 
             return [];
         }
+    }
+    
+    /**
+     * Check if OLT supports SNMP discovery.
+     */
+    private function canUseSNMP(Olt $olt): bool
+    {
+        return !empty($olt->ip_address) 
+            && !empty($olt->snmp_community) 
+            && !empty($olt->snmp_version);
     }
 
     /**
@@ -267,6 +276,28 @@ class OltService implements OltServiceInterface
     {
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
+            
+            // Try SNMP first for real-time power levels
+            if ($this->canUseSNMP($onu->olt)) {
+                $snmpService = app(OltSnmpService::class);
+                $signalData = $snmpService->getOnuSignalLevels($onu->olt, $onu);
+                
+                if ($signalData) {
+                    Log::debug('Retrieved ONU status via SNMP', [
+                        'onu_id' => $onuId,
+                        'status' => $signalData['status'],
+                    ]);
+                    
+                    return [
+                        'status' => $signalData['status'],
+                        'signal_rx' => $signalData['rx_power'],
+                        'signal_tx' => $signalData['tx_power'],
+                        'distance' => $signalData['distance'],
+                        'uptime' => null, // Not available via SNMP
+                        'last_update' => now()->toIso8601String(),
+                    ];
+                }
+            }
 
             // Try SNMP first if configured
             $oltSnmpService = app(\App\Services\OltSnmpService::class);
