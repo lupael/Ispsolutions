@@ -3,19 +3,20 @@
 ## Overview
 The Customer Details page (`/panel/admin/customers/{id}`) provides comprehensive customer management capabilities. This document lists all available actions and their permission requirements.
 
-## Total Actions: 24+
+## Total Actions: 24
 
-### Always Visible Actions (7 actions - No Permission Required)
+### Always Visible Actions (5 actions - No Permission Required)
 These actions are available to all authenticated users who can view the customer:
 
-0. **Back to List** - Returns to customer list page (Navigation)
 16. **Create Ticket** - Opens ticket creation form for this customer (Add Complaint)
 17. **Internet History** - Views customer's internet usage history
 19. **Check Usage** - Real-time usage check (AJAX)
 22. **View Tickets** - Lists all tickets for this customer
 23. **View Activity Logs** - Shows activity logs for this customer
 
-### Permission-Based Actions (17 actions with @can checks)
+**Note**: "Back to List" is a navigation element, not counted as an action.
+
+### Permission-Based Actions (19 actions with @can checks)
 These actions require specific permissions. For Admin users (operator_level <= 20), ALL permissions are automatically granted.
 
 #### Customer Management Actions
@@ -52,7 +53,7 @@ These actions require specific permissions. For Admin users (operator_level <= 2
 ## Permission Hierarchy
 
 ### Admin (operator_level <= 20)
-✅ **ALL 24 ACTIONS VISIBLE** (7 always + up to 17 permission-based)
+✅ **ALL 24 ACTIONS VISIBLE** (5 always + 19 permission-based)
 - Developer (level 0)
 - Super Admin (level 10)  
 - Admin (level 20)
@@ -60,9 +61,9 @@ These actions require specific permissions. For Admin users (operator_level <= 2
 Admin users automatically pass all @can checks due to the CustomerPolicy implementation that returns `true` for `operator_level <= 20` on all methods.
 
 **Note**: The Activate and Suspend buttons are status-dependent:
-- Activate button only shows when customer status is NOT 'active'
-- Suspend button only shows when customer status IS 'active'
-This means an Admin will typically see 22-23 actions at a time, not all 24 simultaneously.
+- Activate button (Action 2) only shows when customer status is NOT 'active'
+- Suspend button (Action 3) only shows when customer status IS 'active'
+This means an Admin will typically see 23 actions at a time, not all 24 simultaneously.
 
 ### Operator (operator_level = 30)
 Requires explicit permissions for most actions. Can view customers in their hierarchy.
@@ -99,9 +100,9 @@ public function someAction(User $user, User $customer): bool
 
 ## Testing Checklist
 
-- [ ] Verify Admin sees all appropriate actions (22-23 actions depending on customer status)
+- [ ] Verify Admin sees all appropriate actions (23 actions - either Activate OR Suspend based on status)
 - [ ] Verify actions 2 (Activate) and 3 (Suspend) are mutually exclusive based on status
-- [ ] Verify 7 actions are always visible regardless of role
+- [ ] Verify 5 actions are always visible regardless of role
 - [ ] Verify Operator sees only permitted actions
 - [ ] Verify Sub-Operator sees limited actions
 - [ ] Test each action executes correctly
@@ -111,7 +112,14 @@ public function someAction(User $user, User $customer): bool
 
 ## Why Admin Might See "Only 5 Actions"
 
-If an Admin user reports seeing only 5-7 actions, check:
+If an Admin user reports seeing only 5 actions, this is actually **CORRECT** - these are the 5 always-visible actions that don't require permission checks:
+1. Create Ticket
+2. Internet History  
+3. Check Usage
+4. View Tickets
+5. View Activity Logs
+
+**The issue is that the other 19 permission-based actions are NOT showing**, which means:
 
 1. **Incorrect operator_level**: Verify the admin user has `operator_level <= 20` in the database
 2. **Tenant Mismatch**: The customer's `tenant_id` might differ from the admin's `tenant_id`
