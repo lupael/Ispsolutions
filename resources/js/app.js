@@ -156,6 +156,7 @@ window.MetronicCore = {
 // Customer Details Editor Alpine Component
 window.customerDetailsEditor = function(customerId) {
     return {
+        customerId: customerId,
         sections: {
             general: { isDirty: false },
             credentials: { isDirty: false },
