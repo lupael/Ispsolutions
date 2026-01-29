@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSmsPaymentRequest;
 use App\Models\SmsPayment;
+use App\Notifications\SmsPaymentFailedNotification;
+use App\Notifications\SmsPaymentSuccessNotification;
 use App\Services\SmsBalanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -258,7 +260,8 @@ class SmsPaymentController extends Controller
                     'transaction_id' => $paymentData['transaction_id'],
                 ]);
 
-                // TODO: Send notification to operator about successful payment
+                // Send notification to operator about successful payment
+                $operator->notify(new SmsPaymentSuccessNotification($payment->fresh()));
                 
                 return response()->json([
                     'success' => true,
@@ -273,7 +276,11 @@ class SmsPaymentController extends Controller
                     'reason' => $paymentData['failure_reason'] ?? 'Unknown',
                 ]);
 
-                // TODO: Send notification to operator about failed payment
+                // Send notification to operator about failed payment
+                $payment->operator->notify(new SmsPaymentFailedNotification(
+                    $payment,
+                    $paymentData['failure_reason'] ?? 'Payment failed'
+                ));
                 
                 return response()->json([
                     'success' => true,

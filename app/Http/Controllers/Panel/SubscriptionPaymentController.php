@@ -9,9 +9,11 @@ use App\Http\Requests\ProcessSubscriptionPaymentRequest;
 use App\Models\Subscription;
 use App\Models\SubscriptionBill;
 use App\Models\SubscriptionPlan;
+use App\Notifications\SubscriptionPaymentSuccessNotification;
 use App\Services\PaymentGatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -184,6 +186,9 @@ class SubscriptionPaymentController extends Controller
                 $subscription->update(['status' => 'active']);
             }
 
+            // Send notification to operator
+            $user->notify(new SubscriptionPaymentSuccessNotification($bill));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Payment processed successfully',
@@ -223,6 +228,31 @@ class SubscriptionPaymentController extends Controller
             'success' => true,
             'data' => $bills,
         ]);
+    }
+
+    /**
+     * Display subscription bills page (Web UI)
+     */
+    public function billsWeb(Request $request): View
+    {
+        $user = $request->user();
+
+        if (! $user->tenant_id) {
+            abort(400, 'No tenant found');
+        }
+
+        $bills = SubscriptionBill::where('tenant_id', $user->tenant_id)
+            ->with('subscription.plan')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        // Get current pending bill if exists
+        $currentBill = SubscriptionBill::where('tenant_id', $user->tenant_id)
+            ->where('status', 'pending')
+            ->orderBy('due_date', 'asc')
+            ->first();
+
+        return view('panels.operator.subscriptions.bills', compact('bills', 'currentBill'));
     }
 
     /**
