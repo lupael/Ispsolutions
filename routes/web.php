@@ -840,6 +840,9 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 't
     // SMS Payments - Web UI routes (authorization enforced at controller level)
     Route::get('/sms-payments', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'webIndex'])->name('sms-payments.index');
     Route::get('/sms-payments/create', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'webCreate'])->name('sms-payments.create');
+    
+    // Auto-Debit Settings - Web UI routes
+    Route::get('/auto-debit', [\App\Http\Controllers\Panel\AutoDebitController::class, 'index'])->name('auto-debit.index');
 });
 
 // Sub-Operator Panel

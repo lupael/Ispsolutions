@@ -1399,4 +1399,47 @@ class PaymentGatewayService
             ];
         }
     }
+
+    /**
+     * Process auto-debit payment
+     *
+     * @param \App\Models\User $customer
+     * @param float $amount
+     * @param string $paymentMethod
+     * @return array{success: bool, transaction_id?: string, message?: string}
+     */
+    public function processAutoDebit(\App\Models\User $customer, float $amount, string $paymentMethod): array
+    {
+        try {
+            // TODO: Implement actual payment gateway integration for auto-debit
+            // This will depend on whether stored payment tokens/agreements are available
+            
+            Log::info('Processing auto-debit payment', [
+                'customer_id' => $customer->id,
+                'amount' => $amount,
+                'payment_method' => $paymentMethod,
+            ]);
+
+            // For now, return a mock response
+            // In production, this should integrate with actual payment gateways
+            // using stored payment tokens or agreements
+            
+            return [
+                'success' => false,
+                'message' => 'Auto-debit payment gateway integration not yet implemented. Please implement payment tokenization first.',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Auto-debit payment failed', [
+                'customer_id' => $customer->id,
+                'amount' => $amount,
+                'payment_method' => $paymentMethod,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 }
