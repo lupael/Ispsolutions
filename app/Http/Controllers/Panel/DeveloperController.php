@@ -625,4 +625,267 @@ class DeveloperController extends Controller
 
         return view('panels.developer.admins.index', compact('admins'));
     }
+
+    /**
+     * Create a new subscription plan.
+     */
+    public function createSubscription(): View
+    {
+        return view('panels.developer.subscriptions.create');
+    }
+
+    /**
+     * Store a new subscription plan.
+     */
+    public function storeSubscription(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:subscription_plans',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'billing_cycle' => 'required|in:monthly,quarterly,yearly',
+            'max_users' => 'nullable|integer|min:0',
+            'max_routers' => 'nullable|integer|min:0',
+            'max_olts' => 'nullable|integer|min:0',
+            'features' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        \App\Models\SubscriptionPlan::create($validated);
+
+        return redirect()->route('panel.developer.subscriptions.index')
+            ->with('success', 'Subscription plan created successfully.');
+    }
+
+    /**
+     * Edit a subscription plan.
+     */
+    public function editSubscription($id): View
+    {
+        $plan = \App\Models\SubscriptionPlan::findOrFail($id);
+        return view('panels.developer.subscriptions.edit', compact('plan'));
+    }
+
+    /**
+     * Update a subscription plan.
+     */
+    public function updateSubscription(Request $request, $id): RedirectResponse
+    {
+        $plan = \App\Models\SubscriptionPlan::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:subscription_plans,slug,' . $id,
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'billing_cycle' => 'required|in:monthly,quarterly,yearly',
+            'max_users' => 'nullable|integer|min:0',
+            'max_routers' => 'nullable|integer|min:0',
+            'max_olts' => 'nullable|integer|min:0',
+            'features' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        $plan->update($validated);
+
+        return redirect()->route('panel.developer.subscriptions.index')
+            ->with('success', 'Subscription plan updated successfully.');
+    }
+
+    /**
+     * Delete a subscription plan.
+     */
+    public function deleteSubscription($id): RedirectResponse
+    {
+        $plan = \App\Models\SubscriptionPlan::findOrFail($id);
+        $plan->delete();
+
+        return redirect()->route('panel.developer.subscriptions.index')
+            ->with('success', 'Subscription plan deleted successfully.');
+    }
+
+    /**
+     * Create a payment gateway.
+     */
+    public function createPaymentGateway(): View
+    {
+        return view('panels.developer.gateways.payment-create');
+    }
+
+    /**
+     * Store a payment gateway.
+     */
+    public function storePaymentGateway(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'provider' => 'required|string|in:stripe,paypal,razorpay,sslcommerz,bkash,nagad',
+            'configuration' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        PaymentGateway::create($validated);
+
+        return redirect()->route('panel.developer.gateways.payment')
+            ->with('success', 'Payment gateway created successfully.');
+    }
+
+    /**
+     * Edit a payment gateway.
+     */
+    public function editPaymentGateway($id): View
+    {
+        $gateway = PaymentGateway::findOrFail($id);
+        return view('panels.developer.gateways.payment-edit', compact('gateway'));
+    }
+
+    /**
+     * Update a payment gateway.
+     */
+    public function updatePaymentGateway(Request $request, $id): RedirectResponse
+    {
+        $gateway = PaymentGateway::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'provider' => 'required|string|in:stripe,paypal,razorpay,sslcommerz,bkash,nagad',
+            'configuration' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        $gateway->update($validated);
+
+        return redirect()->route('panel.developer.gateways.payment')
+            ->with('success', 'Payment gateway updated successfully.');
+    }
+
+    /**
+     * Delete a payment gateway.
+     */
+    public function deletePaymentGateway($id): RedirectResponse
+    {
+        $gateway = PaymentGateway::findOrFail($id);
+        $gateway->delete();
+
+        return redirect()->route('panel.developer.gateways.payment')
+            ->with('success', 'Payment gateway deleted successfully.');
+    }
+
+    /**
+     * Create an SMS gateway.
+     */
+    public function createSmsGateway(): View
+    {
+        return view('panels.developer.gateways.sms-create');
+    }
+
+    /**
+     * Store an SMS gateway.
+     */
+    public function storeSmsGateway(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'provider' => 'required|string|in:twilio,nexmo,msg91,bulksms,custom',
+            'configuration' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        \App\Models\SmsGateway::create($validated);
+
+        return redirect()->route('panel.developer.gateways.sms')
+            ->with('success', 'SMS gateway created successfully.');
+    }
+
+    /**
+     * Edit an SMS gateway.
+     */
+    public function editSmsGateway($id): View
+    {
+        $gateway = \App\Models\SmsGateway::findOrFail($id);
+        return view('panels.developer.gateways.sms-edit', compact('gateway'));
+    }
+
+    /**
+     * Update an SMS gateway.
+     */
+    public function updateSmsGateway(Request $request, $id): RedirectResponse
+    {
+        $gateway = \App\Models\SmsGateway::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'provider' => 'required|string|in:twilio,nexmo,msg91,bulksms,custom',
+            'configuration' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        $gateway->update($validated);
+
+        return redirect()->route('panel.developer.gateways.sms')
+            ->with('success', 'SMS gateway updated successfully.');
+    }
+
+    /**
+     * Delete an SMS gateway.
+     */
+    public function deleteSmsGateway($id): RedirectResponse
+    {
+        $gateway = \App\Models\SmsGateway::findOrFail($id);
+        $gateway->delete();
+
+        return redirect()->route('panel.developer.gateways.sms')
+            ->with('success', 'SMS gateway deleted successfully.');
+    }
+
+    /**
+     * Store a super admin.
+     */
+    public function storeSuperAdmin(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $validated['password'] = bcrypt($validated['password']);
+        $validated['operator_level'] = 10; // Super Admin level
+
+        $user = User::create($validated);
+        $user->assignRole('super-admin');
+
+        return redirect()->route('panel.developer.super-admins.index')
+            ->with('success', 'Super admin created successfully.');
+    }
+
+    /**
+     * Edit a tenancy.
+     */
+    public function editTenancy($id): View
+    {
+        $tenancy = Tenant::findOrFail($id);
+        return view('panels.developer.tenancies.edit', compact('tenancy'));
+    }
+
+    /**
+     * Update a tenancy.
+     */
+    public function updateTenancy(Request $request, $id): RedirectResponse
+    {
+        $tenancy = Tenant::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'domain' => 'required|string|max:255|unique:tenants,domain,' . $id,
+            'status' => 'required|in:active,inactive,suspended',
+        ]);
+
+        $tenancy->update($validated);
+
+        return redirect()->route('panel.developer.tenancies.index')
+            ->with('success', 'Tenancy updated successfully.');
+    }
 }

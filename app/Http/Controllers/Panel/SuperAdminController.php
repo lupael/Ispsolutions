@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class SuperAdminController extends Controller
@@ -482,5 +483,185 @@ class SuperAdminController extends Controller
     public function settings(): View
     {
         return view('panels.super-admin.settings');
+    }
+
+    /**
+     * Store billing fixed configuration.
+     */
+    public function billingFixedStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'monthly_fee' => 'required|numeric|min:0',
+            'setup_fee' => 'nullable|numeric|min:0',
+            'currency' => 'required|string|in:USD,EUR,BDT,INR',
+            'billing_cycle' => 'required|string|in:monthly,quarterly,yearly',
+            'auto_renew' => 'nullable|boolean',
+        ]);
+
+        // Store configuration (you may want to use a settings table or config)
+        foreach ($validated as $key => $value) {
+            \DB::table('settings')->updateOrInsert(
+                ['key' => 'billing_fixed_' . $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
+        }
+
+        return redirect()->route('panel.super-admin.billing.fixed')
+            ->with('success', 'Fixed billing configuration saved successfully.');
+    }
+
+    /**
+     * Store billing user-base configuration.
+     */
+    public function billingUserBaseStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'price_per_user' => 'required|numeric|min:0',
+            'minimum_users' => 'nullable|integer|min:0',
+            'currency' => 'required|string|in:USD,EUR,BDT,INR',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            \DB::table('settings')->updateOrInsert(
+                ['key' => 'billing_user_base_' . $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
+        }
+
+        return redirect()->route('panel.super-admin.billing.user-base')
+            ->with('success', 'User-base billing configuration saved successfully.');
+    }
+
+    /**
+     * Store billing panel-base configuration.
+     */
+    public function billingPanelBaseStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'price_per_panel' => 'required|numeric|min:0',
+            'currency' => 'required|string|in:USD,EUR,BDT,INR',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            \DB::table('settings')->updateOrInsert(
+                ['key' => 'billing_panel_base_' . $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
+        }
+
+        return redirect()->route('panel.super-admin.billing.panel-base')
+            ->with('success', 'Panel-base billing configuration saved successfully.');
+    }
+
+    /**
+     * Edit an ISP.
+     */
+    public function ispEdit($id): View
+    {
+        $isp = User::where('operator_level', 20)->findOrFail($id);
+        return view('panels.super-admin.isp.edit', compact('isp'));
+    }
+
+    /**
+     * Update an ISP.
+     */
+    public function ispUpdate(Request $request, $id): RedirectResponse
+    {
+        $isp = User::where('operator_level', 20)->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'phone' => 'nullable|string|max:20',
+            'company_name' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        $isp->update($validated);
+
+        return redirect()->route('panel.super-admin.isp.index')
+            ->with('success', 'ISP updated successfully.');
+    }
+
+    /**
+     * Edit a payment gateway.
+     */
+    public function paymentGatewayEdit($id): View
+    {
+        $gateway = \App\Models\PaymentGateway::findOrFail($id);
+        return view('panels.super-admin.payment-gateway.edit', compact('gateway'));
+    }
+
+    /**
+     * Update a payment gateway.
+     */
+    public function paymentGatewayUpdate(Request $request, $id): RedirectResponse
+    {
+        $gateway = \App\Models\PaymentGateway::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'provider' => 'required|string|in:stripe,paypal,razorpay,sslcommerz,bkash,nagad',
+            'configuration' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        $gateway->update($validated);
+
+        return redirect()->route('panel.super-admin.payment-gateway.index')
+            ->with('success', 'Payment gateway updated successfully.');
+    }
+
+    /**
+     * Delete a payment gateway.
+     */
+    public function paymentGatewayDestroy($id): RedirectResponse
+    {
+        $gateway = \App\Models\PaymentGateway::findOrFail($id);
+        $gateway->delete();
+
+        return redirect()->route('panel.super-admin.payment-gateway.index')
+            ->with('success', 'Payment gateway deleted successfully.');
+    }
+
+    /**
+     * Edit an SMS gateway.
+     */
+    public function smsGatewayEdit($id): View
+    {
+        $gateway = \App\Models\SmsGateway::findOrFail($id);
+        return view('panels.super-admin.sms-gateway.edit', compact('gateway'));
+    }
+
+    /**
+     * Update an SMS gateway.
+     */
+    public function smsGatewayUpdate(Request $request, $id): RedirectResponse
+    {
+        $gateway = \App\Models\SmsGateway::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'provider' => 'required|string|in:twilio,nexmo,msg91,bulksms,custom',
+            'configuration' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        $gateway->update($validated);
+
+        return redirect()->route('panel.super-admin.sms-gateway.index')
+            ->with('success', 'SMS gateway updated successfully.');
+    }
+
+    /**
+     * Delete an SMS gateway.
+     */
+    public function smsGatewayDestroy($id): RedirectResponse
+    {
+        $gateway = \App\Models\SmsGateway::findOrFail($id);
+        $gateway->delete();
+
+        return redirect()->route('panel.super-admin.sms-gateway.index')
+            ->with('success', 'SMS gateway deleted successfully.');
     }
 }
