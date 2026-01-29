@@ -48,9 +48,9 @@ Choose the guide for your role:
 ### Feature Specifications
 - **[Network Services Guide](docs/NETWORK_SERVICES.md)** - RADIUS, MikroTik, IPAM, and session monitoring
 - **[OLT Service Guide](docs/OLT_SERVICE_GUIDE.md)** - OLT/ONU management and provisioning
-- **[TODO Features A-Z](TODO_FEATURES_A2Z.md)** - Complete feature list and specifications
+- **[Feature Implementation Status](FEATURE_IMPLEMENTATION_STATUS.md)** - Current feature status and implementation tracking
 - **[Panel Specifications](PANELS_SPECIFICATION.md)** - Detailed panel-specific documentation
-- **[Multi-Tenancy Isolation](MULTI_TENANCY_ISOLATION.md)** - Multi-tenancy architecture overview
+- **[Multi-Tenancy Isolation](docs/technical/MULTI_TENANCY_ISOLATION.md)** - Multi-tenancy architecture overview
 
 ### MikroTik Integration
 - **[MikroTik Quick Start](MIKROTIK_QUICKSTART.md)** - Quick start guide for MikroTik integration
@@ -102,7 +102,7 @@ php artisan db:seed --class=RoleSeeder
 - ✅ Production readiness increased to 95% (up from 75%)
 - ✅ Comprehensive A-Z feature coverage through letter W (Web)
 - 🎯 Only 15 features remaining (3.6%) - nearly complete!
-- 📄 See [NEXT_200_TASKS_COMPLETED.md](NEXT_200_TASKS_COMPLETED.md) for detailed breakdown
+- 📄 See [FEATURE_IMPLEMENTATION_STATUS.md](FEATURE_IMPLEMENTATION_STATUS.md) for detailed breakdown
 - 📄 See [CHANGELOG.md](CHANGELOG.md) for version 4.0.0 release notes
 
 ### Network Services
@@ -121,7 +121,7 @@ php artisan db:seed --class=RoleSeeder
 
 The platform implements a hierarchical role-based access control (RBAC) system with strict tenant boundaries.
 
-**📖 Complete Documentation:** See [ROLE_SYSTEM.md](ROLE_SYSTEM.md) for full specification v3.1
+**📖 Complete Documentation:** See [ROLE_SYSTEM.md](docs/technical/ROLE_SYSTEM.md) for full specification v3.1
 
 #### Role Hierarchy (Lower level = Higher privilege)
 
@@ -175,8 +175,8 @@ php artisan db:seed --class=DemoSeeder
 
 #### Documentation
 
-- **[ROLE_SYSTEM.md](ROLE_SYSTEM.md)** - Complete role system specification v3.1
-- **[DATA_ISOLATION.md](DATA_ISOLATION.md)** - Complete data isolation rules
+- **[ROLE_SYSTEM.md](docs/technical/ROLE_SYSTEM.md)** - Complete role system specification v3.1
+- **[DATA_ISOLATION.md](docs/technical/DATA_ISOLATION.md)** - Complete data isolation rules
 - **[CHANGELOG.md](CHANGELOG.md)** - Recent changes and updates
 
 ### ✅ Core Implementation
@@ -326,14 +326,6 @@ make lint              # Run PHPStan and Pint
 make build             # Build production assets
 make ipam-cleanup      # Clean up expired IP allocations
 make mikrotik-health   # Check MikroTik router health
-```
-
-### Manual Installation (Without Docker)
-
-If you prefer to run without Docker:
-```bash
-cp .env.example .env
-php artisan key:generate
 ```
 
 ### Manual Installation (Without Docker)
@@ -538,12 +530,6 @@ Implementations:
 - `radreply` - User attributes
 - `radacct` - Accounting records
 
-## Documentation
-
-- [Phase-by-Phase Implementation Checklist](docs/TODO_REIMPLEMENT.md)
-- [Network Services Guide](docs/NETWORK_SERVICES.md)
-- [API Documentation](docs/API.md)
-
 ## Docker Services
 
 The docker-compose setup includes:
@@ -669,7 +655,8 @@ This project is licensed under the MIT License.
 ## Support
 
 For questions and support:
-- Review the [implementation checklist](docs/TODO_REIMPLEMENT.md)
+- Review the [Documentation Index](DOCUMENTATION_INDEX.md) for all available guides
+- Review the [Implementation Status](docs/IMPLEMENTATION_STATUS.md) for current progress
 - Check the troubleshooting section above
 - Open an issue on GitHub
 - Review Laravel 12 documentation: https://laravel.com/docs/12.x
