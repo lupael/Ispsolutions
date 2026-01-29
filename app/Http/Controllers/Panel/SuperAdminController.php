@@ -145,7 +145,7 @@ class SuperAdminController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => ! empty($validated['password']) ? bcrypt($validated['password']) : $user->password,
-            'is_active' => $request->has('is_active'),
+            'is_active' => $request->has('is_active') ? (bool) $request->input('is_active') : false,
         ]);
 
         $user->roles()->sync([$validated['role_id']]);
