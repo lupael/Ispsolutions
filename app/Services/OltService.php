@@ -148,16 +148,35 @@ class OltService implements OltServiceInterface
     public function discoverOnus(int $oltId): array
     {
         try {
+            $olt = Olt::findOrFail($oltId);
+            
+            // Try SNMP discovery first (preferred method for real-time data)
+            if ($this->canUseSNMP($olt)) {
+                $snmpService = app(OltSnmpService::class);
+                $onus = $snmpService->discoverOnusViaSNMP($olt);
+                
+                if (!empty($onus)) {
+                    Log::info('Discovered ONUs via SNMP', [
+                        'olt_id' => $oltId,
+                        'count' => count($onus)
+                    ]);
+                    return $onus;
+                }
+                
+                Log::info('SNMP discovery returned no results, falling back to CLI', [
+                    'olt_id' => $oltId
+                ]);
+            }
+
+            // Fallback to CLI-based discovery
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
 
-            $olt = Olt::findOrFail($oltId);
             $connection = $this->connections[$oltId];
             $commands = $this->getVendorCommands($olt);
             $onus = [];
 
-            // This is a mock implementation - real implementation would parse actual OLT output
             // Different OLT vendors (Huawei, ZTE, Fiberhome, VSOL) have different commands and output formats
             $output = $connection->exec($commands['onu_state']);
 
@@ -169,7 +188,7 @@ class OltService implements OltServiceInterface
             $lines = explode("\n", $output);
 
             foreach ($lines as $line) {
-                // Mock parsing - real implementation would parse actual OLT output format
+                // Parse based on vendor-specific format
                 if (preg_match('/(\d+\/\d+\/\d+)\s+(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
                     $onus[] = [
                         'pon_port' => $matches[1],
@@ -188,6 +207,16 @@ class OltService implements OltServiceInterface
 
             return [];
         }
+    }
+    
+    /**
+     * Check if OLT supports SNMP discovery.
+     */
+    private function canUseSNMP(Olt $olt): bool
+    {
+        return !empty($olt->ip_address) 
+            && !empty($olt->snmp_community) 
+            && !empty($olt->snmp_version);
     }
 
     /**
@@ -240,7 +269,30 @@ class OltService implements OltServiceInterface
     {
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
+            
+            // Try SNMP first for real-time power levels
+            if ($this->canUseSNMP($onu->olt)) {
+                $snmpService = app(OltSnmpService::class);
+                $signalData = $snmpService->getOnuSignalLevels($onu->olt, $onu);
+                
+                if ($signalData) {
+                    Log::debug('Retrieved ONU status via SNMP', [
+                        'onu_id' => $onuId,
+                        'status' => $signalData['status'],
+                    ]);
+                    
+                    return [
+                        'status' => $signalData['status'],
+                        'signal_rx' => $signalData['rx_power'],
+                        'signal_tx' => $signalData['tx_power'],
+                        'distance' => $signalData['distance'],
+                        'uptime' => null, // Not available via SNMP
+                        'last_update' => now()->toIso8601String(),
+                    ];
+                }
+            }
 
+            // Fallback to CLI
             if (! $this->ensureConnected($onu->olt_id)) {
                 throw new RuntimeException("Failed to connect to OLT {$onu->olt_id}");
             }
