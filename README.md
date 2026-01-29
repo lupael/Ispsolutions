@@ -48,7 +48,6 @@ Choose the guide for your role:
 ### Feature Specifications
 - **[Network Services Guide](docs/NETWORK_SERVICES.md)** - RADIUS, MikroTik, IPAM, and session monitoring
 - **[OLT Service Guide](docs/OLT_SERVICE_GUIDE.md)** - OLT/ONU management and provisioning
-- **[Feature Implementation Status](FEATURE_IMPLEMENTATION_STATUS.md)** - Current feature status and implementation tracking
 - **[Panel Specifications](PANELS_SPECIFICATION.md)** - Detailed panel-specific documentation
 - **[Multi-Tenancy Isolation](docs/technical/MULTI_TENANCY_ISOLATION.md)** - Multi-tenancy architecture overview
 
