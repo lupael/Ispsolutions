@@ -74,7 +74,7 @@
             {{-- Action Buttons --}}
             <div class="space-y-2">
                 <a 
-                    href="{{ route('panel.sms-payments.create') }}" 
+                    href="{{ route('panel.operator.sms-payments.create') }}" 
                     class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                     <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@
                     Buy SMS Credits
                 </a>
                 <a 
-                    href="{{ route('panel.sms-payments.index') }}" 
+                    href="{{ route('panel.operator.sms-payments.index') }}" 
                     class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                     <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
