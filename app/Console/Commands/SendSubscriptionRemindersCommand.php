@@ -23,7 +23,7 @@ class SendSubscriptionRemindersCommand extends Command
      * @var string
      */
     protected $signature = 'subscription:send-reminders
-                          {--days=7 : Days before expiration to send reminder}';
+                          {--days=* : Days before expiration to send reminders (e.g., 7,3,1)}';
 
     /**
      * The console command description.
@@ -37,52 +37,72 @@ class SendSubscriptionRemindersCommand extends Command
      */
     public function handle(): int
     {
-        $daysAhead = (int) $this->option('days');
-        $this->info("Checking for subscriptions expiring in {$daysAhead} days...");
+        // Get days from options, default to 7, 3, 1 if not specified
+        $daysOptions = $this->option('days');
+        $daysToCheck = !empty($daysOptions) ? array_map('intval', $daysOptions) : [7, 3, 1];
 
-        // Get active subscriptions expiring soon
-        $expiringSubscriptions = Subscription::where('status', 'active')
-            ->whereBetween('end_date', [
-                now()->addDays($daysAhead)->startOfDay(),
-                now()->addDays($daysAhead)->endOfDay(),
-            ])
-            ->with('tenant')
-            ->get();
+        $this->info("Checking for subscriptions expiring in: " . implode(', ', $daysToCheck) . " days...");
 
-        $sentCount = 0;
+        $totalSent = 0;
+        $totalSubscriptions = 0;
 
-        foreach ($expiringSubscriptions as $subscription) {
-            try {
-                // Get tenant owner (operator)
-                $operator = $subscription->tenant->owner ?? null;
+        foreach ($daysToCheck as $daysAhead) {
+            // Get active subscriptions expiring on this specific day
+            $expiringSubscriptions = Subscription::where('status', 'active')
+                ->whereBetween('end_date', [
+                    now()->addDays($daysAhead)->startOfDay(),
+                    now()->addDays($daysAhead)->endOfDay(),
+                ])
+                ->with('tenant.owner')
+                ->get();
 
-                if (! $operator) {
-                    $this->warn("✗ Subscription ID {$subscription->id} has no owner");
-                    continue;
-                }
-
-                // Send notification
-                $operator->notify(new SubscriptionRenewalReminderNotification(
-                    $subscription,
-                    $daysAhead
-                ));
-
-                $sentCount++;
-
-                $this->info("✓ Sent reminder to {$operator->name} (Subscription ID: {$subscription->id})");
-            } catch (\Exception $e) {
-                Log::error('Failed to send subscription renewal reminder', [
-                    'subscription_id' => $subscription->id,
-                    'error' => $e->getMessage(),
-                ]);
-                $this->error("✗ Failed to send reminder for Subscription ID {$subscription->id}");
+            if ($expiringSubscriptions->isEmpty()) {
+                $this->line("No subscriptions expiring in {$daysAhead} days");
+                continue;
             }
+
+            $this->info("Found {$expiringSubscriptions->count()} subscription(s) expiring in {$daysAhead} days");
+            $totalSubscriptions += $expiringSubscriptions->count();
+
+            $sentCount = 0;
+
+            foreach ($expiringSubscriptions as $subscription) {
+                try {
+                    // Get tenant owner (operator)
+                    $operator = $subscription->tenant->owner ?? null;
+
+                    if (! $operator) {
+                        $this->warn("✗ Subscription ID {$subscription->id} has no owner");
+                        continue;
+                    }
+
+                    // Send notification
+                    $operator->notify(new SubscriptionRenewalReminderNotification(
+                        $subscription,
+                        $daysAhead
+                    ));
+
+                    $sentCount++;
+                    $totalSent++;
+
+                    $this->info("✓ Sent {$daysAhead}-day reminder to {$operator->name} (Subscription ID: {$subscription->id})");
+                } catch (\Exception $e) {
+                    Log::error('Failed to send subscription renewal reminder', [
+                        'subscription_id' => $subscription->id,
+                        'days_ahead' => $daysAhead,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $this->error("✗ Failed to send reminder for Subscription ID {$subscription->id}");
+                }
+            }
+
+            $this->info("Sent {$sentCount} reminder(s) for subscriptions expiring in {$daysAhead} days");
         }
 
         $this->newLine();
         $this->info("Summary:");
-        $this->info("- Subscriptions expiring in {$daysAhead} days: {$expiringSubscriptions->count()}");
-        $this->info("- Reminders sent: {$sentCount}");
+        $this->info("- Total subscriptions found: {$totalSubscriptions}");
+        $this->info("- Total reminders sent: {$totalSent}");
 
         return Command::SUCCESS;
     }

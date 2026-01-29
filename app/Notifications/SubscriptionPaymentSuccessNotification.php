@@ -45,7 +45,7 @@ class SubscriptionPaymentSuccessNotification extends Notification implements Sho
         $subscription = $this->bill->subscription;
         $planName = $subscription->plan->name ?? 'Your Plan';
         
-        return (new MailMessage)
+        $mailMessage = (new MailMessage)
             ->success()
             ->subject('Subscription Payment Received - ' . config('app.name'))
             ->greeting('Hello ' . $notifiable->name . ',')
@@ -53,11 +53,19 @@ class SubscriptionPaymentSuccessNotification extends Notification implements Sho
             ->line('**Payment Details:**')
             ->line('Plan: ' . $planName)
             ->line('Amount Paid: ' . $this->bill->amount . ' ' . $this->bill->currency)
-            ->line('Billing Period: ' . $this->bill->billing_period_start->format('M j, Y') . ' - ' . $this->bill->billing_period_end->format('M j, Y'))
-            ->line('Payment Date: ' . $this->bill->paid_at->format('F j, Y'))
+            ->line('Billing Period: ' . $this->bill->billing_period_start->format('M j, Y') . ' - ' . $this->bill->billing_period_end->format('M j, Y'));
+
+        // Only add payment date if paid_at is set
+        if ($this->bill->paid_at) {
+            $mailMessage->line('Payment Date: ' . $this->bill->paid_at->format('F j, Y'));
+        }
+
+        $mailMessage
             ->line('Your subscription has been renewed and will remain active until ' . $subscription->end_date->format('F j, Y'))
             ->action('View Invoice', route('panel.operator.subscriptions.bills'))
             ->line('Thank you for your continued support!');
+
+        return $mailMessage;
     }
 
     /**

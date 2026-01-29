@@ -159,9 +159,9 @@ function subscribeToPlan(planId) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-        }
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(data => {

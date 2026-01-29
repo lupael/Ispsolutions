@@ -54,10 +54,8 @@ Schedule::command('auto-debit:process')->daily()->at('05:00');
 // Schedule subscription billing
 Schedule::command('subscription:generate-bills')->monthlyOn(1, '00:30');
 
-// Schedule subscription renewal reminders
-Schedule::command('subscription:send-reminders --days=7')->daily()->at('08:30');
-Schedule::command('subscription:send-reminders --days=3')->daily()->at('08:35');
-Schedule::command('subscription:send-reminders --days=1')->daily()->at('08:40');
+// Schedule subscription renewal reminders (combined command checks 7, 3, and 1 day intervals)
+Schedule::command('subscription:send-reminders')->daily()->at('08:30');
 
 // Schedule SMS balance checks
 Schedule::command('sms:check-balance')->daily()->at('09:30');
