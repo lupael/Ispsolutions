@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * NAS NetWatch Controller
- * 
+ *
  * Implements RADIUS health monitoring with automatic failover.
  * When RADIUS server goes down, router automatically enables local secrets.
  * When RADIUS comes back up, router switches back to RADIUS authentication.
@@ -27,17 +27,13 @@ class NasNetWatchController extends Controller
 
     /**
      * Configure netwatch for RADIUS health monitoring on a router.
-     * 
-     * @param Request $request
-     * @param int $routerId
-     * @return JsonResponse
      */
     public function configure(Request $request, int $routerId): JsonResponse
     {
         try {
             $router = MikrotikRouter::with('nas')->findOrFail($routerId);
 
-            if (!$router->nas) {
+            if (! $router->nas) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Router must be associated with a NAS device',
@@ -45,7 +41,7 @@ class NasNetWatchController extends Controller
             }
 
             $radiusServer = $router->nas->server;
-            
+
             if (empty($radiusServer)) {
                 return response()->json([
                     'success' => false,
@@ -59,15 +55,15 @@ class NasNetWatchController extends Controller
                 'host' => $radiusServer,
                 'interval' => config('radius.netwatch.interval', '1m'),
                 'timeout' => config('radius.netwatch.timeout', '1s'),
-                'up-script' => "/ppp secret disable [find disabled=no];/ppp active remove [find radius=no];",
-                'down-script' => "/ppp secret enable [find disabled=yes];",
+                'up-script' => '/ppp secret disable [find disabled=no];/ppp active remove [find radius=no];',
+                'down-script' => '/ppp secret enable [find disabled=yes];',
                 'comment' => 'radius-health-monitor',
             ]];
 
             // Remove existing netwatch entries for this RADIUS server
             $existingRows = $this->apiService->getMktRows($router, $menu, ['host' => $radiusServer]);
-            
-            if (!empty($existingRows)) {
+
+            if (! empty($existingRows)) {
                 $this->apiService->removeMktRows($router, $menu, $existingRows);
                 Log::info('Removed existing netwatch entries', [
                     'router_id' => $routerId,
@@ -112,16 +108,13 @@ class NasNetWatchController extends Controller
 
     /**
      * Remove netwatch configuration from a router.
-     * 
-     * @param int $routerId
-     * @return JsonResponse
      */
     public function remove(int $routerId): JsonResponse
     {
         try {
             $router = MikrotikRouter::with('nas')->findOrFail($routerId);
 
-            if (!$router->nas) {
+            if (! $router->nas) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Router is not associated with a NAS device',
@@ -168,16 +161,13 @@ class NasNetWatchController extends Controller
 
     /**
      * Get netwatch status for a router.
-     * 
-     * @param int $routerId
-     * @return JsonResponse
      */
     public function status(int $routerId): JsonResponse
     {
         try {
             $router = MikrotikRouter::with('nas')->findOrFail($routerId);
 
-            if (!$router->nas) {
+            if (! $router->nas) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Router is not associated with a NAS device',
@@ -192,7 +182,7 @@ class NasNetWatchController extends Controller
 
             return response()->json([
                 'success' => true,
-                'configured' => !empty($entries),
+                'configured' => ! empty($entries),
                 'entries' => $entries,
                 'radius_server' => $radiusServer,
             ]);

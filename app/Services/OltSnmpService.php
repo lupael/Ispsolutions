@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * OLT SNMP Multi-Vendor Service
- * 
+ *
  * Provides SNMP-based discovery and monitoring for multiple OLT vendors:
  * - VSOL
  * - Huawei
@@ -55,33 +55,32 @@ class OltSnmpService
 
     /**
      * Discover ONUs via SNMP OID walk.
-     * 
-     * @param Olt $olt
+     *
      * @return array Array of discovered ONUs with their details
      */
     public function discoverOnusViaSNMP(Olt $olt): array
     {
         try {
-            if (!$this->canUseSNMP($olt)) {
+            if (! $this->canUseSNMP($olt)) {
                 throw new \RuntimeException('SNMP is not configured for this OLT');
             }
 
             $vendor = $this->detectVendor($olt);
             $oids = self::VENDOR_OIDS[$vendor] ?? null;
 
-            if (!$oids) {
+            if (! $oids) {
                 throw new \RuntimeException("Unsupported vendor: {$vendor}");
             }
 
             // Perform SNMP walk for ONU list
             $onuSerials = $this->snmpWalk($olt, $oids['onu_list']);
-            
+
             if (empty($onuSerials)) {
                 Log::warning('No ONUs discovered via SNMP', [
                     'olt_id' => $olt->id,
                     'vendor' => $vendor,
                 ]);
-                
+
                 return [];
             }
 
@@ -129,23 +128,22 @@ class OltSnmpService
 
     /**
      * Get real-time RX/TX power levels for an ONU.
-     * 
-     * @param Onu $onu
+     *
      * @return array Array with rx_power, tx_power, and distance
      */
     public function getOnuOpticalPower(Onu $onu): array
     {
         try {
             $olt = $onu->olt;
-            
-            if (!$this->canUseSNMP($olt)) {
+
+            if (! $this->canUseSNMP($olt)) {
                 throw new \RuntimeException('SNMP is not configured for this OLT');
             }
 
             $vendor = $this->detectVendor($olt);
             $oids = self::VENDOR_OIDS[$vendor] ?? null;
 
-            if (!$oids) {
+            if (! $oids) {
                 throw new \RuntimeException("Unsupported vendor: {$vendor}");
             }
 
@@ -209,21 +207,17 @@ class OltSnmpService
 
     /**
      * Check if SNMP can be used for this OLT.
-     * 
-     * @param Olt $olt
-     * @return bool
      */
     private function canUseSNMP(Olt $olt): bool
     {
-        return !empty($olt->snmp_community) 
-            && !empty($olt->snmp_version)
+        return ! empty($olt->snmp_community)
+            && ! empty($olt->snmp_version)
             && in_array(strtolower($olt->management_protocol ?? ''), ['snmp', 'both']);
     }
 
     /**
      * Detect OLT vendor from brand or model.
-     * 
-     * @param Olt $olt
+     *
      * @return string Vendor identifier (vsol, huawei, zte, bdcom)
      */
     private function detectVendor(Olt $olt): string
@@ -247,16 +241,12 @@ class OltSnmpService
     /**
      * Perform SNMP walk.
      * This is a placeholder - real implementation would use PHP SNMP functions.
-     * 
-     * @param Olt $olt
-     * @param string $oid
-     * @return array
      */
     private function snmpWalk(Olt $olt, string $oid): array
     {
         // Placeholder implementation
         // Real implementation would use: snmp2_real_walk() or snmp3_real_walk()
-        
+
         Log::info('SNMP walk placeholder', [
             'olt_id' => $olt->id,
             'oid' => $oid,
@@ -269,16 +259,12 @@ class OltSnmpService
     /**
      * Perform SNMP get.
      * This is a placeholder - real implementation would use PHP SNMP functions.
-     * 
-     * @param Olt $olt
-     * @param string $oid
-     * @return mixed
      */
     private function snmpGet(Olt $olt, string $oid): mixed
     {
         // Placeholder implementation
         // Real implementation would use: snmp2_get() or snmp3_get()
-        
+
         Log::info('SNMP get placeholder', [
             'olt_id' => $olt->id,
             'oid' => $oid,
@@ -289,9 +275,6 @@ class OltSnmpService
 
     /**
      * Clean serial number from SNMP response.
-     * 
-     * @param string $serial
-     * @return string
      */
     private function cleanSerialNumber(string $serial): string
     {
@@ -299,25 +282,21 @@ class OltSnmpService
         $serial = trim($serial);
         $serial = preg_replace('/^(STRING: |HEX-STRING: )/', '', $serial);
         $serial = str_replace(' ', '', $serial);
-        
+
         return strtoupper($serial);
     }
 
     /**
      * Extract PON port from SNMP index.
-     * 
-     * @param string $index
-     * @param string $vendor
-     * @return string
      */
     private function extractPonPort(string $index, string $vendor): string
     {
         // Vendor-specific index parsing
         // This is simplified - real implementation varies by vendor
-        
+
         $parts = explode('.', $index);
-        
-        return match($vendor) {
+
+        return match ($vendor) {
             'vsol' => $parts[0] ?? '0/0',
             'huawei' => ($parts[0] ?? '0') . '/' . ($parts[1] ?? '0'),
             'zte' => $parts[0] ?? '0/0',
@@ -328,31 +307,22 @@ class OltSnmpService
 
     /**
      * Extract ONU ID from SNMP index.
-     * 
-     * @param string $index
-     * @param string $vendor
-     * @return int
      */
     private function extractOnuId(string $index, string $vendor): int
     {
         $parts = explode('.', $index);
-        
+
         return (int) ($parts[2] ?? 0);
     }
 
     /**
      * Build SNMP index from PON port and ONU ID.
-     * 
-     * @param string $ponPort
-     * @param int $onuId
-     * @param string $vendor
-     * @return string
      */
     private function buildSnmpIndex(string $ponPort, int $onuId, string $vendor): string
     {
         $parts = explode('/', $ponPort);
-        
-        return match($vendor) {
+
+        return match ($vendor) {
             'vsol' => "{$parts[0]}.{$parts[1]}.{$onuId}",
             'huawei' => "{$parts[0]}.{$parts[1]}.{$onuId}",
             'zte' => "{$parts[0]}.{$parts[1]}.{$onuId}",
@@ -363,10 +333,8 @@ class OltSnmpService
 
     /**
      * Parse ONU status from SNMP response.
-     * 
+     *
      * @param mixed $status
-     * @param string $vendor
-     * @return string
      */
     private function parseOnuStatus($status, string $vendor): string
     {
@@ -375,7 +343,7 @@ class OltSnmpService
         }
 
         // Vendor-specific status code parsing
-        return match($vendor) {
+        return match ($vendor) {
             'vsol' => $status == 1 ? 'online' : 'offline',
             'huawei' => $status == 1 ? 'online' : 'offline',
             'zte' => $status == 1 ? 'online' : 'offline',
@@ -386,10 +354,8 @@ class OltSnmpService
 
     /**
      * Convert optical power value to dBm.
-     * 
+     *
      * @param mixed $value
-     * @param string $vendor
-     * @return float|null
      */
     private function convertOpticalPower($value, string $vendor): ?float
     {
@@ -404,10 +370,8 @@ class OltSnmpService
 
     /**
      * Convert distance value to meters.
-     * 
+     *
      * @param mixed $value
-     * @param string $vendor
-     * @return int|null
      */
     private function convertDistance($value, string $vendor): ?int
     {

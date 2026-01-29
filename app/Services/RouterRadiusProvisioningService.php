@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Router RADIUS Provisioning Service
- * 
+ *
  * Handles automated provisioning of RADIUS configuration on routers.
  * Implements the NAS-centric approach with automatic configuration on first connect.
  */
@@ -23,24 +23,23 @@ class RouterRadiusProvisioningService
 
     /**
      * Perform automated provisioning on router first connect.
-     * 
+     *
      * Steps:
      * 1. Configure RADIUS client
      * 2. Configure PPP AAA
      * 3. Create initial backup
      * 4. Auto-insert router into RADIUS nas table
-     * 
-     * @param MikrotikRouter $router
+     *
      * @return array Result array with success status and details
      */
     public function provisionOnFirstConnect(MikrotikRouter $router): array
     {
         DB::beginTransaction();
-        
+
         try {
             $nas = $router->nas;
-            
-            if (!$nas) {
+
+            if (! $nas) {
                 throw new \RuntimeException('Router must be associated with a NAS device');
             }
 
@@ -66,14 +65,14 @@ class RouterRadiusProvisioningService
             // Step 5: Ensure router is in RADIUS nas table
             $results['nas_table'] = $this->ensureNasTableEntry($router, $nas);
 
-            $allSuccess = $results['radius_client'] 
-                && $results['ppp_aaa'] 
+            $allSuccess = $results['radius_client']
+                && $results['ppp_aaa']
                 && $results['radius_incoming']
                 && $results['nas_table'];
 
             if ($allSuccess) {
                 DB::commit();
-                
+
                 Log::info('Successfully provisioned router for RADIUS', [
                     'router_id' => $router->id,
                     'router_name' => $router->name,
@@ -96,7 +95,7 @@ class RouterRadiusProvisioningService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Error provisioning router for RADIUS', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
@@ -113,10 +112,6 @@ class RouterRadiusProvisioningService
     /**
      * Configure RADIUS client on router.
      * Executes: /radius add service=ppp,hotspot address=[Server_IP]
-     * 
-     * @param MikrotikRouter $router
-     * @param Nas $nas
-     * @return bool
      */
     private function configureRadiusClient(MikrotikRouter $router, Nas $nas): bool
     {
@@ -128,7 +123,7 @@ class RouterRadiusProvisioningService
             // Check if RADIUS client already exists
             $existingRows = $this->apiService->getMktRows($router, $menu, ['address' => $radiusServer]);
 
-            if (!empty($existingRows)) {
+            if (! empty($existingRows)) {
                 // Update existing RADIUS client
                 $existRow = array_shift($existingRows);
                 $radiusConfig = [
@@ -170,9 +165,6 @@ class RouterRadiusProvisioningService
     /**
      * Configure PPP AAA on router.
      * Executes: /ppp aaa set use-radius=yes accounting=yes interim-update=5m
-     * 
-     * @param MikrotikRouter $router
-     * @return bool
      */
     private function configurePppAaa(MikrotikRouter $router): bool
     {
@@ -199,9 +191,6 @@ class RouterRadiusProvisioningService
     /**
      * Configure RADIUS incoming on router.
      * Executes: /radius incoming set accept=yes
-     * 
-     * @param MikrotikRouter $router
-     * @return bool
      */
     private function configureRadiusIncoming(MikrotikRouter $router): bool
     {
@@ -225,9 +214,6 @@ class RouterRadiusProvisioningService
     /**
      * Create initial backup of router configuration.
      * Executes: /system backup save
-     * 
-     * @param MikrotikRouter $router
-     * @return bool
      */
     private function createInitialBackup(MikrotikRouter $router): bool
     {
@@ -264,10 +250,6 @@ class RouterRadiusProvisioningService
     /**
      * Ensure router is present in RADIUS nas table.
      * Auto-inserts if not present.
-     * 
-     * @param MikrotikRouter $router
-     * @param Nas $nas
-     * @return bool
      */
     private function ensureNasTableEntry(MikrotikRouter $router, Nas $nas): bool
     {
@@ -275,7 +257,7 @@ class RouterRadiusProvisioningService
             // Check if NAS entry exists in database
             // The Nas model already has the router relationship,
             // so we just need to ensure the router has a nas_id
-            
+
             if ($router->nas_id) {
                 Log::info('Router already associated with NAS', [
                     'router_id' => $router->id,
@@ -308,8 +290,7 @@ class RouterRadiusProvisioningService
     /**
      * Export PPP secrets from router during import.
      * Creates a backup file on the router with current secrets.
-     * 
-     * @param MikrotikRouter $router
+     *
      * @return array Result with success status and filename
      */
     public function exportPppSecrets(MikrotikRouter $router): array

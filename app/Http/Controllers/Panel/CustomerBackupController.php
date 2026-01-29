@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Customer Backup Controller
- * 
+ *
  * Mirrors customer data to router PPP secrets for fallback authentication.
  * Only runs when primary_authenticator !== 'Radius'.
  */
@@ -26,19 +26,15 @@ class CustomerBackupController extends Controller
 
     /**
      * Backup/mirror a single customer to router PPP secret.
-     * 
-     * @param Request $request
-     * @param int $customerId
-     * @return JsonResponse
      */
     public function backupCustomer(Request $request, int $customerId): JsonResponse
     {
         try {
             $customer = NetworkUser::with('package')->findOrFail($customerId);
-            
+
             $routerId = $request->input('router_id');
-            
-            if (!$routerId) {
+
+            if (! $routerId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Router ID is required',
@@ -61,12 +57,12 @@ class CustomerBackupController extends Controller
             $menu = 'ppp/secret';
             $existRows = $this->apiService->getMktRows($router, $menu, ['name' => $pppSecret['name']]);
 
-            if (!empty($existRows)) {
+            if (! empty($existRows)) {
                 // Update existing secret
                 $existRow = array_shift($existRows);
                 $success = $this->apiService->editMktRow($router, $menu, $existRow, $pppSecret);
-                
-                $message = $success 
+
+                $message = $success
                     ? 'Customer PPP secret updated successfully'
                     : 'Failed to update customer PPP secret';
 
@@ -81,7 +77,7 @@ class CustomerBackupController extends Controller
 
                 return response()->json([
                     'success' => $result['success'],
-                    'message' => $result['success'] 
+                    'message' => $result['success']
                         ? 'Customer PPP secret created successfully'
                         : 'Failed to create customer PPP secret',
                     'action' => 'create',
@@ -104,10 +100,6 @@ class CustomerBackupController extends Controller
 
     /**
      * Backup all customers to router PPP secrets.
-     * 
-     * @param Request $request
-     * @param int $routerId
-     * @return JsonResponse
      */
     public function backupAllCustomers(Request $request, int $routerId): JsonResponse
     {
@@ -139,11 +131,11 @@ class CustomerBackupController extends Controller
                     // Check if secret already exists
                     $existRows = $this->apiService->getMktRows($router, $menu, ['name' => $pppSecret['name']]);
 
-                    if (!empty($existRows)) {
+                    if (! empty($existRows)) {
                         // Update existing
                         $existRow = array_shift($existRows);
                         $success = $this->apiService->editMktRow($router, $menu, $existRow, $pppSecret);
-                        
+
                         if ($success) {
                             $successCount++;
                         } else {
@@ -152,12 +144,12 @@ class CustomerBackupController extends Controller
                     } else {
                         // Add new
                         $result = $this->apiService->addMktRows($router, $menu, [$pppSecret]);
-                        
+
                         if ($result['success']) {
                             $successCount++;
                         } else {
                             $failCount++;
-                            if (!empty($result['errors'])) {
+                            if (! empty($result['errors'])) {
                                 $errors[] = [
                                     'customer' => $customer->username,
                                     'error' => $result['errors'][0]['error'] ?? 'Unknown error',
@@ -172,7 +164,7 @@ class CustomerBackupController extends Controller
                         'customer' => $customer->username ?? 'Unknown',
                         'error' => $e->getMessage(),
                     ];
-                    
+
                     Log::error('Error backing up customer', [
                         'customer_id' => $customer->id,
                         'error' => $e->getMessage(),
@@ -211,19 +203,15 @@ class CustomerBackupController extends Controller
 
     /**
      * Remove customer PPP secret from router.
-     * 
-     * @param Request $request
-     * @param int $customerId
-     * @return JsonResponse
      */
     public function removeCustomer(Request $request, int $customerId): JsonResponse
     {
         try {
             $customer = NetworkUser::findOrFail($customerId);
-            
+
             $routerId = $request->input('router_id');
-            
-            if (!$routerId) {
+
+            if (! $routerId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Router ID is required',
@@ -246,7 +234,7 @@ class CustomerBackupController extends Controller
 
             return response()->json([
                 'success' => $success,
-                'message' => $success 
+                'message' => $success
                     ? 'Customer PPP secret removed successfully'
                     : 'Failed to remove customer PPP secret',
             ]);
@@ -266,14 +254,11 @@ class CustomerBackupController extends Controller
 
     /**
      * Build PPP secret array from customer data.
-     * 
-     * @param NetworkUser $customer
-     * @return array
      */
     private function buildPppSecret(NetworkUser $customer): array
     {
         $package = $customer->package;
-        
+
         return [
             'name' => $customer->username,
             'password' => $customer->password, // Plain password for router
