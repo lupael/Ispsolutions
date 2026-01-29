@@ -37,6 +37,7 @@ class MikrotikAutoProvisioningService
     {
         $steps = [];
         $radiusServer = $radiusServerIp ?? config('radius.server_ip', '127.0.0.1');
+        $allSuccessful = true;
 
         try {
             DB::beginTransaction();
@@ -56,18 +57,42 @@ class MikrotikAutoProvisioningService
 
             // Step 2: Configure RADIUS client on router
             $steps['radius_client'] = $this->configureRadiusClient($router, $radiusServer);
+            if (! $steps['radius_client']['success']) {
+                $allSuccessful = false;
+            }
 
             // Step 3: Configure PPP AAA to use RADIUS
             $steps['ppp_aaa'] = $this->configurePppAaa($router);
+            if (! $steps['ppp_aaa']['success']) {
+                $allSuccessful = false;
+            }
 
             // Step 4: Configure RADIUS incoming
             $steps['radius_incoming'] = $this->configureRadiusIncoming($router);
+            if (! $steps['radius_incoming']['success']) {
+                $allSuccessful = false;
+            }
 
             // Step 5: Create initial backup
             $steps['initial_backup'] = $this->createInitialBackup($router);
+            // Backup failure is not critical, continue
 
             // Step 6: Configure netwatch for RADIUS health monitoring
             $steps['netwatch'] = $this->configureNetwatch($router, $radiusServer);
+            if (! $steps['netwatch']['success']) {
+                $allSuccessful = false;
+            }
+
+            // If critical steps failed, rollback
+            if (! $allSuccessful) {
+                DB::rollBack();
+
+                return [
+                    'success' => false,
+                    'message' => 'Auto-provisioning completed with failures',
+                    'steps' => $steps,
+                ];
+            }
 
             // Mark router as provisioned
             $router->update([
@@ -77,19 +102,14 @@ class MikrotikAutoProvisioningService
 
             DB::commit();
 
-            $allSuccessful = collect($steps)->every(fn ($step) => $step['success']);
-
-            Log::info('Auto-provisioning completed', [
+            Log::info('Auto-provisioning completed successfully', [
                 'router_id' => $router->id,
-                'success' => $allSuccessful,
                 'steps' => array_map(fn ($step) => $step['success'], $steps),
             ]);
 
             return [
-                'success' => $allSuccessful,
-                'message' => $allSuccessful
-                    ? 'Auto-provisioning completed successfully'
-                    : 'Auto-provisioning completed with some failures',
+                'success' => true,
+                'message' => 'Auto-provisioning completed successfully',
                 'steps' => $steps,
             ];
         } catch (\Exception $e) {
@@ -389,6 +409,12 @@ class MikrotikAutoProvisioningService
 
     /**
      * Configure netwatch for RADIUS health monitoring.
+     *
+     * Implements the logic described in issue #180:
+     * - RADIUS UP: Force RADIUS authentication (disable local secrets, drop non-radius sessions)
+     * - RADIUS DOWN: Enable local secrets as fallback
+     *
+     * This ensures users can still authenticate locally when RADIUS is down.
      */
     private function configureNetwatch(MikrotikRouter $router, string $radiusServer): array
     {
@@ -401,6 +427,8 @@ class MikrotikAutoProvisioningService
             }
 
             // Add netwatch configuration
+            // UP script: RADIUS is working, force all auth through RADIUS
+            // DOWN script: RADIUS is down, enable local secrets as fallback
             $netwatchConfig = [
                 'host' => $radiusServer,
                 'interval' => '1m',

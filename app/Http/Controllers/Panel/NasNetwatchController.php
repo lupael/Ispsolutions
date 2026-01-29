@@ -192,6 +192,12 @@ class NasNetwatchController extends Controller
 
     /**
      * Configure netwatch for RADIUS health monitoring.
+     *
+     * Implements the logic described in issue #180:
+     * - RADIUS UP: Force RADIUS authentication (disable local secrets, drop non-radius sessions)
+     * - RADIUS DOWN: Enable local secrets as fallback
+     *
+     * This ensures users can still authenticate locally when RADIUS is down.
      */
     private function configureNetwatchForRadius(MikrotikRouter $router, array $config): array
     {
@@ -200,7 +206,13 @@ class NasNetwatchController extends Controller
         $timeout = $config['timeout'] ?? '1s';
 
         // Scripts as defined in issue #180
+        // UP script: RADIUS is working, force all auth through RADIUS
+        // - Disable local secrets (they should not be used when RADIUS works)
+        // - Remove any active non-RADIUS sessions (force re-auth through RADIUS)
         $upScript = "/ppp secret disable [find disabled=no];/ppp active remove [find radius=no];";
+
+        // DOWN script: RADIUS is down, enable local secrets as fallback
+        // - Enable all disabled secrets so users can authenticate locally
         $downScript = "/ppp secret enable [find disabled=yes];";
 
         $netwatchRow = [

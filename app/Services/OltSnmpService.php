@@ -102,10 +102,19 @@ class OltSnmpService
             $onus = [];
 
             // Walk ONU list to get all ONUs
-            $onuListData = @$snmp->walk($oids['onu_list']);
+            $onuListData = [];
+            try {
+                $onuListData = $snmp->walk($oids['onu_list']);
+            } catch (\Exception $e) {
+                Log::warning('SNMP walk failed for ONU list', [
+                    'olt_id' => $olt->id,
+                    'oid' => $oids['onu_list'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             if (! $onuListData) {
-                Log::warning('Failed to walk ONU list via SNMP', [
+                Log::warning('No data returned from ONU list SNMP walk', [
                     'olt_id' => $olt->id,
                     'oid' => $oids['onu_list'],
                 ]);
@@ -216,7 +225,19 @@ class OltSnmpService
             $snmp = $this->createSnmpSession($olt);
 
             // Try to get system description (standard OID)
-            $sysDescr = @$snmp->get('1.3.6.1.2.1.1.1.0');
+            try {
+                $sysDescr = $snmp->get('1.3.6.1.2.1.1.1.0');
+            } catch (\Exception $e) {
+                Log::warning('SNMP get failed for system description', [
+                    'olt_id' => $olt->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => 'SNMP get operation failed: '.$e->getMessage(),
+                ];
+            }
 
             if ($sysDescr !== false) {
                 return [
@@ -303,6 +324,10 @@ class OltSnmpService
         $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
         $snmp->quick_print = true;
 
+        // Set timeout to prevent indefinite blocking (microseconds)
+        $snmp->timeout = 3000000; // 3 seconds
+        $snmp->retries = 2;
+
         return $snmp;
     }
 
@@ -364,8 +389,13 @@ class OltSnmpService
     private function getSnmpValue(SNMP $snmp, string $oid): mixed
     {
         try {
-            return @$snmp->get($oid);
+            return $snmp->get($oid);
         } catch (\Exception $e) {
+            Log::debug('SNMP get failed', [
+                'oid' => $oid,
+                'error' => $e->getMessage(),
+            ]);
+
             return null;
         }
     }
