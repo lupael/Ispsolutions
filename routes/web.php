@@ -1007,6 +1007,7 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
 
     // Admin (ISP) Management
     Route::get('/admins', [DeveloperController::class, 'allAdmins'])->name('admins.index');
+    Route::get('/admins/{id}', [DeveloperController::class, 'showAdmin'])->name('admins.show');
 
     // Subscription Management
     Route::get('/subscriptions', [DeveloperController::class, 'subscriptionPlans'])->name('subscriptions.index');

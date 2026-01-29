@@ -10,7 +10,7 @@
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <form action="#" method="POST" class="space-y-6" onsubmit="event.preventDefault(); alert('Super Admin creation functionality will be implemented soon.');">
+        <form action="{{ route('panel.developer.super-admins.store') }}" method="POST" class="space-y-6">
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
