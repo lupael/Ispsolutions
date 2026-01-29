@@ -21,18 +21,18 @@
                         Back to List
                     </a>
                     
-                    <!-- Action 1: Edit -->
-                    @can('update', $customer)
+                    <!-- Action 1: Edit - Always Visible -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('update', $customer))
                         <a href="{{ route('panel.admin.customers.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                             Edit
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 2: Activate (Status-dependent) -->
-                    @can('activate', $customer)
+                    <!-- Action 2: Activate (Status-dependent) - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('activate', $customer))
                         @if($customer->status !== 'active')
                             <button data-action="activate" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,10 +41,10 @@
                                 Activate
                             </button>
                         @endif
-                    @endcan
+                    @endif
 
-                    <!-- Action 3: Suspend (Status-dependent) -->
-                    @can('suspend', $customer)
+                    <!-- Action 3: Suspend (Status-dependent) - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('suspend', $customer))
                         @if($customer->status === 'active')
                             <button data-action="suspend" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,82 +53,82 @@
                                 Suspend
                             </button>
                         @endif
-                    @endcan
+                    @endif
 
-                    <!-- Action 4: Disconnect -->
-                    @can('disconnect', $customer)
+                    <!-- Action 4: Disconnect - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('disconnect', $customer))
                         <button data-action="disconnect" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                             </svg>
                             Disconnect
                         </button>
-                    @endcan
+                    @endif
 
-                    <!-- Action 5: Change Package -->
-                    @can('changePackage', $customer)
+                    <!-- Action 5: Change Package - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('changePackage', $customer))
                         <a href="{{ route('panel.admin.customers.change-package.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:bg-purple-700 active:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
                             Change Package
                         </a>
-                    @endcan
+                    @endif
 
                     <!-- Action 6-8: Speed/Time/Volume Limits -->
-                    <!-- Action 6: Speed Limit -->
-                    @can('editSpeedLimit', $customer)
+                    <!-- Action 6: Speed Limit - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('editSpeedLimit', $customer))
                         <a href="{{ route('panel.customers.speed-limit.show', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 focus:bg-orange-700 active:bg-orange-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                             Speed Limit
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 7: Time Limit -->
-                    @can('editSpeedLimit', $customer)
+                    <!-- Action 7: Time Limit - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('editSpeedLimit', $customer))
                         <a href="{{ route('panel.customers.time-limit.show', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-cyan-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-700 focus:bg-cyan-700 active:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Time Limit
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 8: Volume Limit -->
-                    @can('editSpeedLimit', $customer)
+                    <!-- Action 8: Volume Limit - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('editSpeedLimit', $customer))
                         <a href="{{ route('panel.customers.volume-limit.show', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-pink-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-pink-700 focus:bg-pink-700 active:bg-pink-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                             </svg>
                             Volume Limit
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 9: MAC Binding -->
-                    @can('removeMacBind', $customer)
+                    <!-- Action 9: MAC Binding - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('removeMacBind', $customer))
                         <a href="{{ route('panel.customers.mac-binding.index', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-slate-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-700 focus:bg-slate-700 active:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             MAC Binding
                         </a>
-                    @endcan
+                    @endif
 
                     <!-- Section 2: Billing Actions -->
-                    <!-- Action 10: Generate Bill -->
-                    @can('generateBill', $customer)
+                    <!-- Action 10: Generate Bill - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('generateBill', $customer))
                         <a href="{{ route('panel.admin.customers.bills.create', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             Generate Bill
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 11: Edit Billing Profile -->
-                    @can('editBillingProfile', $customer)
+                    <!-- Action 11: Edit Billing Profile - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('editBillingProfile', $customer))
                         <a href="{{ route('panel.admin.customers.billing-profile.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 focus:bg-amber-700 active:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -136,48 +136,48 @@
                             </svg>
                             Billing Profile
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 12: Advance Payment (Recharge) -->
-                    @can('advancePayment', $customer)
+                    <!-- Action 12: Advance Payment (Recharge) - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('advancePayment', $customer))
                         <a href="{{ route('panel.admin.customers.advance-payment.create', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-lime-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-lime-700 focus:bg-lime-700 active:bg-lime-900 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             Advance Payment
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 13: Other Payment -->
-                    @can('advancePayment', $customer)
+                    <!-- Action 13: Other Payment - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('advancePayment', $customer))
                         <a href="{{ route('panel.admin.customers.other-payment.create', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-teal-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-teal-700 focus:bg-teal-700 active:bg-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Other Payment
                         </a>
-                    @endcan
+                    @endif
 
                     <!-- Section 4: Communication -->
-                    <!-- Action 14: Send SMS -->
-                    @can('sendSms', $customer)
+                    <!-- Action 14: Send SMS - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('sendSms', $customer))
                         <a href="{{ route('panel.admin.customers.send-sms', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-sky-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-sky-700 focus:bg-sky-700 active:bg-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                             </svg>
                             Send SMS
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 15: Send Payment Link -->
-                    @can('sendLink', $customer)
+                    <!-- Action 15: Send Payment Link - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('sendLink', $customer))
                         <a href="{{ route('panel.admin.customers.send-payment-link', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-violet-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-violet-700 focus:bg-violet-700 active:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
                             Payment Link
                         </a>
-                    @endcan
+                    @endif
 
                     <!-- Action 16: Create Ticket (Add Complaint) - Always visible -->
                     <a href="{{ route('panel.tickets.create', ['customer_id' => $customer->id]) }}" class="inline-flex items-center px-3 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -196,15 +196,15 @@
                         Internet History
                     </a>
 
-                    <!-- Action 18: Change Operator -->
-                    @can('changeOperator', $customer)
+                    <!-- Action 18: Change Operator - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('changeOperator', $customer))
                         <a href="{{ route('panel.admin.customers.change-operator.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-rose-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-rose-700 focus:bg-rose-700 active:bg-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
                             Change Operator
                         </a>
-                    @endcan
+                    @endif
 
                     <!-- Action 19: Check Usage (Always visible) -->
                     <button id="checkUsageBtn" class="inline-flex items-center px-3 py-2 bg-teal-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-teal-700 focus:bg-teal-700 active:bg-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -214,25 +214,25 @@
                         Check Usage
                     </button>
 
-                    <!-- Action 20: Edit Suspend Date -->
-                    @can('editSuspendDate', $customer)
+                    <!-- Action 20: Edit Suspend Date - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('editSuspendDate', $customer))
                         <a href="{{ route('panel.admin.customers.suspend-date.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-stone-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-stone-700 focus:bg-stone-700 active:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             Suspend Date
                         </a>
-                    @endcan
+                    @endif
 
-                    <!-- Action 21: Hotspot Recharge -->
-                    @can('hotspotRecharge', $customer)
+                    <!-- Action 21: Hotspot Recharge - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('hotspotRecharge', $customer))
                         <a href="{{ route('panel.admin.customers.hotspot-recharge.create', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Hotspot Recharge
                         </a>
-                    @endcan
+                    @endif
 
                     <!-- Section 6: Tickets and Logs -->
                     <!-- Action 22: View Tickets (Always visible) -->
@@ -251,15 +251,15 @@
                         View Logs
                     </a>
 
-                    <!-- Action 24: Delete Customer -->
-                    @can('delete', $customer)
+                    <!-- Action 24: Delete Customer - Always Visible for Admin -->
+                    @if(auth()->user()->operator_level <= 20 || auth()->user()->can('delete', $customer))
                         <button data-action="delete" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-red-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-800 focus:bg-red-800 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                             Delete Customer
                         </button>
-                    @endcan
+                    @endif
                 </div>
             </div>
         </div>
