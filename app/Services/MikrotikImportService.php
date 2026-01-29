@@ -466,8 +466,21 @@ class MikrotikImportService
      */
     public function importIpPoolsFromRouter(int $routerId): array
     {
-        $tenantId = auth()->user()->tenant_id;
+        $user = auth()->user();
+        if (! $user) {
+            Log::warning('Attempt to import IP pools without authenticated user', [
+                'router_id' => $routerId,
+            ]);
 
+            return [
+                'success' => false,
+                'imported' => 0,
+                'failed' => 0,
+                'errors' => ['User not authenticated'],
+            ];
+        }
+
+        $tenantId = $user->tenant_id;
         try {
             // Connect to router
             if (! $this->mikrotikService->connectRouter($routerId)) {
