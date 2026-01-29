@@ -106,7 +106,7 @@
         
         @if($expiringCustomers->count() > 5)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-                <a href="{{ route('panel.admin.customers', ['expiring_days' => $days]) }}" 
+                <a href="{{ route('panel.admin.customers.index', ['expiring_days' => $days]) }}" 
                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
                     View All {{ $expiringCustomers->count() }} Expiring Customers →
                 </a>

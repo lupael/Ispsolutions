@@ -971,7 +971,7 @@ class AdminController extends Controller
                 \Cache::tags(['customers'])->flush();
             }
 
-            return redirect()->route('panel.admin.customers')
+            return redirect()->route('panel.admin.customers.index')
                 ->with('success', 'Customer created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1028,7 +1028,7 @@ class AdminController extends Controller
 
         $customer->update($updateData);
 
-        return redirect()->route('panel.admin.customers')
+        return redirect()->route('panel.admin.customers.index')
             ->with('success', 'Customer updated successfully.');
     }
 
@@ -1224,7 +1224,7 @@ class AdminController extends Controller
         $customer = NetworkUser::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
         $customer->delete();
 
-        return redirect()->route('panel.admin.customers')
+        return redirect()->route('panel.admin.customers.index')
             ->with('success', 'Customer deleted successfully.');
     }
 

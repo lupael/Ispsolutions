@@ -56,7 +56,7 @@
                 'label' => 'Customers',
                 'icon' => 'user-group',
                 'children' => [
-                    ['label' => 'All Customers', 'route' => 'panel.admin.customers'],
+                    ['label' => 'All Customers', 'route' => 'panel.admin.customers.index'],
                     ['label' => 'Add Customer', 'route' => 'panel.admin.customers.create'],
                     ['label' => 'Customer Wizard', 'route' => 'panel.admin.customers.wizard.start'],
                     ['label' => 'Online Customers', 'route' => 'panel.admin.customers.online'],

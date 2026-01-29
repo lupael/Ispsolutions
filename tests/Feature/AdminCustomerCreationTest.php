@@ -65,7 +65,7 @@ class AdminCustomerCreationTest extends TestCase
         $response = $this->post(route('panel.admin.customers.store'), $customerData);
 
         // Assert redirect to customers list
-        $response->assertRedirect(route('panel.admin.customers'));
+        $response->assertRedirect(route('panel.admin.customers.index'));
         $response->assertSessionHas('success', 'Customer created successfully.');
 
         // Assert customer was created in users table

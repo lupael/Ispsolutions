@@ -116,7 +116,7 @@
         <div class="p-6">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Filters</h3>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('panel.admin.customers') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 {{ !request('status') ? 'bg-indigo-50 border-indigo-300 text-indigo-700 dark:bg-indigo-900/20 dark:border-indigo-600' : '' }}">
+                <a href="{{ route('panel.admin.customers.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 {{ !request('status') ? 'bg-indigo-50 border-indigo-300 text-indigo-700 dark:bg-indigo-900/20 dark:border-indigo-600' : '' }}">
                     All Customers
                 </a>
                 <a href="{{ route('panel.admin.customers.online') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -140,7 +140,7 @@
                     Import Requests
                 </a>
                 <!-- Task 7.3: Parent Accounts (Resellers) filter - integrated into existing customer list -->
-                <a href="{{ route('panel.admin.customers', ['has_child_accounts' => '1']) }}" 
+                <a href="{{ route('panel.admin.customers.index', ['has_child_accounts' => '1']) }}" 
                    class="inline-flex items-center px-4 py-2 border border-purple-300 dark:border-purple-600 rounded-md text-sm font-medium {{ request('has_child_accounts') ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -153,35 +153,35 @@
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase">By Overall Status</h4>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_active']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_active']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 rounded-md text-sm hover:bg-green-100 dark:hover:bg-green-900/30 {{ request('overall_status') === 'prepaid_active' ? 'ring-2 ring-green-500' : '' }}">
                         <span class="text-green-700 dark:text-green-300">Prepaid Active</span>
                     </a>
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_active']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_active']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm hover:bg-blue-100 dark:hover:bg-blue-900/30 {{ request('overall_status') === 'postpaid_active' ? 'ring-2 ring-blue-500' : '' }}">
                         <span class="text-blue-700 dark:text-blue-300">Postpaid Active</span>
                     </a>
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_suspended']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_suspended']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 rounded-md text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 {{ request('overall_status') === 'prepaid_suspended' ? 'ring-2 ring-orange-500' : '' }}">
                         <span class="text-orange-700 dark:text-orange-300">Prepaid Suspended</span>
                     </a>
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_suspended']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_suspended']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 rounded-md text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 {{ request('overall_status') === 'postpaid_suspended' ? 'ring-2 ring-orange-500' : '' }}">
                         <span class="text-orange-700 dark:text-orange-300">Postpaid Suspended</span>
                     </a>
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_expired']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_expired']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-md text-sm hover:bg-red-100 dark:hover:bg-red-900/30 {{ request('overall_status') === 'prepaid_expired' ? 'ring-2 ring-red-500' : '' }}">
                         <span class="text-red-700 dark:text-red-300">Prepaid Expired</span>
                     </a>
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_expired']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_expired']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-md text-sm hover:bg-red-100 dark:hover:bg-red-900/30 {{ request('overall_status') === 'postpaid_expired' ? 'ring-2 ring-red-500' : '' }}">
                         <span class="text-red-700 dark:text-red-300">Postpaid Expired</span>
                     </a>
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'prepaid_inactive']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_inactive']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/20 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/30 {{ request('overall_status') === 'prepaid_inactive' ? 'ring-2 ring-gray-500' : '' }}">
                         <span class="text-gray-700 dark:text-gray-300">Prepaid Inactive</span>
                     </a>
-                    <a href="{{ route('panel.admin.customers', ['overall_status' => 'postpaid_inactive']) }}" 
+                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_inactive']) }}" 
                        class="flex items-center justify-between px-3 py-2 border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/20 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/30 {{ request('overall_status') === 'postpaid_inactive' ? 'ring-2 ring-gray-500' : '' }}">
                         <span class="text-gray-700 dark:text-gray-300">Postpaid Inactive</span>
                     </a>
@@ -192,7 +192,7 @@
 
     <!-- Search and Filters -->
     @include('panels.partials.search', [
-        'action' => route('panel.admin.customers'),
+        'action' => route('panel.admin.customers.index'),
         'placeholder' => 'Search by name, email or phone...',
         'filters' => [
             [

@@ -32,7 +32,7 @@
                 $label = $labels[$status] ?? ucfirst(str_replace('_', ' ', $status));
             @endphp
             
-            <a href="{{ route('panel.admin.customers', ['status' => $status]) }}" 
+            <a href="{{ route('panel.admin.customers.index', ['status' => $status]) }}" 
                class="block {{ $color['bg'] }} rounded-lg p-4 border-l-4 {{ $color['border'] }} hover:shadow-md transition-shadow duration-200">
                 <div class="flex items-center justify-between">
                     <div>

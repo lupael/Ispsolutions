@@ -323,7 +323,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     })->name('olt');
 
     // Customer Management
-    Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
+    Route::get('/customers', [AdminController::class, 'customers'])->name('customers.index');
     Route::get('/customers/create', [AdminController::class, 'customersCreate'])->name('customers.create');
     Route::post('/customers', [AdminController::class, 'customersStore'])->name('customers.store');
     Route::get('/customers/import-requests', [AdminController::class, 'customerImportRequests'])->name('customers.import-requests');
