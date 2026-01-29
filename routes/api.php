@@ -278,6 +278,38 @@ Route::prefix('sms-payments')
 Route::post('/sms-payments/webhook', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'webhook'])
     ->name('api.sms-payments.webhook');
 
+// Auto-Debit API Routes
+Route::prefix('auto-debit')
+    ->middleware(['auth:sanctum', 'rate_limit:api'])
+    ->name('api.auto-debit.')
+    ->group(function () {
+        Route::get('/settings', [\App\Http\Controllers\Panel\AutoDebitController::class, 'show'])->name('show');
+        Route::put('/settings', [\App\Http\Controllers\Panel\AutoDebitController::class, 'update'])->name('update');
+        Route::get('/history', [\App\Http\Controllers\Panel\AutoDebitController::class, 'history'])->name('history');
+        Route::get('/failed-report', [\App\Http\Controllers\Panel\AutoDebitController::class, 'failedReport'])
+            ->middleware('role:admin,operator,super-admin')
+            ->name('failed-report');
+        Route::post('/trigger/{customer}', [\App\Http\Controllers\Panel\AutoDebitController::class, 'trigger'])
+            ->middleware('role:super-admin')
+            ->name('trigger');
+        Route::post('/reset-retry/{customer}', [\App\Http\Controllers\Panel\AutoDebitController::class, 'resetRetryCount'])
+            ->middleware('role:super-admin')
+            ->name('reset-retry');
+    });
+
+// Subscription Payment API Routes
+Route::prefix('subscription-payments')
+    ->middleware(['auth:sanctum', 'rate_limit:api'])
+    ->name('api.subscription-payments.')
+    ->group(function () {
+        Route::get('/plans', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'index'])->name('plans');
+        Route::get('/plans/{plan}', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'show'])->name('show-plan');
+        Route::post('/subscribe/{plan}', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'subscribe'])->name('subscribe');
+        Route::get('/bills', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'bills'])->name('bills');
+        Route::post('/bills/{bill}/pay', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'processPayment'])->name('pay-bill');
+        Route::post('/cancel', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'cancel'])->name('cancel');
+    });
+
 // Router Management API Routes
 Route::prefix('routers')->middleware(['web', 'auth'])->group(function () {
     Route::post('{router}/test', [\App\Http\Controllers\Api\RouterController::class, 'testConnection'])

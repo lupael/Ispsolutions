@@ -1399,4 +1399,67 @@ class PaymentGatewayService
             ];
         }
     }
+
+    /**
+     * Process auto-debit payment
+     *
+     * @param \App\Models\User $customer
+     * @param float $amount
+     * @param string $paymentMethod
+     * @return array{success: bool, transaction_id?: string, message?: string}
+     */
+    public function processAutoDebit(\App\Models\User $customer, float $amount, string $paymentMethod): array
+    {
+        try {
+            Log::info('Processing auto-debit payment', [
+                'customer_id' => $customer->id,
+                'amount' => $amount,
+                'payment_method' => $paymentMethod,
+            ]);
+
+            // In non-production environments, return a mock success response
+            // to allow end-to-end testing without charging real payments
+            if (app()->environment(['local', 'testing'])) {
+                $transactionId = 'AUTO-DEBIT-MOCK-' . uniqid('', true);
+
+                Log::warning('Returning mock auto-debit success response in non-production environment', [
+                    'customer_id' => $customer->id,
+                    'amount' => $amount,
+                    'payment_method' => $paymentMethod,
+                    'transaction_id' => $transactionId,
+                ]);
+
+                return [
+                    'success' => true,
+                    'transaction_id' => $transactionId,
+                    'message' => 'Mock auto-debit processed (non-production environment).',
+                ];
+            }
+
+            // In production-like environments, auto-debit requires payment gateway integration
+            Log::warning('Auto-debit attempted in environment without gateway integration', [
+                'customer_id' => $customer->id,
+                'amount' => $amount,
+                'payment_method' => $paymentMethod,
+                'environment' => app()->environment(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Auto-debit payments are not currently available. Please update your payment method or contact support.',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Auto-debit payment failed', [
+                'customer_id' => $customer->id,
+                'amount' => $amount,
+                'payment_method' => $paymentMethod,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 }
