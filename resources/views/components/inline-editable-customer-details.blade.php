@@ -37,8 +37,25 @@
                         </select>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Operator ID</label>
+                        <input type="text" name="operator_id" value="{{ $customer->operator_id ?? $customer->manager_id ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company (Operator/Sub-operators)</label>
+                        <select name="operator_id_editable" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="">Select Operator</option>
+                            @foreach($operators as $operator)
+                                <option value="{{ $operator->id }}" {{ ($customer->manager_id ?? $customer->operator_id) == $operator->id ? 'selected' : '' }}>{{ $operator->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Type</label>
                         <input type="text" name="service_type" value="{{ optional($networkUser)->service_type }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profile Name</label>
+                        <input type="text" value="{{ optional(optional($networkUser)->package)->name ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer Name</label>
@@ -51,6 +68,14 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                         <input type="email" name="email" value="{{ $customer->email ?? '' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Status</label>
+                        <input type="text" value="{{ $customer->payment_status ?? ($customer->balance >= 0 ? 'Paid' : 'Due') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Advance Payment</label>
+                        <input type="text" value="{{ $customer->advance_balance ?? $customer->balance >= 0 ? number_format($customer->balance, 2) : '0.00' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zone</label>
@@ -162,6 +187,18 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valid Until</label>
                     <input type="text" value="{{ optional($networkUser)->expiry_date ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rate Limit</label>
+                    <input type="text" value="{{ optional(optional($networkUser)->package)->rate_limit ?? optional($networkUser)->rate_limit ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Volume Limit</label>
+                    <input type="text" value="{{ optional($networkUser)->volume_limit ?? optional(optional($networkUser)->package)->volume_limit ?? 'N/A' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Volume Used</label>
+                    <input type="text" value="{{ optional($networkUser)->volume_used ?? '0' }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm" readonly>
+                </div>
             </div>
         </div>
     </div>
@@ -222,6 +259,70 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Device Access Section -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Device Access</h3>
+            <div class="grid grid-cols-1 gap-4">
+                @php
+                    $router = optional($networkUser)->router;
+                    $loginUrls = [];
+                    if ($router && $ipAddress) {
+                        // Generate possible login URLs based on router configuration
+                        $loginUrls[] = [
+                            'label' => 'Router Management',
+                            'url' => 'http://' . ($router->host ?? $ipAddress)
+                        ];
+                        if ($router->type === 'mikrotik') {
+                            $loginUrls[] = [
+                                'label' => 'Winbox Connection',
+                                'url' => 'winbox://' . $router->host
+                            ];
+                        }
+                        // Hotspot login URL if applicable
+                        if (optional($networkUser)->service_type === 'hotspot') {
+                            $loginUrls[] = [
+                                'label' => 'Hotspot Login',
+                                'url' => 'http://' . ($router->hotspot_url ?? $router->host) . '/login'
+                            ];
+                        }
+                    }
+                @endphp
+                @if(count($loginUrls) > 0)
+                    @foreach($loginUrls as $login)
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ $login['label'] }}</label>
+                                <code class="text-xs text-gray-600 dark:text-gray-400">{{ $login['url'] }}</code>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="{{ $login['url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-md text-xs text-white hover:bg-indigo-700 transition">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                    Open
+                                </a>
+                                <button type="button" onclick="navigator.clipboard.writeText('{{ $login['url'] }}'); this.querySelector('span').textContent = 'Copied!'; setTimeout(() => this.querySelector('span').textContent = 'Copy', 2000);" class="inline-flex items-center px-3 py-1.5 bg-gray-600 border border-transparent rounded-md text-xs text-white hover:bg-gray-700 transition">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>Copy</span>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                        <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        No device access URLs available. Please configure router and IP address.
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
