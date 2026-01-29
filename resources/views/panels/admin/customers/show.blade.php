@@ -415,7 +415,7 @@
                 if (data.success) {
                     showNotification('Success', data.message, 'success');
                     if (redirectToList) {
-                        setTimeout(() => window.location.href = '{{ route("panel.admin.customers") }}', 1500);
+                        setTimeout(() => window.location.href = '{{ route("panel.admin.customers.index") }}', 1500);
                     } else {
                         setTimeout(() => window.location.reload(), 1500);
                     }

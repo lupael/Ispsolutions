@@ -109,7 +109,7 @@
                                         </td>
                                         @if(auth()->user()->operator_level === 0)
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {{ $customer->tenant?->company_name ?? 'N/A' }}
+                                                {{ $customer->tenant?->name ?? 'N/A' }}
                                             </td>
                                         @endif
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">

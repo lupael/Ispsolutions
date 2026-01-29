@@ -62,7 +62,7 @@ class SearchController extends Controller
         $customerQuery->where('operator_level', 100);
 
         return $customerQuery
-            ->with(['tenant:id,company_name', 'currentPackage:id,name'])
+            ->with(['tenant:id,name', 'currentPackage:id,name'])
             ->select('id', 'name', 'email', 'username', 'tenant_id', 'is_active', 'service_package_id')
             ->latest()
             ->limit(20)
