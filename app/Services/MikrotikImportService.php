@@ -462,6 +462,103 @@ class MikrotikImportService
     }
 
     /**
+     * Import IP pools from router.
+     */
+    public function importIpPoolsFromRouter(int $routerId): array
+    {
+        $tenantId = auth()->user()->tenant_id;
+
+        try {
+            // Connect to router
+            if (! $this->mikrotikService->connectRouter($routerId)) {
+                throw new \Exception('Failed to connect to router');
+            }
+
+            $router = MikrotikRouter::find($routerId);
+
+            if (! $router) {
+                Log::error('Router not found for fetching IP pools', ['router_id' => $routerId]);
+                throw new \Exception('Router not found');
+            }
+
+            // Fetch IP pools from router using API service
+            $pools = $this->mikrotikApiService->getMktRows($router, '/ip/pool');
+
+            if (empty($pools)) {
+                return [
+                    'success' => true,
+                    'imported' => 0,
+                    'failed' => 0,
+                    'errors' => [],
+                    'message' => 'No IP pools found on router',
+                ];
+            }
+
+            // Create backup
+            $this->backupIpPools($tenantId);
+
+            $imported = 0;
+            $failed = 0;
+            $errors = [];
+
+            DB::beginTransaction();
+            foreach ($pools as $poolData) {
+                try {
+                    // Parse the ranges field from MikroTik format
+                    $ranges = $poolData['ranges'] ?? '';
+                    if (empty($ranges)) {
+                        $errors[] = "Pool {$poolData['name']} has no ranges defined";
+                        $failed++;
+                        continue;
+                    }
+
+                    // Parse IP ranges - MikroTik format can be: "192.168.1.10-192.168.1.100"
+                    $ipList = $this->parseIpRange($ranges);
+
+                    foreach ($ipList as $ip) {
+                        IpPool::create([
+                            'name' => $poolData['name'] ?? "Pool-{$ip}",
+                            'ip_address' => $ip,
+                            'subnet_mask' => '255.255.255.0', // Default, can be updated manually
+                            'gateway' => null,
+                            'pool_type' => 'pppoe',
+                            'tenant_id' => $tenantId,
+                            'nas_id' => null,
+                            'status' => 'available',
+                        ]);
+                        $imported++;
+                    }
+                } catch (\Exception $e) {
+                    $failed++;
+                    $poolName = $poolData['name'] ?? 'Unknown';
+                    $errors[] = "Failed to import pool {$poolName}: {$e->getMessage()}";
+                }
+            }
+            DB::commit();
+
+            return [
+                'success' => true,
+                'imported' => $imported,
+                'failed' => $failed,
+                'errors' => $errors,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to import IP pools from router', [
+                'router_id' => $routerId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'imported' => 0,
+                'failed' => 0,
+                'errors' => [$e->getMessage()],
+            ];
+        }
+    }
+
+    /**
      * Get customer role ID.
      */
     private function getCustomerRoleId(): int
