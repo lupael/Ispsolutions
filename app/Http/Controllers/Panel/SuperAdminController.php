@@ -86,7 +86,7 @@ class SuperAdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:8|confirmed',
             'role_id' => 'required|exists:roles,id',
         ]);
 
@@ -104,6 +104,7 @@ class SuperAdminController extends Controller
             'password' => bcrypt($validated['password']),
             'tenant_id' => auth()->user()->tenant_id, // Enforce tenant isolation
             'operator_level' => $role->level,
+            'is_active' => true,
             'created_by' => auth()->id(),
         ]);
 
@@ -136,7 +137,7 @@ class SuperAdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'nullable|string|min:8',
+            'password' => 'nullable|string|min:8|confirmed',
             'role_id' => 'required|exists:roles,id',
             'is_active' => 'nullable|boolean',
         ]);
