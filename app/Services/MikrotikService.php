@@ -1546,6 +1546,7 @@ class MikrotikService implements MikrotikServiceInterface
                     'api_status' => 'online',
                     'last_checked_at' => now(),
                     'response_time_ms' => $response->transferStats && $response->transferStats->getTransferTime() ? (int)($response->transferStats->getTransferTime() * 1000) : null,
+                    'last_error' => null, // Clear previous error on success
                 ]);
 
                 return $data;

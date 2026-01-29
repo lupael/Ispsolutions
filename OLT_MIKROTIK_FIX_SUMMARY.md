@@ -143,9 +143,11 @@ No new migrations needed - all fields already exist:
 - `mikrotik_routers` table: last_checked_at, api_status, last_error (via migration 2026_01_26_023743)
 
 ### Configuration
-No configuration changes needed. The code uses existing config:
-- `services.mikrotik.timeout` (default: 30 seconds)
-- `services.mikrotik.allow_private_ips` (default: false)
+Added new configuration option in `config/services.php`:
+- `services.mikrotik.allow_private_ips` (default: true) - Allows RFC1918 private IPs for internal routers
+
+The code also uses existing config:
+- `services.mikrotik.timeout` (default: 60 seconds, via `MIKROTIK_API_TIMEOUT`)
 
 ### Backward Compatibility
 ✅ No breaking changes

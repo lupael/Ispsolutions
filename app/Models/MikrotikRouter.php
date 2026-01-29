@@ -141,8 +141,8 @@ class MikrotikRouter extends Model
     public function disconnect(): void
     {
         $this->update([
-            'status' => 'inactive',
             'api_status' => 'offline',
+            'last_checked_at' => now(),
         ]);
         // Additional cleanup can be added here if needed
     }
@@ -158,7 +158,6 @@ class MikrotikRouter extends Model
             
             if ($connected) {
                 $this->update([
-                    'status' => 'active',
                     'api_status' => 'online',
                     'last_checked_at' => now()
                 ]);
