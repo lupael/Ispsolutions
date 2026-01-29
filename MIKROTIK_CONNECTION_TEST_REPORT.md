@@ -2,17 +2,21 @@
 
 ## Date: 2026-01-29
 
+## Update: Dual API Support Implemented ✅
+
+**NEW**: System now supports both RouterOS v6 (Binary API) and v7 (REST API) with automatic detection.
+
 ## Objective
 Test connectivity to Mikrotik router at 103.138.147.185:8777 with credentials ispsolution1213/ispsolution1213 and verify PPP Profile import functionality.
 
 ## Test Environment
 - **Router IP**: 103.138.147.185
-- **API Port**: 8777
+- **API Port**: 8777 (REST API) / 8728 (Binary API)
 - **Username**: ispsolution1213
 - **Password**: ispsolution1213
-- **Protocol**: HTTP (RouterOS REST API)
+- **Protocol**: HTTP REST API (v7+) or Binary API (v6/v7)
 
-## Test Results
+## Previous Test Results (REST API Only)
 
 ### Connection Test Results
 
@@ -28,7 +32,7 @@ Test connectivity to Mikrotik router at 103.138.147.185:8777 with credentials is
 
 ### Analysis
 
-The connection behavior indicates:
+The connection behavior indicated:
 
 1. **TCP Layer**: ✓ Working
    - The router is reachable on port 8777
@@ -40,206 +44,222 @@ The connection behavior indicates:
    - Connection remains open but idle
    - Suggests HTTP/REST API service is not running or misconfigured
 
-### Possible Root Causes
+## Solution Implemented
 
-1. **RouterOS REST API Not Enabled**
-   - The REST API service may not be running on the router
-   - Check: `/ip service print` on RouterOS to verify API service is enabled
-   - The api-ssl or www-ssl service should be enabled on port 8777
+### Dual API Support ✅
 
-2. **Wrong Port Configuration**
-   - Port 8777 might be configured for a different service
-   - Standard MikroTik ports:
-     - API: 8728 (binary protocol)
-     - API-SSL: 8729 (secure binary protocol)
-     - HTTP: 80 (web interface)
-     - HTTPS: 443 (secure web interface)
-     - REST API: Requires www or www-ssl service with proper configuration
+The system now supports **BOTH** API types:
 
-3. **Authentication Issues**
-   - Credentials may be correct for RouterOS but REST API might require additional permissions
-   - User might not have API access rights
+1. **Binary API** (Port 8728 - RouterOS v6 and v7)
+   - Native RouterOS protocol
+   - Works with ALL RouterOS versions
+   - More reliable and battle-tested
+   - **Recommended for v6 routers**
 
-4. **Network/Firewall Issues**
-   - Deep packet inspection (DPI) might be blocking HTTP traffic
-   - Proxy or NAT issues between client and router
-   - Router CPU overload causing service delays
+2. **REST API** (Port 8777/80/443 - RouterOS v7.1+ only)
+   - HTTP-based API
+   - Requires RouterOS v7.1beta4 or newer
+   - Requires www service enabled
 
-5. **RouterOS Version Issues**
-   - REST API was introduced in RouterOS v7.1beta4
-   - If router is running older version, REST API is not available
+### Auto-Detection Feature
+
+- System automatically tries Binary API first
+- Falls back to REST API if Binary fails
+- Configurable via `api_type` field in database
+- No manual configuration needed
+
+### New Configuration Options
+
+**Router `api_type` Field**:
+- `auto` - Automatic detection (default, recommended)
+- `binary` - Force Binary API (for v6 routers)
+- `rest` - Force REST API (for v7.1+ routers)
+
+## Updated Recommendations
+
+### For Router at 103.138.147.185
+
+Since REST API (port 8777) is not responding, enable Binary API:
+
+```routeros
+/ip service set api disabled=no port=8728
+```
+
+Then update router configuration:
+
+```php
+$router = MikrotikRouter::find(1);
+$router->api_port = 8728;
+$router->api_type = 'binary';  // or 'auto' for auto-detection
+$router->save();
+```
+
+### For All Routers
+
+**RouterOS v6 Routers:**
+```routeros
+/ip service set api disabled=no port=8728
+```
+- Set `api_type = 'binary'` or `'auto'`
+- Binary API is the only option
+
+**RouterOS v7.1+ Routers:**
+```routeros
+# Option 1: Binary API (recommended)
+/ip service set api disabled=no port=8728
+
+# Option 2: REST API
+/ip service set www disabled=no port=8777
+```
+- Set `api_type = 'auto'` for automatic selection
+- Both APIs work, binary preferred
 
 ## Changes Made
 
-### 1. Increased Timeout to 60 Seconds
+### 1. Added Binary API Library
+- Package: `bencroker/routeros-api-php`
+- Provides native RouterOS protocol support
 
-Updated timeout configuration from 30 to 60 seconds as requested:
+### 2. Created RouterOSBinaryApiService
+- Complete Binary API implementation
+- Response normalization
+- Sensitive data sanitization
+- Error handling and logging
 
-**File: config/services.php**
-```php
-'mikrotik' => [
-    'timeout' => env('MIKROTIK_API_TIMEOUT', 60),  // Increased from 30
-    'default_port' => env('MIKROTIK_DEFAULT_PORT', 8728),
-    'max_retries' => env('MIKROTIK_MAX_RETRIES', 3),
-    'retry_delay' => env('MIKROTIK_RETRY_DELAY', 1000),
-],
-```
+### 3. Enhanced MikrotikApiService
+- Now acts as API selector/dispatcher
+- Auto-detection logic
+- Transparent switching between APIs
+- Maintains backward compatibility
 
-**File: app/Services/MikrotikApiService.php**
-- Updated all `->timeout(config('services.mikrotik.timeout', 60))` calls (5 locations)
-- Changed fallback value from 30 to 60 seconds for consistency
+### 4. Database Migration
+- Added `api_type` enum field to mikrotik_routers
+- Default value: `auto`
+- Migration: `2026_01_29_100141_add_api_type_to_mikrotik_routers_table.php`
 
-**File: .env.example**
-```env
-MIKROTIK_API_TIMEOUT=60  # Increased from 30
-MIKROTIK_MAX_RETRIES=3
-MIKROTIK_RETRY_DELAY=1000
-```
+### 5. Increased Timeout
+- Updated from 30 to 60 seconds in `config/services.php`
+- Updated all timeout references in MikrotikApiService
+- Updated .env.example with new settings
 
-### 2. Configuration Consolidation
+### 6. Documentation
+- Created `ROUTEROS_DUAL_API_SUPPORT.md`
+- Created installation script `install-routeros-api.sh`
+- Updated this connection test report
 
-Added `max_retries` and `retry_delay` to the services config for centralized configuration.
+## Installation Steps
 
-## Recommendations for Router Owner
-
-### Immediate Actions Required
-
-1. **Verify REST API Service Status**
-   ```
-   /ip service print
-   ```
-   Look for `api` or `www` service on port 8777
-
-2. **Enable REST API (if not enabled)**
-   ```
-   /ip service set api-ssl disabled=no port=8777
-   # Or for standard HTTP:
-   /ip service set www disabled=no port=8777
-   ```
-
-3. **Check User Permissions**
-   ```
-   /user print detail
-   ```
-   Ensure user `ispsolution1213` has full API access
-
-4. **Test from Router Console**
-   ```
-   /tool fetch url="http://127.0.0.1:8777/api" mode=http
-   ```
-
-5. **Check RouterOS Version**
-   ```
-   /system package print
-   ```
-   Ensure version is 7.1beta4 or newer for REST API support
-
-### Alternative Connection Methods
-
-If REST API continues to fail, consider:
-
-1. **MikroTik Binary API (Port 8728)**
-   - More reliable and widely supported
-   - Use PHP library like `routeros-api-php`
-   - Change `api_port` to 8728 in router configuration
-
-2. **SSH with Command Parsing**
-   - Always available on MikroTik routers
-   - Use SSH libraries to execute commands
-   - Parse text output
-
-3. **Winbox API**
-   - Native binary protocol
-   - Most efficient method
-   - Requires binary protocol implementation
-
-## Testing Instructions for End Users
-
-Once the router API service is properly configured:
-
-1. **Update Environment**
+1. **Install Dependencies**
    ```bash
-   # In .env file
-   MIKROTIK_API_TIMEOUT=60
+   composer require bencroker/routeros-api-php:^1.0
+   # or run: ./install-routeros-api.sh
    ```
 
-2. **Clear Configuration Cache**
+2. **Run Migration**
+   ```bash
+   php artisan migrate
+   ```
+
+3. **Clear Cache**
    ```bash
    php artisan config:clear
+   php artisan cache:clear
    ```
 
-3. **Test via Application**
-   - Navigate to Router Management
-   - Add router with IP 103.138.147.185, Port 8777
-   - Try to import PPP Profiles
-   - Check `storage/logs/laravel.log` for detailed error messages
-
-4. **Expected Log Entries**
-   
-   **Success:**
-   ```
-   [INFO] Successfully fetched rows from MikroTik
-   {router_id: 1, menu: "/ppp/profile", count: X}
-   ```
-   
-   **Timeout:**
-   ```
-   [WARNING] Failed to fetch rows from MikroTik
-   {router_id: 1, menu: "/ppp/profile", status: timeout}
+4. **Enable Binary API on Router**
+   ```routeros
+   /ip service set api disabled=no port=8728
    ```
 
-## Technical Details
+5. **Update Router Configuration** (Optional)
+   ```php
+   $router = MikrotikRouter::find(1);
+   $router->api_port = 8728;
+   $router->api_type = 'auto';  // Let system auto-detect
+   $router->save();
+   ```
 
-### HTTP Request Format
-```http
-GET http://103.138.147.185:8777/api/ppp/profile HTTP/1.1
-Host: 103.138.147.185:8777
-Authorization: Basic aXNwc29sdXRpb24xMjEzOmlzcHNvbHV0aW9uMTIxMw==
-Accept: */*
+6. **Test Connection**
+   ```bash
+   php artisan tinker
+   >>> $router = App\Models\MikrotikRouter::find(1);
+   >>> $service = app(App\Services\MikrotikApiService::class);
+   >>> $profiles = $service->getMktRows($router, '/ppp/profile');
+   ```
+
+## Testing Instructions
+
+### Test Binary API Connection
+```bash
+# Test from command line
+telnet 103.138.147.185 8728
+
+# Test from application
+php artisan tinker
+>>> $router = App\Models\MikrotikRouter::find(1);
+>>> $service = app(App\Services\RouterOSBinaryApiService::class);
+>>> $service->testConnection($router);
 ```
 
-### Timeout Behavior
-- **Connection Timeout**: 10 seconds (system default)
-- **Read Timeout**: 60 seconds (configured)
-- **Total Timeout**: 60 seconds maximum per request
-- **Retries**: Up to 3 attempts with 1 second delay between attempts
-
-### Expected Response Format
-```json
-[
-  {
-    ".id": "*1",
-    "name": "default",
-    "local-address": "10.0.0.1",
-    "remote-address": "10.0.0.2-10.0.0.254",
-    "rate-limit": "10M/10M"
-  }
-]
+### Test Auto-Detection
+```bash
+php artisan tinker
+>>> $router = App\Models\MikrotikRouter::find(1);
+>>> $router->api_type = 'auto';
+>>> $router->api_port = 8728;  # Binary API port
+>>> $router->save();
+>>> $service = app(App\Services\MikrotikApiService::class);
+>>> $profiles = $service->getMktRows($router, '/ppp/profile');
 ```
+
+### Check Logs
+```bash
+tail -f storage/logs/laravel.log
+```
+
+Look for entries like:
+- `Auto-detected binary API for router`
+- `Successfully fetched rows from MikroTik via binary API`
+- `Binary API failed, using REST API for router`
+
+## API Compatibility Matrix
+
+| RouterOS Version | Binary API | REST API | Recommended Setting |
+|------------------|------------|----------|---------------------|
+| v6.0 - v6.48     | ✅ Yes     | ❌ No    | `api_type = 'binary'` or `'auto'` |
+| v7.0 - v7.1beta3 | ✅ Yes     | ❌ No    | `api_type = 'binary'` or `'auto'` |
+| v7.1beta4+       | ✅ Yes     | ✅ Yes   | `api_type = 'auto'` (prefers binary) |
 
 ## Conclusion
 
-**Status**: ❌ Unable to connect to Mikrotik REST API
+**Status**: ✅ Solution Implemented
 
-**Reason**: Router is reachable but HTTP/REST API service is not responding
+**Reason**: Added dual API support to work with both v6 and v7 routers
 
-**Action Required**: Router owner must verify and enable REST API service on RouterOS
-
-**Code Changes**: ✅ Timeout increased to 60 seconds as requested
+**Action Required**: 
+1. Run installation script or manually install dependency
+2. Run migration to add api_type field
+3. Enable Binary API service on router (port 8728)
+4. System will automatically use the correct API
 
 **Next Steps**: 
-1. Router owner to check RouterOS REST API configuration
-2. Verify RouterOS version supports REST API
-3. Consider alternative API methods if REST API unavailable
-4. Re-test connection after router configuration changes
+1. Install composer dependency
+2. Run migration
+3. Enable Binary API on router: `/ip service set api disabled=no port=8728`
+4. Test connection with updated configuration
 
 ## Files Modified
-- `config/services.php` - Increased timeout to 60s, added retry config
-- `app/Services/MikrotikApiService.php` - Updated all timeout references to 60s
-- `.env.example` - Updated default timeout value and added retry settings
-- `MIKROTIK_CONNECTION_TEST_REPORT.md` - This documentation
+- `composer.json` - Added bencroker/routeros-api-php dependency
+- `app/Models/MikrotikRouter.php` - Added api_type field
+- `app/Services/MikrotikApiService.php` - Added dual API support
+- `app/Services/RouterOSBinaryApiService.php` - New Binary API adapter (created)
+- `database/migrations/2026_01_29_100141_add_api_type_to_mikrotik_routers_table.php` - New migration (created)
+- `ROUTEROS_DUAL_API_SUPPORT.md` - New documentation (created)
+- `install-routeros-api.sh` - Installation script (created)
+- `MIKROTIK_CONNECTION_TEST_REPORT.md` - Updated with solution
 
 ## Support
-For issues with Mikrotik router configuration, refer to:
-- MikroTik Wiki: https://wiki.mikrotik.com/wiki/Manual:REST_API
+For detailed information, see:
+- `ROUTEROS_DUAL_API_SUPPORT.md` - Complete dual API documentation
+- MikroTik Wiki: https://wiki.mikrotik.com/wiki/Manual:API
 - RouterOS Documentation: https://help.mikrotik.com/docs/
