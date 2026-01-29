@@ -9,8 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-29
 
+### ✨ Features
+
+- implement Bkash tokenization with models, migrations, and service ([1e65a91](../../commit/1e65a91c7d9a1aa79ef71a84b37654cd82d7aaed))
+- add operator subscription controller, command, and form request ([0492f27](../../commit/0492f27f7585ff6095ce7c9e43c6b80a232713a2))
+- implement SMS payment webhook security and subscription payment models ([8d29760](../../commit/8d297606d988354dd92c0b573ec0cd4382564d14))
+
+### 🐛 Bug Fixes
+
+- address code review feedback - improve token handling, subscription logic, and webhook processing ([b651310](../../commit/b651310da19cdea4442486c3f992ad6ff547f7c5))
+
 ### 📚 Documentation
 
+- add comprehensive Phase 2 implementation summary ([9fbfe38](../../commit/9fbfe385e6cc228a019fa691e271b4c38be2cc8b))
 - Mark Quick Wins as completed in REFERENCE_SYSTEM_QUICK_GUIDE.md ([b5c0510](../../commit/b5c0510539ffd8d91a8dc0aac5e3a8855ebd804f))
 - Fix cache service method names and parameter references in usage guide ([417386f](../../commit/417386f3d399e81a08b575f2cd35cf92b0ca2659))
 - Add comprehensive Quick Wins usage guide ([dc3fbf6](../../commit/dc3fbf65e5341e63737ff6fa2fa5eaea352e2151))
