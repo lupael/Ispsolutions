@@ -152,3 +152,91 @@ window.MetronicCore = {
     initStickyHeaders,
     initModals
 };
+
+// Customer Details Editor Alpine Component
+window.customerDetailsEditor = function(customerId) {
+    return {
+        sections: {
+            general: { isDirty: false },
+            credentials: { isDirty: false },
+            address: { isDirty: false },
+            network: { isDirty: false },
+            mac: { isDirty: false },
+            comments: { isDirty: false },
+        },
+        
+        markDirty(section) {
+            this.sections[section].isDirty = true;
+        },
+        
+        async saveSection(section) {
+            const formId = section === 'general' ? 'general-info-form' : `${section}-form`;
+            const form = document.getElementById(formId);
+            if (!form) {
+                console.error(`Form not found: ${formId}`);
+                return;
+            }
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const updateUrl = form.dataset.updateUrl;
+                if (!updateUrl) {
+                    console.error('Update URL not found on form');
+                    this.showNotification('Configuration error', 'error');
+                    return;
+                }
+                
+                const response = await fetch(updateUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    this.sections[section].isDirty = false;
+                    this.showNotification('Changes saved successfully', 'success');
+                } else {
+                    this.showNotification('Failed to save changes', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                this.showNotification('An error occurred while saving', 'error');
+            }
+        },
+        
+        showNotification(message, type) {
+            // Simple notification - can be enhanced with a better notification system
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-md shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        },
+        
+        checkUnsavedChanges() {
+            return Object.values(this.sections).some(section => section.isDirty);
+        },
+        
+        init() {
+            // Warn on page leave if there are unsaved changes
+            window.addEventListener('beforeunload', (e) => {
+                if (this.checkUnsavedChanges()) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Would you like to save before leaving?';
+                    return e.returnValue;
+                }
+            });
+        }
+    }
+};
