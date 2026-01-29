@@ -11,7 +11,7 @@ use App\Services\MikrotikApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
+
 
 /**
  * NAS Netwatch Controller
@@ -31,14 +31,18 @@ class NasNetwatchController extends Controller
     /**
      * Display netwatch configuration for a router.
      */
-    public function index(int $routerId): View
+    public function index(int $routerId): JsonResponse
     {
         $router = MikrotikRouter::with('nas')->findOrFail($routerId);
 
         // Get current netwatch configuration
         $netwatchConfig = $this->getNetwatchStatus($router);
 
-        return view('panels.admin.routers.netwatch', compact('router', 'netwatchConfig'));
+        return response()->json([
+            'success' => true,
+            'router' => $router,
+            'netwatchConfig' => $netwatchConfig,
+        ]);
     }
 
     /**
@@ -201,7 +205,8 @@ class NasNetwatchController extends Controller
      */
     private function configureNetwatchForRadius(MikrotikRouter $router, array $config): array
     {
-        $radiusServer = $router->nas->server;
+        // Use RADIUS server IP, not the router/NAS IP
+        $radiusServer = $config['radius_server'] ?? config('radius.server_ip', '127.0.0.1');
         $interval = $config['interval'] ?? '1m';
         $timeout = $config['timeout'] ?? '1s';
 
@@ -327,7 +332,8 @@ class NasNetwatchController extends Controller
                 ];
             }
 
-            $radiusServer = $router->nas->server;
+            // Use RADIUS server IP, not router/NAS IP
+            $radiusServer = config('radius.server_ip', '127.0.0.1');
             $netwatchEntries = $this->mikrotikApiService->getMktRows($router, '/tool/netwatch');
 
             // Find the RADIUS netwatch entry

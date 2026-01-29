@@ -372,6 +372,18 @@ class MikrotikAutoProvisioningService
                 'file' => "ppp-secret-backup-by-billing-{$timestamp}",
             ]);
 
+            if ($secretExportResult === null) {
+                Log::warning('PPP secret export may have failed during initial backup', [
+                    'router_id' => $router->id,
+                    'file' => "ppp-secret-backup-by-billing-{$timestamp}",
+                ]);
+            } else {
+                Log::info('PPP secrets exported successfully during initial backup', [
+                    'router_id' => $router->id,
+                    'file' => "ppp-secret-backup-by-billing-{$timestamp}",
+                ]);
+            }
+
             // Create system backup
             $backupResult = $this->mikrotikApiService->ttyWrite($router, '/system/backup/save', [
                 'name' => $filename,

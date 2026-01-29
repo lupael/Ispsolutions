@@ -370,9 +370,21 @@ class CustomerBackupService
         // Get customer's active package/plan details
         $package = $customer->currentPackage;
 
+        // Generate secure password if not available
+        // SECURITY: Never use predictable passwords derived from usernames
+        $password = $customer->password_plain;
+        if (empty($password)) {
+            // Generate a strong random password (16 characters)
+            $password = bin2hex(random_bytes(8));
+            Log::warning('Generated random password for PPP secret (password_plain not set)', [
+                'customer_id' => $customer->id,
+                'username' => $username,
+            ]);
+        }
+
         $pppSecret = [
             'name' => $username,
-            'password' => $customer->password_plain ?? substr(md5($username), 0, 8),
+            'password' => $password,
             'service' => 'pppoe',
             'disabled' => $customer->status === 'active' ? 'no' : 'yes',
             'comment' => "Customer ID: {$customer->id}",

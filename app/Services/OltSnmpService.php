@@ -33,7 +33,7 @@ class OltSnmpService
             'onu_status' => '1.3.6.1.4.1.37950.1.1.5.12.1.25.1.15',
             'onu_rx_power' => '1.3.6.1.4.1.37950.1.1.5.12.1.25.1.7',
             'onu_tx_power' => '1.3.6.1.4.1.37950.1.1.5.12.1.25.1.8',
-            'onu_distance' => '1.3.6.1.4.1.37950.1.1.5.12.1.25.1.9',
+            'onu_distance' => '1.3.6.1.4.1.37950.1.1.5.12.1.25.1.6', // Distance OID (different from onu_list)
         ],
         'huawei' => [
             'onu_list' => '1.3.6.1.4.1.2011.6.128.1.1.2.43.1.3',
@@ -84,11 +84,20 @@ class OltSnmpService
             return [];
         }
 
+        // Check if SNMP extension is available
+        if (! extension_loaded('snmp') || ! class_exists(\SNMP::class)) {
+            Log::error('SNMP extension is not available', [
+                'olt_id' => $olt->id,
+            ]);
+
+            return [];
+        }
+
         try {
             $vendor = $this->detectVendor($olt);
             $oids = self::VENDOR_OIDS[$vendor] ?? null;
 
-            if (! $oids) {
+            if (! $oids || $vendor === 'unknown') {
                 Log::warning('Unknown or unsupported OLT vendor for SNMP', [
                     'olt_id' => $olt->id,
                     'vendor' => $vendor,
@@ -138,7 +147,7 @@ class OltSnmpService
             ]);
 
             return $onus;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error discovering ONUs via SNMP', [
                 'olt_id' => $olt->id,
                 'error' => $e->getMessage(),
@@ -269,9 +278,14 @@ class OltSnmpService
      */
     private function canUseSNMP(Olt $olt): bool
     {
+        // Only support v1 and v2c for now (v3 requires more complex security setup)
+        $supportedVersions = ['v1', '1', 'v2c', 'v2', '2c', '2'];
+        $version = strtolower($olt->snmp_version ?? '');
+
         return ! empty($olt->ip_address)
             && ! empty($olt->snmp_community)
-            && ! empty($olt->snmp_version);
+            && ! empty($olt->snmp_version)
+            && in_array($version, $supportedVersions, true);
     }
 
     /**
@@ -301,8 +315,8 @@ class OltSnmpService
             return 'fiberhome';
         }
 
-        // Default to Huawei (most common)
-        return 'huawei';
+        // Return unknown instead of defaulting to a vendor
+        return 'unknown';
     }
 
     /**
