@@ -37,6 +37,14 @@ class SmsPaymentController extends Controller
     {
         $user = $request->user();
         
+        // Only allow operators, sub-operators, and admins
+        if (!$user->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only operators, sub-operators, and admins can access SMS payments.',
+            ], 403);
+        }
+        
         $payments = SmsPayment::where('operator_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 15));
@@ -85,8 +93,18 @@ class SmsPaymentController extends Controller
      */
     public function show(SmsPayment $smsPayment): JsonResponse
     {
+        $user = auth()->user();
+        
+        // Only allow operators, sub-operators, and admins
+        if (!$user->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+        
         // Ensure user can only view their own payments
-        if ($smsPayment->operator_id !== auth()->id()) {
+        if ($smsPayment->operator_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',
@@ -109,6 +127,14 @@ class SmsPaymentController extends Controller
     {
         $user = $request->user();
         
+        // Only allow operators, sub-operators, and admins
+        if (!$user->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only operators, sub-operators, and admins can access SMS balance.',
+            ], 403);
+        }
+        
         $history = $this->smsBalanceService->getHistory($user, 20);
         $stats = $this->smsBalanceService->getUsageStats($user, 'month');
 
@@ -128,23 +154,33 @@ class SmsPaymentController extends Controller
      * Handle payment gateway webhook/callback
      * 
      * This method will be called by payment gateways to update payment status
+     * NOTE: This endpoint requires webhook signature verification before processing
      *
      * @param Request $request
      * @return JsonResponse
      */
     public function webhook(Request $request): JsonResponse
     {
-        // TODO: Implement payment gateway webhook handling
-        // This will:
-        // 1. Verify webhook signature
-        // 2. Extract payment details
-        // 3. Update payment status
-        // 4. If successful, add SMS credits to operator balance
+        // TODO: CRITICAL - Implement webhook signature verification
+        // Payment gateway webhooks MUST verify the request authenticity
+        // This prevents unauthorized balance credits
+        // Example for Bkash:
+        // 1. Verify signature using gateway's public key
+        // 2. Validate request IP against gateway's whitelist
+        // 3. Check request timestamp to prevent replay attacks
         
+        // Reject all requests until proper verification is implemented
         return response()->json([
-            'success' => true,
-            'message' => 'Webhook received',
-        ]);
+            'success' => false,
+            'message' => 'Webhook processing not yet implemented. Signature verification required.',
+        ], 501);
+        
+        // TODO: After verification is implemented:
+        // 1. Extract payment details from webhook payload
+        // 2. Find the corresponding SmsPayment record
+        // 3. Update payment status based on gateway response
+        // 4. If successful, add SMS credits to operator balance using SmsBalanceService
+        // 5. Send notification to operator about payment status
     }
 
     /**

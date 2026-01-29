@@ -19,6 +19,14 @@ class SmsPaymentTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Seed roles
+        $this->artisan('db:seed', ['--class' => 'RoleSeeder']);
+    }
+
     /**
      * Test operator can view their SMS payments
      */

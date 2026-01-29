@@ -112,6 +112,8 @@ class User extends Authenticatable
         'payment_type',
         'wallet_balance',
         'sms_balance',
+        'sms_low_balance_threshold',
+        'sms_low_balance_notified_at',
         'suspend_date',
         'expiry_date',
         'auto_suspend',
@@ -175,6 +177,7 @@ class User extends Authenticatable
             'can_view_financials' => 'boolean',
             'expiry_date' => 'date',
             'suspend_date' => 'date',
+            'sms_low_balance_notified_at' => 'datetime',
         ];
     }
 
