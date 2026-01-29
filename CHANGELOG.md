@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Features
 
+- Add SMS payment controller, form requests, and comprehensive tests ([d84087f](../../commit/d84087ff888be09d2a5befcf0d2a927d2fcc925b))
+- Add SMS payment integration foundation (migrations, models, services) ([06d67be](../../commit/06d67beb192158c1a3e649390d35fa705b1c4169))
 - implement customer actions enhancements phases 1-3 ([7184094](../../commit/7184094a001beafcf94b41d97140cbeea7c239e5))
 - Complete Phase 13 with UI implementations for all future enhancement features ([d1a00f5](../../commit/d1a00f53f3fc313f24443b045226181b485e14c2))
 - Add Customer model as type alias for User (operator_level=100) ([e3cc9c6](../../commit/e3cc9c67c1bf337b174d5cf99000674ab220184a))
@@ -20,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- Improve webhook route and admin access to all payments ([c4cf7f6](../../commit/c4cf7f667896826709040ee5b74a5d6f28548bcb))
+- Address PR review comments - add routes, fix role slugs, add authorization ([dc13c84](../../commit/dc13c84184614f6b42e47ebb70c8425ee79ee6c7))
+- Address code review feedback - race conditions, table names, and authorization ([3f52b66](../../commit/3f52b66c9c384030450d06aa822c0984fcccc99b))
 - Update cache TTL to 2.5min and correct terminology (operator not group_admin/reseller) ([3083021](../../commit/308302139f5d1c4c7a7fa136b6f78be4f05b5731))
 - Address code review feedback - add validation, remove duplication, implement placeholder functions ([4b67f8b](../../commit/4b67f8b64f5dce0af80fb2c35e7187601abeca91))
 - remove non-existent mikrotikRouter relationship references ([87d937d](../../commit/87d937dc77098bb32fd11306a40d7b4eff081a8d))
