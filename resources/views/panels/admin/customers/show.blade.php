@@ -13,12 +13,15 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">View customer details and activity</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <!-- Navigation -->
                     <a href="{{ route('panel.admin.customers.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                         Back to List
                     </a>
+                    
+                    <!-- Action 1: Edit -->
                     @can('update', $customer)
                         <a href="{{ route('panel.admin.customers.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,6 +31,7 @@
                         </a>
                     @endcan
 
+                    <!-- Action 2: Activate (Status-dependent) -->
                     @can('activate', $customer)
                         @if($customer->status !== 'active')
                             <button data-action="activate" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -39,6 +43,7 @@
                         @endif
                     @endcan
 
+                    <!-- Action 3: Suspend (Status-dependent) -->
                     @can('suspend', $customer)
                         @if($customer->status === 'active')
                             <button data-action="suspend" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -50,6 +55,7 @@
                         @endif
                     @endcan
 
+                    <!-- Action 4: Disconnect -->
                     @can('disconnect', $customer)
                         <button data-action="disconnect" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,6 +65,7 @@
                         </button>
                     @endcan
 
+                    <!-- Action 5: Change Package -->
                     @can('changePackage', $customer)
                         <a href="{{ route('panel.admin.customers.change-package.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:bg-purple-700 active:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,6 +102,7 @@
                         </a>
                     @endcan
 
+                    <!-- Action 9: MAC Binding -->
                     @can('removeMacBind', $customer)
                         <a href="{{ route('panel.customers.mac-binding.index', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-slate-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-700 focus:bg-slate-700 active:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,6 +122,7 @@
                         </a>
                     @endcan
 
+                    <!-- Action 11: Edit Billing Profile -->
                     @can('editBillingProfile', $customer)
                         <a href="{{ route('panel.admin.customers.billing-profile.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 focus:bg-amber-700 active:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,6 +161,7 @@
                         </a>
                     @endcan
 
+                    <!-- Action 15: Send Payment Link -->
                     @can('sendLink', $customer)
                         <a href="{{ route('panel.admin.customers.send-payment-link', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-violet-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-violet-700 focus:bg-violet-700 active:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,6 +186,7 @@
                         Internet History
                     </a>
 
+                    <!-- Action 18: Change Operator -->
                     @can('changeOperator', $customer)
                         <a href="{{ route('panel.admin.customers.change-operator.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-rose-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-rose-700 focus:bg-rose-700 active:bg-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,6 +203,7 @@
                         Check Usage
                     </button>
 
+                    <!-- Action 20: Edit Suspend Date -->
                     @can('editSuspendDate', $customer)
                         <a href="{{ route('panel.admin.customers.suspend-date.edit', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-stone-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-stone-700 focus:bg-stone-700 active:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,6 +213,7 @@
                         </a>
                     @endcan
 
+                    <!-- Action 21: Hotspot Recharge -->
                     @can('hotspotRecharge', $customer)
                         <a href="{{ route('panel.admin.customers.hotspot-recharge.create', $customer->id) }}" class="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,6 +231,7 @@
                         View Tickets
                     </a>
 
+                    <!-- Action 23: View Activity Logs (Always visible) -->
                     <a href="{{ route('panel.admin.logs.activity', ['customer_id' => $customer->id]) }}" class="inline-flex items-center px-3 py-2 bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -225,6 +239,7 @@
                         View Logs
                     </a>
 
+                    <!-- Action 24: Delete Customer -->
                     @can('delete', $customer)
                         <button data-action="delete" data-customer-id="{{ $customer->id }}" class="action-button inline-flex items-center px-3 py-2 bg-red-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-800 focus:bg-red-800 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
