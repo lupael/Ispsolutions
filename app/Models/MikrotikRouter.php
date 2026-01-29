@@ -24,6 +24,7 @@ class MikrotikRouter extends Model
         'public_ip',
         'host',
         'api_port',
+        'api_type',
         'username',
         'password',
         'radius_secret',

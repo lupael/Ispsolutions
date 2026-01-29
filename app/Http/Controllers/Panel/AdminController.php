@@ -4044,16 +4044,31 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'brand' => 'required|string|max:50',
             'ip_address' => 'required|ip|unique:olts,ip_address',
-            'model' => 'required|string|max:100',
+            'model' => 'nullable|string|max:100',
+            'firmware_version' => 'nullable|string|max:100',
+            'telnet_port' => 'nullable|integer|min:1|max:65535',
+            'username' => 'required|string|max:100',
+            'password' => 'required|string',
             'snmp_version' => 'required|in:v1,v2c,v3',
             'snmp_community' => 'required_if:snmp_version,v1,v2c|nullable|string|max:255',
             'snmp_port' => 'nullable|integer|min:1|max:65535',
+            'location' => 'nullable|string',
+            'coverage_area' => 'nullable|string',
+            'total_ports' => 'nullable|integer|min:1',
+            'max_onus' => 'nullable|integer|min:1',
             'description' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required|in:active,inactive,maintenance',
         ]);
 
         $validated['tenant_id'] = getCurrentTenantId();
+        
+        // Set port from telnet_port if provided, otherwise default to 23
+        $validated['port'] = $validated['telnet_port'] ?? 23;
+        
+        // Set management protocol based on port or default to telnet
+        $validated['management_protocol'] = 'telnet';
 
         Olt::create($validated);
 
@@ -4090,14 +4105,36 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'brand' => 'required|string|max:50',
             'ip_address' => 'required|ip|unique:olts,ip_address,' . $id,
-            'model' => 'required|string|max:100',
+            'model' => 'nullable|string|max:100',
+            'firmware_version' => 'nullable|string|max:100',
+            'telnet_port' => 'nullable|integer|min:1|max:65535',
+            'username' => 'required|string|max:100',
+            'password' => 'nullable|string', // Optional on update - only update if provided
             'snmp_version' => 'required|in:v1,v2c,v3',
             'snmp_community' => 'required_if:snmp_version,v1,v2c|nullable|string|max:255',
             'snmp_port' => 'nullable|integer|min:1|max:65535',
+            'location' => 'nullable|string',
+            'coverage_area' => 'nullable|string',
+            'total_ports' => 'nullable|integer|min:1',
+            'max_onus' => 'nullable|integer|min:1',
             'description' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required|in:active,inactive,maintenance',
         ]);
+
+        // Set port from telnet_port if provided, otherwise keep existing or default to 23
+        if (isset($validated['telnet_port'])) {
+            $validated['port'] = $validated['telnet_port'];
+        }
+        
+        // Set management protocol
+        $validated['management_protocol'] = 'telnet';
+        
+        // Remove password from validated data if not provided (don't overwrite with null)
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        }
 
         $olt->update($validated);
 

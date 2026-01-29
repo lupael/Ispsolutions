@@ -239,6 +239,11 @@ class RadiusService implements RadiusServiceInterface
             $username = $data['username'] ?? '';
             $password = $data['password'] ?? '';
 
+            Log::debug('RADIUS authenticate: Checking credentials in database', [
+                'username' => $username,
+                'connection' => config('radius.connection', 'radius'),
+            ]);
+
             // Check if user exists and password matches
             $user = RadCheck::where('username', $username)
                 ->where('attribute', 'Cleartext-Password')
@@ -246,6 +251,10 @@ class RadiusService implements RadiusServiceInterface
                 ->first();
 
             if ($user) {
+                Log::info('RADIUS authenticate: User authenticated successfully', [
+                    'username' => $username,
+                ]);
+                
                 return [
                     'success' => true,
                     'username' => $username,
@@ -253,15 +262,23 @@ class RadiusService implements RadiusServiceInterface
                 ];
             }
 
+            // Log failure without revealing if user exists (prevents username enumeration)
+            Log::warning('RADIUS authenticate: Authentication failed', [
+                'username' => $username,
+            ]);
+
             return [
                 'success' => false,
                 'username' => $username,
                 'message' => 'Authentication failed',
             ];
         } catch (\Exception $e) {
+            // Only log detailed error internally, don't expose to response
             Log::error('RADIUS authentication error', [
                 'username' => $data['username'] ?? 'unknown',
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
 
             return [
