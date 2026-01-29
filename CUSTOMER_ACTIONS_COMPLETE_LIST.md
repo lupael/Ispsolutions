@@ -77,18 +77,42 @@ Role-specific permissions apply based on their assigned responsibilities.
 ## Implementation Details
 
 ### CustomerPolicy Authorization
-All permission-based actions use the CustomerPolicy which implements this pattern:
+All permission-based actions use the CustomerPolicy. The actual implementation follows several patterns:
 
 ```php
-public function someAction(User $user, User $customer): bool
+// Pattern 1: Most actions - Admin delegates to view(), others require permission + view()
+public function suspend(User $user, User $customer): bool
 {
     // Developer, Super Admin, and Admin have automatic access
     if ($user->operator_level <= 20) {
         return $this->view($user, $customer);
     }
     
-    // For other roles, check explicit permission
-    return $this->update($user, $customer) && $user->hasPermission('some_permission');
+    return $this->update($user, $customer) && $user->hasPermission('suspend_customers');
+}
+
+// Pattern 2: Admin-only actions - Only levels 0-20 allowed
+public function disconnect(User $user, User $customer): bool
+{
+    // Only Developer, Super Admin, and Admin have access
+    if ($user->operator_level <= 20) {
+        return $this->view($user, $customer);
+    }
+    
+    // Operator and Sub-Operator do NOT have access
+    return false;
+}
+
+// Pattern 3: Actions that bypass view check - Direct boolean return
+public function changeOperator(User $user, User $customer): bool
+{
+    // Only Developer, Super Admin, and Admin have access
+    if ($user->operator_level <= 20) {
+        return true;
+    }
+    
+    // Operator and Sub-Operator do NOT have access
+    return false;
 }
 ```
 
