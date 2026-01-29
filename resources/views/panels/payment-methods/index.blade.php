@@ -152,15 +152,54 @@
 
 @push('scripts')
 <script>
-function makePayment(agreementId) {
-    // TODO: Implement one-click payment using this agreement
-    alert('One-click payment feature will be implemented here using agreement ID: ' + agreementId);
-    
-    // Example implementation:
-    // 1. Show payment amount modal
-    // 2. Call API to create payment with agreement_id
-    // 3. Process payment via Bkash tokenization
-    // 4. Show success/failure message
+async function makePayment(agreementId) {
+    const amountInput = prompt('Enter payment amount (BDT):');
+    if (amountInput === null) {
+        // User cancelled the prompt
+        return;
+    }
+
+    const amount = parseFloat(amountInput);
+    if (!Number.isFinite(amount) || amount <= 0) {
+        alert('Please enter a valid payment amount.');
+        return;
+    }
+
+    const confirmed = confirm(
+        'Confirm payment of BDT ' + amount.toFixed(2) + ' using this saved payment method?'
+    );
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/bkash-payments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                agreement_id: agreementId,
+                amount: amount
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            alert('Payment completed successfully.');
+            window.location.reload();
+        } else {
+            alert('Payment failed: ' + (result.message || 'Unable to complete payment.'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while processing the payment. Please try again.');
+    }
 }
 
 async function removePaymentMethod(agreementId) {

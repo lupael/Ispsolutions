@@ -194,6 +194,8 @@ class BkashAgreementController extends Controller
         try {
             // Cancel agreement with Bkash (if needed)
             // TODO: Implement Bkash API call to cancel agreement if required
+            // Tracked in PHASE_2_IMPLEMENTATION_STATUS.md - Bkash Tokenization section
+            // This is part of the remaining 5% work for production deployment
 
             // Mark agreement as cancelled locally
             $agreement->markCancelled();
