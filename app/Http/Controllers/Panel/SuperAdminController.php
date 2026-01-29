@@ -138,12 +138,14 @@ class SuperAdminController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:8',
             'role_id' => 'required|exists:roles,id',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => ! empty($validated['password']) ? bcrypt($validated['password']) : $user->password,
+            'is_active' => $request->has('is_active'),
         ]);
 
         $user->roles()->sync([$validated['role_id']]);
