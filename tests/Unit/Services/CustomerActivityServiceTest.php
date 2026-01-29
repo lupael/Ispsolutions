@@ -4,6 +4,15 @@ namespace Tests\Unit\Services;
 
 use Tests\TestCase;
 
+/**
+ * Unit tests for CustomerActivityService number_format fix
+ * 
+ * These tests validate the fix for the TypeError that occurs when number_format()
+ * receives a string from Laravel's decimal cast instead of a float.
+ * 
+ * Note: These are simplified unit tests that verify the core fix (casting string to float)
+ * without requiring full database setup with tenants and foreign keys.
+ */
 class CustomerActivityServiceTest extends TestCase
 {
     /** @test */
