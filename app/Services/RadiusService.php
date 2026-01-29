@@ -251,7 +251,7 @@ class RadiusService implements RadiusServiceInterface
                 ->first();
 
             if ($user) {
-                Log::info('RADIUS authenticate: User found and authenticated', [
+                Log::info('RADIUS authenticate: User authenticated successfully', [
                     'username' => $username,
                 ]);
                 
@@ -262,34 +262,28 @@ class RadiusService implements RadiusServiceInterface
                 ];
             }
 
-            // Check if user exists at all
-            $userExists = RadCheck::where('username', $username)->exists();
-            
-            if ($userExists) {
-                Log::warning('RADIUS authenticate: User exists but password mismatch', [
-                    'username' => $username,
-                ]);
-            } else {
-                Log::warning('RADIUS authenticate: User not found in database', [
-                    'username' => $username,
-                ]);
-            }
-
-            return [
-                'success' => false,
+            // Log failure without revealing if user exists (prevents username enumeration)
+            Log::warning('RADIUS authenticate: Authentication failed', [
                 'username' => $username,
-                'message' => $userExists ? 'Invalid password' : 'User not found',
-            ];
-        } catch (\Exception $e) {
-            Log::error('RADIUS authentication error', [
-                'username' => $data['username'] ?? 'unknown',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Authentication error: ' . $e->getMessage(),
+                'username' => $username,
+                'message' => 'Authentication failed',
+            ];
+        } catch (\Exception $e) {
+            // Only log detailed error internally, don't expose to response
+            Log::error('RADIUS authentication error', [
+                'username' => $data['username'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Authentication error',
             ];
         }
     }

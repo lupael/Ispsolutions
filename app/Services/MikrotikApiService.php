@@ -140,9 +140,13 @@ class MikrotikApiService
                     } else {
                         $results['failed']++;
                         $errorMsg = "HTTP {$response->status()}: " . ($response->body() ?: 'Unknown error');
+                        
+                        // Sanitize row data before including in errors to prevent credential exposure
+                        $sanitizedRow = $this->sanitizeRowData($row);
+                        
                         $results['errors'][] = [
                             'row_index' => $index,
-                            'row_data' => $row,
+                            'row_data' => $sanitizedRow,
                             'error' => $errorMsg,
                         ];
                         
@@ -157,9 +161,13 @@ class MikrotikApiService
                     }
                 } catch (\Exception $rowException) {
                     $results['failed']++;
+                    
+                    // Sanitize row data before logging to prevent credential exposure
+                    $sanitizedRow = $this->sanitizeRowData($row);
+                    
                     $results['errors'][] = [
                         'row_index' => $index,
-                        'row_data' => $row,
+                        'row_data' => $sanitizedRow,
                         'error' => $rowException->getMessage(),
                     ];
                     
@@ -378,5 +386,26 @@ class MikrotikApiService
 
         // Ensure a single leading slash in the API endpoint
         return $menu === '' ? '/' : '/'.$menu;
+    }
+
+    /**
+     * Sanitize row data to remove sensitive fields before logging.
+     *
+     * @param array $row Row data to sanitize
+     *
+     * @return array Sanitized row data
+     */
+    private function sanitizeRowData(array $row): array
+    {
+        $sensitiveFields = ['password', 'secret', 'snmp-community', 'community', 'private-key'];
+        $sanitized = $row;
+        
+        foreach ($sensitiveFields as $field) {
+            if (isset($sanitized[$field])) {
+                $sanitized[$field] = '***REDACTED***';
+            }
+        }
+        
+        return $sanitized;
     }
 }
