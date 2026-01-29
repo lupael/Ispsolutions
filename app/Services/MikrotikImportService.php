@@ -47,13 +47,15 @@ class MikrotikImportService
 
             foreach ($data['pools'] as $poolData) {
                 try {
-                    $ipList = $this->parseIpRange($poolData['ip_range']);
+                    $parseResult = $this->parseIpRange($poolData['ip_range']);
+                    $ipList = $parseResult['ips'];
+                    $calculatedSubnetMask = $parseResult['subnet_mask'];
 
                     foreach ($ipList as $ip) {
                         IpPool::create([
                             'name' => $poolData['name'] ?? "Pool-{$ip}",
                             'ip_address' => $ip,
-                            'subnet_mask' => $poolData['subnet_mask'] ?? '255.255.255.0',
+                            'subnet_mask' => $poolData['subnet_mask'] ?? $calculatedSubnetMask ?? '255.255.255.0',
                             'gateway' => $poolData['gateway'] ?? null,
                             'pool_type' => $poolData['pool_type'] ?? 'pppoe',
                             'tenant_id' => $tenantId,
@@ -94,14 +96,18 @@ class MikrotikImportService
 
     /**
      * Parse IP range in various formats to array of IPs.
+     * Returns array with 'ips' and optional 'subnet_mask' calculated from the range.
      */
     private function parseIpRange(string $range): array
     {
         $ips = [];
+        $subnetMask = null;
 
         // Handle CIDR notation (e.g., 192.168.1.0/24)
         if (str_contains($range, '/')) {
-            $ips = $this->parseCidr($range);
+            $result = $this->parseCidr($range);
+            $ips = $result['ips'];
+            $subnetMask = $result['subnet_mask'];
         }
         // Handle hyphen range (e.g., 192.168.1.1-254)
         elseif (str_contains($range, '-')) {
@@ -116,11 +122,11 @@ class MikrotikImportService
             $ips = [$range];
         }
 
-        return $ips;
+        return ['ips' => $ips, 'subnet_mask' => $subnetMask];
     }
 
     /**
-     * Parse CIDR notation to IP list.
+     * Parse CIDR notation to IP list with subnet mask.
      */
     private function parseCidr(string $cidr): array
     {
@@ -129,6 +135,7 @@ class MikrotikImportService
 
         // Convert IP to long
         $ipLong = ip2long($ip);
+        $prefix = (int) $prefix;
         $netmask = ~((1 << (32 - $prefix)) - 1);
         $network = $ipLong & $netmask;
         $broadcast = $network | ~$netmask;
@@ -138,30 +145,57 @@ class MikrotikImportService
             $ips[] = long2ip($i);
         }
 
-        return $ips;
+        // Calculate subnet mask from prefix
+        $subnetMask = long2ip($netmask);
+
+        return ['ips' => $ips, 'subnet_mask' => $subnetMask];
     }
 
     /**
      * Parse hyphen range to IP list.
+     * Supports both short format (192.168.1.1-254) and full format (192.168.1.1-192.168.1.254)
      */
     private function parseHyphenRange(string $range): array
     {
-        preg_match('/^(\d+\.\d+\.\d+\.)(\d+)-(\d+)$/', $range, $matches);
-
-        if (count($matches) !== 4) {
-            throw new \InvalidArgumentException("Invalid IP range format: {$range}");
+        // Try full format first (192.168.1.1-192.168.1.254)
+        if (preg_match('/^(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+\.\d+\.\d+)$/', $range, $matches)) {
+            $startIp = $matches[1];
+            $endIp = $matches[2];
+            
+            $start = ip2long($startIp);
+            $end = ip2long($endIp);
+            
+            if ($start === false || $end === false || $start > $end) {
+                throw new \InvalidArgumentException("Invalid IP range format: {$range}");
+            }
+            
+            $ips = [];
+            for ($i = $start; $i <= $end; $i++) {
+                $ips[] = long2ip($i);
+            }
+            
+            return $ips;
         }
+        
+        // Try short format (192.168.1.1-254)
+        if (preg_match('/^(\d+\.\d+\.\d+\.)(\d+)-(\d+)$/', $range, $matches)) {
+            $prefix = $matches[1];
+            $start = (int) $matches[2];
+            $end = (int) $matches[3];
 
-        $prefix = $matches[1];
-        $start = (int) $matches[2];
-        $end = (int) $matches[3];
+            if ($start > $end || $start < 0 || $end > 255) {
+                throw new \InvalidArgumentException("Invalid IP range format: {$range}");
+            }
 
-        $ips = [];
-        for ($i = $start; $i <= $end; $i++) {
-            $ips[] = $prefix . $i;
+            $ips = [];
+            for ($i = $start; $i <= $end; $i++) {
+                $ips[] = $prefix . $i;
+            }
+
+            return $ips;
         }
-
-        return $ips;
+        
+        throw new \InvalidArgumentException("Invalid IP range format: {$range}");
     }
 
     /**
@@ -526,13 +560,15 @@ class MikrotikImportService
                     }
 
                     // Parse IP ranges - MikroTik format can be: "192.168.1.10-192.168.1.100"
-                    $ipList = $this->parseIpRange($ranges);
+                    $parseResult = $this->parseIpRange($ranges);
+                    $ipList = $parseResult['ips'];
+                    $calculatedSubnetMask = $parseResult['subnet_mask'];
 
                     foreach ($ipList as $ip) {
                         IpPool::create([
                             'name' => isset($poolData['name']) ? "{$poolData['name']}-{$ip}" : "Pool-{$ip}",
                             'ip_address' => $ip,
-                            'subnet_mask' => '255.255.255.0', // Default, can be updated manually
+                            'subnet_mask' => $calculatedSubnetMask ?? '255.255.255.0',
                             'gateway' => null,
                             'pool_type' => 'pppoe',
                             'tenant_id' => $tenantId,

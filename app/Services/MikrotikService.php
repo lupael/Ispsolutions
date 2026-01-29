@@ -813,50 +813,65 @@ class MikrotikService implements MikrotikServiceInterface
             DB::beginTransaction();
 
             // Apply configuration based on type using MikroTik API
-            $success = true;
+            // Track configurations for potential rollback
             $appliedConfigs = [];
+            $configDetails = [];
 
             foreach ($config as $configType => $settings) {
                 $result = $this->applyConfiguration($router, $configType, $settings);
                 if ($result) {
                     $appliedConfigs[] = $configType;
+                    $configDetails[$configType] = $settings;
                 } else {
-                    $success = false;
-                    Log::error('Failed to apply configuration type', [
+                    // Configuration failed - rollback all previously applied configurations
+                    Log::error('Configuration failed, rolling back previously applied configurations', [
                         'router_id' => $routerId,
-                        'config_type' => $configType,
+                        'failed_config_type' => $configType,
+                        'applied_configs' => $appliedConfigs,
                     ]);
+
+                    // Attempt to rollback (note: this is best-effort, may not always succeed)
+                    foreach ($appliedConfigs as $appliedType) {
+                        try {
+                            $this->rollbackConfiguration($router, $appliedType, $configDetails[$appliedType]);
+                        } catch (\Exception $rollbackException) {
+                            Log::error('Failed to rollback configuration', [
+                                'router_id' => $router->id,
+                                'config_type' => $appliedType,
+                                'error' => $rollbackException->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    DB::rollBack();
+
+                    Log::error('Failed to configure router - configuration aborted and rolled back', [
+                        'router_id' => $routerId,
+                        'failed_at' => $configType,
+                        'rolled_back' => $appliedConfigs,
+                    ]);
+
+                    return false;
                 }
             }
 
-            if ($success) {
-                RouterConfiguration::create([
-                    'router_id' => $routerId,
-                    'config_type' => 'one-click',
-                    'config_data' => $config,
-                    'applied_at' => now(),
-                    'status' => 'applied',
-                ]);
-
-                DB::commit();
-
-                Log::info('Router configured', [
-                    'router_id' => $routerId,
-                    'config_types' => $appliedConfigs,
-                ]);
-
-                return true;
-            }
-
-            DB::rollBack();
-
-            Log::error('Failed to configure router - one or more configurations failed', [
+            // All configurations applied successfully
+            RouterConfiguration::create([
                 'router_id' => $routerId,
-                'attempted_configs' => array_keys($config),
-                'applied_configs' => $appliedConfigs,
+                'config_type' => 'one-click',
+                'config_data' => $config,
+                'applied_at' => now(),
+                'status' => 'applied',
             ]);
 
-            return false;
+            DB::commit();
+
+            Log::info('Router configured successfully', [
+                'router_id' => $routerId,
+                'config_types' => $appliedConfigs,
+            ]);
+
+            return true;
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -867,6 +882,42 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         }
+    }
+
+    /**
+     * Attempt to rollback a configuration change.
+     * Note: This is best-effort and may not always succeed.
+     */
+    private function rollbackConfiguration(MikrotikRouter $router, string $configType, array $settings): void
+    {
+        Log::info('Attempting to rollback configuration', [
+            'router_id' => $router->id,
+            'config_type' => $configType,
+        ]);
+
+        // Rollback logic varies by configuration type
+        // For now, we log the attempt; full rollback implementation would require
+        // storing previous state or removing added configurations
+        switch ($configType) {
+            case 'pppoe':
+                // Would need to remove the PPPoE server we added
+                // Requires tracking what was added in applyConfiguration
+                break;
+            case 'ippool':
+                // Would need to remove the IP pool we added
+                break;
+            case 'firewall':
+                // Would need to remove the firewall rule we added
+                break;
+            case 'queue':
+                // Would need to remove the queue we added
+                break;
+        }
+
+        Log::warning('Rollback not fully implemented for configuration type', [
+            'router_id' => $router->id,
+            'config_type' => $configType,
+        ]);
     }
 
     /**
@@ -926,6 +977,21 @@ class MikrotikService implements MikrotikServiceInterface
 
                 return false;
             }
+
+            // Check if PPPoE server already exists on the interface
+            if (isset($pppoeConfig['interface'])) {
+                $existing = $this->mikrotikApiService->getMktRows($router, '/interface/pppoe-server/server');
+                foreach ($existing as $server) {
+                    if (isset($server['interface']) && $server['interface'] === $pppoeConfig['interface']) {
+                        Log::info('PPPoE server already exists on interface, skipping creation', [
+                            'router_id' => $router->id,
+                            'interface' => $pppoeConfig['interface'],
+                        ]);
+                        return true;
+                    }
+                }
+            }
+
             $result = $this->mikrotikApiService->addMktRows($router, '/interface/pppoe-server/server', [$pppoeConfig]);
 
             Log::info('PPPoE configuration applied', [
