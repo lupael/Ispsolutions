@@ -846,6 +846,11 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 't
     
     // Subscription Plans - Web UI routes
     Route::get('/subscriptions', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'index'])->name('subscriptions.index');
+    
+    // Bkash Tokenization - Web UI routes (Payment Methods)
+    Route::get('/payment-methods', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'index'])->name('bkash-agreements.index');
+    Route::get('/payment-methods/create', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'create'])->name('bkash-agreements.create');
+    Route::get('/payment-methods/callback', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'callback'])->name('bkash-agreements.callback');
 });
 
 // Sub-Operator Panel

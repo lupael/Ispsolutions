@@ -535,6 +535,16 @@ If authentication fails:
 - **[FEATURE_IMPLEMENTATION_STATUS.md](FEATURE_IMPLEMENTATION_STATUS.md)** - Feature status
 - **[PANELS_SPECIFICATION.md](PANELS_SPECIFICATION.md)** - Panel specifications
 
+### Phase 2 Features (NEW - 2026-01-29) ✨
+- **[PHASE_2_FEATURES_USER_GUIDE.md](PHASE_2_FEATURES_USER_GUIDE.md)** - Complete user guide for new features
+  - SMS Payment System - Purchase SMS credits with tiered pricing
+  - Auto-Debit System - Automatic bill payments for customers
+  - Subscription Payments - Platform billing management
+  - Bkash Tokenization - One-click payments with saved methods
+- **[PHASE_2_IMPLEMENTATION_STATUS.md](PHASE_2_IMPLEMENTATION_STATUS.md)** - Detailed implementation progress (85% complete)
+- **[IMPLEMENTATION_COMPLETE_SUMMARY.md](IMPLEMENTATION_COMPLETE_SUMMARY.md)** - Executive summary and statistics
+- **[REFERENCE_SYSTEM_QUICK_GUIDE.md](REFERENCE_SYSTEM_QUICK_GUIDE.md)** - Original requirements and roadmap
+
 ### MikroTik Integration
 - **[MIKROTIK_QUICKSTART.md](MIKROTIK_QUICKSTART.md)** - Quick start guide
 - **[MIKROTIK_ADVANCED_FEATURES.md](MIKROTIK_ADVANCED_FEATURES.md)** - Advanced features

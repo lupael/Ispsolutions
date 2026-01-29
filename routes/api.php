@@ -310,6 +310,18 @@ Route::prefix('subscription-payments')
         Route::post('/cancel', [\App\Http\Controllers\Panel\SubscriptionPaymentController::class, 'cancel'])->name('cancel');
     });
 
+// Bkash Tokenization API Routes
+Route::prefix('bkash-agreements')
+    ->middleware(['auth:sanctum', 'rate_limit:api'])
+    ->name('api.bkash-agreements.')
+    ->group(function () {
+        Route::get('/', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'store'])->name('store');
+        Route::get('/active', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'active'])->name('active');
+        Route::get('/{agreement}', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'show'])->name('show');
+        Route::delete('/{agreement}', [\App\Http\Controllers\Panel\BkashAgreementController::class, 'destroy'])->name('destroy');
+    });
+
 // Router Management API Routes
 Route::prefix('routers')->middleware(['web', 'auth'])->group(function () {
     Route::post('{router}/test', [\App\Http\Controllers\Api\RouterController::class, 'testConnection'])
