@@ -371,7 +371,7 @@ class OltService implements OltServiceInterface
             Log::error("Error getting ONU {$onuId} status: " . $e->getMessage());
             
             // Only clean up connection if we created it in this method call
-            if ($sshConnectionCreated && isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
+            if ($sshConnectionCreated && isset($onu) && isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
                 $this->disconnect($onu->olt_id);
             }
 
