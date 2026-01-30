@@ -36,7 +36,7 @@ This document describes the new dashboard features added to the ISP Solution adm
 - Green gradient for Active
 - Gray gradient for In-Active
 
-### 3. Client's of Operator Widget
+### 3. Clients of Operator Widget
 **Purpose**: Display statistics for customers managed by operators and sub-operators.
 
 **Metrics Displayed**:
@@ -66,10 +66,10 @@ This document describes the new dashboard features added to the ISP Solution adm
 - Same metrics as ISP's MRC (duplicate for clarity)
 - Represents all client revenue
 
-#### C. Client's Of Operator MRC
-- **Current MRC**: Sum of package prices for sub-operator clients
-- **This Month Avg. MRC**: Average invoice for sub-operator clients this month
-- **Last Month Avg. MRC**: Average invoice for sub-operator clients last month
+#### C. Clients of Operator MRC
+- **Current MRC**: Sum of package prices for clients created by operators and sub-operators
+- **This Month Avg. MRC**: Average invoice for clients created by operators and sub-operators this month
+- **Last Month Avg. MRC**: Average invoice for clients created by operators and sub-operators last month
 
 **Visual Design**:
 - 3-column grid for MRC statistics

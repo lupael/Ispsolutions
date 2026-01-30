@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <!-- Client's Of Operator MRC -->
+        <!-- Clients of Operator MRC -->
         <div class="space-y-3">
             <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Clients of Operator MRC</h4>
             <div class="space-y-2">

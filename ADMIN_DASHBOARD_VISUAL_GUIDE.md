@@ -8,8 +8,39 @@
 │                  Tenant-specific overview and management            │
 └────────────────────────────────────────────────────────────────────┘
 
+┌─────────────────────┬─────────────────────┐
+│ Customer Statistics │   Today's Update     │
+│                     │                     │
+│ ┌─────────────────┐ │ ┌─────────────────┐ │
+│ │ Online Now      │ │ │ New Customers   │ │
+│ │      42         │ │ │       5         │ │
+│ └─────────────────┘ │ └─────────────────┘ │
+│ ┌─────────────────┐ │ ┌─────────────────┐ │
+│ │ Offline         │ │ │ Payments Today  │ │
+│ │      140        │ │ │    $2,350.00    │ │
+│ └─────────────────┘ │ └─────────────────┘ │
+│ ┌─────────────────┐ │ ┌─────────────────┐ │
+│ │ Suspended       │ │ │ New Tickets     │ │
+│ │       8         │ │ │       3         │ │
+│ └─────────────────┘ │ └─────────────────┘ │
+│ ┌─────────────────┐ │ ┌─────────────────┐ │
+│ │ PPPoE Users     │ │ │ Expiring Today  │ │
+│ │      125        │ │ │       12        │ │
+│ └─────────────────┘ │ └─────────────────┘ │
+└─────────────────────┴─────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────┐
+│                      Billing Statistics                             │
+├────────────────────────────────────────────────────────────────────┤
+│ ┌────────────┬────────────┬────────────┬────────────┐              │
+│ │ Billed     │ Total      │ Total      │ Invoice    │              │
+│ │ Customers  │ Invoices   │ Billed     │ Status     │              │
+│ │    156     │    842     │  $84,250   │ Breakdown  │              │
+│ └────────────┴────────────┴────────────┴────────────┘              │
+└────────────────────────────────────────────────────────────────────┘
+
 ┌─────────────────────┬─────────────────────┬─────────────────────┐
-│  ISP Information    │ Operator Info   │ Clients of Operator   │
+│  ISP Information    │ Operator Info       │ Clients of Operator │
 │                     │                     │                     │
 │ ┌─────────────────┐ │ ┌─────────────────┐ │ ┌─────────────────┐ │
 │ │ Status: Active  │ │ │ Total: 8        │ │ │ Total: 570      │ │
@@ -31,7 +62,7 @@
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │ ┌──────────────────┬──────────────────┬──────────────────┐         │
-│ │   ISP's MRC      │   Clients MRC    │  Operator Clients  │         │
+│ │   ISP's MRC      │   Clients MRC    │  Operator Clients│         │
 │ │                  │                  │      MRC         │         │
 │ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │         │
 │ │ │ Current MRC  │ │ │ Current MRC  │ │ │ Current MRC  │ │         │
@@ -64,17 +95,11 @@
 │              0 ┴─┴───┴───┴──┴───┴──┴───┴──┴─┴──┴─┴─                 │
 │                  Nov 2025   Dec 2025   Jan 2026                     │
 │                                                                     │
-│         Legend:  █ ISP's MRC   █ Clients MRC   █ Operator MRC        │
+│         Legend:  █ ISP's MRC   █ Clients MRC   █ Operator MRC      │
 │                  (Blue)        (Green)         (Purple)            │
 └────────────────────────────────────────────────────────────────────┘
 
-... [Existing Dashboard Sections Continue Below] ...
-
-┌─────────────────────┬─────────────────────┐
-│ Customer Statistics │   Today's Update     │
-│                     │                     │
-│ [Existing widgets]  │ [Existing widgets]  │
-└─────────────────────┴─────────────────────┘
+... [Payment Collection, Revenue Trend & Customer Growth sections] ...
 ```
 
 ## Color Scheme
@@ -113,7 +138,12 @@
 ```
 dashboard.blade.php
 ├── Page Header
-├── ISP Information Section
+├── Customer Statistics & Today's Update Section (2-column grid)
+│   ├── Customer Statistics (Online, Offline, Suspended, PPPoE)
+│   └── Today's Update (New Customers, Payments, Tickets, Expiring)
+├── Billing Statistics Section
+│   └── Billing widgets (Billed Customers, Invoices, Amounts, Status)
+├── ISP Information Section (3-column grid)
 │   ├── isp-information-widget
 │   ├── operator-information-widget
 │   └── operator-clients-widget
