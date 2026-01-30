@@ -39,11 +39,14 @@ return new class extends Migration
             }
         });
 
-        // Modify the pool_type enum to add 'pppoe' and other types (MySQL-specific)
-        DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `pool_type` ENUM('public', 'private', 'pppoe', 'dhcp', 'static') DEFAULT 'public'");
-        
-        // Modify status enum to include 'available'
-        DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `status` ENUM('active', 'inactive', 'available', 'allocated') DEFAULT 'active'");
+        // Only modify ENUMs for MySQL (skip for SQLite/other databases used in testing)
+        if (DB::connection()->getDriverName() === 'mysql') {
+            // Modify the pool_type enum to add 'pppoe' and other types (MySQL-specific)
+            DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `pool_type` ENUM('public', 'private', 'pppoe', 'dhcp', 'static') DEFAULT 'public'");
+            
+            // Modify status enum to include 'available'
+            DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `status` ENUM('active', 'inactive', 'available', 'allocated') DEFAULT 'active'");
+        }
     }
 
     /**
