@@ -22,9 +22,19 @@ class CustomerImportController extends Controller
     public function index(): View
     {
         $tenantId = auth()->user()->tenant_id;
+        
+        // Get active routers, including those with active NAS or no NAS
         $routers = MikrotikRouter::where('tenant_id', $tenantId)
             ->where('status', 'active')
+            ->where(function($query) {
+                // Include routers with no NAS, or routers whose NAS is also active
+                $query->whereNull('nas_id')
+                    ->orWhereHas('nas', function($q) {
+                        $q->where('status', 'active');
+                    });
+            })
             ->get();
+            
         $nasDevices = Nas::where('tenant_id', $tenantId)
             ->where('status', 'active')
             ->get();
