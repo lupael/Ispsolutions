@@ -6,10 +6,17 @@ namespace App\Services;
 
 use App\Models\PackageFup;
 use App\Models\User;
+use App\Notifications\FupExceededNotification;
+use App\Notifications\FupWarningNotification;
+use App\Notifications\FupResetNotification;
 use Illuminate\Support\Facades\Log;
 
 class FupService
 {
+    public function __construct(
+        protected ?MikroTikService $mikrotikService = null
+    ) {}
+
     /**
      * Check if user has exceeded FUP limits.
      */
@@ -75,13 +82,40 @@ class FupService
         }
 
         // Apply reduced speed to router
-        // This would integrate with MikroTik API to change speed
-        Log::info("Applying FUP speed limit for user {$user->id}: {$fup->reduced_speed}");
-
-        // TODO: Integrate with MikroTik service to apply speed limit
-        // Example: $this->mikrotikService->changeCustomerSpeed($user, $fup->reduced_speed);
-
-        return true;
+        try {
+            if ($this->mikrotikService && $user->router) {
+                // Parse reduced speed (e.g., "512K/512K")
+                $speeds = explode('/', $fup->reduced_speed);
+                $downloadSpeed = $speeds[0] ?? $fup->reduced_speed;
+                $uploadSpeed = $speeds[1] ?? $downloadSpeed;
+                
+                // Change customer speed profile on MikroTik
+                $this->mikrotikService->changeCustomerSpeed(
+                    $user->router,
+                    $user,
+                    $downloadSpeed,
+                    $uploadSpeed
+                );
+                
+                Log::info("Applied FUP speed limit for user {$user->id}: {$fup->reduced_speed}");
+                
+                // Mark user as FUP limited
+                $user->update([
+                    'fup_exceeded' => true,
+                    'fup_exceeded_at' => now(),
+                ]);
+                
+                return true;
+            }
+            
+            Log::warning("Cannot enforce FUP for user {$user->id}: MikroTik service not available or no router assigned");
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Failed to enforce FUP for user {$user->id}", [
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -95,9 +129,39 @@ class FupService
             return;
         }
 
-        // TODO: Implement notification sending
-        // Could be SMS, email, or in-app notification
-        Log::info("FUP notification should be sent to user {$user->id}");
+        try {
+            $fup = $status['fup'];
+            $usage = $status['usage'];
+            
+            // Determine if this is a warning or exceeded notification
+            if ($status['exceeded']) {
+                // Send exceeded notification
+                $user->notify(new FupExceededNotification(
+                    $fup,
+                    $usage['bytes'],
+                    $usage['minutes'],
+                    $status['data_percent'],
+                    $status['time_percent']
+                ));
+                
+                Log::info("FUP exceeded notification sent to user {$user->id}");
+            } else {
+                // Send warning notification (near limit)
+                $user->notify(new FupWarningNotification(
+                    $fup,
+                    $usage['bytes'],
+                    $usage['minutes'],
+                    $status['data_percent'],
+                    $status['time_percent']
+                ));
+                
+                Log::info("FUP warning notification sent to user {$user->id}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to send FUP notification to user {$user->id}", [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -110,11 +174,45 @@ class FupService
         
         Log::info("Resetting FUP usage for package {$fup->package_id}");
         
-        // TODO: Implement actual reset logic
-        // This might involve:
-        // 1. Resetting customer speeds back to normal
-        // 2. Clearing usage counters
-        // 3. Sending notification that FUP has been reset
+        try {
+            // Get all customers with this package who have FUP limits applied
+            $affectedCustomers = User::where('package_id', $fup->package_id)
+                ->where('fup_exceeded', true)
+                ->get();
+            
+            foreach ($affectedCustomers as $customer) {
+                // Restore normal speed on router
+                if ($this->mikrotikService && $customer->router && $customer->package) {
+                    $package = $customer->package;
+                    
+                    // Restore original package speed
+                    $this->mikrotikService->changeCustomerSpeed(
+                        $customer->router,
+                        $customer,
+                        $package->download_speed,
+                        $package->upload_speed
+                    );
+                }
+                
+                // Clear FUP exceeded flag
+                $customer->update([
+                    'fup_exceeded' => false,
+                    'fup_exceeded_at' => null,
+                    'fup_reset_at' => now(),
+                ]);
+                
+                // Send reset notification to customer
+                $customer->notify(new FupResetNotification($fup));
+                
+                Log::info("FUP reset for user {$customer->id}");
+            }
+            
+            Log::info("FUP reset completed for package {$fup->package_id}: {$affectedCustomers->count()} customers affected");
+        } catch (\Exception $e) {
+            Log::error("Failed to reset FUP for package {$fup->package_id}", [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

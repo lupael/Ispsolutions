@@ -221,12 +221,35 @@ class SmsBalanceService
             return false;
         }
 
-        // TODO: Send notification (email/SMS) to operator about low balance
-        // This will be implemented when notification system is in place
-        
-        // Update last notified timestamp
-        $operator->update(['sms_low_balance_notified_at' => now()]);
-
-        return true;
+        // Send notification to operator about low balance
+        try {
+            $threshold = $operator->sms_low_balance_threshold ?? 100;
+            $currentBalance = $operator->sms_balance ?? 0;
+            
+            // Send email notification
+            $operator->notify(new \App\Notifications\SmsBalanceLowNotification(
+                $currentBalance,
+                $threshold
+            ));
+            
+            // Log the notification
+            \Illuminate\Support\Facades\Log::info('Low SMS balance notification sent', [
+                'operator_id' => $operator->id,
+                'current_balance' => $currentBalance,
+                'threshold' => $threshold,
+            ]);
+            
+            // Update last notified timestamp
+            $operator->update(['sms_low_balance_notified_at' => now()]);
+            
+            return true;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send low SMS balance notification', [
+                'operator_id' => $operator->id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return false;
+        }
     }
 }
