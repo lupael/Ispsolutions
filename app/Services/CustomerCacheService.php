@@ -185,16 +185,22 @@ class CustomerCacheService
         }
 
         try {
-            // Query radacct table for active sessions using radius connection
-            // Note: This assumes you have a radacct table. Adjust based on your schema.
+            // First, fetch usernames from the main database
+            $usernames = DB::table('users')
+                ->select('username')
+                ->whereIn('id', $customerIds)
+                ->where('operator_level', 100)
+                ->pluck('username')
+                ->toArray();
+
+            if (empty($usernames)) {
+                return array_fill_keys($customerIds, false);
+            }
+
+            // Then, query radacct table for active sessions using radius connection
             $activeSessions = DB::connection('radius')->table('radacct')
                 ->select('username')
-                ->whereIn('username', function ($query) use ($customerIds) {
-                    $query->select('username')
-                        ->from('users')
-                        ->whereIn('id', $customerIds)
-                        ->where('operator_level', 100);
-                })
+                ->whereIn('username', $usernames)
                 ->whereNull('acctstoptime')
                 ->get()
                 ->pluck('username')
