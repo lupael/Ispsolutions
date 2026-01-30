@@ -3,49 +3,49 @@
 @section('title', 'Access Panel')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Access Any Panel</h3>
-                    <p class="card-subtitle">Select a tenancy to access their panel</p>
+<div class="w-full px-4">
+    <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold">Access Any Panel</h3>
+                    <p class="text-sm text-gray-600">Select a tenancy to access their panel</p>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     @if($tenancies->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover">
+                        <div class="overflow-x-auto">
+                            <table class="w-full hover:bg-gray-50">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Domain/Subdomain</th>
-                                        <th>Status</th>
-                                        <th>Users</th>
-                                        <th>Actions</th>
+                                        <th class="text-left p-2">ID</th>
+                                        <th class="text-left p-2">Name</th>
+                                        <th class="text-left p-2">Domain/Subdomain</th>
+                                        <th class="text-left p-2">Status</th>
+                                        <th class="text-left p-2">Users</th>
+                                        <th class="text-left p-2">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($tenancies as $tenancy)
-                                        <tr>
-                                            <td>{{ $tenancy->id }}</td>
-                                            <td>{{ $tenancy->name }}</td>
-                                            <td>
+                                        <tr class="border-t hover:bg-gray-50">
+                                            <td class="p-2">{{ $tenancy->id }}</td>
+                                            <td class="p-2">{{ $tenancy->name }}</td>
+                                            <td class="p-2">
                                                 @if($tenancy->domain)
-                                                    <span class="badge badge-info">{{ $tenancy->domain }}</span>
+                                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-500 text-white">{{ $tenancy->domain }}</span>
                                                 @endif
                                                 @if($tenancy->subdomain)
-                                                    <span class="badge badge-secondary">{{ $tenancy->subdomain }}</span>
+                                                    <span class="px-2 py-1 text-xs rounded-full bg-gray-500 text-white">{{ $tenancy->subdomain }}</span>
                                                 @endif
                                             </td>
-                                            <td>
-                                                <span class="badge badge-{{ $tenancy->status === 'active' ? 'success' : 'danger' }}">
+                                            <td class="p-2">
+                                                <span class="px-2 py-1 text-xs rounded-full {{ $tenancy->status === 'active' ? 'bg-green-500 text-white' : 'bg-red-500 text-white' }}">
                                                     {{ ucfirst($tenancy->status) }}
                                                 </span>
                                             </td>
-                                            <td>{{ $tenancy->users->count() }}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-primary coming-soon-btn" data-message="Access panel functionality coming soon">
+                                            <td class="p-2">{{ $tenancy->users->count() }}</td>
+                                            <td class="p-2">
+                                                <button class="px-3 py-1 text-sm px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 coming-soon-btn" data-message="Access panel functionality coming soon">
                                                     Access Panel
                                                 </button>
                                             </td>
@@ -55,7 +55,7 @@
                             </table>
                         </div>
                     @else
-                        <div class="alert alert-info">
+                        <div class="p-4 rounded-md mb-4 bg-blue-50 border border-blue-200 text-blue-800">
                             No active tenancies found.
                         </div>
                     @endif

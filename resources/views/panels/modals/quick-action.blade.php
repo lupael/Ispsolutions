@@ -4,32 +4,32 @@
     </div>
 
     @if($action === 'activate')
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle me-2"></i>
+        <div class="p-4 rounded-md mb-4 bg-green-50 border border-green-200 text-green-800">
+            <i class="fas fa-check-circle mr-2"></i>
             Are you sure you want to activate this customer?
         </div>
         <form id="quickActionForm" action="{{ route('panel.customers.quick-action.execute', ['customer' => $customer->id, 'action' => 'activate']) }}" method="POST">
             @csrf
-            <div class="form-group mb-3">
-                <label for="notes" class="form-label">Notes (optional)</label>
-                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Add any notes about this action..."></textarea>
+            <div class="mb-3">
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+                <textarea name="notes" id="notes" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Add any notes about this action..."></textarea>
             </div>
-            <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-success">Activate Customer</button>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Activate Customer</button>
             </div>
         </form>
 
     @elseif($action === 'suspend')
-        <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle me-2"></i>
+        <div class="p-4 rounded-md mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
             Are you sure you want to suspend this customer? They will lose access to services.
         </div>
         <form id="quickActionForm" action="{{ route('panel.customers.quick-action.execute', ['customer' => $customer->id, 'action' => 'suspend']) }}" method="POST">
             @csrf
-            <div class="form-group mb-3">
-                <label for="reason" class="form-label">Reason <span class="text-danger">*</span></label>
-                <select name="reason" id="reason" class="form-select" required>
+            <div class="mb-3">
+                <label for="reason" class="block text-sm font-medium text-gray-700 mb-1">Reason <span class="text-red-500">*</span></label>
+                <select name="reason" id="reason" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     <option value="">Select reason...</option>
                     <option value="non_payment">Non-payment</option>
                     <option value="abuse">Policy violation / Abuse</option>
@@ -38,30 +38,30 @@
                     <option value="other">Other</option>
                 </select>
             </div>
-            <div class="form-group mb-3">
-                <label for="notes" class="form-label">Additional Notes</label>
-                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Add any additional details..."></textarea>
+            <div class="mb-3">
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+                <textarea name="notes" id="notes" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Add any additional details..."></textarea>
             </div>
-            <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-warning">Suspend Customer</button>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700">Suspend Customer</button>
             </div>
         </form>
 
     @elseif($action === 'recharge')
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
+        <div class="p-4 rounded-md mb-4 bg-blue-50 border border-blue-200 text-blue-800">
+            <i class="fas fa-info-circle mr-2"></i>
             Quick recharge for {{ $customer->username }}
         </div>
         <form id="quickActionForm" action="{{ route('panel.customers.quick-action.execute', ['customer' => $customer->id, 'action' => 'recharge']) }}" method="POST">
             @csrf
-            <div class="form-group mb-3">
-                <label for="amount" class="form-label">Amount <span class="text-danger">*</span></label>
-                <input type="number" name="amount" id="amount" class="form-control" step="0.01" min="0" required placeholder="0.00">
+            <div class="mb-3">
+                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount <span class="text-red-500">*</span></label>
+                <input type="number" name="amount" id="amount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" min="0" required placeholder="0.00">
             </div>
-            <div class="form-group mb-3">
-                <label for="method" class="form-label">Payment Method <span class="text-danger">*</span></label>
-                <select name="method" id="method" class="form-select" required>
+            <div class="mb-3">
+                <label for="method" class="block text-sm font-medium text-gray-700 mb-1">Payment Method <span class="text-red-500">*</span></label>
+                <select name="method" id="method" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     <option value="">Select method...</option>
                     <option value="cash">Cash</option>
                     <option value="bank_transfer">Bank Transfer</option>
@@ -69,13 +69,13 @@
                     <option value="mobile_money">Mobile Money</option>
                 </select>
             </div>
-            <div class="form-group mb-3">
-                <label for="notes" class="form-label">Notes (optional)</label>
-                <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="Transaction reference or notes..."></textarea>
+            <div class="mb-3">
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+                <textarea name="notes" id="notes" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Transaction reference or notes..."></textarea>
             </div>
-            <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Process Recharge</button>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Process Recharge</button>
             </div>
         </form>
     @endif
@@ -91,7 +91,7 @@ document.getElementById('quickActionForm')?.addEventListener('submit', function(
     
     // Disable submit button
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
     
     fetch(form.action, {
         method: 'POST',
@@ -106,7 +106,7 @@ document.getElementById('quickActionForm')?.addEventListener('submit', function(
         if (data.success) {
             // Show success message
             alert(data.message);
-            // Close modal
+            // TODO: Replace Bootstrap modal with Alpine.js or custom Tailwind modal
             bootstrap.Modal.getInstance(document.getElementById('quickActionModal'))?.hide();
             // Reload page to reflect changes
             window.location.reload();

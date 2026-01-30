@@ -10,7 +10,7 @@
             <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $plan->name }}</h1>
             <p class="mt-2 text-gray-600 dark:text-gray-400">Review plan details and subscribe</p>
         </div>
-        <a href="{{ route('panel.operator.subscriptions.index') }}" class="btn btn-secondary">
+        <a href="{{ route('panel.operator.subscriptions.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 transition">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
