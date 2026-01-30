@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- Revert back button font-weight to font-semibold ([ab5d273](../../commit/ab5d27389d681b13a95db21e915f91282bdeaf51))
 - Address PR review feedback - update percentages and implement makePayment function ([38e9af7](../../commit/38e9af7ecdff59915a744dc550f723ce12d1e38c))
 - address code review feedback - improve token handling, subscription logic, and webhook processing ([b651310](../../commit/b651310da19cdea4442486c3f992ad6ff547f7c5))
 
