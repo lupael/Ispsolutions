@@ -3365,7 +3365,10 @@ class AdminController extends Controller
      */
     public function activityLogs(Request $request): View
     {
-        $query = \App\Models\AuditLog::with(['user', 'auditable']);
+        $tenantId = auth()->user()->tenant_id;
+        
+        $query = \App\Models\AuditLog::where('tenant_id', $tenantId)
+            ->with(['user', 'auditable']);
 
         // Filter by customer_id if provided
         if ($request->filled('customer_id')) {
@@ -3381,11 +3384,14 @@ class AdminController extends Controller
 
         $logs = $query->latest()->paginate(50);
 
+        // Build base query for stats with tenant filtering
+        $baseStatsQuery = \App\Models\AuditLog::where('tenant_id', $tenantId);
+
         $stats = [
-            'total' => \App\Models\AuditLog::count(),
-            'today' => \App\Models\AuditLog::whereDate('created_at', today())->count(),
-            'this_week' => \App\Models\AuditLog::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-            'this_month' => \App\Models\AuditLog::whereMonth('created_at', now()->month)->count(),
+            'total' => (clone $baseStatsQuery)->count(),
+            'today' => (clone $baseStatsQuery)->whereDate('created_at', today())->count(),
+            'this_week' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            'this_month' => (clone $baseStatsQuery)->whereMonth('created_at', now()->month)->count(),
         ];
 
         return view('panels.admin.logs.activity', compact('logs', 'stats'));
@@ -3456,20 +3462,50 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $userRole = $user->roles->first()?->slug ?? '';
+        $tenantId = $user->tenant_id;
 
         try {
-            // Base query for PPP sessions from RADIUS accounting
-            $query = \App\Models\RadAcct::where('username', 'LIKE', '%ppp%')
-                ->orWhere('nasporttype', 'PPP');
+            // Get tenant usernames to filter by tenant
+            $tenantUsernames = \App\Models\User::where('tenant_id', $tenantId)
+                ->whereNotNull('username')
+                ->pluck('username')
+                ->toArray();
+            
+            // If no users with usernames, return empty results
+            if (empty($tenantUsernames)) {
+                return view('panels.admin.logs.ppp', [
+                    'logs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
+                    'stats' => [
+                        'total' => 0,
+                        'today' => 0,
+                        'active_sessions' => 0,
+                        'total_bandwidth' => 0,
+                    ],
+                ]);
+            }
 
-            // Filter by ownership for non-admin roles
+            // Base query for PPP sessions from RADIUS accounting with tenant filtering
+            $query = \App\Models\RadAcct::whereIn('username', $tenantUsernames)
+                ->where(function($q) {
+                    $q->where('username', 'LIKE', '%ppp%')
+                      ->orWhere('nasporttype', 'PPP');
+                });
+
+            // Additional filter by ownership for non-admin roles
             if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
                 // For operators and staff, show only their assigned customers
                 if ($userRole === 'operator' || $userRole === 'staff') {
                     $customerIds = $user->customers()->pluck('id')->toArray();
-                    $query->whereHas('user', function ($q) use ($customerIds) {
-                        $q->whereIn('id', $customerIds);
-                    });
+                    if (!empty($customerIds)) {
+                        $customerUsernames = \App\Models\User::whereIn('id', $customerIds)
+                            ->whereNotNull('username')
+                            ->pluck('username')
+                            ->toArray();
+                        $query->whereIn('username', $customerUsernames);
+                    } else {
+                        // No customers assigned, return empty
+                        $query->whereRaw('1 = 0');
+                    }
                 }
                 // For customers, show only their own logs
                 elseif ($userRole === 'customer') {
@@ -3480,10 +3516,10 @@ class AdminController extends Controller
             $logs = $query->latest('acctstarttime')->paginate(50);
 
             $stats = [
-                'total' => $query->count(),
+                'total' => (clone $query)->count(),
                 'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
                 'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
-                'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
+                'total_bandwidth' => (clone $query)->sum('acctinputoctets') + (clone $query)->sum('acctoutputoctets'),
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle case where radacct table doesn't exist
@@ -3515,24 +3551,52 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $userRole = $user->roles->first()?->slug ?? '';
+        $tenantId = $user->tenant_id;
 
         try {
-            // Base query for Hotspot sessions from RADIUS accounting
-            $query = \App\Models\RadAcct::where('username', 'NOT LIKE', '%ppp%')
+            // Get tenant usernames to filter by tenant
+            $tenantUsernames = \App\Models\User::where('tenant_id', $tenantId)
+                ->whereNotNull('username')
+                ->pluck('username')
+                ->toArray();
+            
+            // If no users with usernames, return empty results
+            if (empty($tenantUsernames)) {
+                return view('panels.admin.logs.hotspot', [
+                    'logs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
+                    'stats' => [
+                        'total' => 0,
+                        'today' => 0,
+                        'active_sessions' => 0,
+                        'total_bandwidth' => 0,
+                    ],
+                ]);
+            }
+
+            // Base query for Hotspot sessions from RADIUS accounting with tenant filtering
+            $query = \App\Models\RadAcct::whereIn('username', $tenantUsernames)
+                ->where('username', 'NOT LIKE', '%ppp%')
                 ->where(function ($q) {
                     $q->where('nasporttype', 'Wireless-802.11')
                         ->orWhere('nasporttype', 'Ethernet')
                         ->orWhereNull('nasporttype');
                 });
 
-            // Filter by ownership for non-admin roles
+            // Additional filter by ownership for non-admin roles
             if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
                 // For operators and staff, show only their assigned customers
                 if ($userRole === 'operator' || $userRole === 'staff') {
                     $customerIds = $user->customers()->pluck('id')->toArray();
-                    $query->whereHas('user', function ($q) use ($customerIds) {
-                        $q->whereIn('id', $customerIds);
-                    });
+                    if (!empty($customerIds)) {
+                        $customerUsernames = \App\Models\User::whereIn('id', $customerIds)
+                            ->whereNotNull('username')
+                            ->pluck('username')
+                            ->toArray();
+                        $query->whereIn('username', $customerUsernames);
+                    } else {
+                        // No customers assigned, return empty
+                        $query->whereRaw('1 = 0');
+                    }
                 }
                 // For customers, show only their own logs
                 elseif ($userRole === 'customer') {
@@ -3543,10 +3607,10 @@ class AdminController extends Controller
             $logs = $query->latest('acctstarttime')->paginate(50);
 
             $stats = [
-                'total' => $query->count(),
+                'total' => (clone $query)->count(),
                 'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
                 'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
-                'total_bandwidth' => $query->sum('acctinputoctets') + $query->sum('acctoutputoctets'),
+                'total_bandwidth' => (clone $query)->sum('acctinputoctets') + (clone $query)->sum('acctoutputoctets'),
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle case where radacct table doesn't exist
