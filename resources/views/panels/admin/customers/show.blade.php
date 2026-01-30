@@ -9,7 +9,14 @@
         <div class="p-6">
             <div class="flex justify-between items-start">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Customer Profile</h1>
+                    <div class="flex items-center gap-3 mb-2">
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Customer Profile</h1>
+                        @if($customer->customer_id)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                ID: {{ $customer->customer_id }}
+                            </span>
+                        @endif
+                    </div>
                     <p class="mt-2 text-gray-600 dark:text-gray-400">View customer details and activity</p>
                 </div>
                 <div>
