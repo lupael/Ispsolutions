@@ -17,7 +17,9 @@ class OltMonitorOnusTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Tenant $tenant;
+
     protected Olt $olt;
 
     protected function setUp(): void
@@ -172,6 +174,41 @@ class OltMonitorOnusTest extends TestCase
                         'online' => 1,
                         'offline' => 1,
                         'average_signal_rx' => -25.0,
+                    ],
+                ],
+            ]);
+    }
+
+    public function test_monitor_onus_endpoint_handles_zero_average()
+    {
+        $this->actingAs($this->user);
+
+        // Create ONUs with signal values that average to zero
+        Onu::factory()->create([
+            'olt_id' => $this->olt->id,
+            'tenant_id' => $this->tenant->id,
+            'signal_rx' => -10.0,
+            'status' => 'online',
+        ]);
+
+        Onu::factory()->create([
+            'olt_id' => $this->olt->id,
+            'tenant_id' => $this->tenant->id,
+            'signal_rx' => 10.0,
+            'status' => 'online',
+        ]);
+
+        $response = $this->getJson("/api/v1/olt/{$this->olt->id}/monitor-onus");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'summary' => [
+                        'total' => 2,
+                        'online' => 2,
+                        'offline' => 0,
+                        'average_signal_rx' => 0.0, // Should be 0.0, not null
                     ],
                 ],
             ]);

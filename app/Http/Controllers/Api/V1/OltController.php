@@ -362,7 +362,7 @@ class OltController extends Controller
                     'total' => $onus->count(),
                     'online' => $onus->where('status', 'online')->count(),
                     'offline' => $onus->where('status', 'offline')->count(),
-                    'average_signal_rx' => ($avgSignal = $onus->whereNotNull('signal_rx')->avg('signal_rx'))
+                    'average_signal_rx' => ($avgSignal = $onus->whereNotNull('signal_rx')->avg('signal_rx')) !== null
                         ? round($avgSignal, 2)
                         : null,
                 ],
