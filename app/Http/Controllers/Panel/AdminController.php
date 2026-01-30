@@ -24,6 +24,7 @@ use App\Models\Payment;
 use App\Models\PaymentGateway;
 use App\Models\Role;
 use App\Models\ServicePackage;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\CustomerCacheService;
@@ -196,12 +197,113 @@ class AdminController extends Controller
                 ->count('user_id'),
         ];
 
+        // Operator Performance Data - Optimized to avoid N+1 queries
+        $operators = User::whereIn('operator_level', [30, 40])->get(); // Operators and Sub-operators
+        
+        if ($operators->isNotEmpty()) {
+            $operatorIds = $operators->pluck('id');
+            
+            // Bulk fetch all customers for all operators using created_by relationship
+            $allCustomers = User::whereIn('created_by', $operatorIds)
+                ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->select('id', 'created_by', 'status', 'created_at')
+                ->get()
+                ->groupBy('created_by');
+            
+            // Bulk fetch payments for all operator customers
+            $allCustomerIds = $allCustomers->flatten()->pluck('id');
+            $payments = Payment::whereIn('user_id', $allCustomerIds)
+                ->whereDate('payment_date', '>=', now()->startOfMonth())
+                ->where('status', 'success')
+                ->select('user_id', 'amount')
+                ->get()
+                ->groupBy('user_id');
+            
+            // Bulk fetch tickets for all operator customers
+            $tickets = Ticket::whereIn('customer_id', $allCustomerIds)
+                ->where('status', 'resolved')
+                ->whereDate('updated_at', '>=', now()->startOfMonth())
+                ->select('customer_id', 'id')
+                ->get()
+                ->groupBy('customer_id');
+            
+            $operatorPerformance = $operators->map(function ($operator) use ($allCustomers, $payments, $tickets) {
+                $operatorCustomers = $allCustomers->get($operator->id, collect());
+                $operatorCustomerIds = $operatorCustomers->pluck('id');
+                
+                // Calculate total revenue for this operator's customers
+                $monthlyRevenue = $operatorCustomerIds->sum(function ($customerId) use ($payments) {
+                    return $payments->get($customerId, collect())->sum('amount');
+                });
+                
+                // Count tickets resolved for this operator's customers
+                $ticketsResolved = $operatorCustomerIds->sum(function ($customerId) use ($tickets) {
+                    return $tickets->get($customerId, collect())->count();
+                });
+                
+                return [
+                    'id' => $operator->id,
+                    'name' => $operator->name,
+                    'operator_level' => $operator->operator_level,
+                    'total_customers' => $operatorCustomers->count(),
+                    'active_customers' => $operatorCustomers->where('status', 'active')->count(),
+                    'monthly_revenue' => $monthlyRevenue,
+                    'tickets_resolved' => $ticketsResolved,
+                    'new_customers_this_month' => $operatorCustomers
+                        ->where('created_at', '>=', now()->startOfMonth())
+                        ->count(),
+                ];
+            })
+            ->sortByDesc('monthly_revenue')
+            ->take(10);
+        } else {
+            $operatorPerformance = collect();
+        }
+
+        // Revenue Trend Data (last 6 months)
+        $revenueTrend = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $revenueTrend->push([
+                'month' => $month->format('M Y'),
+                'revenue' => Payment::whereYear('payment_date', $month->year)
+                    ->whereMonth('payment_date', $month->month)
+                    ->where('status', 'success')
+                    ->sum('amount'),
+            ]);
+        }
+
+        // Customer Growth Data (last 6 months)
+        $customerGrowth = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $customerGrowth->push([
+                'month' => $month->format('M Y'),
+                'customers' => User::where('operator_level', 100)
+                    ->whereDate('created_at', '<=', $month->endOfMonth())
+                    ->count(),
+            ]);
+        }
+
+        // Service Type Distribution
+        $serviceTypeDistribution = [
+            'pppoe' => $stats['pppoe_customers'] ?? 0,
+            'hotspot' => $stats['hotspot_customers'] ?? 0,
+            'static' => User::where('operator_level', 100)
+                ->where('service_type', 'static')
+                ->count(),
+        ];
+
         return view('panels.admin.dashboard', compact(
             'stats',
             'statusDistribution',
             'expiringCustomers',
             'lowPerformingPackages',
-            'paymentStats'
+            'paymentStats',
+            'operatorPerformance',
+            'revenueTrend',
+            'customerGrowth',
+            'serviceTypeDistribution'
         ));
     }
 
