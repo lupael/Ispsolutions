@@ -47,7 +47,6 @@ class MinimumConfigurationController extends Controller
         $examEnabled = config('consumer.exam_attendance', false);
         if ($examEnabled) {
             $steps[] = [
-                'number' => 1,
                 'name' => 'Exam Attendance',
                 'description' => 'Pass the exam if questions exist',
                 'completed' => $this->checkExamCompleted($operator),
@@ -58,7 +57,6 @@ class MinimumConfigurationController extends Controller
 
         // Step 2: Billing Profile
         $steps[] = [
-            'number' => 2,
             'name' => 'Billing Profile',
             'description' => 'Create at least one billing profile',
             'completed' => $this->checkBillingProfileExists($operator),
@@ -68,7 +66,6 @@ class MinimumConfigurationController extends Controller
 
         // Step 3: Router Registration
         $steps[] = [
-            'number' => 3,
             'name' => 'Router Registration',
             'description' => 'Add at least one router (NAS)',
             'completed' => $this->checkRouterExists($operator),
@@ -78,7 +75,6 @@ class MinimumConfigurationController extends Controller
 
         // Step 4: Customer Data
         $steps[] = [
-            'number' => 4,
             'name' => 'Customer Data',
             'description' => 'Add at least one customer or import request',
             'completed' => $this->checkCustomerDataExists($operator),
@@ -89,7 +85,6 @@ class MinimumConfigurationController extends Controller
         // Step 5: Assign Billing Profile to Self
         if ($operator->operator_level === User::OPERATOR_LEVEL_ADMIN) {
             $steps[] = [
-                'number' => 5,
                 'name' => 'Assign Billing Profile to Self',
                 'description' => 'Assign a billing profile to your account',
                 'completed' => $this->checkOperatorHasBillingProfile($operator),
@@ -101,7 +96,6 @@ class MinimumConfigurationController extends Controller
         // Step 6: Assign Billing Profile to Resellers
         if ($operator->operator_level === User::OPERATOR_LEVEL_ADMIN) {
             $steps[] = [
-                'number' => 6,
                 'name' => 'Assign Billing Profile to Operators',
                 'description' => 'All operators must have billing profiles',
                 'completed' => $this->checkAllOperatorsHaveBillingProfiles($operator),
@@ -112,7 +106,6 @@ class MinimumConfigurationController extends Controller
 
         // Step 7: Package Assignment
         $steps[] = [
-            'number' => 7,
             'name' => 'Package Assignment',
             'description' => 'Create packages from master packages',
             'completed' => $this->checkPackagesExist($operator),
@@ -122,7 +115,6 @@ class MinimumConfigurationController extends Controller
 
         // Step 8: Package Pricing
         $steps[] = [
-            'number' => 8,
             'name' => 'Package Pricing',
             'description' => 'All packages must have price > 1 (except Trial)',
             'completed' => $this->checkPackagePricing($operator),
@@ -132,7 +124,6 @@ class MinimumConfigurationController extends Controller
 
         // Step 9: Backup Settings
         $steps[] = [
-            'number' => 9,
             'name' => 'Backup Settings',
             'description' => 'Configure backup settings for authentication',
             'completed' => $this->checkBackupSettingsConfigured($operator),
@@ -142,13 +133,18 @@ class MinimumConfigurationController extends Controller
 
         // Step 10: Profile Completion
         $steps[] = [
-            'number' => 10,
             'name' => 'Profile Completion',
             'description' => 'Complete your company profile',
             'completed' => $this->checkProfileCompleted($operator),
             'route' => 'panel.admin.profile.edit',
             'required' => true,
         ];
+
+        // Normalize step numbers to ensure sequential ordering without gaps
+        foreach ($steps as $index => &$step) {
+            $step['number'] = $index + 1;
+        }
+        unset($step);
 
         return $steps;
     }
@@ -168,7 +164,7 @@ class MinimumConfigurationController extends Controller
      */
     protected function checkBillingProfileExists(User $operator): bool
     {
-        return BillingProfile::where('operator_id', $operator->id)->count() > 0;
+        return BillingProfile::where('tenant_id', $operator->tenant_id)->count() > 0;
     }
 
     /**
@@ -176,7 +172,7 @@ class MinimumConfigurationController extends Controller
      */
     protected function checkRouterExists(User $operator): bool
     {
-        return Nas::where('operator_id', $operator->id)->count() > 0;
+        return Nas::where('tenant_id', $operator->tenant_id)->count() > 0;
     }
 
     /**
@@ -184,7 +180,7 @@ class MinimumConfigurationController extends Controller
      */
     protected function checkCustomerDataExists(User $operator): bool
     {
-        $hasCustomers = Customer::where('operator_id', $operator->id)->count() > 0;
+        $hasCustomers = Customer::where('parent_id', $operator->id)->count() > 0;
         $hasImportRequest = CustomerImport::where('operator_id', $operator->id)->exists();
 
         return $hasCustomers || $hasImportRequest;
@@ -245,11 +241,15 @@ class MinimumConfigurationController extends Controller
             return false;
         }
 
+        $hasNonTrialPackage = false;
+
         foreach ($packages as $package) {
             // Skip trial packages
             if (stripos($package->name, 'trial') !== false) {
                 continue;
             }
+
+            $hasNonTrialPackage = true;
 
             // Check if price is greater than 1
             if (! isset($package->price) || $package->price <= 1) {
@@ -257,7 +257,8 @@ class MinimumConfigurationController extends Controller
             }
         }
 
-        return true;
+        // Require at least one non-trial package with valid pricing
+        return $hasNonTrialPackage;
     }
 
     /**

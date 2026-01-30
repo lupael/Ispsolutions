@@ -23,10 +23,16 @@ class BackupSettingController extends Controller
     {
         $operator = Auth::user();
         $backupSetting = BackupSetting::where('operator_id', $operator->id)->first();
-        $routers = Nas::where('operator_id', $operator->id)->get();
+        $routers = Nas::where('tenant_id', $operator->tenant_id)->get();
 
-        return view('panel.backup-settings.index', [
-            'backupSetting' => $backupSetting,
+        if ($backupSetting) {
+            return view('panel.backup-settings.edit', [
+                'backupSetting' => $backupSetting,
+                'routers' => $routers,
+            ]);
+        }
+
+        return view('panel.backup-settings.create', [
             'routers' => $routers,
         ]);
     }
@@ -37,7 +43,7 @@ class BackupSettingController extends Controller
     public function create()
     {
         $operator = Auth::user();
-        $routers = Nas::where('operator_id', $operator->id)->get();
+        $routers = Nas::where('tenant_id', $operator->tenant_id)->get();
 
         if ($routers->isEmpty()) {
             return redirect()->route('panel.admin.network.routers.create')
@@ -54,11 +60,14 @@ class BackupSettingController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nas_id' => 'required|exists:nas,id',
-        ]);
-
         $operator = Auth::user();
+        
+        $request->validate([
+            'nas_id' => [
+                'required',
+                'exists:nas,id,tenant_id,' . $operator->tenant_id,
+            ],
+        ]);
 
         BackupSetting::updateOrCreate(
             ['operator_id' => $operator->id],
@@ -79,7 +88,7 @@ class BackupSettingController extends Controller
     {
         $operator = Auth::user();
         $backupSetting = BackupSetting::where('operator_id', $operator->id)->firstOrFail();
-        $routers = Nas::where('operator_id', $operator->id)->get();
+        $routers = Nas::where('tenant_id', $operator->tenant_id)->get();
 
         return view('panel.backup-settings.edit', [
             'backupSetting' => $backupSetting,
@@ -92,11 +101,15 @@ class BackupSettingController extends Controller
      */
     public function update(Request $request)
     {
+        $operator = Auth::user();
+        
         $request->validate([
-            'nas_id' => 'required|exists:nas,id',
+            'nas_id' => [
+                'required',
+                'exists:nas,id,tenant_id,' . $operator->tenant_id,
+            ],
         ]);
 
-        $operator = Auth::user();
         $backupSetting = BackupSetting::where('operator_id', $operator->id)->firstOrFail();
 
         $backupSetting->update([

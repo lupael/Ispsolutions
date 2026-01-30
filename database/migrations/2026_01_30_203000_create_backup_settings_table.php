@@ -20,6 +20,7 @@ return new class extends Migration
 
             $table->unique(['operator_id']);
             $table->foreign('operator_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('nas_id')->references('id')->on('nas')->onDelete('cascade');
         });
     }
 

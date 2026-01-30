@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Controllers\Panel\MinimumConfigurationController;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,12 +38,17 @@ class EnsureOnboardingComplete
     public function handle(Request $request, Closure $next): Response
     {
         // Only check for admin users
-        if (! Auth::check() || Auth::user()->operator_level !== 20) {
+        if (! Auth::check() || Auth::user()->operator_level !== User::OPERATOR_LEVEL_ADMIN) {
+            return $next($request);
+        }
+
+        // Get the current route name
+        $currentRoute = $request->route()?->getName();
+        if (! $currentRoute) {
             return $next($request);
         }
 
         // Skip check for excluded routes
-        $currentRoute = $request->route()->getName();
         foreach ($this->except as $pattern) {
             if ($this->matchesPattern($currentRoute, $pattern)) {
                 return $next($request);
@@ -51,13 +56,43 @@ class EnsureOnboardingComplete
         }
 
         // Check if onboarding is complete
-        $controller = new MinimumConfigurationController();
-        if (! $controller->isOnboardingComplete(Auth::user())) {
+        if (! $this->isOnboardingComplete(Auth::user())) {
             return redirect()->route('panel.admin.onboarding')
                 ->with('warning', 'Please complete the onboarding process to access this feature.');
         }
 
         return $next($request);
+    }
+
+    /**
+     * Check if onboarding is complete for the given user.
+     */
+    protected function isOnboardingComplete(User $user): bool
+    {
+        // This duplicates logic from MinimumConfigurationController
+        // to avoid tight coupling, but maintains the same checks
+        
+        // Check billing profile exists
+        if (! \App\Models\BillingProfile::where('tenant_id', $user->tenant_id)->exists()) {
+            return false;
+        }
+
+        // Check router exists
+        if (! \App\Models\Nas::where('tenant_id', $user->tenant_id)->exists()) {
+            return false;
+        }
+
+        // Check backup settings configured
+        if (! \App\Models\BackupSetting::where('operator_id', $user->id)->exists()) {
+            return false;
+        }
+
+        // Check profile completed
+        if (empty($user->company_in_native_lang)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
