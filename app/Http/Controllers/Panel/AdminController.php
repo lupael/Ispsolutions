@@ -285,6 +285,109 @@ class AdminController extends Controller
             ]);
         }
 
+        // ISP Information (Admin level 20)
+        $ispInfo = [
+            'status' => 'active',
+            'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->count(),
+            'active_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->where('status', 'active')
+                ->count(),
+            'inactive_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->where('status', 'inactive')
+                ->count(),
+            'expired_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->where('status', 'expired')
+                ->count(),
+        ];
+
+        // Sub-Operator Information (Operator level 30 and Sub-Operator level 40)
+        $subOperatorInfo = [
+            'total' => User::whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR])->count(),
+            'active' => User::whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR])
+                ->where('is_active', true)
+                ->count(),
+            'inactive' => User::whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR])
+                ->where('is_active', false)
+                ->count(),
+        ];
+
+        // Get all operator and sub-operator IDs
+        $operatorIds = User::whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR])
+            ->pluck('id');
+
+        // Clients of Sub-Operator (customers created by operators/sub-operators)
+        $subOperatorClients = [
+            'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->whereIn('created_by', $operatorIds)
+                ->count(),
+            'active_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->whereIn('created_by', $operatorIds)
+                ->where('status', 'active')
+                ->count(),
+            'inactive_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->whereIn('created_by', $operatorIds)
+                ->where('status', 'inactive')
+                ->count(),
+            'expired_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->whereIn('created_by', $operatorIds)
+                ->where('status', 'expired')
+                ->count(),
+        ];
+
+        // Helper function to calculate MRC for a set of customers
+        $calculateMRC = function($customerQuery) {
+            return $customerQuery
+                ->join('service_packages', 'users.service_package_id', '=', 'service_packages.id')
+                ->where('users.status', 'active')
+                ->sum('service_packages.price');
+        };
+
+        // Helper function to calculate average MRC for a month
+        $calculateMonthAvgMRC = function($customerQuery, $year, $month) {
+            // Get customers who were active at any point during the month
+            return DB::table('invoices')
+                ->whereIn('user_id', $customerQuery->pluck('id'))
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->avg('total_amount') ?? 0;
+        };
+
+        // ISP's MRC (all customers directly under Admin)
+        $ispCustomerQuery = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
+        $ispMRC = [
+            'current_mrc' => $calculateMRC(clone $ispCustomerQuery),
+            'this_month_avg_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, now()->year, now()->month),
+            'last_month_avg_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, now()->subMonth()->year, now()->subMonth()->month),
+        ];
+
+        // Client's MRC (breakdown for all clients)
+        $clientsMRC = [
+            'current_mrc' => $ispMRC['current_mrc'],
+            'this_month_avg_mrc' => $ispMRC['this_month_avg_mrc'],
+            'last_month_avg_mrc' => $ispMRC['last_month_avg_mrc'],
+        ];
+
+        // Client's of Sub-Operator MRC (customers created by operators/sub-operators)
+        $subOperatorCustomerQuery = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            ->whereIn('created_by', $operatorIds);
+        $subOperatorClientsMRC = [
+            'current_mrc' => $calculateMRC(clone $subOperatorCustomerQuery),
+            'this_month_avg_mrc' => $calculateMonthAvgMRC(clone $subOperatorCustomerQuery, now()->year, now()->month),
+            'last_month_avg_mrc' => $calculateMonthAvgMRC(clone $subOperatorCustomerQuery, now()->subMonth()->year, now()->subMonth()->month),
+        ];
+
+        // 3-Month MRC Comparison Data for graphs
+        $mrcComparison = collect();
+        for ($i = 2; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $mrcComparison->push([
+                'month' => $month->format('M Y'),
+                'isp_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, $month->year, $month->month),
+                'clients_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, $month->year, $month->month),
+                'sub_operator_clients_mrc' => $calculateMonthAvgMRC(clone $subOperatorCustomerQuery, $month->year, $month->month),
+            ]);
+        }
+
         return view('panels.admin.dashboard', compact(
             'stats',
             'statusDistribution',
@@ -293,7 +396,14 @@ class AdminController extends Controller
             'paymentStats',
             'operatorPerformance',
             'revenueTrend',
-            'customerGrowth'
+            'customerGrowth',
+            'ispInfo',
+            'subOperatorInfo',
+            'subOperatorClients',
+            'ispMRC',
+            'clientsMRC',
+            'subOperatorClientsMRC',
+            'mrcComparison'
         ));
     }
 
