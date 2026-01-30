@@ -94,7 +94,7 @@
                             Extend
                         </a>
                         <span class="text-gray-300 dark:text-gray-600">|</span>
-                        <button onclick="alert('Email reminder feature coming soon')" 
+                        <button type="button" data-action="remind-customer" data-customer-id="{{ $customer->id }}" 
                                 class="text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium">
                             Remind
                         </button>

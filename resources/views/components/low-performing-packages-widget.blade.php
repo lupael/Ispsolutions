@@ -111,7 +111,7 @@
                         @if($customerCount === 0)
                             <span class="text-gray-300 dark:text-gray-600">|</span>
                             <form action="{{ route('panel.admin.packages.destroy', $package) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Are you sure you want to delete this package?')">
+                                  data-confirm-delete>
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" 

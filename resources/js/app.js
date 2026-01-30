@@ -4,6 +4,7 @@ import AnalyticsManager from './analytics';
 import ApexCharts from 'apexcharts';
 import './bulk-actions';
 import './form-validation';
+import './dashboard-widgets';
 
 // Customer Details Editor Alpine Component
 // This must be defined BEFORE Alpine.start() to be available for use
