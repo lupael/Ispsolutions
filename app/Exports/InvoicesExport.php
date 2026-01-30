@@ -47,16 +47,16 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
     {
         return [
             $invoice->invoice_number,
-            $invoice->networkUser->name ?? 'N/A',
-            $invoice->networkUser->username ?? 'N/A',
-            $invoice->networkUser->package->name ?? 'N/A',
-            number_format($invoice->subtotal, 2),
+            $invoice->user->name ?? 'N/A',
+            $invoice->user->username ?? 'N/A',
+            $invoice->package->name ?? 'N/A',
+            number_format($invoice->amount, 2),
             number_format($invoice->tax_amount ?? 0, 2),
             number_format($invoice->total_amount, 2),
-            number_format($invoice->paid_amount ?? 0, 2),
-            number_format($invoice->total_amount - ($invoice->paid_amount ?? 0), 2),
+            number_format($invoice->payments->sum('amount') ?? 0, 2),
+            number_format($invoice->total_amount - ($invoice->payments->sum('amount') ?? 0), 2),
             ucfirst($invoice->status),
-            $invoice->issue_date?->format('Y-m-d') ?? 'N/A',
+            $invoice->created_at?->format('Y-m-d') ?? 'N/A',
             $invoice->due_date?->format('Y-m-d') ?? 'N/A',
             $invoice->paid_at?->format('Y-m-d') ?? 'N/A',
         ];

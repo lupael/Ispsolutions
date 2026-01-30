@@ -3477,7 +3477,7 @@ class AdminController extends Controller
         $user = auth()->user();
 
         // Get invoices based on user's access level
-        $query = Invoice::with(['networkUser', 'networkUser.package']);
+        $query = Invoice::with(['user', 'package', 'payments']);
 
         // Apply tenant filtering
         if (! $user->isDeveloper()) {
@@ -3497,7 +3497,7 @@ class AdminController extends Controller
         $user = auth()->user();
 
         // Get payments based on user's access level
-        $query = Payment::with(['invoice', 'invoice.networkUser']);
+        $query = Payment::with(['invoice', 'invoice.user']);
 
         // Apply tenant filtering
         if (! $user->isDeveloper()) {
@@ -3601,12 +3601,12 @@ class AdminController extends Controller
 
         // Get VAT collections data from invoices
         $vatCollections = Invoice::whereBetween('created_at', [$startDate, $endDate])
-            ->with('networkUser')
+            ->with('user')
             ->get()
             ->map(function ($invoice) {
                 return (object) [
                     'invoice_number' => $invoice->invoice_number,
-                    'customer_name' => $invoice->networkUser->name ?? 'N/A',
+                    'customer_name' => $invoice->user->name ?? 'N/A',
                     'date' => $invoice->created_at->format('Y-m-d'),
                     'subtotal' => $invoice->subtotal ?? $invoice->total_amount / 1.15,
                     'vat_rate' => 15,
@@ -3710,14 +3710,14 @@ class AdminController extends Controller
 
         // Get receivables data from unpaid invoices
         $receivables = Invoice::where('status', '!=', 'paid')
-            ->with('networkUser')
+            ->with('user')
             ->get()
             ->map(function ($invoice) {
                 $dueDate = $invoice->due_date ?? $invoice->created_at->addDays(30);
                 $daysOverdue = now()->diffInDays($dueDate, false);
 
                 return (object) [
-                    'customer_name' => $invoice->networkUser->name ?? 'N/A',
+                    'customer_name' => $invoice->user->name ?? 'N/A',
                     'invoice_number' => $invoice->invoice_number,
                     'invoice_date' => $invoice->created_at->format('Y-m-d'),
                     'due_date' => $dueDate->format('Y-m-d'),
