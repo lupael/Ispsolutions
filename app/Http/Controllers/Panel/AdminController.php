@@ -2985,7 +2985,7 @@ class AdminController extends Controller
                 ->count(),
             'this_month' => \App\Models\AuditLog::where('tenant_id', $tenantId)
                 ->where('auditable_type', MikrotikRouter::class)
-                ->whereMonth('created_at', now()->month)
+                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->count(),
         ];
 
@@ -3000,53 +3000,30 @@ class AdminController extends Controller
         $tenantId = auth()->user()->tenant_id;
         
         try {
+            // Build tenant filter subquery once for reuse
+            $tenantUsersQuery = function($query) use ($tenantId) {
+                $query->select('username')
+                    ->from('users')
+                    ->where('tenant_id', $tenantId)
+                    ->whereNotNull('username');
+            };
+            
             // Get RADIUS accounting logs filtered by tenant users
-            $logs = \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
-                    $query->select('username')
-                        ->from('users')
-                        ->where('tenant_id', $tenantId)
-                        ->whereNotNull('username');
-                })
+            $logs = \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
                 ->latest('acctstarttime')
                 ->paginate(50);
 
             $stats = [
-                'total' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
-                        $query->select('username')
-                            ->from('users')
-                            ->where('tenant_id', $tenantId)
-                            ->whereNotNull('username');
-                    })->count(),
-                'today' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
-                        $query->select('username')
-                            ->from('users')
-                            ->where('tenant_id', $tenantId)
-                            ->whereNotNull('username');
-                    })
+                'total' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)->count(),
+                'today' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
                     ->whereDate('acctstarttime', today())
                     ->count(),
-                'active_sessions' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
-                        $query->select('username')
-                            ->from('users')
-                            ->where('tenant_id', $tenantId)
-                            ->whereNotNull('username');
-                    })
+                'active_sessions' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
                     ->whereNull('acctstoptime')
                     ->count(),
-                'total_bandwidth' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
-                        $query->select('username')
-                            ->from('users')
-                            ->where('tenant_id', $tenantId)
-                            ->whereNotNull('username');
-                    })
-                    ->sum('acctinputoctets') + 
-                    \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
-                        $query->select('username')
-                            ->from('users')
-                            ->where('tenant_id', $tenantId)
-                            ->whereNotNull('username');
-                    })
-                    ->sum('acctoutputoctets'),
+                'total_bandwidth' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
+                    ->selectRaw('SUM(acctinputoctets) + SUM(acctoutputoctets) as total')
+                    ->value('total') ?? 0,
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle missing RADIUS tables gracefully
