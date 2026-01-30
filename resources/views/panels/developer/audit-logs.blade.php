@@ -3,220 +3,149 @@
 @section('title', 'Audit Logs')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <!-- Page Header -->
-            <div class="mb-4">
-                <h2 class="text-2xl font-bold">Audit Logs & Change History</h2>
-                <p class="text-gray-600">Track all system changes and user activities</p>
-            </div>
+<div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Audit Logs & Change History</h2>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Track all system changes and user activities</p>
+    </div>
 
-            <!-- Stats -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6 class="text-muted">Total Logs</h6>
-                            <h3>{{ number_format($stats['total']) }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6 class="text-muted">Today</h6>
-                            <h3>{{ number_format($stats['today']) }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6 class="text-muted">This Week</h6>
-                            <h3>{{ number_format($stats['this_week']) }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6 class="text-muted">This Month</h6>
-                            <h3>{{ number_format($stats['this_month']) }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Enhanced Filters -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="GET" action="{{ route('panel.developer.audit-logs') }}" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="event_filter" class="form-label">Event Type</label>
-                            <select id="event_filter" name="event" class="form-select">
-                                <option value="">All Events</option>
-                                <option value="created" {{ request('event') === 'created' ? 'selected' : '' }}>Created</option>
-                                <option value="updated" {{ request('event') === 'updated' ? 'selected' : '' }}>Updated</option>
-                                <option value="deleted" {{ request('event') === 'deleted' ? 'selected' : '' }}>Deleted</option>
-                                <option value="login" {{ request('event') === 'login' ? 'selected' : '' }}>Login</option>
-                                <option value="logout" {{ request('event') === 'logout' ? 'selected' : '' }}>Logout</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label for="user_filter" class="form-label">User</label>
-                            <input type="text" id="user_filter" name="user" value="{{ request('user') }}" 
-                                   placeholder="Search by user name" class="form-control">
-                        </div>
-
-                        <div class="col-md-2">
-                            <label for="date_from" class="form-label">Date From</label>
-                            <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}" class="form-control">
-                        </div>
-
-                        <div class="col-md-2">
-                            <label for="date_to" class="form-label">Date To</label>
-                            <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}" class="form-control">
-                        </div>
-
-                        <div class="col-md-2 d-flex align-items-end gap-2">
-                            <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
-                            <a href="{{ route('panel.developer.audit-logs') }}" class="btn btn-secondary">Clear</a>
-                        </div>
-                    </form>
-
-                    <!-- Quick Filters -->
-                    <div class="mt-3">
-                        <span class="text-muted small">Quick Filters:</span>
-                        <button type="button" onclick="setQuickFilter('today')" class="btn btn-sm btn-link">Today</button>
-                        <button type="button" onclick="setQuickFilter('yesterday')" class="btn btn-sm btn-link">Yesterday</button>
-                        <button type="button" onclick="setQuickFilter('week')" class="btn btn-sm btn-link">This Week</button>
-                        <button type="button" onclick="setQuickFilter('month')" class="btn btn-sm btn-link">This Month</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Audit Logs Table -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Audit Logs</h3>
-                    <button onclick="exportLogs()" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Event</th>
-                                    <th>User</th>
-                                    <th>Type</th>
-                                    <th>Description</th>
-                                    <th>IP Address</th>
-                                    <th>Timestamp</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($logs as $log)
-                                    <tr>
-                                        <td>{{ $log->id }}</td>
-                                        <td>
-                                            <span class="badge 
-                                                @if($log->event === 'created') badge-success
-                                                @elseif($log->event === 'updated') badge-info
-                                                @elseif($log->event === 'deleted') badge-danger
-                                                @else badge-secondary
-                                                @endif">
-                                                {{ ucfirst($log->event) }}
-                                            </span>
-                                        </td>
-                                        <td>{{ $log->user ? $log->user->name : 'System' }}</td>
-                                        <td><code>{{ class_basename($log->auditable_type) }}</code></td>
-                                        <td class="text-truncate" style="max-width: 200px;" title="{{ $log->description ?? 'No description' }}">
-                                            {{ $log->description ?? 'No description' }}
-                                        </td>
-                                        <td>{{ $log->ip_address }}</td>
-                                        <td>
-                                            <span title="{{ $log->created_at }}">
-                                                {{ $log->created_at->diffForHumans() }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button onclick="viewDetails({{ $log->id }})" class="btn btn-sm btn-link" title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center py-4">
-                                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                            <p>No audit logs found</p>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    {{ $logs->appends(request()->query())->links() }}
-                </div>
-            </div>
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h6 class="text-sm text-gray-600 dark:text-gray-400">Total Logs</h6>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total']) }}</h3>
         </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h6 class="text-sm text-gray-600 dark:text-gray-400">Today</h6>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['today']) }}</h3>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h6 class="text-sm text-gray-600 dark:text-gray-400">This Week</h6>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['this_week']) }}</h3>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h6 class="text-sm text-gray-600 dark:text-gray-400">This Month</h6>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['this_month']) }}</h3>
+        </div>
+    </div>
+
+    <!-- Enhanced Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <form method="GET" action="{{ route('panel.developer.audit-logs') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label for="event_filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event Type</label>
+                <select id="event_filter" name="event" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All Events</option>
+                    <option value="created" {{ request('event') === 'created' ? 'selected' : '' }}>Created</option>
+                    <option value="updated" {{ request('event') === 'updated' ? 'selected' : '' }}>Updated</option>
+                    <option value="deleted" {{ request('event') === 'deleted' ? 'selected' : '' }}>Deleted</option>
+                    <option value="login" {{ request('event') === 'login' ? 'selected' : '' }}>Login</option>
+                    <option value="logout" {{ request('event') === 'logout' ? 'selected' : '' }}>Logout</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="user_filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">User</label>
+                <input type="text" id="user_filter" name="user" value="{{ request('user') }}" 
+                       placeholder="Search by user name" 
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="date_from" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date From</label>
+                <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}" 
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="date_to" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date To</label>
+                <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}" 
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div class="flex items-end gap-2">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
+                    Apply Filters
+                </button>
+                <a href="{{ route('panel.developer.audit-logs') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Timestamp</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Event</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Model</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">IP Address</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    @forelse($logs as $log)
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ $log->created_at->format('Y-m-d H:i:s') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ $log->user->name ?? 'System' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($log->event === 'created')
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Created</span>
+                            @elseif($log->event === 'updated')
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Updated</span>
+                            @elseif($log->event === 'deleted')
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Deleted</span>
+                            @else
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">{{ ucfirst($log->event) }}</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ class_basename($log->auditable_type ?? 'N/A') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {{ $log->ip_address ?? 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button type="button" onclick="showDetails({{ $log->id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                            No audit logs found. Logs will appear here as users perform actions.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if($logs->hasPages())
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            {{ $logs->links() }}
+        </div>
+        @endif
     </div>
 </div>
 
-<script nonce="{{ $cspNonce ?? '' }}">
-function setQuickFilter(period) {
-    const dateFrom = document.getElementById('date_from');
-    const dateTo = document.getElementById('date_to');
-    const today = new Date();
-    
-    // Format date as YYYY-MM-DD using local timezone
-    function formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-    
-    switch(period) {
-        case 'today':
-            dateFrom.value = formatDate(today);
-            dateTo.value = formatDate(today);
-            break;
-        case 'yesterday':
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-            dateFrom.value = formatDate(yesterday);
-            dateTo.value = formatDate(yesterday);
-            break;
-        case 'week':
-            const weekStart = new Date(today);
-            weekStart.setDate(today.getDate() - today.getDay());
-            dateFrom.value = formatDate(weekStart);
-            dateTo.value = formatDate(today);
-            break;
-        case 'month':
-            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-            dateFrom.value = formatDate(monthStart);
-            dateTo.value = formatDate(today);
-            break;
-    }
-}
-
-function viewDetails(logId) {
-    // Note: This requires a backend endpoint to be implemented
-    // For now, show a placeholder message
-    alert('Audit log details view requires backend implementation. Log ID: ' + logId);
-}
-
-function exportLogs() {
-    const params = new URLSearchParams(window.location.search);
-    window.location.href = '/panel/developer/audit-logs/export?' + params.toString();
+@push('scripts')
+<script>
+function showDetails(logId) {
+    alert('View details for log #' + logId + ' - Full details modal would open here');
 }
 </script>
+@endpush
 @endsection
