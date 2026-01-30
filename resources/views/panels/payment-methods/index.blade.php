@@ -151,7 +151,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 async function makePayment(agreementId) {
     const amountInput = prompt('Enter payment amount (BDT):');
     if (amountInput === null) {

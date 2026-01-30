@@ -150,7 +150,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 function showCardView() {
     document.getElementById('cardView').classList.remove('hidden');
     document.getElementById('tableView').classList.add('hidden');

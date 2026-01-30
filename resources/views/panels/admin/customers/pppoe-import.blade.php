@@ -149,7 +149,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 // No additional JavaScript needed - router_id is directly used in the select
 </script>
 @endsection

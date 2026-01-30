@@ -88,7 +88,7 @@
         ></div>
     </div>
     
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         (function() {
             // Initialize chart immediately if DOM is ready, or wait for DOMContentLoaded
             function initMRCChart() {

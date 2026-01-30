@@ -213,7 +213,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 function confirmUpgrade(customerId, currentPackageId, targetPackageId, targetPackageName, priceDiff) {
     if (!customerId) {
         alert('{{ __("Customer ID is required") }}');

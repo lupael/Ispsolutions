@@ -77,7 +77,7 @@
 <!-- Hidden input for copying -->
 <input type="hidden" id="address-copy-input-{{ $customer->id }}" value="{{ $formattedAddress }}">
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 (function() {
     // Scoped to avoid global namespace pollution
     window.copyAddressFor{{ $customer->id }} = function() {

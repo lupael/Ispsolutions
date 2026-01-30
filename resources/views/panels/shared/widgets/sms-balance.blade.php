@@ -121,7 +121,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 /**
  * Refresh SMS balance widget data via AJAX
  */

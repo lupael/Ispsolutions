@@ -142,7 +142,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 function showDetails(logId) {
     alert('View details for log #' + logId + ' - Full details modal would open here');
 }

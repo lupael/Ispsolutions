@@ -252,7 +252,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 function viewPaymentDetails(paymentId) {
     // TODO: Implement modal or redirect to details page
     alert('Payment details for ID: ' + paymentId);
