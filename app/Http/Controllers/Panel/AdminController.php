@@ -1083,8 +1083,22 @@ class AdminController extends Controller
      */
     public function customersEdit($id): View
     {
-        $customer = NetworkUser::with('package')->findOrFail($id);
-        $packages = ServicePackage::all();
+        $tenantId = auth()->user()->tenant_id;
+        
+        // Try to find as User first (User model now has network fields)
+        $customer = User::where('tenant_id', $tenantId)->find($id);
+        
+        // If not found as User, try finding as NetworkUser and get the related User
+        if (!$customer) {
+            $networkUser = NetworkUser::with('user')->where('tenant_id', $tenantId)->find($id);
+            if ($networkUser && $networkUser->user) {
+                $customer = $networkUser->user;
+            } else {
+                abort(404, 'Customer not found');
+            }
+        }
+        
+        $packages = ServicePackage::where('tenant_id', $tenantId)->get();
 
         return view('panels.admin.customers.edit', compact('customer', 'packages'));
     }
@@ -1098,10 +1112,23 @@ class AdminController extends Controller
      */
     public function customersUpdate(Request $request, $id)
     {
-        $customer = NetworkUser::findOrFail($id);
+        $tenantId = auth()->user()->tenant_id;
+        
+        // Try to find as User first
+        $customer = User::where('tenant_id', $tenantId)->find($id);
+        
+        // If not found as User, try finding as NetworkUser and get the related User
+        if (!$customer) {
+            $networkUser = NetworkUser::with('user')->where('tenant_id', $tenantId)->find($id);
+            if ($networkUser && $networkUser->user) {
+                $customer = $networkUser->user;
+            } else {
+                abort(404, 'Customer not found');
+            }
+        }
 
         $validated = $request->validate([
-            'username' => 'required|string|min:3|max:255|unique:network_users,username,' . $id . '|regex:/^[a-zA-Z0-9_-]+$/',
+            'username' => 'required|string|min:3|max:255|unique:users,username,' . $customer->id . '|regex:/^[a-zA-Z0-9_-]+$/',
             'password' => 'nullable|string|min:8',
             'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
             'package_id' => 'required|exists:packages,id',
@@ -1112,18 +1139,17 @@ class AdminController extends Controller
         $updateData = [
             'username' => $validated['username'],
             'service_type' => $validated['service_type'],
-            'package_id' => $validated['package_id'],
             'status' => $validated['status'],
         ];
 
         // Only update password if provided
         if (! empty($validated['password'])) {
-            $updateData['password'] = bcrypt($validated['password']);
+            $updateData['radius_password'] = $validated['password'];
         }
 
         $customer->update($updateData);
 
-        return redirect()->route('panel.admin.customers.index')
+        return redirect()->route('panel.admin.customers.show', $customer->id)
             ->with('success', 'Customer updated successfully.');
     }
 
