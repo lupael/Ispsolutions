@@ -227,22 +227,33 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
     Route::get('/isp', [SuperAdminController::class, 'ispIndex'])->name('isp.index');
     Route::get('/isp/create', [SuperAdminController::class, 'ispCreate'])->name('isp.create');
     Route::post('/isp', [SuperAdminController::class, 'ispStore'])->name('isp.store');
+    Route::get('/isp/{id}/edit', [SuperAdminController::class, 'ispEdit'])->name('isp.edit');
+    Route::put('/isp/{id}', [SuperAdminController::class, 'ispUpdate'])->name('isp.update');
 
     // Billing Configuration
     Route::get('/billing/fixed', [SuperAdminController::class, 'billingFixed'])->name('billing.fixed');
+    Route::post('/billing/fixed', [SuperAdminController::class, 'billingFixedStore'])->name('billing.fixed.store');
     Route::get('/billing/user-base', [SuperAdminController::class, 'billingUserBase'])->name('billing.user-base');
+    Route::post('/billing/user-base', [SuperAdminController::class, 'billingUserBaseStore'])->name('billing.user-base.store');
     Route::get('/billing/panel-base', [SuperAdminController::class, 'billingPanelBase'])->name('billing.panel-base');
+    Route::post('/billing/panel-base', [SuperAdminController::class, 'billingPanelBaseStore'])->name('billing.panel-base.store');
 
     // Payment Gateway Management
     Route::get('/payment-gateway', [SuperAdminController::class, 'paymentGatewayIndex'])->name('payment-gateway.index');
     Route::get('/payment-gateway/create', [SuperAdminController::class, 'paymentGatewayCreate'])->name('payment-gateway.create');
     Route::get('/payment-gateway/settings', [SuperAdminController::class, 'paymentGatewaySettings'])->name('payment-gateway.settings');
     Route::post('/payment-gateway', [SuperAdminController::class, 'paymentGatewayStore'])->name('payment-gateway.store');
+    Route::get('/payment-gateway/{id}/edit', [SuperAdminController::class, 'paymentGatewayEdit'])->name('payment-gateway.edit');
+    Route::put('/payment-gateway/{id}', [SuperAdminController::class, 'paymentGatewayUpdate'])->name('payment-gateway.update');
+    Route::delete('/payment-gateway/{id}', [SuperAdminController::class, 'paymentGatewayDestroy'])->name('payment-gateway.destroy');
 
     // SMS Gateway Management
     Route::get('/sms-gateway', [SuperAdminController::class, 'smsGatewayIndex'])->name('sms-gateway.index');
     Route::get('/sms-gateway/create', [SuperAdminController::class, 'smsGatewayCreate'])->name('sms-gateway.create');
     Route::post('/sms-gateway', [SuperAdminController::class, 'smsGatewayStore'])->name('sms-gateway.store');
+    Route::get('/sms-gateway/{id}/edit', [SuperAdminController::class, 'smsGatewayEdit'])->name('sms-gateway.edit');
+    Route::put('/sms-gateway/{id}', [SuperAdminController::class, 'smsGatewayUpdate'])->name('sms-gateway.update');
+    Route::delete('/sms-gateway/{id}', [SuperAdminController::class, 'smsGatewayDestroy'])->name('sms-gateway.destroy');
 
     // Logs & Settings
     Route::get('/logs', [SuperAdminController::class, 'logs'])->name('logs');
@@ -982,24 +993,44 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     Route::get('/tenancies', [DeveloperController::class, 'tenancies'])->name('tenancies.index');
     Route::get('/tenancies/create', [DeveloperController::class, 'createTenancy'])->name('tenancies.create');
     Route::post('/tenancies', [DeveloperController::class, 'storeTenancy'])->name('tenancies.store');
+    Route::get('/tenancies/{id}/edit', [DeveloperController::class, 'editTenancy'])->name('tenancies.edit');
+    Route::put('/tenancies/{id}', [DeveloperController::class, 'updateTenancy'])->name('tenancies.update');
     Route::post('/tenancies/{tenant}/toggle-status', [DeveloperController::class, 'toggleTenancyStatus'])->name('tenancies.toggle-status');
 
     // Super Admin Management
     Route::get('/super-admins', [DeveloperController::class, 'superAdmins'])->name('super-admins.index');
     Route::get('/super-admins/create', [DeveloperController::class, 'createSuperAdmin'])->name('super-admins.create');
+    Route::post('/super-admins', [DeveloperController::class, 'storeSuperAdmin'])->name('super-admins.store');
     Route::get('/super-admins/{id}', [DeveloperController::class, 'showSuperAdmin'])->name('super-admins.show');
     Route::get('/super-admins/{id}/edit', [DeveloperController::class, 'editSuperAdmin'])->name('super-admins.edit');
     Route::put('/super-admins/{id}', [DeveloperController::class, 'updateSuperAdmin'])->name('super-admins.update');
 
     // Admin (ISP) Management
     Route::get('/admins', [DeveloperController::class, 'allAdmins'])->name('admins.index');
+    Route::get('/admins/{id}', [DeveloperController::class, 'showAdmin'])->name('admins.show');
 
     // Subscription Management
     Route::get('/subscriptions', [DeveloperController::class, 'subscriptionPlans'])->name('subscriptions.index');
+    Route::get('/subscriptions/create', [DeveloperController::class, 'createSubscription'])->name('subscriptions.create');
+    Route::post('/subscriptions', [DeveloperController::class, 'storeSubscription'])->name('subscriptions.store');
+    Route::get('/subscriptions/{id}/edit', [DeveloperController::class, 'editSubscription'])->name('subscriptions.edit');
+    Route::put('/subscriptions/{id}', [DeveloperController::class, 'updateSubscription'])->name('subscriptions.update');
+    Route::delete('/subscriptions/{id}', [DeveloperController::class, 'deleteSubscription'])->name('subscriptions.destroy');
 
     // Gateway Configuration
     Route::get('/gateways/payment', [DeveloperController::class, 'paymentGateways'])->name('gateways.payment');
+    Route::get('/gateways/payment/create', [DeveloperController::class, 'createPaymentGateway'])->name('gateways.payment.create');
+    Route::post('/gateways/payment', [DeveloperController::class, 'storePaymentGateway'])->name('gateways.payment.store');
+    Route::get('/gateways/payment/{id}/edit', [DeveloperController::class, 'editPaymentGateway'])->name('gateways.payment.edit');
+    Route::put('/gateways/payment/{id}', [DeveloperController::class, 'updatePaymentGateway'])->name('gateways.payment.update');
+    Route::delete('/gateways/payment/{id}', [DeveloperController::class, 'deletePaymentGateway'])->name('gateways.payment.destroy');
+    
     Route::get('/gateways/sms', [DeveloperController::class, 'smsGateways'])->name('gateways.sms');
+    Route::get('/gateways/sms/create', [DeveloperController::class, 'createSmsGateway'])->name('gateways.sms.create');
+    Route::post('/gateways/sms', [DeveloperController::class, 'storeSmsGateway'])->name('gateways.sms.store');
+    Route::get('/gateways/sms/{id}/edit', [DeveloperController::class, 'editSmsGateway'])->name('gateways.sms.edit');
+    Route::put('/gateways/sms/{id}', [DeveloperController::class, 'updateSmsGateway'])->name('gateways.sms.update');
+    Route::delete('/gateways/sms/{id}', [DeveloperController::class, 'deleteSmsGateway'])->name('gateways.sms.destroy');
 
     // VPN Pools
     Route::get('/vpn-pools', [DeveloperController::class, 'vpnPools'])->name('vpn-pools');
@@ -1022,6 +1053,15 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     // System Tools
     Route::get('/settings', [DeveloperController::class, 'settings'])->name('settings');
     Route::get('/debug', [DeveloperController::class, 'debug'])->name('debug');
+
+    // Role Settings
+    Route::get('/settings/roles', [DeveloperController::class, 'showRoleSettings'])->name('settings.roles');
+    Route::put('/settings/roles', [DeveloperController::class, 'updateRoleNames'])->name('settings.roles.update');
+
+    // Subscription Features Configuration
+    Route::get('/subscriptions/features', [DeveloperController::class, 'showSubscriptionFeatures'])->name('subscriptions.features');
+    Route::put('/subscriptions/features', [DeveloperController::class, 'updateSubscriptionFeatures'])->name('subscriptions.features.update');
+    Route::put('/subscriptions/limits', [DeveloperController::class, 'updateSubscriptionLimits'])->name('subscriptions.limits.update');
 
     // Command Execution
     Route::get('/commands', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'index'])->name('commands.index');

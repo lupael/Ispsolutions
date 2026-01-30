@@ -3,102 +3,78 @@
 @section('title', 'Fixed Billing Configuration')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="h3 mb-1 text-foreground">Fixed Billing Configuration</h1>
-            <p class="text-muted-foreground mb-0">Configure fixed monthly billing for ISPs</p>
-        </div>
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Fixed Billing Configuration</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Configure fixed monthly billing for ISPs</p>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Fixed Monthly Bill Settings</h5>
-                </div>
-                <div class="card-body">
-                    {{-- Note: Form action currently set to '#'. A proper route and controller method 
-                         should be implemented to handle the billing configuration POST request. --}}
-                    <form action="#" method="POST">
-                        @csrf
-
-                        <div class="mb-3">
-                            <label for="monthly_fee" class="form-label">Monthly Fixed Fee</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="monthly_fee" name="monthly_fee" 
-                                       step="0.01" placeholder="0.00">
-                            </div>
-                            <small class="form-text text-muted-foreground">Fixed monthly fee for the ISP subscription</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="setup_fee" class="form-label">Setup Fee (One-time)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="setup_fee" name="setup_fee" 
-                                       step="0.01" placeholder="0.00">
-                            </div>
-                            <small class="form-text text-muted-foreground">One-time setup fee (optional)</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="currency" class="form-label">Currency</label>
-                            <select class="form-select" id="currency" name="currency">
-                                <option value="USD">USD - US Dollar</option>
-                                <option value="EUR">EUR - Euro</option>
-                                <option value="BDT">BDT - Bangladeshi Taka</option>
-                                <option value="INR">INR - Indian Rupee</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="billing_cycle" class="form-label">Billing Cycle</label>
-                            <select class="form-select" id="billing_cycle" name="billing_cycle">
-                                <option value="monthly">Monthly</option>
-                                <option value="quarterly">Quarterly</option>
-                                <option value="yearly">Yearly</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="auto_renew" name="auto_renew">
-                                <label class="form-check-label" for="auto_renew">
-                                    Enable auto-renewal
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ki-filled ki-check"></i> Save Configuration
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h5 class="text-lg font-semibold text-gray-900 dark:text-white">Fixed Monthly Bill Settings</h5>
         </div>
+        <div class="p-6">
+            <form action="{{ route('panel.super-admin.billing.fixed.store') }}" method="POST">
+                @csrf
 
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Fixed Billing</h5>
+                <div class="mb-4">
+                    <label for="monthly_fee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Monthly Fixed Fee</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">$</span>
+                        <input type="number" class="rounded-none rounded-r-lg bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm border-gray-300 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                               id="monthly_fee" name="monthly_fee" step="0.01" placeholder="0.00">
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fixed monthly fee for the ISP subscription</p>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted-foreground mb-3">
-                        Fixed billing charges a predetermined amount regardless of usage or number of users.
-                    </p>
-                    <h6 class="mb-2">Best for:</h6>
-                    <ul class="mb-0">
-                        <li>Simple subscription model</li>
-                        <li>Predictable revenue</li>
-                        <li>Easy to manage</li>
-                        <li>Flat-rate ISPs</li>
-                    </ul>
+
+                <div class="mb-4">
+                    <label for="setup_fee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Setup Fee (One-time)</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">$</span>
+                        <input type="number" class="rounded-none rounded-r-lg bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm border-gray-300 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                               id="setup_fee" name="setup_fee" step="0.01" placeholder="0.00">
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">One-time setup fee (optional)</p>
                 </div>
-            </div>
+
+                <div class="mb-4">
+                    <label for="currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Currency</label>
+                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                            id="currency" name="currency">
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="BDT">BDT - Bangladeshi Taka</option>
+                        <option value="INR">INR - Indian Rupee</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="billing_cycle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Cycle</label>
+                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                            id="billing_cycle" name="billing_cycle">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" 
+                               id="auto_renew" name="auto_renew">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Enable auto-renewal</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg inline-flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        Save Configuration
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
