@@ -78,8 +78,10 @@ class CustomerBillingController extends Controller
 
             $this->auditLogService->log(
                 'invoice_generated',
-                'Generated manual invoice',
-                ['invoice_id' => $invoice->id, 'customer_id' => $customer->id]
+                $invoice,
+                null,
+                ['invoice_id' => $invoice->id, 'customer_id' => $customer->id],
+                ['billing', 'invoice']
             );
 
             DB::commit();
@@ -135,8 +137,10 @@ class CustomerBillingController extends Controller
 
             $this->auditLogService->log(
                 'billing_profile_updated',
-                'Updated customer billing profile',
-                ['customer_id' => $customer->id, 'changes' => $validated]
+                $customer,
+                null,
+                ['customer_id' => $customer->id, 'changes' => $validated],
+                ['billing', 'profile']
             );
 
             DB::commit();
@@ -197,8 +201,10 @@ class CustomerBillingController extends Controller
 
             $this->auditLogService->log(
                 'other_payment_recorded',
-                "Recorded {$validated['payment_type']} payment",
-                ['payment_id' => $payment->id, 'customer_id' => $customer->id]
+                $payment,
+                null,
+                ['payment_id' => $payment->id, 'customer_id' => $customer->id, 'payment_type' => $validated['payment_type']],
+                ['payment', 'billing']
             );
 
             DB::commit();
