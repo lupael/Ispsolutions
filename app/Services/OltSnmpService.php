@@ -434,7 +434,19 @@ class OltSnmpService
      */
     private function buildSnmpIndex(string $ponPort, int $onuId, string $vendor): string
     {
+        // Ensure ponPort is a string and has the expected format
+        $ponPort = (string) $ponPort;
         $parts = explode('/', $ponPort);
+        
+        // Validate port format (should have at least 2 parts: slot/port or chassis/slot/port)
+        if (count($parts) < 2) {
+            Log::warning('Invalid PON port format for SNMP index', [
+                'pon_port' => $ponPort,
+                'vendor' => $vendor,
+            ]);
+            // Default to 0/0 format if invalid
+            $parts = ['0', '0'];
+        }
 
         return match ($vendor) {
             'vsol' => "{$parts[0]}.{$parts[1]}.{$onuId}",

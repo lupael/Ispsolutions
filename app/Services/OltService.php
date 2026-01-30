@@ -324,6 +324,10 @@ class OltService implements OltServiceInterface
 
             // Fallback to SSH-based status retrieval
             if (! $this->ensureConnected($onu->olt_id)) {
+                Log::error("Failed to connect to OLT via SSH for ONU status", [
+                    'onu_id' => $onuId,
+                    'olt_id' => $onu->olt_id,
+                ]);
                 throw new RuntimeException("Failed to connect to OLT {$onu->olt_id}");
             }
 
@@ -338,6 +342,8 @@ class OltService implements OltServiceInterface
             $output = $connection->exec($command);
 
             if ($output === false) {
+                // Clean up connection on failure
+                $this->disconnect($onu->olt_id);
                 throw new RuntimeException('Failed to execute status command');
             }
 
@@ -355,6 +361,11 @@ class OltService implements OltServiceInterface
             return $status;
         } catch (\Exception $e) {
             Log::error("Error getting ONU {$onuId} status: " . $e->getMessage());
+            
+            // Ensure connection is cleaned up on error
+            if (isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
+                $this->disconnect($onu->olt_id);
+            }
 
             return [
                 'status' => 'unknown',
@@ -523,6 +534,8 @@ class OltService implements OltServiceInterface
             $output = $connection->exec($commands['backup']);
 
             if ($output === false || empty($output)) {
+                // Clean up connection on failure
+                $this->disconnect($oltId);
                 throw new RuntimeException('Failed to retrieve configuration');
             }
 
@@ -536,7 +549,11 @@ class OltService implements OltServiceInterface
             $filepath = $backupDir . '/' . $filename;
 
             // Save backup
-            Storage::put($filepath, $output);
+            if (!Storage::put($filepath, $output)) {
+                Log::error("Failed to save backup file: {$filepath}");
+                throw new RuntimeException("Failed to save backup file");
+            }
+            
             $fileSize = strlen($output);
 
             // Create backup record
@@ -550,11 +567,19 @@ class OltService implements OltServiceInterface
             // Update OLT last backup timestamp
             $olt->update(['last_backup_at' => now()]);
 
-            Log::info("Created backup for OLT {$oltId}: {$filename}");
+            Log::info("Created backup for OLT {$oltId}: {$filename}", [
+                'size' => $fileSize,
+                'path' => $filepath,
+            ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error("Error creating backup for OLT {$oltId}: " . $e->getMessage());
+            
+            // Ensure connection is cleaned up on error
+            if (isset($this->connections[$oltId])) {
+                $this->disconnect($oltId);
+            }
 
             return false;
         }
