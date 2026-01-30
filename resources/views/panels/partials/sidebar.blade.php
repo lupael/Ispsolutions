@@ -293,6 +293,7 @@
                 'icon' => 'currency',
                 'children' => [
                     ['label' => 'Manage Plans', 'route' => 'panel.developer.subscriptions.index'],
+                    ['label' => 'Features & Limits', 'route' => 'panel.developer.subscriptions.features'],
                 ]
             ],
             [
@@ -325,7 +326,14 @@
             ],
             ['label' => 'Command Execution', 'route' => 'panel.developer.commands.index', 'icon' => 'terminal'],
             ['label' => 'Debug Tools', 'route' => 'panel.developer.debug', 'icon' => 'bug'],
-            ['label' => 'Settings', 'route' => 'panel.developer.settings', 'icon' => 'cog'],
+            [
+                'label' => 'Settings',
+                'icon' => 'cog',
+                'children' => [
+                    ['label' => 'General Settings', 'route' => 'panel.developer.settings'],
+                    ['label' => 'Role Names', 'route' => 'panel.developer.settings.roles'],
+                ]
+            ],
         ];
     } elseif ($userRole === 'sales-manager') {
         $menus = [
