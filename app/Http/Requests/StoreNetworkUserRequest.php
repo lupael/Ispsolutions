@@ -117,7 +117,8 @@ class StoreNetworkUserRequest extends FormRequest
             'zone_id' => null,
             
             // Set as customer (is_subscriber = true)
-            'operator_level' => 100,
+            'is_subscriber' => true,
+            'operator_level' => null,
             'status' => ($validated['is_active'] ?? true) ? 'active' : 'inactive',
         ];
     }
