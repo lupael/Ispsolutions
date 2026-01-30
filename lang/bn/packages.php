@@ -43,17 +43,21 @@ return [
     // প্যাকেজ আপগ্রেড
     'upgrade' => 'প্যাকেজ আপগ্রেড করুন',
     'upgrade_wizard' => 'প্যাকেজ আপগ্রেড উইজার্ড',
+    'upgrade_wizard_help' => 'উন্নত বৈশিষ্ট্য এবং কর্মক্ষমতা সহ একটি ভাল প্যাকেজ চয়ন করুন',
     'upgrade_options' => 'আপগ্রেড অপশন',
     'available_upgrades' => 'উপলব্ধ আপগ্রেড',
     'current_package' => 'বর্তমান প্যাকেজ',
     'target_package' => 'টার্গেট প্যাকেজ',
     'upgrade_cost' => 'আপগ্রেড খরচ',
     'upgrade_preview' => 'আপগ্রেড প্রিভিউ',
-    'confirm_upgrade' => 'আপগ্রেড নিশ্চিত করুন',
+    'confirm_upgrade' => 'আপনি কি এই প্যাকেজ আপগ্রেড করতে চান?',
     'upgrade_benefits' => 'আপগ্রেড সুবিধা',
     'price_difference' => 'মূল্য পার্থক্য',
     'speed_increase' => 'স্পিড বৃদ্ধি',
     'no_upgrades_available' => 'কোনো আপগ্রেড অপশন উপলব্ধ নেই',
+    'already_on_best_package' => 'আপনি ইতিমধ্যে সেরা প্যাকেজে আছেন',
+    'no_package_selected' => 'কোন প্যাকেজ নির্বাচিত হয়নি',
+    'upgrade_wizard_help' => 'উন্নত বৈশিষ্ট্য এবং কর্মক্ষমতা সহ একটি ভাল প্যাকেজ চয়ন করুন',
     
     // প্যাকেজ তুলনা
     'compare' => 'প্যাকেজ তুলনা করুন',
