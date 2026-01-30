@@ -43,6 +43,7 @@ return [
     // Package Upgrade
     'upgrade' => 'Upgrade Package',
     'upgrade_wizard' => 'Package Upgrade Wizard',
+    'upgrade_wizard_help' => 'Choose a better package with improved features and performance',
     'upgrade_options' => 'Upgrade Options',
     'available_upgrades' => 'Available Upgrades',
     'current_package' => 'Current Package',

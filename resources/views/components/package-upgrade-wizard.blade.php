@@ -28,7 +28,7 @@
         <!-- Header -->
         <div class="mb-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                <svg class="w-6 h-6 mr-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 mr-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
                 {{ __('packages.upgrade_wizard') }}
@@ -49,11 +49,11 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400">
                                 <span class="font-medium">{{ __('Speed') }}:</span> 
                                 {{ $currentPackage->bandwidth_download }}{{ $currentPackage->readable_rate_unit ?? 'Mbps' }} 
-                                <svg class="inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
                                 </svg>
                                 {{ $currentPackage->bandwidth_upload }}{{ $currentPackage->readable_rate_unit ?? 'Mbps' }}
-                                <svg class="inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                                 </svg>
                             </p>
@@ -101,8 +101,7 @@
                                 : 0;
                         @endphp
                         
-                        <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors cursor-pointer group"
-                             onclick="selectUpgrade({{ $option->id }}, '{{ $option->name }}', {{ $option->price }})">
+                        <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <div class="flex items-center space-x-2">
@@ -171,9 +170,10 @@
                                     </div>
                                     
                                     <button type="button" 
-                                            onclick="event.stopPropagation(); confirmUpgrade({{ $customer->id ?? 0 }}, {{ $currentPackage->id }}, {{ $option->id }}, '{{ $option->name }}', {{ $priceDiff }})"
-                                            class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            onclick="confirmUpgrade({{ $customer->id ?? 0 }}, {{ $currentPackage->id }}, {{ $option->id }}, '{{ addslashes($option->name) }}', {{ $priceDiff }})"
+                                            class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                            aria-label="{{ __('Upgrade to') }} {{ $option->name }}">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                         </svg>
                                         {{ __('Upgrade Now') }}
@@ -214,14 +214,6 @@
 
 @push('scripts')
 <script>
-function selectUpgrade(packageId, packageName, price) {
-    // Add visual selection feedback
-    event.currentTarget.classList.add('ring-2', 'ring-indigo-500');
-    setTimeout(() => {
-        event.currentTarget.classList.remove('ring-2', 'ring-indigo-500');
-    }, 300);
-}
-
 function confirmUpgrade(customerId, currentPackageId, targetPackageId, targetPackageName, priceDiff) {
     if (!customerId) {
         alert('{{ __("Customer ID is required") }}');
@@ -236,8 +228,11 @@ function confirmUpgrade(customerId, currentPackageId, targetPackageId, targetPac
     );
 
     if (confirmed) {
+        // Generate URL using route name (Laravel will handle this when rendered)
+        const url = `{{ route('panel.admin.customers.package-change.store', ['customer' => '__CUSTOMER_ID__']) }}`.replace('__CUSTOMER_ID__', customerId);
+        
         // Submit upgrade request
-        fetch(`/panel/admin/customers/${customerId}/package-change`, {
+        fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -249,13 +244,19 @@ function confirmUpgrade(customerId, currentPackageId, targetPackageId, targetPac
                 effective_date: 'immediate'
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.success) {
+            if (data && data.success) {
                 alert('{{ __("Package upgraded successfully!") }}');
                 window.location.reload();
             } else {
-                alert('{{ __("Error") }}: ' + (data.message || '{{ __("Unknown error occurred") }}'));
+                const message = data && data.message ? data.message : '{{ __("Unknown error occurred") }}';
+                alert('{{ __("Error") }}: ' + message);
             }
         })
         .catch(error => {
