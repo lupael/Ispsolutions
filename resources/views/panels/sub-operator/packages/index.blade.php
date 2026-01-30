@@ -36,7 +36,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                         </svg>
                                     </div>
@@ -64,12 +64,12 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900 dark:text-gray-100">
-                                    @if($package->download_speed && $package->upload_speed)
+                                    @if($package->bandwidth_down && $package->bandwidth_up)
                                         <div class="flex items-center space-x-1">
-                                            <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                                             </svg>
-                                            <span>{{ $package->download_speed }}M / {{ $package->upload_speed }}M</span>
+                                            <span>{{ $package->bandwidth_down }}M / {{ $package->bandwidth_up }}M</span>
                                         </div>
                                     @else
                                         <span class="text-gray-500 dark:text-gray-400">N/A</span>
@@ -77,9 +77,9 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {{ $package->duration_days ?? 'N/A' }} 
-                                @if($package->duration_days)
-                                    {{ $package->duration_days == 1 ? 'day' : 'days' }}
+                                {{ $package->validity_days ?? 'N/A' }} 
+                                @if($package->validity_days)
+                                    {{ $package->validity_days == 1 ? 'day' : 'days' }}
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -98,7 +98,7 @@
                         <tr>
                             <td colspan="5" class="px-6 py-4 text-center">
                                 <div class="flex flex-col items-center justify-center py-8">
-                                    <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                     </svg>
                                     <p class="text-gray-500 dark:text-gray-400 text-lg">No packages found.</p>

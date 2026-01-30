@@ -23,7 +23,7 @@
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
@@ -42,7 +42,7 @@
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
@@ -61,7 +61,7 @@
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
@@ -101,11 +101,15 @@
                             <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                                 <div>
                                     <div class="font-medium text-gray-900 dark:text-gray-100">
-                                        {{ $transaction->description ?? 'Commission Payment' }}
+                                        {{ $transaction->notes ?? 'Commission Payment' }}
                                     </div>
-                                    @if($transaction->reference_type)
+                                    @if($transaction->payment_id || $transaction->invoice_id)
                                     <div class="text-xs text-gray-400 dark:text-gray-500">
-                                        Ref: {{ $transaction->reference_type }} #{{ $transaction->reference_id }}
+                                        @if($transaction->payment_id)
+                                            Ref: Payment #{{ $transaction->payment_id }}
+                                        @elseif($transaction->invoice_id)
+                                            Ref: Invoice #{{ $transaction->invoice_id }}
+                                        @endif
                                     </div>
                                     @endif
                                 </div>
@@ -143,7 +147,7 @@
                         <tr>
                             <td colspan="5" class="px-6 py-4 text-center">
                                 <div class="flex flex-col items-center justify-center py-8">
-                                    <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     <p class="text-gray-500 dark:text-gray-400 text-lg">No commission transactions found.</p>
@@ -167,7 +171,7 @@
     <div class="bg-purple-50 dark:bg-purple-900 dark:bg-opacity-20 border-l-4 border-purple-400 p-4">
         <div class="flex">
             <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg class="h-5 w-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                 </svg>
             </div>
