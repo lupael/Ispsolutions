@@ -411,7 +411,10 @@ Before deploying to production, ensure the following:
 
 **bKash:**
 - ✅ Production URL is correctly set: `https://tokenized.pay.bkash.com`
-- ✅ API version path is configured: `/v1.2.0-beta/` (this is the stable production version)
+- ✅ API version path is configured: `/v1.2.0-beta/` 
+  - Note: Despite the "beta" label, this is bKash's official stable production API version
+  - bKash uses this naming convention for their tokenized payment API
+  - Reference: https://developer.bkash.com/
 - ✅ Test mode is **disabled** in gateway settings
 - ✅ Production credentials are configured (not sandbox credentials)
 - ✅ Webhook secret is set and verified

@@ -156,7 +156,9 @@ class PaymentGatewayService
                 ? 'https://tokenized.sandbox.bkash.com'
                 : 'https://tokenized.pay.bkash.com';
 
-            // Use the appropriate API version (production uses v1.2.0-beta as the stable version identifier)
+            // Use the appropriate API version
+            // Note: Despite the "beta" label, v1.2.0-beta is bKash's official stable production API version
+            // This is bKash's naming convention for their tokenized payment API
             $apiVersion = 'v1.2.0-beta';
 
             $appKey = $config['app_key'] ?? '';
