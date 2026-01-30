@@ -13,12 +13,13 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Manage your recharge card stock</p>
                 </div>
                 <div>
-                    <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    {{-- TODO: Implement card request functionality --}}
+                    <button type="button" disabled aria-disabled="true" class="inline-flex items-center px-4 py-2 bg-gray-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest cursor-not-allowed opacity-60 transition ease-in-out duration-150" title="Request cards feature coming soon">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         Request Cards
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -201,9 +202,11 @@
                                     {{ $card->expiry_date ? $card->expiry_date->format('M d, Y') : 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View</a>
+                                    {{-- TODO: Implement card detail view --}}
+                                    <span role="button" aria-disabled="true" class="text-gray-400 cursor-not-allowed mr-3" title="View feature coming soon">View</span>
                                     @if($card->status === 'available')
-                                        <a href="#" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Sell</a>
+                                        {{-- TODO: Implement card sell functionality --}}
+                                        <span role="button" aria-disabled="true" class="text-gray-400 cursor-not-allowed" title="Sell feature coming soon">Sell</span>
                                     @endif
                                 </td>
                             </tr>
