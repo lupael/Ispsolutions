@@ -2999,6 +2999,19 @@ class AdminController extends Controller
                 ->pluck('username')
                 ->toArray();
             
+            // If no users with usernames, return empty results
+            if (empty($tenantUsernames)) {
+                return view('panels.admin.logs.radius', [
+                    'logs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
+                    'stats' => [
+                        'total' => 0,
+                        'today' => 0,
+                        'active_sessions' => 0,
+                        'total_bandwidth' => 0,
+                    ],
+                ]);
+            }
+            
             // Get RADIUS accounting logs filtered by tenant users
             $logs = \App\Models\RadAcct::whereIn('username', $tenantUsernames)
                 ->latest('acctstarttime')
