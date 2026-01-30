@@ -500,7 +500,7 @@ class PaymentGatewayService
 
                 // Optional parameters - store custom data
                 'value_a' => $invoice->invoice_number,
-                'value_b' => (string) $invoice->network_user_id,
+                'value_b' => (string) $invoice->user_id,
                 'value_c' => (string) $invoice->id,
                 'value_d' => (string) $invoice->tenant_id,
             ];

@@ -45,6 +45,8 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function map($invoice): array
     {
+        $paidAmount = $invoice->payments->sum('amount') ?? 0;
+        
         return [
             $invoice->invoice_number,
             $invoice->user->name ?? 'N/A',
@@ -53,8 +55,8 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
             number_format($invoice->amount, 2),
             number_format($invoice->tax_amount ?? 0, 2),
             number_format($invoice->total_amount, 2),
-            number_format($invoice->payments->sum('amount') ?? 0, 2),
-            number_format($invoice->total_amount - ($invoice->payments->sum('amount') ?? 0), 2),
+            number_format($paidAmount, 2),
+            number_format($invoice->total_amount - $paidAmount, 2),
             ucfirst($invoice->status),
             $invoice->created_at?->format('Y-m-d') ?? 'N/A',
             $invoice->due_date?->format('Y-m-d') ?? 'N/A',
