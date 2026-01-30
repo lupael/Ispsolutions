@@ -30,15 +30,11 @@ class StaffController extends Controller
 
         // Check permissions and add device stats
         $canViewMikrotik = $user->hasPermission('devices.mikrotik.view');
-        $canViewNas = $user->hasPermission('devices.nas.view');
         $canViewCisco = $user->hasPermission('devices.cisco.view');
         $canViewOlt = $user->hasPermission('devices.olt.view');
 
         if ($canViewMikrotik) {
             $stats['total_mikrotik'] = MikrotikRouter::count();
-        }
-        if ($canViewNas) {
-            $stats['total_nas'] = Nas::count();
         }
         if ($canViewCisco) {
             $stats['total_cisco'] = CiscoDevice::count();
@@ -48,7 +44,7 @@ class StaffController extends Controller
         }
 
         // Pass permission flags to view to avoid N+1 queries
-        return view('panels.staff.dashboard', compact('stats', 'canViewMikrotik', 'canViewNas', 'canViewCisco', 'canViewOlt'));
+        return view('panels.staff.dashboard', compact('stats', 'canViewMikrotik', 'canViewCisco', 'canViewOlt'));
     }
 
     /**
@@ -103,20 +99,6 @@ class StaffController extends Controller
         $routers = MikrotikRouter::latest()->paginate(20);
 
         return view('panels.staff.mikrotik.index', compact('routers'));
-    }
-
-    /**
-     * Display NAS devices listing (if permitted).
-     */
-    public function nasDevices(): View
-    {
-        if (! auth()->user()->hasPermission('devices.nas.view')) {
-            abort(403, 'Unauthorized access to NAS devices.');
-        }
-
-        $devices = Nas::latest()->paginate(20);
-
-        return view('panels.staff.nas.index', compact('devices'));
     }
 
     /**

@@ -796,13 +796,6 @@ class AdminController extends Controller
      * Displays paginated list of Network Access Server devices for admin users with full management access.
      * Includes 20 items per page with tenant isolation automatically applied via BelongsToTenant trait.
      */
-    public function nasDevices(): View
-    {
-        $devices = Nas::latest()->paginate(20);
-
-        return view('panels.admin.nas.index', compact('devices'));
-    }
-
     /**
      * Display Cisco devices listing.
      *
@@ -2186,7 +2179,7 @@ class AdminController extends Controller
      */
     public function routers(): View
     {
-        $routers = MikrotikRouter::with('pppoeUsers')->paginate(20);
+        $routers = MikrotikRouter::with('pppoeUsers', 'nas')->paginate(20);
 
         $stats = [
             'total' => MikrotikRouter::count(),
@@ -2217,30 +2210,61 @@ class AdminController extends Controller
             'username' => 'required|string|max:100',
             'password' => 'required|string',
             'port' => 'nullable|integer|min:1|max:65535',
-            'radius_secret' => 'nullable|string|max:255',
+            'radius_secret' => 'required|string|max:255',
+            'nas_shortname' => 'required|string|max:50|unique:nas,short_name',
+            'nas_type' => 'nullable|string|in:mikrotik,cisco,juniper,other',
             'public_ip' => 'nullable|ip',
             'primary_auth' => 'nullable|in:radius,router,hybrid',
             'status' => 'required|in:active,inactive,maintenance',
         ]);
 
-        // Map form fields to database columns
-        $router = MikrotikRouter::create([
-            'tenant_id' => auth()->user()->tenant_id,
-            'name' => $validated['router_name'],
-            'ip_address' => $validated['ip_address'],
-            'username' => $validated['username'],
-            'password' => $validated['password'],
-            'api_port' => $validated['port'] ?? 8728,
-            'radius_secret' => $validated['radius_secret'] ?? null,
-            'public_ip' => $validated['public_ip'] ?? null,
-            'primary_auth' => $validated['primary_auth'] ?? 'hybrid',
-            'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
-        ]);
+        // Use database transaction to ensure both router and NAS are created together
+        DB::beginTransaction();
+        try {
+            // Create or update NAS entry in RADIUS database
+            $nas = Nas::create([
+                'tenant_id' => auth()->user()->tenant_id,
+                'name' => $validated['router_name'],
+                'nas_name' => $validated['router_name'],
+                'short_name' => $validated['nas_shortname'],
+                'server' => $validated['ip_address'],
+                'secret' => $validated['radius_secret'],
+                'type' => $validated['nas_type'] ?? 'mikrotik',
+                'ports' => 0,
+                'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
+            ]);
 
-        return redirect()->route('panel.admin.network.routers')
-            ->with('success', 'Router created successfully!')
-            ->with('router_id', $router->id)
-            ->with('configure_prompt', 'Would you like to configure this router now for RADIUS integration and PPP profiles?');
+            // Map form fields to database columns
+            $router = MikrotikRouter::create([
+                'tenant_id' => auth()->user()->tenant_id,
+                'nas_id' => $nas->id,
+                'name' => $validated['router_name'],
+                'ip_address' => $validated['ip_address'],
+                'username' => $validated['username'],
+                'password' => $validated['password'],
+                'api_port' => $validated['port'] ?? 8728,
+                'radius_secret' => $validated['radius_secret'],
+                'public_ip' => $validated['public_ip'] ?? null,
+                'primary_auth' => $validated['primary_auth'] ?? 'hybrid',
+                'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.network.routers')
+                ->with('success', 'Router and NAS entry created successfully!')
+                ->with('router_id', $router->id)
+                ->with('configure_prompt', 'Would you like to configure this router now for RADIUS integration and PPP profiles?');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create router and NAS entry', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create router. Please try again later.');
+        }
     }
 
     /**
@@ -2248,7 +2272,7 @@ class AdminController extends Controller
      */
     public function routersEdit($id): View
     {
-        $router = MikrotikRouter::findOrFail($id);
+        $router = MikrotikRouter::with('nas')->findOrFail($id);
 
         return view('panels.admin.network.routers-edit', compact('router'));
     }
@@ -2267,38 +2291,85 @@ class AdminController extends Controller
             'password' => 'nullable|string',
             'port' => 'nullable|integer|min:1|max:65535',
             'radius_secret' => 'nullable|string|max:255',
+            'nas_shortname' => 'required|string|max:50|unique:nas,short_name,' . ($router->nas_id ?? 'NULL'),
+            'nas_type' => 'nullable|string|in:mikrotik,cisco,juniper,other',
             'public_ip' => 'nullable|ip',
             'primary_auth' => 'nullable|in:radius,router,hybrid',
             'status' => 'required|in:active,inactive,maintenance',
         ]);
 
-        // Map form fields to database columns
-        $updateData = [
-            'name' => $validated['router_name'],
-            'ip_address' => $validated['ip_address'],
-            'username' => $validated['username'],
-            'api_port' => $validated['port'] ?? $router->api_port,
-            'public_ip' => $validated['public_ip'] ?? $router->public_ip,
-            'primary_auth' => $validated['primary_auth'] ?? $router->primary_auth,
-            'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
-        ];
+        DB::beginTransaction();
+        try {
+            // Map form fields to database columns
+            $updateData = [
+                'name' => $validated['router_name'],
+                'ip_address' => $validated['ip_address'],
+                'username' => $validated['username'],
+                'api_port' => $validated['port'] ?? $router->api_port,
+                'public_ip' => $validated['public_ip'] ?? $router->public_ip,
+                'primary_auth' => $validated['primary_auth'] ?? $router->primary_auth,
+                'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
+            ];
 
-        // Only update password if provided
-        if (! empty($validated['password'])) {
-            $updateData['password'] = $validated['password'];
+            // Only update password if provided
+            if (! empty($validated['password'])) {
+                $updateData['password'] = $validated['password'];
+            }
+
+            // Only update radius_secret if a non-empty value was provided
+            if (array_key_exists('radius_secret', $validated)
+                && $validated['radius_secret'] !== null
+                && $validated['radius_secret'] !== '') {
+                $updateData['radius_secret'] = $validated['radius_secret'];
+            }
+
+            $router->update($updateData);
+
+            // Update or create NAS entry
+            $nasData = [
+                'name' => $validated['router_name'],
+                'nas_name' => $validated['router_name'],
+                'short_name' => $validated['nas_shortname'],
+                'server' => $validated['ip_address'],
+                'type' => $validated['nas_type'] ?? 'mikrotik',
+                'ports' => 0,
+                'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
+            ];
+
+            // Only update secret if provided
+            if (! empty($validated['radius_secret'])) {
+                $nasData['secret'] = $validated['radius_secret'];
+            }
+
+            if ($router->nas_id) {
+                // Update existing NAS entry
+                Nas::where('id', $router->nas_id)->update($nasData);
+            } else {
+                // Create new NAS entry if it doesn't exist
+                // Require radius_secret when creating new NAS
+                if (empty($validated['radius_secret']) && empty($router->radius_secret)) {
+                    throw new \Exception('RADIUS secret is required to create NAS entry');
+                }
+                $nasData['tenant_id'] = auth()->user()->tenant_id;
+                $nasData['secret'] = $validated['radius_secret'] ?? $router->radius_secret;
+                $nas = Nas::create($nasData);
+                $router->update(['nas_id' => $nas->id]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.network.routers')
+                ->with('success', 'Router and linked NAS entry updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update router and NAS entry', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to update router. Please try again later.');
         }
-
-        // Only update radius_secret if a non-empty value was provided
-        if (array_key_exists('radius_secret', $validated)
-            && $validated['radius_secret'] !== null
-            && $validated['radius_secret'] !== '') {
-            $updateData['radius_secret'] = $validated['radius_secret'];
-        }
-
-        $router->update($updateData);
-
-        return redirect()->route('panel.admin.network.routers')
-            ->with('success', 'Router and linked NAS entry updated successfully.');
     }
 
     /**

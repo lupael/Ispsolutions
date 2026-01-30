@@ -102,6 +102,78 @@
                     </div>
                 </div>
 
+                <!-- RADIUS/NAS Configuration -->
+                <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">RADIUS/NAS Configuration</h3>
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div>
+                            <label for="nas_shortname" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                NAS Short Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="nas_shortname" id="nas_shortname" value="{{ old('nas_shortname', optional($router->nas)->short_name ?: strtolower(str_replace(' ', '-', $router->name))) }}" required
+                                class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Unique identifier for RADIUS NAS</p>
+                            @error('nas_shortname')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="nas_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                NAS Type
+                            </label>
+                            <select name="nas_type" id="nas_type"
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="mikrotik" {{ old('nas_type', optional($router->nas)->type) === 'mikrotik' ? 'selected' : '' }}>MikroTik</option>
+                                <option value="cisco" {{ old('nas_type', optional($router->nas)->type) === 'cisco' ? 'selected' : '' }}>Cisco</option>
+                                <option value="juniper" {{ old('nas_type', optional($router->nas)->type) === 'juniper' ? 'selected' : '' }}>Juniper</option>
+                                <option value="other" {{ old('nas_type', optional($router->nas)->type) === 'other' ? 'selected' : '' }}>Other</option>
+                            </select>
+                            @error('nas_type')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="radius_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                RADIUS Shared Secret <span class="text-red-500">*</span>
+                            </label>
+                            <input type="password" name="radius_secret" id="radius_secret" placeholder="Leave blank to keep current secret" value="{{ old('radius_secret') }}"
+                                class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave blank to keep current secret</p>
+                            @error('radius_secret')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="public_ip" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Public IP Address
+                            </label>
+                            <input type="text" name="public_ip" id="public_ip" value="{{ old('public_ip', $router->public_ip) }}"
+                                class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            @error('public_ip')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="primary_auth" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Primary Authentication Mode
+                            </label>
+                            <select name="primary_auth" id="primary_auth"
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="radius" {{ old('primary_auth', $router->primary_auth) === 'radius' ? 'selected' : '' }}>RADIUS Only</option>
+                                <option value="router" {{ old('primary_auth', $router->primary_auth) === 'router' ? 'selected' : '' }}>Router Only</option>
+                                <option value="hybrid" {{ old('primary_auth', $router->primary_auth) === 'hybrid' ? 'selected' : '' }}>Hybrid (RADIUS + Router Fallback)</option>
+                            </select>
+                            @error('primary_auth')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Description

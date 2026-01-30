@@ -561,7 +561,6 @@ return [
                 // Temporarily hidden as per issue requirements
                 // ['label' => 'MikroTik', 'route' => 'panel.staff.mikrotik'],
                 // ['label' => 'Cisco Devices', 'route' => 'panel.staff.cisco'],
-                ['label' => 'Router (RADIUS NAS)', 'route' => 'panel.staff.nas'],
                 ['label' => 'OLT Devices', 'route' => 'panel.staff.olt'],
             ],
         ],

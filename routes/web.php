@@ -11,7 +11,6 @@ use App\Http\Controllers\Panel\DeveloperController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Panel\ManagerController;
 use App\Http\Controllers\Panel\MasterPackageController;
-use App\Http\Controllers\Panel\NasController;
 use App\Http\Controllers\Panel\NasNetwatchController;
 use App\Http\Controllers\Panel\OnuController;
 use App\Http\Controllers\Panel\OperatorPackageController;
@@ -328,7 +327,6 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     Route::get('/mikrotik', function () {
         return redirect()->route('panel.admin.network.routers');
     })->name('mikrotik');
-    Route::get('/nas', [AdminController::class, 'nasDevices'])->name('nas');
     Route::get('/cisco', [AdminController::class, 'ciscoDevices'])->name('cisco');
     Route::get('/olt', function () {
         return redirect()->route('panel.admin.network.olt');
@@ -584,16 +582,6 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/{routerId}/execute', [\App\Http\Controllers\Panel\RouterAutoProvisionController::class, 'provision'])->name('execute');
         Route::get('/{routerId}/status', [\App\Http\Controllers\Panel\RouterAutoProvisionController::class, 'status'])->name('status');
     });
-    
-    // NAS Device Management Routes
-    Route::get('/network/nas', [NasController::class, 'index'])->name('network.nas');
-    Route::get('/network/nas/create', [NasController::class, 'create'])->name('network.nas.create');
-    Route::post('/network/nas', [NasController::class, 'store'])->name('network.nas.store');
-    Route::get('/network/nas/{id}', [NasController::class, 'show'])->name('network.nas.show');
-    Route::get('/network/nas/{id}/edit', [NasController::class, 'edit'])->name('network.nas.edit');
-    Route::put('/network/nas/{id}', [NasController::class, 'update'])->name('network.nas.update');
-    Route::delete('/network/nas/{id}', [NasController::class, 'destroy'])->name('network.nas.destroy');
-    Route::post('/network/nas/{id}/test-connection', [NasController::class, 'testConnection'])->name('network.nas.test-connection');
     
     // OLT Device Management Routes (proper CRUD)
     Route::get('/network/olt', [AdminController::class, 'oltList'])->name('network.olt');
@@ -933,7 +921,6 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'tenant'
 
     // Network Device Management (permission-based)
     Route::get('/mikrotik', [StaffController::class, 'mikrotikRouters'])->name('mikrotik');
-    Route::get('/nas', [StaffController::class, 'nasDevices'])->name('nas');
     Route::get('/cisco', [StaffController::class, 'ciscoDevices'])->name('cisco');
     Route::get('/olt', [StaffController::class, 'oltDevices'])->name('olt');
 });

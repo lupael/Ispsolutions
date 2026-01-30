@@ -146,22 +146,19 @@
                                 Router Name
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Type
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 IP Address
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Model
+                                NAS Info
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Location
+                                Auth Mode
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Status
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Uptime
+                                Users
                             </th>
                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Actions
@@ -185,24 +182,38 @@
                                                 {{ $router->name }}
                                             </div>
                                             <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                {{ $router->description ?? 'N/A' }}
+                                                Port: {{ $router->api_port ?? 8728 }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100">
-                                        {{ strtoupper($router->type ?? 'N/A') }}
-                                    </span>
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    {{ $router->ip_address }}
+                                    <div>{{ $router->ip_address }}</div>
+                                    @if($router->public_ip)
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">Public: {{ $router->public_ip }}</div>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $router->model ?? 'N/A' }}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($router->nas)
+                                        <div class="text-sm text-gray-900 dark:text-gray-100">
+                                            <div class="font-medium">{{ $router->nas->short_name }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                                    {{ strtoupper($router->nas->type) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-400">No NAS</span>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $router->location ?? 'N/A' }}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        @if($router->primary_auth === 'radius') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                        @elseif($router->primary_auth === 'hybrid') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
+                                        @else bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 @endif">
+                                        {{ strtoupper($router->primary_auth ?? 'HYBRID') }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php
@@ -232,21 +243,16 @@
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
                                                 {{ ucfirst($apiStatus) }}
                                             </span>
-                                            @if($router->last_checked_at)
+                                            @if($router->nas && $router->nas->status)
                                                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    {{ $router->last_checked_at->diffForHumans() }}
-                                                </div>
-                                            @endif
-                                            @if($router->response_time_ms && $apiStatus === 'online')
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                    {{ $router->response_time_ms }}ms
+                                                    NAS: {{ ucfirst($router->nas->status) }}
                                                 </div>
                                             @endif
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $router->uptime ?? 'N/A' }}
+                                    {{ $router->pppoeUsers->count() ?? 0 }} users
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">

@@ -130,20 +130,37 @@
                 </div>
             </div>
 
-            <!-- RADIUS Configuration -->
+            <!-- RADIUS/NAS Configuration -->
             <div>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">RADIUS Configuration</h3>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">RADIUS/NAS Configuration</h3>
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                        <label for="radius_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300">RADIUS Shared Secret</label>
+                        <label for="nas_shortname" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NAS Short Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="nas_shortname" name="nas_shortname" placeholder="router1" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Unique identifier for RADIUS NAS</p>
+                    </div>
+
+                    <div>
+                        <label for="nas_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NAS Type</label>
+                        <select id="nas_type" name="nas_type" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="mikrotik" selected>MikroTik</option>
+                            <option value="cisco">Cisco</option>
+                            <option value="juniper">Juniper</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="radius_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300">RADIUS Shared Secret <span class="text-red-500">*</span></label>
                         <div class="mt-1 flex rounded-md shadow-sm">
-                            <input type="text" id="radius_secret" name="radius_secret" class="flex-1 rounded-none rounded-l-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="text" id="radius_secret" name="radius_secret" class="flex-1 rounded-none rounded-l-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500" required>
                             <button type="button" onclick="generateSecret()" class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 dark:border-gray-700 rounded-r-md bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                             </button>
                         </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Shared secret for RADIUS authentication</p>
                     </div>
 
                     <div>
