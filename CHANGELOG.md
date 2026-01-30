@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- add version validation to prevent malformed tags ([e293a66](../../commit/e293a6675eaa7aaf49c5deb5744d84d37b27cff2))
+- update workflow to auto-generate version from git tags ([14fc60a](../../commit/14fc60ab2f0bbe1fe9817dd83323a19574cf8f73))
 - Change generateInvoiceNumber() visibility to public ([8f6a929](../../commit/8f6a92935440702444fb07badacbb3af1c834c0c))
 - Update customer-status-badge component to accept customer prop ([f2c082e](../../commit/f2c082e53043f801183a92eaf1779b3001d649c2))
 - Add ARIA attributes, correct permissions, restore missing actions, update docs ([5b90d47](../../commit/5b90d47c498e8890faf462097052a5d0fce372a0))
