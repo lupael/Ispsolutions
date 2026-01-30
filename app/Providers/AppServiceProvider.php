@@ -91,6 +91,12 @@ class AppServiceProvider extends ServiceProvider
                 || $user->isDeveloper()
                 || $user->isSuperAdmin();
         });
+
+        Gate::define('manage-customers', function ($user) {
+            // Allow admins and higher to manage customers
+            // This gate is used by routes requiring customer management access
+            return $user->operator_level <= 20; // Developer, Super Admin, Admin
+        });
     }
 
     /**
