@@ -122,12 +122,6 @@ class BelongsToTenantTraitTest extends TestCase
         $tenant = Tenant::factory()->create();
         $this->tenancyService->setCurrentTenant($tenant);
 
-        // Create admin user
-        $admin = User::factory()->create([
-            'tenant_id' => $tenant->id,
-            'operator_level' => User::OPERATOR_LEVEL_ADMIN,
-        ]);
-
         // Create a package
         $package = Package::factory()->create([
             'tenant_id' => $tenant->id,
