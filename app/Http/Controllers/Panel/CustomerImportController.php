@@ -8,7 +8,6 @@ use App\Events\ImportPppCustomersRequested;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerImport;
 use App\Models\MikrotikRouter;
-use App\Models\Nas;
 use App\Models\Package;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,21 +22,11 @@ class CustomerImportController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
         
-        // Get active routers, including those with active NAS or no NAS
+        // Get active routers (NAS functionality is now integrated into routers)
         $routers = MikrotikRouter::where('tenant_id', $tenantId)
             ->where('status', 'active')
-            ->where(function($query) {
-                // Include routers with no NAS, or routers whose NAS is also active
-                $query->whereNull('nas_id')
-                    ->orWhereHas('nas', function($q) {
-                        $q->where('status', 'active');
-                    });
-            })
             ->get();
             
-        $nasDevices = Nas::where('tenant_id', $tenantId)
-            ->where('status', 'active')
-            ->get();
         $packages = Package::where('tenant_id', $tenantId)->get();
 
         // Get recent imports
@@ -47,7 +36,7 @@ class CustomerImportController extends Controller
             ->take(10)
             ->get();
 
-        return view('panels.admin.customers.pppoe-import', compact('routers', 'nasDevices', 'packages', 'recentImports'));
+        return view('panels.admin.customers.pppoe-import', compact('routers', 'packages', 'recentImports'));
     }
 
     /**
@@ -56,60 +45,33 @@ class CustomerImportController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nas_id' => 'nullable|integer|exists:nas,id',
-            'router_id' => 'nullable|integer|exists:mikrotik_routers,id',
+            'router_id' => 'required|integer|exists:mikrotik_routers,id',
             'filter_disabled' => 'nullable|boolean',
             'generate_bills' => 'nullable|boolean',
             'package_id' => 'nullable|integer|exists:packages,id',
         ]);
 
-        // Ensure either nas_id or router_id is provided
-        if (empty($validated['nas_id']) && empty($validated['router_id'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Either NAS device or Mikrotik router must be selected.',
-            ], 422);
-        }
-
-        // Ensure nas_id and router_id are not both provided simultaneously
-        if (! empty($validated['nas_id']) && ! empty($validated['router_id'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please select either a NAS device or a Mikrotik router, not both.',
-            ], 422);
-        }
-
         try {
-            // Determine which ID to use for duplicate check
-            $deviceId = $validated['nas_id'] ?? $validated['router_id'];
-            $deviceType = isset($validated['nas_id']) ? 'nas' : 'router';
-
             // Check for duplicate import today
-            $query = CustomerImport::where('operator_id', auth()->id())
+            $existingImport = CustomerImport::where('operator_id', auth()->id())
                 ->whereDate('created_at', today())
-                ->where('status', 'in_progress');
-
-            if ($deviceType === 'nas') {
-                $query->where('nas_id', $deviceId);
-            } else {
-                $query->where('router_id', $deviceId);
-            }
-
-            $existingImport = $query->first();
+                ->where('status', 'in_progress')
+                ->where('router_id', $validated['router_id'])
+                ->first();
 
             if ($existingImport) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'An import is already in progress for this device today.',
+                    'message' => 'An import is already in progress for this router today.',
                 ], 422);
             }
 
-            // Dispatch event
+            // Dispatch event (NAS functionality is now part of routers)
             event(new ImportPppCustomersRequested(
                 auth()->id(),
-                $validated['nas_id'] ?? null,
+                null, // nas_id deprecated
                 [
-                    'router_id' => $validated['router_id'] ?? null,
+                    'router_id' => $validated['router_id'],
                     'filter_disabled' => $validated['filter_disabled'] ?? true,
                     'generate_bills' => $validated['generate_bills'] ?? false,
                     'package_id' => $validated['package_id'] ?? null,
