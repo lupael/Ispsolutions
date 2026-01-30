@@ -121,6 +121,7 @@ class OperatorPackageController extends Controller
             'operator_id' => $user->id,
             'master_package_id' => $validated['master_package_id'],
             'operator_price' => $validated['operator_price'],
+            'commission_percentage' => 0,
             'status' => 'active',
             'assigned_by' => $user->id,
         ]);
@@ -282,6 +283,7 @@ class OperatorPackageController extends Controller
             'operator_id' => $validated['sub_operator_id'],
             'master_package_id' => $operatorRate->master_package_id,
             'operator_price' => $validated['sub_operator_price'],
+            'commission_percentage' => 0,
             'status' => 'active',
             'assigned_by' => $user->id,
         ]);
