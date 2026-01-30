@@ -85,35 +85,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-30
 
-### ✨ Features
-
-- Complete Bkash tokenization implementation with UI and routes ([594732c](../../commit/594732ca46007e747a37c4bc37dc2d0480f24c9f))
-- implement Bkash tokenization with models, migrations, and service ([1e65a91](../../commit/1e65a91c7d9a1aa79ef71a84b37654cd82d7aaed))
-- add operator subscription controller, command, and form request ([0492f27](../../commit/0492f27f7585ff6095ce7c9e43c6b80a232713a2))
-- implement SMS payment webhook security and subscription payment models ([8d29760](../../commit/8d297606d988354dd92c0b573ec0cd4382564d14))
-
-### 🐛 Bug Fixes
-
-- Add explicit isset check for $onu variable in error handler ([7787f86](../../commit/7787f86bb62c5f91a203532ee78ff7ff980ce976))
-- add version validation to prevent malformed tags ([e293a66](../../commit/e293a6675eaa7aaf49c5deb5744d84d37b27cff2))
-- update workflow to auto-generate version from git tags ([14fc60a](../../commit/14fc60ab2f0bbe1fe9817dd83323a19574cf8f73))
-- Change generateInvoiceNumber() visibility to public ([8f6a929](../../commit/8f6a92935440702444fb07badacbb3af1c834c0c))
-- Update customer-status-badge component to accept customer prop ([f2c082e](../../commit/f2c082e53043f801183a92eaf1779b3001d649c2))
-- Add ARIA attributes, correct permissions, restore missing actions, update docs ([5b90d47](../../commit/5b90d47c498e8890faf462097052a5d0fce372a0))
-- Revert back button font-weight to font-semibold ([ab5d273](../../commit/ab5d27389d681b13a95db21e915f91282bdeaf51))
-- Address PR review feedback - update percentages and implement makePayment function ([38e9af7](../../commit/38e9af7ecdff59915a744dc550f723ce12d1e38c))
-- address code review feedback - improve token handling, subscription logic, and webhook processing ([b651310](../../commit/b651310da19cdea4442486c3f992ad6ff547f7c5))
-
-### 📚 Documentation
-
-- Update README with Phase 2 feature documentation links ([5c8f443](../../commit/5c8f443589a6b48f1b454de3be51b055fec0b018))
-- Add comprehensive user guide and implementation summary ([b14995e](../../commit/b14995ecf0a1af5626d73fd1903617bb3e9e4119))
-- Add comprehensive Phase 2 implementation status report ([0aa3bb6](../../commit/0aa3bb676811f1b9bea05283bca81df015312773))
-- add comprehensive Phase 2 implementation summary ([9fbfe38](../../commit/9fbfe385e6cc228a019fa691e271b4c38be2cc8b))
-- Mark Quick Wins as completed in REFERENCE_SYSTEM_QUICK_GUIDE.md ([b5c0510](../../commit/b5c0510539ffd8d91a8dc0aac5e3a8855ebd804f))
-- Fix cache service method names and parameter references in usage guide ([417386f](../../commit/417386f3d399e81a08b575f2cd35cf92b0ca2659))
-- Add comprehensive Quick Wins usage guide ([dc3fbf6](../../commit/dc3fbf65e5341e63737ff6fa2fa5eaea352e2151))
-
 ---
 
 ## [Unreleased]
