@@ -16,7 +16,7 @@ class SubOperatorController extends Controller
 
         // Get customer IDs for this sub-operator
         $customerIds = $user->subordinates()
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->pluck('id');
 
         // Calculate pending payments from unpaid invoices
@@ -32,7 +32,7 @@ class SubOperatorController extends Controller
 
         // Get sub-operator metrics (only assigned customers) - optimized to avoid N+1
         $subordinateStats = $user->subordinates()
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->selectRaw('COUNT(*) as assigned_customers, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_customers')
             ->first();
 
@@ -55,7 +55,7 @@ class SubOperatorController extends Controller
 
         // Get only customers assigned to this sub-operator
         $customers = $user->subordinates()
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->paginate(20);
 
         return view('panels.sub-operator.customers.index', compact('customers'));
@@ -70,7 +70,7 @@ class SubOperatorController extends Controller
 
         // Get bills for sub-operator's assigned customers only
         $customerIds = $user->subordinates()
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->pluck('id');
 
         // Check if there are any customers before querying invoices
@@ -104,7 +104,7 @@ class SubOperatorController extends Controller
 
         // Get customer IDs for this sub-operator
         $customerIds = $user->subordinates()
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->pluck('id');
 
         // Calculate collections for different periods
@@ -125,7 +125,7 @@ class SubOperatorController extends Controller
 
         // Generate basic sub-operator reports
         $reports = [
-            'assigned_customers' => $user->subordinates()->where('operator_level', 100)->count(),
+            'assigned_customers' => $user->subordinates()->where('is_subscriber', true)->count(),
             'collections_today' => $collectionsToday,
             'collections_week' => $collectionsWeek,
             'collections_month' => $collectionsMonth,

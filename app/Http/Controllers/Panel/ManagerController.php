@@ -12,7 +12,7 @@ class ManagerController extends Controller
     /**
      * Display the manager dashboard.
      * 
-     * Note: Network credentials are now stored directly in User model (operator_level = 100 for customers)
+     * Note: Network credentials are now stored directly in User model (is_subscriber = true for customers)
      */
     public function dashboard(): View
     {
@@ -20,14 +20,14 @@ class ManagerController extends Controller
 
         $stats = [
             'total_network_users' => User::where('tenant_id', $tenantId)
-                ->where('operator_level', 100)->count(),
+                ->where('is_subscriber', true)->count(),
             'active_sessions' => NetworkUserSession::where('tenant_id', $tenantId)
                 ->whereNull('end_time')->count(),
             'pppoe_users' => User::where('tenant_id', $tenantId)
-                ->where('operator_level', 100)
+                ->where('is_subscriber', true)
                 ->where('service_type', 'pppoe')->count(),
             'hotspot_users' => User::where('tenant_id', $tenantId)
-                ->where('operator_level', 100)
+                ->where('is_subscriber', true)
                 ->where('service_type', 'hotspot')->count(),
         ];
 
@@ -81,7 +81,7 @@ class ManagerController extends Controller
 
         // Managers can view operators' or sub-operators' customers based on permissions
         $customers = \App\Models\User::where('tenant_id', $tenantId)
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->latest()
             ->paginate(20);
 

@@ -78,7 +78,7 @@ class BillingProfileCacheService
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($profileId) {
             return User::where('billing_profile_id', $profileId)
-                ->where('operator_level', 100) // Customers only
+                ->where('is_subscriber', true) // Customers only
                 ->count();
         });
     }

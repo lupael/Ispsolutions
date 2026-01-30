@@ -45,7 +45,7 @@ class ValidationController extends Controller
     }
 
     /**
-     * Check if username already exists (now uses User model with operator_level = 100).
+     * Check if username already exists (now uses User model with is_subscriber = true).
      * Note: Migrated from NetworkUser to User model.
      */
     public function checkUsername(Request $request): JsonResponse
@@ -58,7 +58,7 @@ class ValidationController extends Controller
         }
 
         $query = User::where('username', $username)
-            ->where('operator_level', 100);
+            ->where('is_subscriber', true);
         
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);

@@ -23,7 +23,7 @@ class BulkUserUpdateRequest extends FormRequest
     {
         return [
             'user_ids' => 'required|array|min:1',
-            'user_ids.*' => 'required|exists:network_users,id',
+            'user_ids.*' => 'required|exists:customers,id',
             'action' => 'required|in:activate,deactivate,extend_validity,change_package',
             'package_id' => 'required_if:action,change_package|exists:packages,id',
             'extend_days' => 'required_if:action,extend_validity|integer|min:1|max:365',

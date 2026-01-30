@@ -48,7 +48,7 @@ class Onu extends Model
         'onu_id',
         'serial_number',
         'mac_address',
-        'network_user_id',
+        'customer_id',
         'name',
         'description',
         'status',
@@ -66,7 +66,7 @@ class Onu extends Model
     protected $casts = [
         'olt_id' => 'integer',
         'onu_id' => 'integer',
-        'network_user_id' => 'integer',
+        'customer_id' => 'integer',
         'signal_rx' => 'decimal:2',
         'signal_tx' => 'decimal:2',
         'distance' => 'integer',
@@ -93,11 +93,21 @@ class Onu extends Model
     }
 
     /**
-     * Get the network user associated with the ONU.
+     * Get the customer associated with the ONU.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(NetworkUser::class, 'customer_id');
+    }
+
+    /**
+     * Get the network user associated with the ONU (deprecated - use customer()).
+     * 
+     * @deprecated Use customer() instead
      */
     public function networkUser(): BelongsTo
     {
-        return $this->belongsTo(NetworkUser::class);
+        return $this->belongsTo(NetworkUser::class, 'customer_id');
     }
 
     /**

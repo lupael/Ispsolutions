@@ -111,21 +111,21 @@ class OperatorStatsCacheService
 
             $stats = [
                 'total_customers' => User::where('tenant_id', $tenantId)
-                    ->where('operator_level', 100)
+                    ->where('is_subscriber', true)
                     ->count(),
                 
                 'active_customers' => User::where('tenant_id', $tenantId)
-                    ->where('operator_level', 100)
+                    ->where('is_subscriber', true)
                     ->where('status', 'active')
                     ->count(),
                 
                 'suspended_customers' => User::where('tenant_id', $tenantId)
-                    ->where('operator_level', 100)
+                    ->where('is_subscriber', true)
                     ->where('status', 'suspended')
                     ->count(),
                 
                 'expired_customers' => User::where('tenant_id', $tenantId)
-                    ->where('operator_level', 100)
+                    ->where('is_subscriber', true)
                     ->where('status', 'expired')
                     ->count(),
                 
@@ -161,7 +161,7 @@ class OperatorStatsCacheService
 
             // Get customer counts by status
             $byStatus = User::where('tenant_id', $tenantId)
-                ->where('operator_level', 100)
+                ->where('is_subscriber', true)
                 ->select('status', DB::raw('count(*) as count'))
                 ->groupBy('status')
                 ->pluck('count', 'status')
@@ -169,7 +169,7 @@ class OperatorStatsCacheService
 
             // Get customer counts by payment type
             $byPaymentType = User::where('tenant_id', $tenantId)
-                ->where('operator_level', 100)
+                ->where('is_subscriber', true)
                 ->select('payment_type', DB::raw('count(*) as count'))
                 ->groupBy('payment_type')
                 ->pluck('count', 'payment_type')
@@ -208,7 +208,7 @@ class OperatorStatsCacheService
 
             // Calculate monthly recurring revenue (MRR)
             $mrr = User::where('users.tenant_id', $tenantId)
-                ->where('users.operator_level', 100)
+                ->where('users.is_subscriber', true)
                 ->where('users.status', 'active')
                 ->where('users.payment_type', 'postpaid')
                 ->whereNotNull('users.service_package_id')
@@ -217,7 +217,7 @@ class OperatorStatsCacheService
 
             // Calculate prepaid active revenue
             $prepaidRevenue = User::where('users.tenant_id', $tenantId)
-                ->where('users.operator_level', 100)
+                ->where('users.is_subscriber', true)
                 ->where('users.status', 'active')
                 ->where('users.payment_type', 'prepaid')
                 ->whereNotNull('users.service_package_id')

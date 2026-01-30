@@ -356,7 +356,7 @@ class RadiusController extends Controller
     }
 
     /**
-     * Sync a customer to RADIUS (now uses User model with operator_level = 100).
+     * Sync a customer to RADIUS (now uses User model with is_subscriber = true).
      * Note: Migrated from NetworkUser to User model, kept for backward compatibility.
      */
     public function syncUser(Request $request, string $username): JsonResponse
@@ -373,7 +373,7 @@ class RadiusController extends Controller
         }
 
         $user = User::where('username', $username)
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->firstOrFail();
 
         $password = $request->password ?? null;
@@ -413,7 +413,7 @@ class RadiusController extends Controller
 
     /**
      * Get real-time bandwidth stats for a customer (by customer ID).
-     * Note: Migrated from NetworkUser to User model with operator_level = 100.
+     * Note: Migrated from NetworkUser to User model with is_subscriber = true.
      */
     public function getRealTimeStats(int $customerId): JsonResponse
     {
@@ -426,8 +426,8 @@ class RadiusController extends Controller
                 ], 401);
             }
 
-            // Get the customer by ID (User model with operator_level = 100)
-            $user = User::where('operator_level', 100)->findOrFail($customerId);
+            // Get the customer by ID (User model with is_subscriber = true)
+            $user = User::where('is_subscriber', true)->findOrFail($customerId);
             
             // Check tenant isolation
             if ($user->tenant_id !== auth()->user()->tenant_id) {

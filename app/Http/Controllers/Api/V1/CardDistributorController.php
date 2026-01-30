@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\RateLimiter;
 /**
  * CardDistributorController
  * 
- * Note: Updated to use User model (operator_level = 100) instead of NetworkUser model.
+ * Note: Updated to use User model (is_subscriber = true) instead of NetworkUser model.
  */
 class CardDistributorController extends Controller
 {
@@ -349,7 +349,7 @@ class CardDistributorController extends Controller
         $expiresAt = now()->addDays($card->validity_days);
         
         if ($customer) {
-            // Update user's package and expiry (User model with operator_level = 100)
+            // Update user's package and expiry (User model with is_subscriber = true)
             $customer->update([
                 'service_package_id' => $card->package_id,
                 'expiry_date' => $expiresAt,

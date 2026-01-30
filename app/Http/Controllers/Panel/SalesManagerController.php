@@ -138,7 +138,7 @@ class SalesManagerController extends Controller
 
         // Get customers with their invoices accessible to this sales manager
         $customers = User::where('tenant_id', $user->tenant_id)
-            ->where('operator_level', 100) // Customer role level
+            ->where('is_subscriber', true) // Customer role level
             ->with(['invoices' => function ($query) {
                 $query->where('status', '!=', 'paid')
                     ->orderBy('due_date', 'desc');
@@ -176,7 +176,7 @@ class SalesManagerController extends Controller
 
         // Get customers accessible to this sales manager (scoped by tenant)
         $customers = User::where('tenant_id', $user->tenant_id)
-            ->where('operator_level', 100) // Customer role level
+            ->where('is_subscriber', true) // Customer role level
             ->select('id', 'name', 'email', 'is_active')
             ->orderBy('name')
             ->get();

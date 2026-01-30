@@ -116,8 +116,9 @@ class StoreNetworkUserRequest extends FormRequest
             // For example: based on area, router assignment, or package requirements
             'zone_id' => null,
             
-            // Set as customer (operator_level = 100)
-            'operator_level' => 100,
+            // Set as customer (is_subscriber = true)
+            'is_subscriber' => true,
+            'operator_level' => null,
             'status' => ($validated['is_active'] ?? true) ? 'active' : 'inactive',
         ];
     }

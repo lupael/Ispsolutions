@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Validator;
  * NetworkUserController - kept for backward API compatibility.
  * 
  * Note: NetworkUser model has been eliminated. This controller now works with
- * User model (operator_level = 100 for customers) but maintains the same API contract.
+ * User model (is_subscriber = true for customers) but maintains the same API contract.
  */
 class NetworkUserController extends Controller
 {
@@ -26,7 +26,7 @@ class NetworkUserController extends Controller
 
     /**
      * List all customers (network users).
-     * Note: Now uses User model with operator_level = 100.
+     * Note: Now uses User model with is_subscriber = true.
      */
     public function index(Request $request): JsonResponse
     {
@@ -34,7 +34,7 @@ class NetworkUserController extends Controller
             'id', 'name', 'username', 'email', 'service_type',
             'service_package_id as package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
-        ])->where('operator_level', 100)
+        ])->where('is_subscriber', true)
           ->with(['servicePackage:id,name,price,bandwidth_upload,bandwidth_download']);
 
         if ($request->has('service_type')) {
@@ -61,7 +61,7 @@ class NetworkUserController extends Controller
 
     /**
      * Create a new customer (network user).
-     * Note: Now uses User model with operator_level = 100.
+     * Note: Now uses User model with is_subscriber = true.
      */
     public function store(StoreNetworkUserRequest $request): JsonResponse
     {
@@ -89,7 +89,7 @@ class NetworkUserController extends Controller
 
     /**
      * Get a specific customer (network user).
-     * Note: Now uses User model with operator_level = 100.
+     * Note: Now uses User model with is_subscriber = true.
      */
     public function show(int $id): JsonResponse
     {
@@ -97,7 +97,7 @@ class NetworkUserController extends Controller
             'id', 'name', 'username', 'email', 'service_type',
             'service_package_id as package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
-        ])->where('operator_level', 100)
+        ])->where('is_subscriber', true)
           ->with([
             'servicePackage:id,name,price,bandwidth_upload,bandwidth_download',
         ])->findOrFail($id);
@@ -107,11 +107,11 @@ class NetworkUserController extends Controller
 
     /**
      * Update a customer (network user).
-     * Note: Now uses User model with operator_level = 100.
+     * Note: Now uses User model with is_subscriber = true.
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = User::where('operator_level', 100)->findOrFail($id);
+        $user = User::where('is_subscriber', true)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'email' => [
@@ -119,7 +119,7 @@ class NetworkUserController extends Controller
                 'email',
                 function ($attribute, $value, $fail) use ($id) {
                     $exists = User::where('email', $value)
-                        ->where('operator_level', 100)
+                        ->where('is_subscriber', true)
                         ->where('id', '!=', $id)
                         ->exists();
                     if ($exists) {
@@ -160,11 +160,11 @@ class NetworkUserController extends Controller
 
     /**
      * Delete a customer (network user).
-     * Note: Now uses User model with operator_level = 100.
+     * Note: Now uses User model with is_subscriber = true.
      */
     public function destroy(int $id): JsonResponse
     {
-        $user = User::where('operator_level', 100)->findOrFail($id);
+        $user = User::where('is_subscriber', true)->findOrFail($id);
 
         // Observer will handle RADIUS deletion automatically
         $user->delete();
@@ -176,11 +176,11 @@ class NetworkUserController extends Controller
 
     /**
      * Sync customer to RADIUS.
-     * Note: Now uses User model with operator_level = 100.
+     * Note: Now uses User model with is_subscriber = true.
      */
     public function syncToRadius(Request $request, int $id): JsonResponse
     {
-        $user = User::where('operator_level', 100)->findOrFail($id);
+        $user = User::where('is_subscriber', true)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'password' => 'nullable|string|min:6',

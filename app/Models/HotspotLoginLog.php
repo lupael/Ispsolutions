@@ -15,7 +15,7 @@ class HotspotLoginLog extends Model
     protected $fillable = [
         'tenant_id',
         'hotspot_user_id',
-        'network_user_id',
+        'customer_id',
         'username',
         'mac_address',
         'ip_address',
@@ -76,9 +76,17 @@ class HotspotLoginLog extends Model
         return $this->belongsTo(HotspotUser::class);
     }
 
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(NetworkUser::class, 'customer_id');
+    }
+
+    /**
+     * @deprecated Use customer() instead
+     */
     public function networkUser(): BelongsTo
     {
-        return $this->belongsTo(NetworkUser::class);
+        return $this->belongsTo(NetworkUser::class, 'customer_id');
     }
 
     /**

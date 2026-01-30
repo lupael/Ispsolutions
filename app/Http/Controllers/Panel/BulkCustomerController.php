@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Validator;
 class BulkCustomerController extends Controller
 {
     /**
-     * Execute bulk action on selected customers (User model with operator_level = 100).
+     * Execute bulk action on selected customers (User model with is_subscriber = true).
      * Note: Migrated from NetworkUser to User model.
      */
     public function executeBulkAction(Request $request): JsonResponse
@@ -27,7 +27,7 @@ class BulkCustomerController extends Controller
                 'required',
                 'integer',
                 function ($attribute, $value, $fail) {
-                    if (!User::where('id', $value)->where('operator_level', 100)->exists()) {
+                    if (!User::where('id', $value)->where('is_subscriber', true)->exists()) {
                         $fail('The selected customer is invalid.');
                     }
                 }
@@ -53,7 +53,7 @@ class BulkCustomerController extends Controller
         $tenantId = auth()->user()->tenant_id;
         $customers = User::whereIn('id', $customerIds)
             ->where('tenant_id', $tenantId)
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->get();
 
         if ($customers->count() !== count($customerIds)) {

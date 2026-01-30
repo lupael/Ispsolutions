@@ -1029,7 +1029,7 @@ class MikrotikController extends Controller
     public function applySpeedToUser(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:network_users,id',
+            'user_id' => 'required|exists:customers,id',
             'method' => 'nullable|string|in:router,radius',
         ]);
 

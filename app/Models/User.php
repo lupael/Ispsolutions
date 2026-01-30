@@ -42,7 +42,7 @@ use Illuminate\Notifications\Notifiable;
  *    - Manager (level 50): View-only scoped access
  *    - Accountant (level 70): Financial view-only access
  *    - Staff (level 80): Support staff with limited permissions
- *    - Customer (level 100): End customer with self-service access
+ *    - Customer (is_subscriber=true): External subscribers (not in hierarchy), managed as assets
  *
  * 5. Permission Rules:
  *    - Only Admin can add/manage NAS, OLT, Router, PPP profiles, Pools, Packages, Package Prices
@@ -57,6 +57,7 @@ class User extends Authenticatable
 
     /**
      * Operator level constants
+     * Note: Customers are not operators and are identified by is_subscriber flag
      */
     public const OPERATOR_LEVEL_DEVELOPER = 0;
 
@@ -74,6 +75,11 @@ class User extends Authenticatable
 
     public const OPERATOR_LEVEL_STAFF = 80;
 
+    /**
+     * @deprecated since version 1.0 (2026-01-30). Use is_subscriber flag instead.
+     *             Customers are no longer identified by operator_level.
+     *             Will be removed in version 2.0.
+     */
     public const OPERATOR_LEVEL_CUSTOMER = 100;
 
     /**
@@ -93,6 +99,7 @@ class User extends Authenticatable
         'activated_at',
         'created_by',
         'operator_level',
+        'is_subscriber',
         'disabled_menus',
         'manager_id',
         'operator_type',
@@ -169,6 +176,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'is_subscriber' => 'boolean',
             'activated_at' => 'datetime',
             'disabled_menus' => 'array',
             'two_factor_enabled' => 'boolean',

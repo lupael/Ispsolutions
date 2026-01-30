@@ -17,7 +17,7 @@ class BulkOperationsController extends Controller
     use HandlesFormValidation;
 
     /**
-     * Bulk delete customers (User model with operator_level = 100).
+     * Bulk delete customers (User model with is_subscriber = true).
      * Note: Migrated from NetworkUser to User model.
      */
     public function bulkDeleteNetworkUsers(BulkDeleteRequest $request): RedirectResponse
@@ -25,7 +25,7 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $request->validated('ids'),
             function ($id) {
-                $user = User::where('operator_level', 100)->findOrFail($id);
+                $user = User::where('is_subscriber', true)->findOrFail($id);
                 $this->authorize('delete', $user);
                 $user->delete();
             },
@@ -35,7 +35,7 @@ class BulkOperationsController extends Controller
     }
 
     /**
-     * Bulk action on customers (User model with operator_level = 100).
+     * Bulk action on customers (User model with is_subscriber = true).
      * Note: Migrated from NetworkUser to User model.
      */
     public function bulkActionNetworkUsers(BulkActionRequest $request): RedirectResponse
@@ -62,7 +62,7 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = User::where('operator_level', 100)->findOrFail($id);
+                $user = User::where('is_subscriber', true)->findOrFail($id);
                 $this->authorize('update', $user);
                 $user->update(['is_active' => true, 'status' => 'active']);
             },
@@ -79,7 +79,7 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = User::where('operator_level', 100)->findOrFail($id);
+                $user = User::where('is_subscriber', true)->findOrFail($id);
                 $this->authorize('update', $user);
                 $user->update(['is_active' => false, 'status' => 'inactive']);
             },
@@ -96,7 +96,7 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = User::where('operator_level', 100)->findOrFail($id);
+                $user = User::where('is_subscriber', true)->findOrFail($id);
                 $this->authorize('update', $user);
                 $user->update(['status' => 'suspended']);
             },
@@ -113,7 +113,7 @@ class BulkOperationsController extends Controller
         return $this->handleBulkOperation(
             $ids,
             function ($id) {
-                $user = User::where('operator_level', 100)->findOrFail($id);
+                $user = User::where('is_subscriber', true)->findOrFail($id);
                 $this->authorize('delete', $user);
                 $user->delete();
             },
@@ -134,7 +134,7 @@ class BulkOperationsController extends Controller
             DB::transaction(function () use ($ids, &$successCount, &$failedCount) {
                 foreach ($ids as $id) {
                     try {
-                        $customer = User::where('operator_level', 100)
+                        $customer = User::where('is_subscriber', true)
                             ->with('servicePackage')->findOrFail($id);
 
                         if (! $customer->servicePackage) {

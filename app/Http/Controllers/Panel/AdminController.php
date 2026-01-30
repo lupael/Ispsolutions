@@ -56,12 +56,12 @@ class AdminController extends Controller
         // Calculate online/offline customers with error handling for radacct table
         try {
             // Base query for customers with network service
-            $totalNetworkCustomers = User::where('operator_level', 100)
+            $totalNetworkCustomers = User::where('is_subscriber', true)
                 ->whereNotNull('service_type')
                 ->whereNotNull('username')
                 ->count();
 
-            $onlineCustomers = User::where('operator_level', 100)
+            $onlineCustomers = User::where('is_subscriber', true)
                 ->whereNotNull('service_type')
                 ->whereNotNull('username')
                 ->whereIn('username', function ($subQuery) {
@@ -103,7 +103,7 @@ class AdminController extends Controller
                 $query->whereIn('slug', $excludedRoleSlugs);
             })->count(),
             // Count customers with network service types (previously NetworkUser count)
-            'total_network_users' => User::where('operator_level', 100)
+            'total_network_users' => User::where('is_subscriber', true)
                 ->whereNotNull('service_type')
                 ->count(),
             'active_users' => User::where('is_active', true)
@@ -132,19 +132,19 @@ class AdminController extends Controller
                 ->sum('amount'),
             'tickets_today' => \App\Models\Ticket::whereDate('created_at', today())->count(),
             // Customers expiring today (now using User model)
-            'expiring_today' => User::where('operator_level', 100)
+            'expiring_today' => User::where('is_subscriber', true)
                 ->whereDate('expiry_date', today())
                 ->count(),
             // Additional customer statistics (now using User model)
             'online_customers' => $onlineCustomers,
             'offline_customers' => $offlineCustomers,
-            'suspended_customers' => User::where('operator_level', 100)
+            'suspended_customers' => User::where('is_subscriber', true)
                 ->where('status', 'suspended')
                 ->count(),
-            'pppoe_customers' => User::where('operator_level', 100)
+            'pppoe_customers' => User::where('is_subscriber', true)
                 ->where('service_type', 'pppoe')
                 ->count(),
-            'hotspot_customers' => User::where('operator_level', 100)
+            'hotspot_customers' => User::where('is_subscriber', true)
                 ->where('service_type', 'hotspot')
                 ->count(),
         ];
@@ -154,7 +154,7 @@ class AdminController extends Controller
         // Task 18.1: Overall status distribution
         $statusDistribution = collect();
         if (class_exists(\App\Enums\CustomerOverallStatus::class)) {
-            $customers = User::where('operator_level', 100)->get();
+            $customers = User::where('is_subscriber', true)->get();
             foreach ($customers as $customer) {
                 $status = $customer->overall_status;
                 if ($status) {
@@ -165,7 +165,7 @@ class AdminController extends Controller
         }
 
         // Task 18.2: Expiring customers (next 7 days)
-        $expiringCustomers = User::where('operator_level', 100)
+        $expiringCustomers = User::where('is_subscriber', true)
             ->whereNotNull('expiry_date')
             ->whereDate('expiry_date', '>=', now())
             ->whereDate('expiry_date', '<=', now()->addDays(7))
@@ -279,7 +279,7 @@ class AdminController extends Controller
             $month = now()->subMonths($i);
             $customerGrowth->push([
                 'month' => $month->format('M Y'),
-                'customers' => User::where('operator_level', 100)
+                'customers' => User::where('is_subscriber', true)
                     ->whereDate('created_at', '<=', $month->endOfMonth())
                     ->count(),
             ]);
@@ -449,7 +449,7 @@ class AdminController extends Controller
     {
         $users = User::with('roles')
             ->where('tenant_id', auth()->user()->tenant_id)
-            ->where('operator_level', '<', 100) // Exclude customers (operator_level = 100)
+            ->where('is_subscriber', false) // Exclude customers (subscribers)
             ->latest()
             ->paginate(20);
 
@@ -632,7 +632,7 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'username' => 'required|string|max:255|unique:network_users,username',
+            'username' => 'required|string|max:255|unique:customers,username',
             'password' => 'required|string|min:6',
             'package_id' => 'required|exists:packages,id',
             'service_type' => 'required|in:pppoe,hotspot,static',
@@ -742,7 +742,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'username' => 'required|string|max:255|unique:network_users,username,' . $id,
+            'username' => 'required|string|max:255|unique:customers,username,' . $id,
             'password' => 'nullable|string|min:6',
             'package_id' => 'required|exists:packages,id',
             'service_type' => 'required|in:pppoe,hotspot,static',
@@ -1350,7 +1350,7 @@ class AdminController extends Controller
             // Credentials section
             if ($request->has(['username', 'password'])) {
                 $validated = $request->validate([
-                    'username' => 'sometimes|string|min:3|max:255|unique:network_users,username,' . $networkUser->id . '|regex:/^[a-zA-Z0-9_-]+$/',
+                    'username' => 'sometimes|string|min:3|max:255|unique:customers,username,' . $networkUser->id . '|regex:/^[a-zA-Z0-9_-]+$/',
                     'password' => 'nullable|string|min:8',
                 ]);
 
