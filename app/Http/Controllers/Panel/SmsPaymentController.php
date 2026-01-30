@@ -372,18 +372,41 @@ class SmsPaymentController extends Controller
             return false;
         }
         
+        // Normalize/ensure Nagad public key is in PEM format
+        if (strpos($publicKey, 'BEGIN PUBLIC KEY') === false) {
+            // Remove all whitespace and line breaks, then wrap as PEM
+            $normalizedKey = preg_replace('/\s+/', '', (string) $publicKey);
+            $normalizedKey = chunk_split($normalizedKey, 64, "\n");
+            $publicKey = "-----BEGIN PUBLIC KEY-----\n" .
+                trim($normalizedKey) .
+                "\n-----END PUBLIC KEY-----";
+        }
+        
+        // Load the public key via OpenSSL to validate its format
+        $publicKeyResource = openssl_pkey_get_public($publicKey);
+        
+        if ($publicKeyResource === false) {
+            Log::warning('Nagad public key is invalid or not in PEM format');
+            return false;
+        }
+        
         // Get payload
         $payload = $request->getContent();
         
         try {
-            // Decode the signature from base64
-            $decodedSignature = base64_decode($signature);
+            // Decode the signature from base64 (strict mode)
+            $decodedSignature = base64_decode($signature, true);
+            
+            if ($decodedSignature === false) {
+                Log::warning('Nagad signature is not valid base64');
+                return false;
+            }
             
             // Verify signature using Nagad's public key
             $verified = openssl_verify(
                 $payload,
                 $decodedSignature,
-                $publicKey,
+                $publicKeyResource,
                 OPENSSL_ALGO_SHA256
             );
             
@@ -437,7 +460,7 @@ class SmsPaymentController extends Controller
 
     /**
      * Verify SSLCommerz webhook signature
-     * SSLCommerz uses HMAC MD5 with store password for signature verification
+     * SSLCommerz uses plain MD5 hashing (not HMAC) with store password for signature verification
      */
     private function verifySSLCommerzSignature(Request $request): bool
     {
@@ -464,14 +487,61 @@ class SmsPaymentController extends Controller
         $tranId = $request->input('tran_id', '');
         $status = $request->input('status', '');
         
-        // Build verification string according to SSLCommerz specification
+        // Build verification string according to SSLCommerz specification.
+        // NOTE: The use of MD5 and this exact concatenation order are mandated by
+        // SSLCommerz's official documentation for webhook/IPN verification. This is
+        // not a general-purpose security design choice of this application and
+        // MUST NOT be changed unless SSLCommerz changes their specification.
         $verificationString = $storePassword . $valId . $storeId . $amount . $tranId . $status;
         
-        // Generate expected hash
+        // Generate expected hash as required by SSLCommerz
         $expectedHash = md5($verificationString);
         
         // Compare hashes using constant-time comparison
         return hash_equals(strtolower($expectedHash), strtolower($receivedHash));
+    }
+
+    /**
+     * Extract local payment ID from merchant invoice/order identifier
+     * Handles formats: "SmsPayment-{id}" or just the numeric ID
+     * 
+     * @param string|null $identifier The merchant invoice or order identifier
+     * @return int|null The extracted payment ID or null if invalid
+     */
+    private function extractLocalPaymentId(?string $identifier): ?int
+    {
+        if ($identifier === null || $identifier === '') {
+            return null;
+        }
+
+        // Check for "SmsPayment-" prefix
+        if (str_contains($identifier, 'SmsPayment-')) {
+            $idPart = str_replace('SmsPayment-', '', $identifier);
+            if ($idPart !== '' && ctype_digit($idPart)) {
+                $localPaymentId = (int) $idPart;
+                if ($localPaymentId > 0) {
+                    return $localPaymentId;
+                }
+            }
+            
+            Log::warning('Unexpected SmsPayment identifier format', [
+                'identifier' => $identifier,
+            ]);
+            return null;
+        }
+
+        // Check if it's a plain numeric ID
+        if (is_numeric($identifier) && ctype_digit($identifier)) {
+            $localPaymentId = (int) $identifier;
+            if ($localPaymentId > 0) {
+                return $localPaymentId;
+            }
+        }
+
+        Log::warning('Unable to extract payment ID from identifier', [
+            'identifier' => $identifier,
+        ]);
+        return null;
     }
 
     /**
@@ -501,32 +571,33 @@ class SmsPaymentController extends Controller
         $paymentId = $payload['paymentID'] ?? null;
         $tranId = $payload['trxID'] ?? null;
         $amount = $payload['amount'] ?? null;
-        $status = strtolower($payload['paymentExecuteStatus'] ?? $payload['transactionStatus'] ?? '');
         
-        // Extract local payment ID from merchantInvoiceNumber
-        // Format expected: SmsPayment-{id} or just the ID
+        // bKash may return status in different fields - check both
+        $rawStatus = $payload['paymentExecuteStatus'] ?? $payload['transactionStatus'] ?? '';
+        $status = strtolower(trim((string) $rawStatus));
+        
+        // Extract local payment ID from merchantInvoiceNumber using helper
         $merchantInvoice = $payload['merchantInvoiceNumber'] ?? null;
-        $localPaymentId = null;
-        
-        if ($merchantInvoice) {
-            if (str_contains($merchantInvoice, 'SmsPayment-')) {
-                $localPaymentId = (int) str_replace('SmsPayment-', '', $merchantInvoice);
-            } elseif (is_numeric($merchantInvoice)) {
-                $localPaymentId = (int) $merchantInvoice;
-            }
-        }
+        $localPaymentId = $this->extractLocalPaymentId($merchantInvoice);
         
         if (!$paymentId || !$status) {
-            Log::warning('Invalid bKash webhook payload', $payload);
+            Log::warning('Invalid bKash webhook payload - missing required fields', [
+                'has_paymentID' => !empty($paymentId),
+                'has_status' => !empty($status),
+            ]);
             return null;
         }
+        
+        // bKash success statuses - verify exact values from API docs
+        $successStatuses = ['success', 'completed', 'complete'];
+        $isSuccess = in_array($status, $successStatuses);
         
         return [
             'payment_id' => $localPaymentId,
             'transaction_id' => $tranId ?? $paymentId,
-            'status' => in_array($status, ['success', 'completed']) ? 'success' : 'failed',
-            'failure_reason' => $status !== 'success' && $status !== 'completed' 
-                ? ($payload['statusMessage'] ?? 'Payment failed') 
+            'status' => $isSuccess ? 'success' : 'failed',
+            'failure_reason' => !$isSuccess
+                ? ($payload['statusMessage'] ?? $payload['message'] ?? 'Payment failed') 
                 : null,
         ];
     }
@@ -544,31 +615,31 @@ class SmsPaymentController extends Controller
         $paymentRefId = $payload['paymentRefId'] ?? $payload['payment_ref_id'] ?? null;
         $issuerPaymentRefNo = $payload['issuerPaymentRefNo'] ?? null;
         $amount = $payload['amount'] ?? null;
-        $status = strtolower($payload['status'] ?? $payload['orderStatus'] ?? '');
         
-        // Extract local payment ID from order ID
-        // Format expected: SmsPayment-{id} or just the ID
-        $localPaymentId = null;
+        $rawStatus = $payload['status'] ?? $payload['orderStatus'] ?? '';
+        $status = strtolower(trim((string) $rawStatus));
         
-        if ($orderId) {
-            if (str_contains($orderId, 'SmsPayment-')) {
-                $localPaymentId = (int) str_replace('SmsPayment-', '', $orderId);
-            } elseif (is_numeric($orderId)) {
-                $localPaymentId = (int) $orderId;
-            }
-        }
+        // Extract local payment ID using helper
+        $localPaymentId = $this->extractLocalPaymentId($orderId);
         
         if (!$orderId || !$status) {
-            Log::warning('Invalid Nagad webhook payload', $payload);
+            Log::warning('Invalid Nagad webhook payload - missing required fields', [
+                'has_orderId' => !empty($orderId),
+                'has_status' => !empty($status),
+            ]);
             return null;
         }
+        
+        // Nagad success statuses
+        $successStatuses = ['success', 'paid', 'complete'];
+        $isSuccess = in_array($status, $successStatuses);
         
         return [
             'payment_id' => $localPaymentId,
             'transaction_id' => $issuerPaymentRefNo ?? $paymentRefId ?? $orderId,
-            'status' => in_array($status, ['success', 'paid']) ? 'success' : 'failed',
-            'failure_reason' => !in_array($status, ['success', 'paid'])
-                ? ($payload['message'] ?? 'Payment failed')
+            'status' => $isSuccess ? 'success' : 'failed',
+            'failure_reason' => !$isSuccess
+                ? ($payload['message'] ?? $payload['error'] ?? 'Payment failed')
                 : null,
         ];
     }
@@ -584,35 +655,35 @@ class SmsPaymentController extends Controller
         // Reference: Dutch-Bangla Rocket Payment Gateway API documentation
         $tranId = $payload['trxId'] ?? $payload['transaction_id'] ?? null;
         $amount = $payload['amount'] ?? null;
-        $status = strtolower($payload['status'] ?? $payload['transactionStatus'] ?? '');
         
-        // Extract local payment ID from merchant invoice/order
-        // Format expected: SmsPayment-{id} or just the ID
+        $rawStatus = $payload['status'] ?? $payload['transactionStatus'] ?? '';
+        $status = strtolower(trim((string) $rawStatus));
+        
+        // Extract local payment ID using helper
         $merchantInvoice = $payload['merchantInvoiceNumber'] ?? $payload['merchant_invoice'] ?? null;
-        $localPaymentId = null;
-        
-        if ($merchantInvoice) {
-            if (str_contains($merchantInvoice, 'SmsPayment-')) {
-                $localPaymentId = (int) str_replace('SmsPayment-', '', $merchantInvoice);
-            } elseif (is_numeric($merchantInvoice)) {
-                $localPaymentId = (int) $merchantInvoice;
-            }
-        }
+        $localPaymentId = $this->extractLocalPaymentId($merchantInvoice);
         
         if (!$tranId || !$status) {
-            Log::warning('Invalid Rocket webhook payload', $payload);
+            Log::warning('Invalid Rocket webhook payload - missing required fields', [
+                'has_tranId' => !empty($tranId),
+                'has_status' => !empty($status),
+            ]);
             return null;
         }
+        
+        // Rocket success statuses
+        $successStatuses = ['success', 'completed', 'paid', 'complete'];
+        $isSuccess = in_array($status, $successStatuses);
         
         return [
             'payment_id' => $localPaymentId,
             'transaction_id' => $tranId,
-            'status' => in_array($status, ['success', 'completed', 'paid']) ? 'success' : 'failed',
-            'failure_reason' => !in_array($status, ['success', 'completed', 'paid'])
+            'status' => $isSuccess ? 'success' : 'failed',
+            'failure_reason' => !$isSuccess
                 ? ($payload['statusMessage'] ?? $payload['message'] ?? 'Payment failed')
                 : null,
         ];
-    }
+        }
 
     /**
      * Extract SSLCommerz payment data from webhook
@@ -626,34 +697,41 @@ class SmsPaymentController extends Controller
         $tranId = $payload['tran_id'] ?? null;
         $valId = $payload['val_id'] ?? null;
         $amount = $payload['amount'] ?? null;
-        $status = strtoupper($payload['status'] ?? '');
         
-        // Extract local payment ID from tran_id or value_a
-        // Format expected: SmsPayment-{id} or value_a contains the ID
+        // SSLCommerz uses UPPERCASE status values
+        $rawStatus = $payload['status'] ?? '';
+        $status = strtoupper(trim((string) $rawStatus));
+        
+        // Extract local payment ID - SSLCommerz sends in value_a or tran_id
         $merchantInvoice = $payload['value_a'] ?? null;
-        $localPaymentId = null;
+        $localPaymentId = $this->extractLocalPaymentId($merchantInvoice);
         
-        if ($merchantInvoice && is_numeric($merchantInvoice)) {
-            $localPaymentId = (int) $merchantInvoice;
-        } elseif ($tranId && str_contains($tranId, 'SmsPayment-')) {
-            // Parse from transaction ID if it contains our identifier
+        // Fallback: parse from transaction ID if value_a is not set
+        if (!$localPaymentId && $tranId && str_contains($tranId, 'SmsPayment-')) {
             $parts = explode('SmsPayment-', $tranId);
-            if (count($parts) > 1 && is_numeric($parts[1])) {
-                $localPaymentId = (int) $parts[1];
+            if (count($parts) > 1) {
+                $localPaymentId = $this->extractLocalPaymentId($parts[1]);
             }
         }
         
         if (!$tranId || !$status) {
-            Log::warning('Invalid SSLCommerz webhook payload', $payload);
+            Log::warning('Invalid SSLCommerz webhook payload - missing required fields', [
+                'has_tranId' => !empty($tranId),
+                'has_status' => !empty($status),
+            ]);
             return null;
         }
+        
+        // SSLCommerz success statuses are UPPERCASE
+        $successStatuses = ['VALID', 'VALIDATED'];
+        $isSuccess = in_array($status, $successStatuses);
         
         return [
             'payment_id' => $localPaymentId,
             'transaction_id' => $valId ?? $tranId,
-            'status' => in_array($status, ['VALID', 'VALIDATED']) ? 'success' : 'failed',
-            'failure_reason' => !in_array($status, ['VALID', 'VALIDATED'])
-                ? ($payload['error'] ?? $payload['failedReason'] ?? 'Payment failed')
+            'status' => $isSuccess ? 'success' : 'failed',
+            'failure_reason' => !$isSuccess
+                ? ($payload['error'] ?? $payload['failedReason'] ?? $payload['status_title'] ?? 'Payment failed')
                 : null,
         ];
     }
@@ -743,10 +821,21 @@ class SmsPaymentController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        // Admins and superadmins can view all payments, others can only view their own
+        // Admins and superadmins can view all payments
         $isAdmin = $user->hasAnyRole(['admin', 'superadmin']);
-        if (! $isAdmin && $smsPayment->operator_id !== $user->id) {
-            abort(403, 'Unauthorized');
+        if (!$isAdmin) {
+            // Determine which operator ID to check for non-admins
+            $operatorIdToCheck = $user->id;
+            
+            // If user is a sub-operator and has a parent_operator_id, check against parent
+            if ($user->hasRole('sub-operator') && isset($user->parent_operator_id)) {
+                $operatorIdToCheck = $user->parent_operator_id;
+            }
+            
+            // Check if user has access to this payment
+            if ($smsPayment->operator_id !== $operatorIdToCheck) {
+                abort(403, 'Unauthorized');
+            }
         }
 
         // Load the operator relationship

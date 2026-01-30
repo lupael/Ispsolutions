@@ -38,9 +38,11 @@ Implemented secure signature verification for all 4 payment gateways:
 
 **Key Features:**
 - ✅ Constant-time comparison (`hash_equals()`) prevents timing attacks
-- ✅ Development environment bypass for testing
+- ✅ Test/local environment bypass in SmsPaymentController for testing (not in PaymentGatewayService)
 - ✅ Proper logging of verification failures
 - ✅ Configuration-driven secrets (no hardcoded credentials)
+- ✅ PEM format validation for Nagad public key
+- ✅ Improved error messages for debugging
 
 #### 2. Payment Data Extraction
 Implemented payload parsing for all 4 gateways:

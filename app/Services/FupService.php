@@ -84,18 +84,59 @@ class FupService
         // Apply reduced speed to router
         try {
             if ($this->mikrotikService && $user->router) {
-                // Parse reduced speed (e.g., "512K/512K")
-                $speeds = explode('/', $fup->reduced_speed);
-                $downloadSpeed = $speeds[0] ?? $fup->reduced_speed;
-                $uploadSpeed = $speeds[1] ?? $downloadSpeed;
+                // Parse reduced speed (supports "download/upload" or a single value like "512K")
+                $rawSpeed = trim((string) $fup->reduced_speed);
+
+                if ($rawSpeed === '') {
+                    Log::warning("FUP exceeded for user {$user->id} but reduced speed is empty");
+                    return false;
+                }
+
+                $downloadSpeed = $rawSpeed;
+                $uploadSpeed = $rawSpeed;
+
+                // Check if speed contains "/" separator
+                if (strpos($rawSpeed, '/') !== false) {
+                    // Limit to two parts and trim each one
+                    $parts = explode('/', $rawSpeed, 2);
+                    $downloadPart = isset($parts[0]) ? trim($parts[0]) : '';
+                    $uploadPart = isset($parts[1]) ? trim($parts[1]) : '';
+
+                    // If one side is missing or empty, reuse the other side
+                    if ($downloadPart === '' && $uploadPart === '') {
+                        Log::warning("FUP exceeded for user {$user->id} but reduced speed '{$rawSpeed}' has empty parts");
+                        return false;
+                    }
+
+                    if ($downloadPart === '') {
+                        $downloadPart = $uploadPart;
+                    }
+
+                    if ($uploadPart === '') {
+                        $uploadPart = $downloadPart;
+                    }
+
+                    $downloadSpeed = $downloadPart;
+                    $uploadSpeed = $uploadPart;
+                }
                 
                 // Change customer speed profile on MikroTik
-                $this->mikrotikService->changeCustomerSpeed(
-                    $user->router,
-                    $user,
-                    $downloadSpeed,
-                    $uploadSpeed
-                );
+                // Note: This assumes MikrotikService will have a changeCustomerSpeed method
+                // If the method doesn't exist, consider using updatePppoeUser instead
+                if (method_exists($this->mikrotikService, 'changeCustomerSpeed')) {
+                    $this->mikrotikService->changeCustomerSpeed(
+                        $user->router,
+                        $user,
+                        $downloadSpeed,
+                        $uploadSpeed
+                    );
+                } else {
+                    // Fallback to updatePppoeUser if changeCustomerSpeed doesn't exist
+                    $this->mikrotikService->updatePppoeUser($user->pppoe_username, [
+                        'profile' => 'fup-limited', // Or create dynamic profile
+                        'rate-limit' => "{$downloadSpeed}/{$uploadSpeed}",
+                    ]);
+                }
                 
                 Log::info("Applied FUP speed limit for user {$user->id}: {$fup->reduced_speed}");
                 
@@ -165,14 +206,17 @@ class FupService
     }
 
     /**
-     * Reset FUP usage based on reset period.
+     * Reset FUP limits and restore speeds for customers
+     * 
+     * Note: This method clears FUP exceeded flags and restores speeds, but does NOT
+     * reset actual usage counters (bytes consumed, time used). Usage counter reset
+     * should be handled by the RADIUS accounting system or usage tracking service.
+     * 
+     * This would be called by a scheduled job based on reset_period (daily, weekly, monthly)
      */
-    public function resetFupUsage(PackageFup $fup): void
+    public function resetFupLimits(PackageFup $fup): void
     {
-        // This would be called by a scheduled job
-        // Reset logic depends on the reset_period (daily, weekly, monthly)
-        
-        Log::info("Resetting FUP usage for package {$fup->package_id}");
+        Log::info("Resetting FUP limits for package {$fup->package_id}");
         
         try {
             // Get all customers with this package who have FUP limits applied
@@ -186,7 +230,50 @@ class FupService
                     $package = $customer->package;
                     
                     // Restore original package speed
-                    $this->mikrotikService->changeCustomerSpeed(
+                    if (method_exists($this->mikrotikService, 'changeCustomerSpeed')) {
+                        $this->mikrotikService->changeCustomerSpeed(
+                            $customer->router,
+                            $customer,
+                            $package->download_speed,
+                            $package->upload_speed
+                        );
+                    } else {
+                        // Fallback to updatePppoeUser
+                        $this->mikrotikService->updatePppoeUser($customer->pppoe_username, [
+                            'profile' => $package->mikrotik_profile ?? 'default',
+                        ]);
+                    }
+                }
+                
+                // Clear FUP exceeded flag
+                $customer->update([
+                    'fup_exceeded' => false,
+                    'fup_exceeded_at' => null,
+                    'fup_reset_at' => now(),
+                ]);
+                
+                // Send reset notification to customer
+                $customer->notify(new FupResetNotification($fup));
+                
+                Log::info("FUP limits reset for user {$customer->id}");
+            }
+            
+            Log::info("FUP limit reset completed for package {$fup->package_id}: {$affectedCustomers->count()} customers affected");
+        } catch (\Exception $e) {
+            Log::error("Failed to reset FUP limits for package {$fup->package_id}", [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Legacy method name - kept for backward compatibility
+     * @deprecated Use resetFupLimits() instead
+     */
+    public function resetFupUsage(PackageFup $fup): void
+    {
+        $this->resetFupLimits($fup);
+    }
                         $customer->router,
                         $customer,
                         $package->download_speed,

@@ -112,10 +112,13 @@ class AutoDebitController extends Controller
     {
         $user = $request->user();
 
+        // Load customer relationship first (needed for authorization check)
+        $history->load('customer');
+
         // Authorization: User can only view their own history
         // Admins/operators can view history for their customers
         if ($history->customer_id !== $user->id) {
-            if (!$user->hasAnyRole(['admin', 'operator', 'super-admin', 'superadmin'])) {
+            if (!$user->hasAnyRole(['admin', 'operator', 'superadmin'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized',
@@ -131,8 +134,9 @@ class AutoDebitController extends Controller
             }
         }
 
-        // Load relationships for detail view
-        $history->load(['customer', 'invoice', 'payment']);
+        // Load additional relationships for detail view
+        // Note: AutoDebitHistory model has 'customer' and 'bill' relationships (not 'invoice' or 'payment')
+        $history->load('bill');
 
         return response()->json([
             'success' => true,
