@@ -29,7 +29,9 @@ class RouterCommentHelper
      * Build a structured comment string for a user on the router (legacy pipe format)
      * Format: username|user_id|package_id|expiry_date|service_type
      * 
-     * @deprecated Use getComment() for new implementations (IspBills pattern)
+     * @deprecated since v1.1.0 Use getComment() for new implementations (IspBills pattern)
+     * @param NetworkUser $user
+     * @return string
      */
     public static function buildUserComment(NetworkUser $user): string
     {
@@ -168,6 +170,12 @@ class RouterCommentHelper
     /**
      * Sanitize a value for use in a router comment (IspBills format)
      * Removes special characters that might break comment format
+     * 
+     * @param string|null $value Value to sanitize
+     * @return string Sanitized value (returns 'N/A' for null/empty values)
+     * 
+     * @note When parsed back, 'N/A' cannot be distinguished from an actual 'N/A' input.
+     *       This is intentional to maintain compatibility with IspBills pattern.
      */
     public static function sanitize(?string $value): string
     {
@@ -176,6 +184,7 @@ class RouterCommentHelper
         }
         
         // Remove or replace special characters that might break comment format
+        // Note: '--' is replaced with '-' to prevent parsing issues
         $value = str_replace([',', '--', ';', "\n", "\r"], ['_', '-', '_', ' ', ' '], $value);
         
         // Limit length to prevent overly long comments
@@ -230,6 +239,11 @@ class RouterCommentHelper
     
     /**
      * Check if comment indicates expired user
+     * 
+     * @param string $comment Comment string
+     * @return bool True if expiry date is in the past
+     * 
+     * @note Uses server timezone for comparison. Ensure consistent timezone configuration.
      */
     public static function isExpired(string $comment): bool
     {
@@ -242,6 +256,7 @@ class RouterCommentHelper
         }
         
         try {
+            // Use application timezone for consistency
             $expiryDate = new \DateTime($expiryDateStr);
             $now = new \DateTime();
             

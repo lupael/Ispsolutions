@@ -49,17 +49,42 @@ class RouterConfigurationService
                 'radius_incoming' => false,
             ];
 
-            // 1. Configure RADIUS client
-            $this->configureRadiusClient($api, $router, $nas);
-            $results['radius_client'] = true;
+            // 1. Configure RADIUS client with error handling
+            try {
+                $this->configureRadiusClient($api, $router, $nas);
+                $results['radius_client'] = true;
+            } catch (\Exception $e) {
+                Log::error('Failed to configure RADIUS client', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                throw new \Exception('RADIUS client configuration failed: ' . $e->getMessage());
+            }
 
-            // 2. Configure PPP AAA
-            $this->configurePppAaa($api);
-            $results['ppp_aaa'] = true;
+            // 2. Configure PPP AAA with error handling
+            try {
+                $this->configurePppAaa($api);
+                $results['ppp_aaa'] = true;
+            } catch (\Exception $e) {
+                Log::error('Failed to configure PPP AAA', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                throw new \Exception('PPP AAA configuration failed: ' . $e->getMessage());
+            }
 
-            // 3. Enable RADIUS incoming
-            $this->configureRadiusIncoming($api);
-            $results['radius_incoming'] = true;
+            // 3. Enable RADIUS incoming with error handling
+            try {
+                $this->configureRadiusIncoming($api);
+                $results['radius_incoming'] = true;
+            } catch (\Exception $e) {
+                Log::error('Failed to configure RADIUS incoming', [
+                    'router_id' => $router->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // This is non-critical, so we don't throw
+                $results['radius_incoming'] = false;
+            }
 
             Log::info('RADIUS configuration completed', [
                 'router_id' => $router->id,
