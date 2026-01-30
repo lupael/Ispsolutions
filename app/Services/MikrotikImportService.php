@@ -301,12 +301,16 @@ class MikrotikImportService
             foreach ($chunks as $chunkIndex => $secretsChunk) {
                 DB::beginTransaction();
                 try {
+                    $chunkImported = 0;
+                    $chunkFailed = 0;
+                    
                     foreach ($secretsChunk as $secretData) {
                         try {
                             // Create user account if not exists
                             // Use a lower bcrypt cost (4 instead of default 10) for bulk imports to improve performance
                             // This is acceptable as users should be prompted to change passwords after import
-                            $hashedPassword = password_hash($secretData['password'], PASSWORD_BCRYPT, ['cost' => 4]);
+                            // Using Laravel's Hash facade with custom rounds to ensure compatibility with Auth system
+                            $hashedPassword = \Illuminate\Support\Facades\Hash::make($secretData['password'], ['rounds' => 4]);
                             
                             $user = User::firstOrCreate(
                                 [
@@ -340,16 +344,22 @@ class MikrotikImportService
                                 // Skipped for brevity
                             }
 
-                            $imported++;
+                            $chunkImported++;
                         } catch (\Exception $e) {
-                            $failed++;
+                            $chunkFailed++;
                             $errors[] = "Failed to import customer {$secretData['username']}: {$e->getMessage()}";
                         }
                     }
+                    
+                    // Only update totals and commit if chunk processing succeeded
+                    $imported += $chunkImported;
+                    $failed += $chunkFailed;
                     DB::commit();
                     
                     Log::info("Processed chunk {$chunkIndex} of secrets import", [
                         'chunk_size' => count($secretsChunk),
+                        'chunk_imported' => $chunkImported,
+                        'chunk_failed' => $chunkFailed,
                         'total_imported' => $imported,
                         'total_failed' => $failed,
                     ]);
@@ -358,7 +368,7 @@ class MikrotikImportService
                     Log::error("Failed to process chunk {$chunkIndex} of secrets import", [
                         'error' => $e->getMessage(),
                     ]);
-                    // Continue with next chunk
+                    // Entire chunk failed - all records in this chunk are considered failed
                     $failed += count($secretsChunk);
                 }
             }
@@ -377,9 +387,9 @@ class MikrotikImportService
 
             return [
                 'success' => false,
-                'imported' => 0,
-                'failed' => 0,
-                'errors' => [$e->getMessage()],
+                'imported' => $imported, // Return actual counts, not zeros
+                'failed' => $failed,
+                'errors' => array_merge($errors, [$e->getMessage()]),
             ];
         }
     }
@@ -639,6 +649,7 @@ class MikrotikImportService
                 } catch (\Exception $e) {
                     $poolName = $poolData['name'] ?? 'Unknown';
                     $errors[] = "Failed to process pool {$poolName}: {$e->getMessage()}";
+                    $failed++; // Increment failed count for the pool that couldn't be parsed
                     Log::error("Failed to process IP pool", [
                         'pool_name' => $poolName,
                         'error' => $e->getMessage(),
@@ -660,9 +671,9 @@ class MikrotikImportService
 
             return [
                 'success' => false,
-                'imported' => 0,
-                'failed' => 0,
-                'errors' => [$e->getMessage()],
+                'imported' => $imported, // Return actual counts, not zeros
+                'failed' => $failed,
+                'errors' => array_merge($errors, [$e->getMessage()]),
             ];
         }
     }
