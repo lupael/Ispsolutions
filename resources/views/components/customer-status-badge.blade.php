@@ -45,8 +45,8 @@
 
     // Handle both enum objects and string values, with null fallback
     $statusKey = $statusValue ? (is_object($statusValue) ? $statusValue->value : $statusValue) : null;
-    $colorClass = $statusKey ? ($colors[$statusKey] ?? 'bg-gray-100 text-gray-800') : 'bg-gray-100 text-gray-800';
-    $iconPath = $statusKey ? ($icons[$statusKey] ?? 'M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z') : 'M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z';
+    $colorClass = $colors[$statusKey] ?? 'bg-gray-100 text-gray-800';
+    $iconPath = $icons[$statusKey] ?? 'M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z';
     $label = $statusKey ? ($labels[$statusKey] ?? ucfirst(str_replace('_', ' ', $statusKey))) : 'Unknown';
 @endphp
 
