@@ -10,6 +10,10 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * Note: tenant_id is intentionally added without a foreign key constraint 
+     * to allow for flexible multi-tenancy scenarios where tenants table 
+     * may not exist in all installations.
      */
     public function up(): void
     {

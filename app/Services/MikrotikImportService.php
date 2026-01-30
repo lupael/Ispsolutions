@@ -475,6 +475,7 @@ class MikrotikImportService
             // Normalize secrets to expected format
             return array_map(function ($secret) {
                 return [
+                    // 'username' is required for NetworkUser creation, while 'name' is used for User display name
                     'username' => $secret['name'] ?? '',
                     'name' => $secret['name'] ?? '',
                     'password' => $secret['password'] ?? '',

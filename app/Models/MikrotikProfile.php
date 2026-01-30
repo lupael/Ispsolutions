@@ -22,6 +22,7 @@ class MikrotikProfile extends Model
 
     protected $casts = [
         'router_id' => 'integer',
+        'tenant_id' => 'integer',
         'session_timeout' => 'integer',
         'idle_timeout' => 'integer',
         'created_at' => 'datetime',

@@ -11,6 +11,12 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * Note: This migration uses MySQL-specific ALTER TABLE syntax for ENUM modification.
+     * For non-MySQL databases, the migration will need to be adapted.
+     * 
+     * tenant_id and nas_id are intentionally added without foreign key constraints
+     * to allow for flexible installation scenarios where referenced tables may not exist.
      */
     public function up(): void
     {
@@ -33,7 +39,7 @@ return new class extends Migration
             }
         });
 
-        // Modify the pool_type enum to add 'pppoe' and other types
+        // Modify the pool_type enum to add 'pppoe' and other types (MySQL-specific)
         DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `pool_type` ENUM('public', 'private', 'pppoe', 'dhcp', 'static') DEFAULT 'public'");
         
         // Modify status enum to include 'available'

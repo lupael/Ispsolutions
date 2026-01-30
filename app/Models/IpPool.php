@@ -30,6 +30,8 @@ class IpPool extends Model
 
     protected $casts = [
         'vlan_id' => 'integer',
+        'tenant_id' => 'integer',
+        'nas_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
