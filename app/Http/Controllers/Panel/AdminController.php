@@ -2211,7 +2211,7 @@ class AdminController extends Controller
             'password' => 'required|string',
             'port' => 'nullable|integer|min:1|max:65535',
             'radius_secret' => 'required|string|max:255',
-            'nas_shortname' => 'required|string|max:50',
+            'nas_shortname' => 'required|string|max:50|unique:nas,short_name',
             'nas_type' => 'nullable|string|in:mikrotik,cisco,juniper,other',
             'public_ip' => 'nullable|ip',
             'primary_auth' => 'nullable|in:radius,router,hybrid',
@@ -2291,7 +2291,7 @@ class AdminController extends Controller
             'password' => 'nullable|string',
             'port' => 'nullable|integer|min:1|max:65535',
             'radius_secret' => 'nullable|string|max:255',
-            'nas_shortname' => 'required|string|max:50',
+            'nas_shortname' => 'required|string|max:50|unique:nas,short_name,' . ($router->nas_id ?? 'NULL'),
             'nas_type' => 'nullable|string|in:mikrotik,cisco,juniper,other',
             'public_ip' => 'nullable|ip',
             'primary_auth' => 'nullable|in:radius,router,hybrid',
@@ -2332,11 +2332,12 @@ class AdminController extends Controller
                 'short_name' => $validated['nas_shortname'],
                 'server' => $validated['ip_address'],
                 'type' => $validated['nas_type'] ?? 'mikrotik',
+                'ports' => 0,
                 'status' => $validated['status'] === 'maintenance' ? 'inactive' : $validated['status'],
             ];
 
             // Only update secret if provided
-            if (!empty($validated['radius_secret'])) {
+            if (! empty($validated['radius_secret'])) {
                 $nasData['secret'] = $validated['radius_secret'];
             }
 
@@ -2345,6 +2346,10 @@ class AdminController extends Controller
                 Nas::where('id', $router->nas_id)->update($nasData);
             } else {
                 // Create new NAS entry if it doesn't exist
+                // Require radius_secret when creating new NAS
+                if (empty($validated['radius_secret']) && empty($router->radius_secret)) {
+                    throw new \Exception('RADIUS secret is required to create NAS entry');
+                }
                 $nasData['tenant_id'] = auth()->user()->tenant_id;
                 $nasData['secret'] = $validated['radius_secret'] ?? $router->radius_secret;
                 $nas = Nas::create($nasData);

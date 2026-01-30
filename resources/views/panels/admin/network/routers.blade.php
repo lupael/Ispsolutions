@@ -254,23 +254,6 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {{ $router->pppoeUsers->count() ?? 0 }} users
                                 </td>
-                                            </span>
-                                            @if($router->last_checked_at)
-                                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    {{ $router->last_checked_at->diffForHumans() }}
-                                                </div>
-                                            @endif
-                                            @if($router->response_time_ms && $apiStatus === 'online')
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                    {{ $router->response_time_ms }}ms
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $router->uptime ?? 'N/A' }}
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">
                                         <a href="{{ route('panel.admin.network.routers.edit', $router->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" title="View / Edit">
