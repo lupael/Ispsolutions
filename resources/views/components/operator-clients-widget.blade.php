@@ -18,9 +18,9 @@
             <p class="text-3xl font-bold text-green-900 dark:text-green-100">{{ number_format($operatorClients['active_clients']) }}</p>
         </div>
 
-        <!-- In-Active Clients -->
+        <!-- Inactive Clients -->
         <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-            <p class="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1">In-Active Clients</p>
+            <p class="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1">Inactive Clients</p>
             <p class="text-3xl font-bold text-yellow-900 dark:text-yellow-100">{{ number_format($operatorClients['inactive_clients']) }}</p>
         </div>
 

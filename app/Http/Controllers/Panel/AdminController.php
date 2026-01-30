@@ -312,7 +312,7 @@ class AdminController extends Controller
                 ->count(),
         ];
 
-        // Clients of Operator (customers created by operators/sub-operators)
+        // Clients of Operator (customers created by operators AND sub-operators - both levels 30 and 40)
         // Using subquery instead of pluck for better performance with large datasets
         // Note: Only counts customers with non-null created_by field (i.e., created by operators/sub-operators)
         // Customers created directly by admin or with null created_by are not included in these statistics
@@ -399,7 +399,7 @@ class AdminController extends Controller
         // Clients MRC (same as ISP's MRC for all clients)
         $clientsMRC = $ispMRC;
 
-        // Clients of Operator MRC (customers created by operators/sub-operators)
+        // Clients of Operator MRC (customers created by operators AND sub-operators - both levels 30 and 40)
         $operatorClientsMRC = [
             'current_mrc' => $calculateCurrentMRC($operatorSubquery),
             'this_month_avg_mrc' => $calculateMonthlyAvgMRC(now()->year, now()->month, $operatorSubquery),
