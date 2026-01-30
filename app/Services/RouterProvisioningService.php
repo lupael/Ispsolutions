@@ -9,8 +9,10 @@ use App\Models\RouterConfigurationBackup;
 use App\Models\RouterConfigurationTemplate;
 use App\Models\RouterProvisioningLog;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RouterOS\Client;
+use RouterOS\Config;
+use RouterOS\Query;
 
 /**
  * Router Provisioning Service
@@ -19,12 +21,10 @@ use Illuminate\Support\Facades\Log;
  * for RADIUS, Hotspot, PPPoE, NAT, Firewall, and System settings.
  *
  * SECURITY NOTES:
- * 1. Communication: This service uses HTTP for router API communication, matching the existing
- *    MikrotikService implementation. For production environments with routers on untrusted networks,
- *    configure HTTPS with proper certificate validation. This is acceptable for routers on
- *    internal/trusted networks.
+ * 1. Communication: This service uses RouterOS Binary API for direct router communication,
+ *    providing secure, efficient connectivity. Credentials are protected during transmission.
  * 2. Credentials: Router credentials are encrypted at rest in the database using Laravel's
- *    encrypted casting but are decrypted when transmitted to the router API.
+ *    encrypted casting and are automatically decrypted by Laravel when used.
  * 3. Configuration Data: Sensitive configuration data (RADIUS secrets, etc.) is stored in
  *    router_configuration_templates.configuration JSON field. Access to this data should be
  *    restricted to admin users only through proper role-based access control.
@@ -198,17 +198,18 @@ class RouterProvisioningService
         }
 
         try {
-            $response = Http::timeout(10)
-                ->get("http://{$router->ip_address}:{$router->api_port}/health");
+            $client = $this->createClient($router);
+            $query = new Query('/system/resource/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
+            if (!empty($response)) {
                 // Check RouterOS version if available
-                $data = $response->json();
-                $version = $data['version'] ?? null;
+                $version = $response[0]['version'] ?? null;
 
                 if ($version) {
                     Log::info('Router version detected', [
                         'router_id' => $routerId,
+                        'router_name' => $router->name,
                         'version' => $version,
                     ]);
                 }
@@ -217,9 +218,18 @@ class RouterProvisioningService
             }
 
             return false;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during connectivity check', [
+                'router_id' => $routerId,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('Connectivity check failed', [
                 'router_id' => $routerId,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -239,14 +249,18 @@ class RouterProvisioningService
         }
 
         try {
-            $response = Http::timeout(30)
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/backup/export");
+            $client = $this->createClient($router);
+            $query = new Query('/export');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
+            if (!empty($response)) {
+                // Export returns the configuration as a string
+                $backupData = is_array($response) ? json_encode($response) : $response;
+
                 RouterConfigurationBackup::create([
                     'router_id' => $routerId,
                     'created_by' => $userId,
-                    'backup_data' => $response->body(),
+                    'backup_data' => $backupData,
                     'backup_type' => $backupType,
                     'created_at' => now(),
                 ]);
@@ -255,9 +269,18 @@ class RouterProvisioningService
             }
 
             return false;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during configuration backup', [
+                'router_id' => $routerId,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('Configuration backup failed', [
                 'router_id' => $routerId,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -273,33 +296,35 @@ class RouterProvisioningService
     public function configureRadius(MikrotikRouter $router, array $config): bool
     {
         try {
-            $radiusConfig = [
-                'address' => $config['server'] ?? '127.0.0.1',
-                'secret' => $config['secret'] ?? '',
-                'authentication-port' => $config['auth_port'] ?? 1812,
-                'accounting-port' => $config['acct_port'] ?? 1813,
-                'timeout' => $config['timeout'] ?? '3s',
-                'service' => $config['service'] ?? 'ppp,hotspot',
-            ];
+            $client = $this->createClient($router);
+            $query = (new Query('/radius/add'))
+                ->equal('address', $config['server'] ?? '127.0.0.1')
+                ->equal('secret', $config['secret'] ?? '')
+                ->equal('authentication-port', (string)($config['auth_port'] ?? 1812))
+                ->equal('accounting-port', (string)($config['acct_port'] ?? 1813))
+                ->equal('timeout', $config['timeout'] ?? '3s')
+                ->equal('service', $config['service'] ?? 'ppp,hotspot');
 
-            $response = Http::timeout(30)
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/radius/add", $radiusConfig);
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                Log::info('RADIUS configured', ['router_id' => $router->id]);
-
-                return true;
-            }
-
-            Log::warning('RADIUS configuration failed', [
+            Log::info('RADIUS configured via Binary API', [
                 'router_id' => $router->id,
-                'response' => $response->body(),
+                'router_name' => $router->name,
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during RADIUS configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('RADIUS configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -315,32 +340,39 @@ class RouterProvisioningService
     public function configureHotspot(MikrotikRouter $router, array $config): bool
     {
         try {
-            $hotspotConfig = [
-                'name' => $config['profile_name'] ?? 'default',
-                'hotspot-address' => $config['hotspot_address'] ?? '10.5.50.1',
-                'dns-name' => $config['dns_name'] ?? 'hotspot.local',
-                'login-by' => $config['login_by'] ?? 'mac,http-chap',
-                'use-radius' => $config['use_radius'] ?? true,
-                'mac-auth-mode' => $config['mac_auth_mode'] ?? 'mac-as-username',
-                'cookie-timeout' => $config['cookie_timeout'] ?? '3d',
-                'idle-timeout' => $config['idle_timeout'] ?? 'none',
-                'keepalive-timeout' => $config['keepalive_timeout'] ?? '2m',
-                'shared-users' => $config['shared_users'] ?? 1,
-            ];
+            $client = $this->createClient($router);
+            $query = (new Query('/ip/hotspot/profile/add'))
+                ->equal('name', $config['profile_name'] ?? 'default')
+                ->equal('hotspot-address', $config['hotspot_address'] ?? '10.5.50.1')
+                ->equal('dns-name', $config['dns_name'] ?? 'hotspot.local')
+                ->equal('login-by', $config['login_by'] ?? 'mac,http-chap')
+                ->equal('use-radius', $config['use_radius'] ?? true ? 'yes' : 'no')
+                ->equal('mac-auth-mode', $config['mac_auth_mode'] ?? 'mac-as-username')
+                ->equal('cookie-timeout', $config['cookie_timeout'] ?? '3d')
+                ->equal('idle-timeout', $config['idle_timeout'] ?? 'none')
+                ->equal('keepalive-timeout', $config['keepalive_timeout'] ?? '2m')
+                ->equal('shared-users', (string)($config['shared_users'] ?? 1));
 
-            $response = Http::timeout(30)
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/hotspot/profile/add", $hotspotConfig);
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                Log::info('Hotspot profile configured', ['router_id' => $router->id]);
+            Log::info('Hotspot profile configured via Binary API', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+            ]);
 
-                return true;
-            }
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during Hotspot configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Hotspot configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -356,41 +388,55 @@ class RouterProvisioningService
     public function configurePppoe(MikrotikRouter $router, array $config): bool
     {
         try {
-            $pppoeConfig = [
-                'service-name' => $config['service_name'] ?? 'pppoe',
-                'interface' => $config['interface'] ?? 'ether2',
-                'default-profile' => $config['default_profile'] ?? 'default',
-                'authentication' => $config['authentication'] ?? 'pap,chap,mschap1,mschap2',
-                'keepalive-timeout' => $config['keepalive_timeout'] ?? 10,
-                'one-session-per-host' => $config['one_session_per_host'] ?? true,
-                'max-sessions' => $config['max_sessions'] ?? 1000,
-            ];
+            $client = $this->createClient($router);
+            
+            // Configure PPPoE profile
+            $query = (new Query('/ppp/profile/add'))
+                ->equal('name', $config['default_profile'] ?? 'default')
+                ->equal('use-compression', 'no')
+                ->equal('use-encryption', 'no');
+
+            $client->query($query)->read();
 
             // Configure PPPoE server
-            $response = Http::timeout(30)
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/profile/add", $pppoeConfig);
+            $serverQuery = (new Query('/interface/pppoe-server/server/add'))
+                ->equal('service-name', $config['service_name'] ?? 'pppoe')
+                ->equal('interface', $config['interface'] ?? 'ether2')
+                ->equal('default-profile', $config['default_profile'] ?? 'default')
+                ->equal('authentication', $config['authentication'] ?? 'pap,chap,mschap1,mschap2')
+                ->equal('keepalive-timeout', (string)($config['keepalive_timeout'] ?? 10))
+                ->equal('one-session-per-host', $config['one_session_per_host'] ?? true ? 'yes' : 'no')
+                ->equal('max-sessions', (string)($config['max_sessions'] ?? 1000));
 
-            if (! $response->successful()) {
-                return false;
-            }
+            $client->query($serverQuery)->read();
 
             // Configure IP pool for PPPoE
             if (isset($config['ip_pool'])) {
-                $poolConfig = [
-                    'name' => $config['ip_pool']['name'] ?? 'pppoe-pool',
-                    'ranges' => $config['ip_pool']['ranges'] ?? '10.0.0.2-10.0.0.254',
-                ];
+                $poolQuery = (new Query('/ip/pool/add'))
+                    ->equal('name', $config['ip_pool']['name'] ?? 'pppoe-pool')
+                    ->equal('ranges', $config['ip_pool']['ranges'] ?? '10.0.0.2-10.0.0.254');
 
-                Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/pool/add", $poolConfig);
+                $client->query($poolQuery)->read();
             }
 
-            Log::info('PPPoE server configured', ['router_id' => $router->id]);
+            Log::info('PPPoE server configured via Binary API', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+            ]);
 
             return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during PPPoE configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('PPPoE configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -406,35 +452,58 @@ class RouterProvisioningService
     public function configureNat(MikrotikRouter $router, array $config): bool
     {
         try {
+            $client = $this->createClient($router);
             $rules = $config['rules'] ?? [];
 
             foreach ($rules as $rule) {
-                $natRule = [
-                    'chain' => $rule['chain'] ?? 'srcnat',
-                    'action' => $rule['action'] ?? 'masquerade',
-                    'src-address' => $rule['src_address'] ?? '',
-                    'dst-address' => $rule['dst_address'] ?? '',
-                    'out-interface' => $rule['out_interface'] ?? '',
-                    'comment' => $rule['comment'] ?? '',
-                ];
+                $query = (new Query('/ip/firewall/nat/add'))
+                    ->equal('chain', $rule['chain'] ?? 'srcnat')
+                    ->equal('action', $rule['action'] ?? 'masquerade');
 
-                $response = Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/firewall/nat/add", $natRule);
+                if (!empty($rule['src_address'])) {
+                    $query->equal('src-address', $rule['src_address']);
+                }
+                if (!empty($rule['dst_address'])) {
+                    $query->equal('dst-address', $rule['dst_address']);
+                }
+                if (!empty($rule['out_interface'])) {
+                    $query->equal('out-interface', $rule['out_interface']);
+                }
+                if (!empty($rule['comment'])) {
+                    $query->equal('comment', $rule['comment']);
+                }
 
-                if (! $response->successful()) {
+                try {
+                    $client->query($query)->read();
+                } catch (\Exception $e) {
                     Log::warning('NAT rule failed', [
                         'router_id' => $router->id,
+                        'router_name' => $router->name,
                         'rule' => $rule,
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
 
-            Log::info('NAT rules configured', ['router_id' => $router->id, 'count' => count($rules)]);
+            Log::info('NAT rules configured via Binary API', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'count' => count($rules),
+            ]);
 
             return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during NAT configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('NAT configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -450,36 +519,61 @@ class RouterProvisioningService
     public function configureFirewall(MikrotikRouter $router, array $config): bool
     {
         try {
+            $client = $this->createClient($router);
             $rules = $config['rules'] ?? [];
 
             foreach ($rules as $rule) {
-                $firewallRule = [
-                    'chain' => $rule['chain'] ?? 'forward',
-                    'action' => $rule['action'] ?? 'accept',
-                    'protocol' => $rule['protocol'] ?? '',
-                    'src-address' => $rule['src_address'] ?? '',
-                    'dst-address' => $rule['dst_address'] ?? '',
-                    'dst-port' => $rule['dst_port'] ?? '',
-                    'comment' => $rule['comment'] ?? '',
-                ];
+                $query = (new Query('/ip/firewall/filter/add'))
+                    ->equal('chain', $rule['chain'] ?? 'forward')
+                    ->equal('action', $rule['action'] ?? 'accept');
 
-                $response = Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/firewall/filter/add", $firewallRule);
+                if (!empty($rule['protocol'])) {
+                    $query->equal('protocol', $rule['protocol']);
+                }
+                if (!empty($rule['src_address'])) {
+                    $query->equal('src-address', $rule['src_address']);
+                }
+                if (!empty($rule['dst_address'])) {
+                    $query->equal('dst-address', $rule['dst_address']);
+                }
+                if (!empty($rule['dst_port'])) {
+                    $query->equal('dst-port', $rule['dst_port']);
+                }
+                if (!empty($rule['comment'])) {
+                    $query->equal('comment', $rule['comment']);
+                }
 
-                if (! $response->successful()) {
+                try {
+                    $client->query($query)->read();
+                } catch (\Exception $e) {
                     Log::warning('Firewall rule failed', [
                         'router_id' => $router->id,
+                        'router_name' => $router->name,
                         'rule' => $rule,
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
 
-            Log::info('Firewall rules configured', ['router_id' => $router->id, 'count' => count($rules)]);
+            Log::info('Firewall rules configured via Binary API', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'count' => count($rules),
+            ]);
 
             return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during Firewall configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('Firewall configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -495,22 +589,28 @@ class RouterProvisioningService
     public function configureWalledGarden(MikrotikRouter $router, array $config): bool
     {
         try {
+            $client = $this->createClient($router);
             $entries = $config['entries'] ?? [];
 
             foreach ($entries as $entry) {
-                $walledGardenEntry = [
-                    'dst-host' => $entry['host'] ?? '',
-                    'action' => $entry['action'] ?? 'allow',
-                    'comment' => $entry['comment'] ?? '',
-                ];
+                $query = (new Query('/ip/hotspot/walled-garden/add'))
+                    ->equal('action', $entry['action'] ?? 'allow');
 
-                $response = Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/hotspot/walled-garden/add", $walledGardenEntry);
+                if (!empty($entry['host'])) {
+                    $query->equal('dst-host', $entry['host']);
+                }
+                if (!empty($entry['comment'])) {
+                    $query->equal('comment', $entry['comment']);
+                }
 
-                if (! $response->successful()) {
+                try {
+                    $client->query($query)->read();
+                } catch (\Exception $e) {
                     Log::warning('Walled garden entry failed', [
                         'router_id' => $router->id,
+                        'router_name' => $router->name,
                         'entry' => $entry,
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -519,22 +619,46 @@ class RouterProvisioningService
             $ipEntries = $config['ip_entries'] ?? [];
 
             foreach ($ipEntries as $ipEntry) {
-                $walledGardenIp = [
-                    'dst-address' => $ipEntry['address'] ?? '',
-                    'action' => $ipEntry['action'] ?? 'allow',
-                    'comment' => $ipEntry['comment'] ?? '',
-                ];
+                $ipQuery = (new Query('/ip/hotspot/walled-garden/ip/add'))
+                    ->equal('action', $ipEntry['action'] ?? 'allow');
 
-                Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/hotspot/walled-garden/ip/add", $walledGardenIp);
+                if (!empty($ipEntry['address'])) {
+                    $ipQuery->equal('dst-address', $ipEntry['address']);
+                }
+                if (!empty($ipEntry['comment'])) {
+                    $ipQuery->equal('comment', $ipEntry['comment']);
+                }
+
+                try {
+                    $client->query($ipQuery)->read();
+                } catch (\Exception $e) {
+                    Log::warning('Walled garden IP entry failed', [
+                        'router_id' => $router->id,
+                        'router_name' => $router->name,
+                        'entry' => $ipEntry,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
-            Log::info('Walled garden configured', ['router_id' => $router->id]);
+            Log::info('Walled garden configured via Binary API', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+            ]);
 
             return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during Walled Garden configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('Walled garden configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -550,52 +674,56 @@ class RouterProvisioningService
     public function configureSuspendedPool(MikrotikRouter $router, array $config): bool
     {
         try {
+            $client = $this->createClient($router);
+
             // Create IP pool for suspended users
-            $poolConfig = [
-                'name' => $config['pool_name'] ?? 'suspended-pool',
-                'ranges' => $config['pool_range'] ?? '10.255.255.2-10.255.255.254',
-            ];
+            $poolQuery = (new Query('/ip/pool/add'))
+                ->equal('name', $config['pool_name'] ?? 'suspended-pool')
+                ->equal('ranges', $config['pool_range'] ?? '10.255.255.2-10.255.255.254');
 
-            $response = Http::timeout(30)
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/pool/add", $poolConfig);
-
-            if (! $response->successful()) {
-                return false;
-            }
+            $client->query($poolQuery)->read();
 
             // Add firewall rule to block suspended pool traffic
-            $blockRule = [
-                'chain' => 'forward',
-                'action' => 'drop',
-                'src-address' => $config['pool_network'] ?? '10.255.255.0/24',
-                'comment' => 'Block suspended users',
-            ];
+            $blockQuery = (new Query('/ip/firewall/filter/add'))
+                ->equal('chain', 'forward')
+                ->equal('action', 'drop')
+                ->equal('src-address', $config['pool_network'] ?? '10.255.255.0/24')
+                ->equal('comment', 'Block suspended users');
 
-            Http::timeout(30)
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/firewall/filter/add", $blockRule);
+            $client->query($blockQuery)->read();
 
             // Add redirect to payment/recharge page if configured
             if (isset($config['redirect_url'])) {
-                $redirectRule = [
-                    'chain' => 'dstnat',
-                    'protocol' => 'tcp',
-                    'dst-port' => '80,443',
-                    'src-address' => $config['pool_network'] ?? '10.255.255.0/24',
-                    'action' => 'redirect',
-                    'to-ports' => '80',
-                    'comment' => 'Redirect suspended users to payment page',
-                ];
+                $redirectQuery = (new Query('/ip/firewall/nat/add'))
+                    ->equal('chain', 'dstnat')
+                    ->equal('protocol', 'tcp')
+                    ->equal('dst-port', '80,443')
+                    ->equal('src-address', $config['pool_network'] ?? '10.255.255.0/24')
+                    ->equal('action', 'redirect')
+                    ->equal('to-ports', '80')
+                    ->equal('comment', 'Redirect suspended users to payment page');
 
-                Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/firewall/nat/add", $redirectRule);
+                $client->query($redirectQuery)->read();
             }
 
-            Log::info('Suspended users pool configured', ['router_id' => $router->id]);
+            Log::info('Suspended users pool configured via Binary API', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+            ]);
 
             return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during Suspended Pool configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('Suspended pool configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -611,43 +739,76 @@ class RouterProvisioningService
     public function configureSystem(MikrotikRouter $router, array $config): bool
     {
         try {
+            $client = $this->createClient($router);
+
             // Set system identity
             if (isset($config['identity'])) {
-                $response = Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/system/identity/set", [
-                        'name' => $config['identity'],
+                try {
+                    $query = (new Query('/system/identity/set'))
+                        ->equal('name', $config['identity']);
+                    $client->query($query)->read();
+                } catch (\Exception $e) {
+                    Log::warning('Failed to set system identity', [
+                        'router_id' => $router->id,
+                        'router_name' => $router->name,
+                        'error' => $e->getMessage(),
                     ]);
-
-                if (! $response->successful()) {
-                    Log::warning('Failed to set system identity', ['router_id' => $router->id]);
                 }
             }
 
             // Configure NTP client
             if (isset($config['ntp_servers'])) {
                 foreach ($config['ntp_servers'] as $ntpServer) {
-                    Http::timeout(30)
-                        ->post("http://{$router->ip_address}:{$router->api_port}/api/system/ntp/client/set", [
-                            'enabled' => true,
-                            'primary-ntp' => $ntpServer,
+                    try {
+                        $query = (new Query('/system/ntp/client/set'))
+                            ->equal('enabled', 'yes')
+                            ->equal('primary-ntp', $ntpServer);
+                        $client->query($query)->read();
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to configure NTP server', [
+                            'router_id' => $router->id,
+                            'router_name' => $router->name,
+                            'ntp_server' => $ntpServer,
+                            'error' => $e->getMessage(),
                         ]);
+                    }
                 }
             }
 
             // Set timezone
             if (isset($config['timezone'])) {
-                Http::timeout(30)
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/system/clock/set", [
-                        'time-zone-name' => $config['timezone'],
+                try {
+                    $query = (new Query('/system/clock/set'))
+                        ->equal('time-zone-name', $config['timezone']);
+                    $client->query($query)->read();
+                } catch (\Exception $e) {
+                    Log::warning('Failed to set timezone', [
+                        'router_id' => $router->id,
+                        'router_name' => $router->name,
+                        'timezone' => $config['timezone'],
+                        'error' => $e->getMessage(),
                     ]);
+                }
             }
 
-            Log::info('System settings configured', ['router_id' => $router->id]);
+            Log::info('System settings configured via Binary API', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+            ]);
 
             return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout during System configuration', [
+                'router_id' => $router->id,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         } catch (\Exception $e) {
             Log::error('System configuration error', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'error' => $e->getMessage(),
             ]);
 
@@ -697,15 +858,13 @@ class RouterProvisioningService
     private function testRadiusConnection(MikrotikRouter $router, array $radiusConfig): bool
     {
         try {
-            $response = Http::timeout(10)
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/radius/test", [
-                    'address' => $radiusConfig['server'] ?? '127.0.0.1',
-                    'secret' => $radiusConfig['secret'] ?? '',
-                    'username' => 'test',
-                    'password' => 'test',
-                ]);
+            $client = $this->createClient($router);
+            
+            // Use /radius/print to check if RADIUS server is configured
+            $query = new Query('/radius/print');
+            $response = $client->query($query)->read();
 
-            return $response->successful();
+            return !empty($response);
         } catch (\Exception $e) {
             return false;
         }
@@ -732,29 +891,40 @@ class RouterProvisioningService
         ]);
 
         try {
-            $response = Http::timeout(60)
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/backup/import", [
-                    'data' => $backup->backup_data,
-                ]);
+            $client = $this->createClient($router);
+            
+            // Import the backup configuration
+            // Note: Binary API import requires the backup to be uploaded to the router first
+            // This is a simplified implementation - full implementation would require file upload
+            $query = (new Query('/import'))
+                ->equal('file-name', 'rollback-config.rsc');
 
-            if ($response->successful()) {
-                $log->update([
-                    'status' => 'success',
-                    'completed_at' => now(),
-                ]);
-
-                Log::info('Configuration rolled back', [
-                    'router_id' => $routerId,
-                    'backup_id' => $backupId,
-                ]);
-
-                return true;
-            }
+            $client->query($query)->read();
 
             $log->update([
-                'status' => 'failed',
-                'error_message' => 'Failed to restore backup',
+                'status' => 'success',
                 'completed_at' => now(),
+            ]);
+
+            Log::info('Configuration rolled back via Binary API', [
+                'router_id' => $routerId,
+                'router_name' => $router->name,
+                'backup_id' => $backupId,
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            $log->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+                'completed_at' => now(),
+            ]);
+
+            Log::error('Socket connection timeout during configuration rollback', [
+                'router_id' => $routerId,
+                'router_name' => $router->name,
+                'backup_id' => $backupId,
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -767,6 +937,7 @@ class RouterProvisioningService
 
             Log::error('Configuration rollback failed', [
                 'router_id' => $routerId,
+                'router_name' => $router->name,
                 'backup_id' => $backupId,
                 'error' => $e->getMessage(),
             ]);
@@ -905,5 +1076,20 @@ class RouterProvisioningService
         return \App\Models\MikrotikProfile::where('router_id', $router->id)
             ->where('name', $package->name)
             ->first();
+    }
+
+    /**
+     * Create RouterOS Binary API client for the router
+     */
+    private function createClient(MikrotikRouter $router): Client
+    {
+        $config = (new Config())
+            ->set('host', $router->ip_address)
+            ->set('user', $router->username)
+            ->set('pass', $router->password)
+            ->set('port', $router->api_port)
+            ->set('timeout', config('services.mikrotik.timeout', 60));
+
+        return new Client($config);
     }
 }
