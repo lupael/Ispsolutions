@@ -7,7 +7,9 @@ use App\Models\Radius\Radcheck;
 use App\Services\MikrotikService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
+use RouterOS\Client;
+use RouterOS\Config;
+use RouterOS\Query;
 
 class RouterMigrationService
 {
@@ -18,75 +20,141 @@ class RouterMigrationService
         $this->mikrotik = $mikrotik;
     }
     
+    /**
+     * Create RouterOS Binary API client for the router with SSL/TLS support
+     * 
+     * @param MikrotikRouter $router Router instance
+     * @return Client Connected Binary API client
+     * @throws \Exception If router IP validation fails (SSRF protection)
+     */
+    private function createClient(MikrotikRouter $router): Client
+    {
+        // Validate router IP to prevent SSRF attacks
+        if (! $this->isValidRouterIpAddress($router->ip_address)) {
+            throw new \Exception('Invalid router IP address - potential SSRF attempt');
+        }
+
+        $config = (new Config())
+            ->set('host', $router->ip_address)
+            ->set('user', $router->username)
+            ->set('pass', $router->password)
+            ->set('port', $router->api_port)
+            ->set('timeout', config('services.mikrotik.timeout', 60));
+        
+        // Enable SSL/TLS if configured (recommended for production)
+        if (config('services.mikrotik.ssl', false)) {
+            $config->set('ssl', true);
+        }
+
+        return new Client($config);
+    }
+
+    /**
+     * Validate router IP address to prevent SSRF attacks
+     * 
+     * @param string $ipAddress IP address to validate
+     * @return bool True if valid and safe
+     */
+    private function isValidRouterIpAddress(string $ipAddress): bool
+    {
+        // Validate it's a valid IP
+        if (! filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+            return false;
+        }
+
+        // Block private/internal IPs if configured
+        if (config('services.mikrotik.block_private_ips', false)) {
+            if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return false;
+            }
+        }
+
+        // Block specific dangerous IPs (metadata services, etc.)
+        $blockedIps = config('services.mikrotik.blocked_ips', ['169.254.169.254', '127.0.0.1', '0.0.0.0']);
+        if (in_array($ipAddress, $blockedIps, true)) {
+            return false;
+        }
+
+        return true;
+    }
+    
     public function verifyRadiusConnectivity(MikrotikRouter $router): bool
     {
         try {
+            $client = $this->createClient($router);
+            
             // Check if RADIUS server is configured by querying router
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/radius/print");
-            
-            if (!$response->successful()) {
-                return false;
-            }
-            
-            $radiusServers = $response->json();
+            $query = new Query('/radius/print');
+            $radiusServers = $client->query($query)->read();
             
             foreach ($radiusServers as $server) {
                 if (isset($server['address']) && $server['address'] === config('radius.server')) {
                     // Test connectivity by pinging RADIUS server
-                    $pingResponse = Http::timeout(config('services.mikrotik.timeout', 30))
-                        ->post("http://{$router->ip_address}:{$router->api_port}/api/ping", [
-                            'address' => config('radius.server'),
-                            'count' => 3
-                        ]);
+                    $pingQuery = (new Query('/ping'))
+                        ->equal('address', config('radius.server'))
+                        ->equal('count', '3');
                     
-                    if ($pingResponse->successful()) {
-                        $pingResult = $pingResponse->json();
-                        return isset($pingResult['received']) && $pingResult['received'] > 0;
+                    $pingResult = $client->query($pingQuery)->read();
+                    
+                    if (!empty($pingResult)) {
+                        foreach ($pingResult as $result) {
+                            if (isset($result['received']) && (int)$result['received'] > 0) {
+                                return true;
+                            }
+                        }
                     }
                 }
             }
             
             return false;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error("Failed to verify RADIUS connectivity for router {$router->id} ({$router->name}): " . $e->getMessage());
+            return false;
         } catch (\Exception $e) {
-            Log::error("Failed to verify RADIUS connectivity: " . $e->getMessage());
+            Log::error("Failed to verify RADIUS connectivity for router {$router->id} ({$router->name}): " . $e->getMessage());
             return false;
         }
     }
     
     public function backupPppSecrets(MikrotikRouter $router): string
     {
-        // Get all PPP secrets
-        $response = Http::timeout(config('services.mikrotik.timeout', 30))
-            ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/print");
-        
-        $secrets = $response->successful() ? $response->json() : [];
-        
-        // Create backup file
-        $timestamp = now()->format('Y-m-d_His');
-        $filename = "router_{$router->id}_ppp_secrets_{$timestamp}.json";
-        $path = "backups/router-migrations/{$filename}";
-        
-        Storage::put($path, json_encode($secrets, JSON_PRETTY_PRINT));
-        
-        // Also store rollback info in cache
-        cache()->put("router:{$router->id}:migration:backup", $path, now()->addDays(7));
-        
-        return $path;
+        try {
+            $client = $this->createClient($router);
+            
+            // Get all PPP secrets
+            $query = new Query('/ppp/secret/print');
+            $secrets = $client->query($query)->read();
+            
+            // Create backup file
+            $timestamp = now()->format('Y-m-d_His');
+            $filename = "router_{$router->id}_ppp_secrets_{$timestamp}.json";
+            $path = "backups/router-migrations/{$filename}";
+            
+            Storage::put($path, json_encode($secrets, JSON_PRETTY_PRINT));
+            
+            // Also store rollback info in cache
+            cache()->put("router:{$router->id}:migration:backup", $path, now()->addDays(7));
+            
+            return $path;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error("Failed to backup PPP secrets for router {$router->id} ({$router->name}): " . $e->getMessage());
+            // Return empty path on failure
+            return '';
+        } catch (\Exception $e) {
+            Log::error("Failed to backup PPP secrets for router {$router->id} ({$router->name}): " . $e->getMessage());
+            return '';
+        }
     }
     
     public function configureRadiusAuth(MikrotikRouter $router): bool
     {
         try {
+            $client = $this->createClient($router);
+            
             // Check if RADIUS is already configured
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/radius/print");
+            $query = new Query('/radius/print');
+            $radiusServers = $client->query($query)->read();
             
-            if (!$response->successful()) {
-                return false;
-            }
-            
-            $radiusServers = $response->json();
             $radiusExists = false;
             
             foreach ($radiusServers as $server) {
@@ -98,29 +166,28 @@ class RouterMigrationService
             
             // Add RADIUS server if not exists
             if (!$radiusExists) {
-                $addResponse = Http::timeout(config('services.mikrotik.timeout', 30))
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/radius/add", [
-                        'address' => config('radius.server'),
-                        'secret' => config('radius.secret'),
-                        'service' => 'ppp',
-                        'authentication-port' => config('radius.auth_port', 1812),
-                        'accounting-port' => config('radius.acct_port', 1813),
-                    ]);
+                $addQuery = (new Query('/radius/add'))
+                    ->equal('address', config('radius.server'))
+                    ->equal('secret', config('radius.secret'))
+                    ->equal('service', 'ppp')
+                    ->equal('authentication-port', (string)config('radius.auth_port', 1812))
+                    ->equal('accounting-port', (string)config('radius.acct_port', 1813));
                 
-                if (!$addResponse->successful()) {
-                    return false;
-                }
+                $client->query($addQuery)->read();
             }
             
             // Enable RADIUS for PPP
-            $aaaResponse = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/aaa/set", [
-                    'use-radius' => 'yes',
-                ]);
+            $aaaQuery = (new Query('/ppp/aaa/set'))
+                ->equal('use-radius', 'yes');
             
-            return $aaaResponse->successful();
+            $client->query($aaaQuery)->read();
+            
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error("Failed to configure RADIUS auth for router {$router->id} ({$router->name}): " . $e->getMessage());
+            return false;
         } catch (\Exception $e) {
-            Log::error("Failed to configure RADIUS auth: " . $e->getMessage());
+            Log::error("Failed to configure RADIUS auth for router {$router->id} ({$router->name}): " . $e->getMessage());
             return false;
         }
     }
@@ -140,75 +207,80 @@ class RouterMigrationService
     
     public function disableLocalSecrets(MikrotikRouter $router): int
     {
-        $response = Http::timeout(config('services.mikrotik.timeout', 30))
-            ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/print");
-        
-        if (!$response->successful()) {
-            return 0;
-        }
-        
-        $secrets = $response->json();
-        $count = 0;
-        
-        foreach ($secrets as $secret) {
-            if (isset($secret['.id'])) {
-                $disableResponse = Http::timeout(config('services.mikrotik.timeout', 30))
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/disable", [
-                        '.id' => $secret['.id']
-                    ]);
-                
-                if ($disableResponse->successful()) {
-                    $count++;
+        try {
+            $client = $this->createClient($router);
+            
+            $query = new Query('/ppp/secret/print');
+            $secrets = $client->query($query)->read();
+            
+            $count = 0;
+            
+            foreach ($secrets as $secret) {
+                if (isset($secret['.id'])) {
+                    try {
+                        $disableQuery = (new Query('/ppp/secret/disable'))
+                            ->equal('.id', $secret['.id']);
+                        
+                        $client->query($disableQuery)->read();
+                        $count++;
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to disable secret {$secret['.id']} on router {$router->id} ({$router->name}): " . $e->getMessage());
+                    }
                 }
             }
+            
+            return $count;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error("Failed to disable local secrets for router {$router->id} ({$router->name}): " . $e->getMessage());
+            return 0;
+        } catch (\Exception $e) {
+            Log::error("Failed to disable local secrets for router {$router->id} ({$router->name}): " . $e->getMessage());
+            return 0;
         }
-        
-        return $count;
     }
     
     public function disconnectActiveSessions(MikrotikRouter $router): int
     {
-        $response = Http::timeout(config('services.mikrotik.timeout', 30))
-            ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/active/print");
-        
-        if (!$response->successful()) {
-            return 0;
-        }
-        
-        $activeSessions = $response->json();
-        $count = 0;
-        
-        foreach ($activeSessions as $session) {
-            if (isset($session['.id'])) {
-                $removeResponse = Http::timeout(config('services.mikrotik.timeout', 30))
-                    ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/active/remove", [
-                        '.id' => $session['.id']
-                    ]);
-                
-                if ($removeResponse->successful()) {
-                    $count++;
+        try {
+            $client = $this->createClient($router);
+            
+            $query = new Query('/ppp/active/print');
+            $activeSessions = $client->query($query)->read();
+            
+            $count = 0;
+            
+            foreach ($activeSessions as $session) {
+                if (isset($session['.id'])) {
+                    try {
+                        $removeQuery = (new Query('/ppp/active/remove'))
+                            ->equal('.id', $session['.id']);
+                        
+                        $client->query($removeQuery)->read();
+                        $count++;
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to disconnect session {$session['.id']} on router {$router->id} ({$router->name}): " . $e->getMessage());
+                    }
                 }
             }
+            
+            return $count;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error("Failed to disconnect active sessions for router {$router->id} ({$router->name}): " . $e->getMessage());
+            return 0;
+        } catch (\Exception $e) {
+            Log::error("Failed to disconnect active sessions for router {$router->id} ({$router->name}): " . $e->getMessage());
+            return 0;
         }
-        
-        return $count;
     }
     
     public function verifyMigration(MikrotikRouter $router): array
     {
         try {
+            $client = $this->createClient($router);
+            
             // Check RADIUS is enabled
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/aaa/print");
-            
-            if (!$response->successful()) {
-                return [
-                    'success' => false,
-                    'message' => 'Failed to verify PPP AAA settings'
-                ];
-            }
-            
-            $aaa = $response->json();
+            $query = new Query('/ppp/aaa/print');
+            $aaa = $client->query($query)->read();
             
             if (!isset($aaa[0]['use-radius']) || $aaa[0]['use-radius'] !== 'true') {
                 return [
@@ -218,19 +290,22 @@ class RouterMigrationService
             }
             
             // Count active sessions
-            $sessionsResponse = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/active/print");
-            
-            $activeSessions = $sessionsResponse->successful() ? $sessionsResponse->json() : [];
+            $sessionsQuery = new Query('/ppp/active/print');
+            $activeSessions = $client->query($sessionsQuery)->read();
             
             return [
                 'success' => true,
                 'active_sessions' => count($activeSessions),
             ];
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            return [
+                'success' => false,
+                'message' => "Connection failed for router {$router->id} ({$router->name}): " . $e->getMessage(),
+            ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => "Error for router {$router->id} ({$router->name}): " . $e->getMessage(),
             ];
         }
     }
@@ -245,30 +320,39 @@ class RouterMigrationService
                 throw new \Exception("No backup found for router {$router->id}");
             }
             
+            $client = $this->createClient($router);
+            
             // Restore PPP secrets from backup
             $secrets = json_decode(Storage::get($backupPath), true);
             
             foreach ($secrets as $secret) {
                 if (isset($secret['.id'])) {
-                    // Re-enable disabled secrets
-                    Http::timeout(config('services.mikrotik.timeout', 30))
-                        ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/enable", [
-                            '.id' => $secret['.id']
-                        ]);
+                    try {
+                        // Re-enable disabled secrets
+                        $enableQuery = (new Query('/ppp/secret/enable'))
+                            ->equal('.id', $secret['.id']);
+                        
+                        $client->query($enableQuery)->read();
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to re-enable secret {$secret['.id']} on router {$router->id} ({$router->name}): " . $e->getMessage());
+                    }
                 }
             }
             
             // Disable RADIUS
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/aaa/set", [
-                    'use-radius' => 'no',
-                ]);
+            $aaaQuery = (new Query('/ppp/aaa/set'))
+                ->equal('use-radius', 'no');
             
-            Log::info("Successfully rolled back router {$router->id} migration");
-            return $response->successful();
+            $client->query($aaaQuery)->read();
             
+            Log::info("Successfully rolled back router {$router->id} ({$router->name}) migration");
+            return true;
+            
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error("Failed to rollback router {$router->id} ({$router->name}) migration: " . $e->getMessage());
+            return false;
         } catch (\Exception $e) {
-            Log::error("Failed to rollback router migration: " . $e->getMessage());
+            Log::error("Failed to rollback router {$router->id} ({$router->name}) migration: " . $e->getMessage());
             return false;
         }
     }
