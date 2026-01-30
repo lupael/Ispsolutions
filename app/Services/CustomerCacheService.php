@@ -151,7 +151,7 @@ class CustomerCacheService
             }
             
             return User::where('tenant_id', $tenantId)
-                ->where('operator_level', 100) // Customers only
+                ->where('is_subscriber', true) // Customers only
                 ->with([
                     'package:id,name,price,bandwidth_down,bandwidth_up',
                     'zone:id,name',
@@ -189,7 +189,7 @@ class CustomerCacheService
             $usernameToId = DB::table('users')
                 ->select('id', 'username')
                 ->whereIn('id', $customerIds)
-                ->where('operator_level', 100)
+                ->where('is_subscriber', true)
                 ->pluck('id', 'username')
                 ->toArray();
 

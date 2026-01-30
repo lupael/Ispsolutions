@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
  * User Observer
  * 
  * Automatically provisions customers to RADIUS when they are created, updated, or deleted.
- * Only applies to users with operator_level = 100 (customers) and network service types.
+ * Only applies to users with is_subscriber = true (customers) and network service types.
  */
 class UserObserver
 {
@@ -19,7 +19,7 @@ class UserObserver
      */
     public function creating(User $user): void
     {
-        // Only generate customer_id for customers (operator_level = 100)
+        // Only generate customer_id for customers (is_subscriber = true)
         if ($user->operator_level === 100 && empty($user->customer_id)) {
             $user->customer_id = $this->generateCustomerId();
         }

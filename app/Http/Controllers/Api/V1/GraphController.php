@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 /**
  * GraphController
  * 
- * Note: Updated to use User model (operator_level = 100) instead of NetworkUser model.
+ * Note: Updated to use User model (is_subscriber = true) instead of NetworkUser model.
  */
 class GraphController extends Controller
 {
@@ -56,13 +56,13 @@ class GraphController extends Controller
     
     /**
      * Get graph for customer by timeframe.
-     * Note: Now uses User model with operator_level = 100.
+     * Note: Now uses User model with is_subscriber = true.
      */
     private function getGraph(int $customerId, string $timeframe): JsonResponse
     {
         try {
             // Verify customer exists and user has access
-            $customer = User::where('operator_level', 100)->findOrFail($customerId);
+            $customer = User::where('is_subscriber', true)->findOrFail($customerId);
             
             // Check tenant isolation
             if ($customer->tenant_id !== auth()->user()->tenant_id) {

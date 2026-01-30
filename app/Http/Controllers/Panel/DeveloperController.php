@@ -295,14 +295,14 @@ class DeveloperController extends Controller
         $query = null;
 
         $customers = User::allTenants()
-            ->where('operator_level', 100) // Filter for customers only
+            ->where('is_subscriber', true) // Filter for customers only
             ->with(['tenant', 'roles'])
             ->latest()
             ->paginate(20);
 
         // Calculate stats for the view with a single aggregated query
         $statsData = User::allTenants()
-            ->where('operator_level', 100) // Filter for customers only
+            ->where('is_subscriber', true) // Filter for customers only
             ->selectRaw('COUNT(*) as total')
             ->selectRaw('SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
             ->first();

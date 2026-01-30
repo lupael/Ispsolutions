@@ -109,7 +109,7 @@ class AccountantController extends Controller
 
         // Get customers with their statement data
         $customers = User::where('tenant_id', $tenantId)
-            ->where('operator_level', 100)
+            ->where('is_subscriber', true)
             ->paginate(20);
 
         return view('panels.accountant.reports.statements', compact('customers'));

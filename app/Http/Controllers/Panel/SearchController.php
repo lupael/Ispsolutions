@@ -58,8 +58,8 @@ class SearchController extends Controller
                 ->orWhere('username', 'like', "%{$escapedQuery}%");
         });
 
-        // Scope to customers only (operator_level = 100)
-        $customerQuery->where('operator_level', 100);
+        // Scope to customers only (is_subscriber = true)
+        $customerQuery->where('is_subscriber', true);
 
         return $customerQuery
             ->with(['tenant:id,name', 'currentPackage:id,name'])

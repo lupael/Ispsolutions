@@ -48,14 +48,14 @@ class DataController extends Controller
     }
 
     /**
-     * Get network users data (now uses User model with operator_level = 100).
+     * Get network users data (now uses User model with is_subscriber = true).
      * Note: Migrated from NetworkUser to User model.
      */
     public function getNetworkUsers(Request $request): JsonResponse
     {
         $query = User::with(['package'])
             ->where('tenant_id', auth()->user()->tenant_id)
-            ->where('operator_level', 100);
+            ->where('is_subscriber', true);
 
         // Search
         if ($request->has('search')) {
@@ -235,9 +235,9 @@ class DataController extends Controller
                     ->sum('amount'),
             ],
             'customers' => [
-                'total' => User::where('tenant_id', $tenantId)->where('operator_level', 100)->count(),
-                'active' => User::where('tenant_id', $tenantId)->where('operator_level', 100)->where('status', 'active')->count(),
-                'suspended' => User::where('tenant_id', $tenantId)->where('operator_level', 100)->where('status', 'suspended')->count(),
+                'total' => User::where('tenant_id', $tenantId)->where('is_subscriber', true)->count(),
+                'active' => User::where('tenant_id', $tenantId)->where('is_subscriber', true)->where('status', 'active')->count(),
+                'suspended' => User::where('tenant_id', $tenantId)->where('is_subscriber', true)->where('status', 'suspended')->count(),
             ],
         ];
 

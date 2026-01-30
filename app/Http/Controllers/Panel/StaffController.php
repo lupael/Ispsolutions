@@ -16,12 +16,12 @@ class StaffController extends Controller
     /**
      * Display the staff dashboard.
      * 
-     * Note: Network credentials are now stored directly in User model (operator_level = 100 for customers)
+     * Note: Network credentials are now stored directly in User model (is_subscriber = true for customers)
      */
     public function dashboard(): View
     {
         $stats = [
-            'assigned_users' => User::where('operator_level', 100)->count(),
+            'assigned_users' => User::where('is_subscriber', true)->count(),
             'pending_tickets' => Ticket::where('status', Ticket::STATUS_PENDING)->count(),
         ];
 
