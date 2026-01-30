@@ -285,15 +285,6 @@ class AdminController extends Controller
             ]);
         }
 
-        // Service Type Distribution
-        $serviceTypeDistribution = [
-            'pppoe' => $stats['pppoe_customers'] ?? 0,
-            'hotspot' => $stats['hotspot_customers'] ?? 0,
-            'static' => User::where('operator_level', 100)
-                ->where('service_type', 'static')
-                ->count(),
-        ];
-
         return view('panels.admin.dashboard', compact(
             'stats',
             'statusDistribution',
@@ -302,8 +293,7 @@ class AdminController extends Controller
             'paymentStats',
             'operatorPerformance',
             'revenueTrend',
-            'customerGrowth',
-            'serviceTypeDistribution'
+            'customerGrowth'
         ));
     }
 
