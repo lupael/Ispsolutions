@@ -119,37 +119,41 @@
             };
             
             const chart = new ApexCharts(chartElement, options);
-            chart.render();
+            chart.render().catch(error => {
+                console.error('Error rendering chart:', error);
+            });
             
-            // Handle dark mode changes
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.attributeName === 'class') {
-                        const isDark = document.documentElement.classList.contains('dark');
-                        chart.updateOptions({
-                            theme: {
-                                mode: isDark ? 'dark' : 'light'
-                            },
-                            plotOptions: {
-                                pie: {
-                                    donut: {
-                                        labels: {
-                                            value: {
-                                                color: isDark ? '#f3f4f6' : '#111827'
+            // Handle dark mode changes - only if chart was successfully created
+            if (chart) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.attributeName === 'class') {
+                            const isDark = document.documentElement.classList.contains('dark');
+                            chart.updateOptions({
+                                theme: {
+                                    mode: isDark ? 'dark' : 'light'
+                                },
+                                plotOptions: {
+                                    pie: {
+                                        donut: {
+                                            labels: {
+                                                value: {
+                                                    color: isDark ? '#f3f4f6' : '#111827'
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        });
-                    }
+                            });
+                        }
+                    });
                 });
-            });
-            
-            observer.observe(document.documentElement, {
-                attributes: true,
-                attributeFilter: ['class']
-            });
+                
+                observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+            }
         });
     </script>
 </div>

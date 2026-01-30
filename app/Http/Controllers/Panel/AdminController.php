@@ -24,6 +24,7 @@ use App\Models\Payment;
 use App\Models\PaymentGateway;
 use App\Models\Role;
 use App\Models\ServicePackage;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\CustomerCacheService;
@@ -196,39 +197,67 @@ class AdminController extends Controller
                 ->count('user_id'),
         ];
 
-        // Operator Performance Data
-        $operatorPerformance = User::whereIn('operator_level', [30, 40]) // Operators and Sub-operators
-            ->with(['customers' => function ($query) {
-                $query->select('id', 'operator_id');
-            }])
-            ->withCount('customers')
-            ->get()
-            ->map(function ($operator) {
-                $operatorCustomers = User::where('operator_id', $operator->id)->pluck('id');
+        // Operator Performance Data - Optimized to avoid N+1 queries
+        $operators = User::whereIn('operator_level', [30, 40])->get(); // Operators and Sub-operators
+        
+        if ($operators->isNotEmpty()) {
+            $operatorIds = $operators->pluck('id');
+            
+            // Bulk fetch all customers for all operators
+            $allCustomers = User::whereIn('operator_id', $operatorIds)
+                ->select('id', 'operator_id', 'status', 'created_at')
+                ->get()
+                ->groupBy('operator_id');
+            
+            // Bulk fetch payments for all operator customers
+            $allCustomerIds = $allCustomers->flatten()->pluck('id');
+            $payments = Payment::whereIn('user_id', $allCustomerIds)
+                ->whereDate('payment_date', '>=', now()->startOfMonth())
+                ->where('status', 'success')
+                ->select('user_id', 'amount')
+                ->get()
+                ->groupBy('user_id');
+            
+            // Bulk fetch tickets for all operator customers
+            $tickets = Ticket::whereIn('customer_id', $allCustomerIds)
+                ->where('status', 'resolved')
+                ->whereDate('updated_at', '>=', now()->startOfMonth())
+                ->select('customer_id', 'id')
+                ->get()
+                ->groupBy('customer_id');
+            
+            $operatorPerformance = $operators->map(function ($operator) use ($allCustomers, $payments, $tickets) {
+                $operatorCustomers = $allCustomers->get($operator->id, collect());
+                $operatorCustomerIds = $operatorCustomers->pluck('id');
+                
+                // Calculate total revenue for this operator's customers
+                $monthlyRevenue = $operatorCustomerIds->sum(function ($customerId) use ($payments) {
+                    return $payments->get($customerId, collect())->sum('amount');
+                });
+                
+                // Count tickets resolved for this operator's customers
+                $ticketsResolved = $operatorCustomerIds->sum(function ($customerId) use ($tickets) {
+                    return $tickets->get($customerId, collect())->count();
+                });
                 
                 return [
                     'id' => $operator->id,
                     'name' => $operator->name,
                     'operator_level' => $operator->operator_level,
                     'total_customers' => $operatorCustomers->count(),
-                    'active_customers' => User::whereIn('id', $operatorCustomers)
-                        ->where('status', 'active')
-                        ->count(),
-                    'monthly_revenue' => Payment::whereIn('user_id', $operatorCustomers)
-                        ->whereDate('payment_date', '>=', now()->startOfMonth())
-                        ->where('status', 'success')
-                        ->sum('amount'),
-                    'tickets_resolved' => \App\Models\Ticket::whereIn('customer_id', $operatorCustomers)
-                        ->where('status', 'resolved')
-                        ->whereDate('updated_at', '>=', now()->startOfMonth())
-                        ->count(),
-                    'new_customers_this_month' => User::whereIn('id', $operatorCustomers)
-                        ->whereDate('created_at', '>=', now()->startOfMonth())
+                    'active_customers' => $operatorCustomers->where('status', 'active')->count(),
+                    'monthly_revenue' => $monthlyRevenue,
+                    'tickets_resolved' => $ticketsResolved,
+                    'new_customers_this_month' => $operatorCustomers
+                        ->where('created_at', '>=', now()->startOfMonth())
                         ->count(),
                 ];
             })
             ->sortByDesc('monthly_revenue')
             ->take(10);
+        } else {
+            $operatorPerformance = collect();
+        }
 
         // Revenue Trend Data (last 6 months)
         $revenueTrend = collect();
@@ -250,8 +279,6 @@ class AdminController extends Controller
             $customerGrowth->push([
                 'month' => $month->format('M Y'),
                 'customers' => User::where('operator_level', 100)
-                    ->whereYear('created_at', '<=', $month->year)
-                    ->whereMonth('created_at', '<=', $month->month)
                     ->whereDate('created_at', '<=', $month->endOfMonth())
                     ->count(),
             ]);
