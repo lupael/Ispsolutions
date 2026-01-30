@@ -66,8 +66,10 @@ class CustomerCommunicationController extends Controller
 
             $this->auditLogService->log(
                 'sms_sent',
-                'Sent SMS to customer',
-                ['customer_id' => $customer->id, 'message_length' => strlen($message)]
+                $customer,
+                null,
+                ['customer_id' => $customer->id, 'message_length' => strlen($message)],
+                ['communication', 'sms']
             );
 
             if ($result) {
@@ -159,14 +161,16 @@ class CustomerCommunicationController extends Controller
 
             $this->auditLogService->log(
                 'payment_link_sent',
-                'Sent payment link to customer',
+                $customer,
+                null,
                 [
                     'customer_id' => $customer->id,
                     'invoice_id' => $invoice?->id,
                     'methods' => $validated['send_via'],
                     'sms_sent' => $smsSent,
                     'email_sent' => $emailSent,
-                ]
+                ],
+                ['communication', 'payment']
             );
 
             // Success if at least one requested method succeeded

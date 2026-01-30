@@ -78,13 +78,15 @@ class CustomerOperatorController extends Controller
 
             $this->auditLogService->log(
                 'operator_changed',
-                'Changed customer operator',
+                $customer,
+                null,
                 [
                     'customer_id' => $customer->id,
                     'old_operator_id' => $oldOperatorId,
                     'new_operator_id' => $newOperator->id,
                     'reason' => $validated['reason'] ?? null
-                ]
+                ],
+                ['customer', 'operator']
             );
 
             DB::commit();

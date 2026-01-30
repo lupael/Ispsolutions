@@ -96,13 +96,15 @@ class CustomerHotspotRechargeController extends Controller
 
             $this->auditLogService->log(
                 'hotspot_recharged',
-                'Hotspot customer recharged',
+                $customer,
+                null,
                 [
                     'customer_id' => $customer->id,
                     'package_id' => $package->id,
                     'validity_days' => $validityDays,
                     'payment_id' => $payment->id
-                ]
+                ],
+                ['hotspot', 'recharge', 'payment']
             );
 
             DB::commit();

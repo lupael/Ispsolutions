@@ -52,12 +52,14 @@ class CustomerSuspendDateController extends Controller
 
             $this->auditLogService->log(
                 'suspend_date_updated',
-                'Updated customer suspend/expiry dates',
+                $customer,
+                null,
                 [
                     'customer_id' => $customer->id,
                     'suspend_date' => $validated['suspend_date'] ?? null,
                     'expiry_date' => $validated['expiry_date'] ?? null,
-                ]
+                ],
+                ['customer', 'suspension']
             );
 
             DB::commit();
