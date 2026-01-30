@@ -31,6 +31,9 @@ class NetworkUser extends Model
         'is_active',
         'user_id',
         'tenant_id',
+        'fup_exceeded',
+        'fup_exceeded_at',
+        'fup_reset_at',
     ];
 
     protected $hidden = [
@@ -40,7 +43,10 @@ class NetworkUser extends Model
     protected $casts = [
         'package_id' => 'integer',
         'is_active' => 'boolean',
+        'fup_exceeded' => 'boolean',
         'expiry_date' => 'date',
+        'fup_exceeded_at' => 'datetime',
+        'fup_reset_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

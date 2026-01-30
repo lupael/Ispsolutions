@@ -401,6 +401,196 @@ All gateways support test/sandbox mode:
 - [ ] Webhook URLs are correct
 - [ ] IP whitelist configured (if supported by gateway)
 
+## Production Deployment
+
+### Pre-Deployment Checklist
+
+Before deploying to production, ensure the following:
+
+#### 1. API Endpoint Configuration
+
+**bKash:**
+- ✅ Production URL is correctly set: `https://tokenized.pay.bkash.com`
+- ✅ API version path is configured: `/v1.2.0-beta/` (this is the stable production version)
+- ✅ Test mode is **disabled** in gateway settings
+- ✅ Production credentials are configured (not sandbox credentials)
+- ✅ Webhook secret is set and verified
+
+**Nagad:**
+- ✅ Production URL is correctly set: `https://api.mynagad.com`
+- ✅ Test mode is **disabled** in gateway settings
+- ✅ Production merchant credentials are configured
+- ✅ Production RSA keys are configured (not sandbox keys)
+- ✅ Webhook secret is set and verified
+
+**SSLCommerz:**
+- ✅ Production URL is correctly set: `https://securepay.sslcommerz.com`
+- ✅ Test mode is **disabled** in gateway settings
+- ✅ Production Store ID and Password are configured
+- ✅ Webhook/IPN URL is properly configured
+
+**Stripe:**
+- ✅ Production keys are configured (sk_live_... and pk_live_...)
+- ✅ Test mode is **disabled** in gateway settings
+- ✅ Webhook signing secret is configured (whsec_...)
+- ✅ Webhook endpoint is registered in Stripe Dashboard
+
+#### 2. Database Configuration
+
+Ensure the following columns exist in `network_users` table:
+- ✅ `fup_exceeded` (boolean, default: false)
+- ✅ `fup_exceeded_at` (timestamp, nullable)
+- ✅ `fup_reset_at` (timestamp, nullable)
+
+Run migrations if not already applied:
+```bash
+php artisan migrate
+```
+
+#### 3. Webhook Signature Verification
+
+**Critical for Production Security:**
+
+All payment gateways MUST have webhook secrets configured for signature verification. Without this, your application is vulnerable to fraudulent payment notifications.
+
+**Verification Status by Gateway:**
+
+| Gateway | Signature Method | Header | Required Field |
+|---------|-----------------|---------|----------------|
+| bKash | HMAC SHA256 | X-Bkash-Signature | webhook_secret |
+| Nagad | RSA Signature | X-Nagad-Signature | nagad_public_key |
+| SSLCommerz | MD5 Hash + API Validation | - | verify_sign (from payload) |
+| Stripe | HMAC SHA256 + Timestamp | Stripe-Signature | webhook_secret |
+
+**Testing Signature Verification:**
+
+Before production deployment, test webhook signature verification in staging:
+
+1. Configure webhook secrets in staging environment
+2. Initiate test payment
+3. Monitor logs for signature verification:
+   ```bash
+   tail -f storage/logs/laravel.log | grep "webhook"
+   ```
+4. Confirm successful signature verification:
+   - Look for: "Webhook signature verified successfully"
+   - Should NOT see: "webhook signature verification failed"
+
+5. Test with invalid signature:
+   - Send webhook with modified payload
+   - Should be rejected with signature verification failure
+
+#### 4. Environment Variables
+
+Update `.env` file for production (NOT stored in version control):
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://yourdomain.com
+
+# Set appropriate log level
+LOG_LEVEL=warning
+```
+
+**Important:** Payment gateway configurations are stored in the database, not `.env` file. Use the Super Admin panel to configure gateways.
+
+#### 5. Production Settings in Admin Panel
+
+For each payment gateway, navigate to:
+**Super Admin Panel → Payment Gateway → Settings**
+
+Then configure:
+
+1. **bKash:**
+   - Enter production App Key, App Secret, Username, Password
+   - Set webhook_secret (REQUIRED)
+   - **UNCHECK** "Test Mode" checkbox
+   - Save and verify configuration
+
+2. **Nagad:**
+   - Enter production Merchant ID, Merchant Number
+   - Enter production RSA keys (private and public)
+   - Set webhook_secret (REQUIRED)
+   - **UNCHECK** "Test Mode" checkbox
+   - Save and verify configuration
+
+3. **SSLCommerz:**
+   - Enter production Store ID and Store Password
+   - Set currency (BDT/USD/EUR)
+   - **UNCHECK** "Test Mode" checkbox
+   - Save and verify configuration
+
+4. **Stripe:**
+   - Enter production Secret Key (sk_live_...)
+   - Enter production Publishable Key (pk_live_...)
+   - Set webhook signing secret (whsec_...)
+   - Set currency (USD/BDT)
+   - **UNCHECK** "Test Mode" checkbox
+   - Save and verify configuration
+
+### Post-Deployment Verification
+
+After deploying to production:
+
+1. **Test Each Gateway:**
+   - Initiate small test payment (minimum amount)
+   - Complete payment flow
+   - Verify webhook is received and processed
+   - Verify invoice status is updated
+   - Verify payment record is created
+
+2. **Monitor Logs:**
+   ```bash
+   # Monitor for errors
+   tail -f storage/logs/laravel.log
+   
+   # Check for webhook issues
+   grep "webhook" storage/logs/laravel.log | tail -20
+   
+   # Check for signature verification failures
+   grep "signature verification failed" storage/logs/laravel.log
+   ```
+
+3. **Verify Webhook Endpoints:**
+   - Test webhook URLs are accessible: `curl https://yourdomain.com/webhooks/payment/bkash`
+   - Should return 405 Method Not Allowed (POST required)
+   - Should NOT return 404 or connection errors
+
+4. **Security Verification:**
+   - Verify HTTPS is working (no mixed content warnings)
+   - Test webhook with invalid signature (should be rejected)
+   - Verify rate limiting is working
+   - Check that sensitive data is not exposed in error messages
+
+### Rollback Plan
+
+If issues are detected after deployment:
+
+1. **Immediate Action:**
+   - Enable "Test Mode" on all gateways to prevent real transactions
+   - Or disable gateways entirely by unchecking "Is Active"
+
+2. **Investigation:**
+   - Review logs for errors
+   - Check webhook signature verification
+   - Verify API credentials
+
+3. **Fix and Redeploy:**
+   - Fix identified issues
+   - Test in staging environment
+   - Redeploy to production
+   - Re-verify all gateways
+
+### Monitoring and Alerts
+
+Set up monitoring for:
+- Failed webhook verifications (> 5 per hour = potential attack)
+- Payment initialization failures
+- Webhook processing failures
+- API timeout errors
+- Signature verification failures
+
 ## Troubleshooting
 
 ### Common Issues

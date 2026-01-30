@@ -151,9 +151,13 @@ class PaymentGatewayService
     protected function initiateBkashPayment(Invoice $invoice, array $config, bool $testMode): array
     {
         try {
+            // Use production or sandbox URL based on test_mode
             $baseUrl = $testMode
                 ? 'https://tokenized.sandbox.bkash.com'
                 : 'https://tokenized.pay.bkash.com';
+
+            // Use the appropriate API version (production uses v1.2.0-beta as the stable version identifier)
+            $apiVersion = 'v1.2.0-beta';
 
             $appKey = $config['app_key'] ?? '';
             $appSecret = $config['app_secret'] ?? '';
@@ -172,7 +176,7 @@ class PaymentGatewayService
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
                 ])
-                ->post("{$baseUrl}/v1.2.0-beta/tokenized/checkout/token/grant", [
+                ->post("{$baseUrl}/{$apiVersion}/tokenized/checkout/token/grant", [
                     'app_key' => $appKey,
                     'app_secret' => $appSecret,
                 ]);
@@ -205,7 +209,7 @@ class PaymentGatewayService
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json',
                     ])
-                    ->post("{$baseUrl}/v1.2.0-beta/tokenized/checkout/create", [
+                    ->post("{$baseUrl}/{$apiVersion}/tokenized/checkout/create", [
                         'mode' => '0011',
                         'payerReference' => (string) ($invoice->network_user_id ?? 'CUST-' . $invoice->id),
                         'callbackURL' => route('webhooks.payment', ['gateway' => 'bkash']),
@@ -1218,11 +1222,13 @@ class PaymentGatewayService
                 ? 'https://tokenized.sandbox.bkash.com'
                 : 'https://tokenized.pay.bkash.com';
 
+            $apiVersion = 'v1.2.0-beta';
+
             // Get token first
             $tokenResponse = Http::withHeaders([
                 'username' => $config['app_key'] ?? '',
                 'password' => $config['app_secret'] ?? '',
-            ])->post("{$baseUrl}/v1.2.0-beta/tokenized/checkout/token/grant", [
+            ])->post("{$baseUrl}/{$apiVersion}/tokenized/checkout/token/grant", [
                 'app_key' => $config['app_key'] ?? '',
                 'app_secret' => $config['app_secret'] ?? '',
             ]);
@@ -1237,7 +1243,7 @@ class PaymentGatewayService
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$token}",
                 'X-APP-Key' => $config['app_key'] ?? '',
-            ])->post("{$baseUrl}/v1.2.0-beta/tokenized/checkout/payment/status", [
+            ])->post("{$baseUrl}/{$apiVersion}/tokenized/checkout/payment/status", [
                 'paymentID' => $transactionId,
             ]);
 
