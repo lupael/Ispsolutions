@@ -546,6 +546,7 @@ If authentication fails:
 ### Getting Started
 - **[INSTALLATION.md](INSTALLATION.md)** - Complete automated installation guide
 - **[ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md](ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md)** - Complete onboarding & router configuration guide
+- **[ONBOARDING_IMPLEMENTATION.md](ONBOARDING_IMPLEMENTATION.md)** - Implementation details for onboarding features
 - **[POST_DEPLOYMENT_STEPS.md](POST_DEPLOYMENT_STEPS.md)** - Essential post-deployment steps
 - **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Complete documentation index
 - **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Current status and roadmap
