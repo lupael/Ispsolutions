@@ -236,4 +236,89 @@ class Package extends Model
         // data_limit is already stored in bytes, return as-is
         return $this->data_limit;
     }
+
+    /**
+     * Task 8.3: Get available upgrade packages
+     * Returns packages that can be upgraded to from this package
+     */
+    public function getAvailableUpgrades(): \Illuminate\Database\Eloquent\Collection
+    {
+        // Get packages with higher price/bandwidth that share the same parent
+        return self::where('status', 'active')
+            ->where('id', '!=', $this->id)
+            ->where(function ($query) {
+                $query->where('price', '>', $this->price)
+                    ->orWhere('bandwidth_download', '>', $this->bandwidth_download);
+            })
+            ->orderBy('price')
+            ->get();
+    }
+
+    /**
+     * Task 8.3: Check if can upgrade to another package
+     */
+    public function canUpgradeTo(Package $targetPackage): bool
+    {
+        // Basic validation: target must be different and active
+        if ($this->id === $targetPackage->id || $targetPackage->status !== 'active') {
+            return false;
+        }
+
+        // Target should have equal or better specs
+        $hasBetterSpeed = $targetPackage->bandwidth_download >= $this->bandwidth_download;
+        $hasBetterPrice = $targetPackage->price >= $this->price;
+
+        return $hasBetterSpeed || $hasBetterPrice;
+    }
+
+    /**
+     * Task 8.4: Get inherited attribute from parent package
+     * Child packages inherit settings from parent with override capability
+     */
+    public function getInheritedAttribute(string $attribute, $default = null)
+    {
+        // If this package has the attribute set, use it
+        if ($this->{$attribute} !== null && $this->{$attribute} !== '') {
+            return $this->{$attribute};
+        }
+
+        // Otherwise, try to inherit from parent
+        if ($this->hasParent() && $this->parentPackage) {
+            return $this->parentPackage->{$attribute} ?? $default;
+        }
+
+        return $default;
+    }
+
+    /**
+     * Task 8.4: Get effective bandwidth considering inheritance
+     */
+    public function getEffectiveBandwidthDownload(): int
+    {
+        return $this->getInheritedAttribute('bandwidth_download', 0);
+    }
+
+    /**
+     * Task 8.4: Get effective bandwidth upload considering inheritance
+     */
+    public function getEffectiveBandwidthUpload(): int
+    {
+        return $this->getInheritedAttribute('bandwidth_upload', 0);
+    }
+
+    /**
+     * Task 8.4: Get effective price considering inheritance
+     */
+    public function getEffectivePrice(): float
+    {
+        return (float) $this->getInheritedAttribute('price', 0);
+    }
+
+    /**
+     * Task 8.4: Get effective validity considering inheritance
+     */
+    public function getEffectiveValidity(): int
+    {
+        return $this->getInheritedAttribute('validity_days', 0);
+    }
 }

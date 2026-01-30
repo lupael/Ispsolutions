@@ -394,4 +394,42 @@ class CustomerPolicy
             ->where('is_enabled', true)
             ->exists();
     }
+
+    /**
+     * Task 7.5: Add reseller permissions
+     * Determine if a reseller can manage a child account
+     */
+    public function manageChildAccount(User $reseller, User $customer): bool
+    {
+        // Check if the customer is a child of this reseller
+        if ($customer->parent_id === $reseller->id) {
+            return true;
+        }
+
+        // Also check if admin/superadmin
+        if ($reseller->operator_level <= 20) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Task 7.5: Check if user can view reseller dashboard
+     */
+    public function viewResellerDashboard(User $user): bool
+    {
+        // User must have child accounts to be considered a reseller
+        return $user->childAccounts()->exists() || $user->operator_level <= 20;
+    }
+
+    /**
+     * Task 7.5: Determine if user can assign child accounts
+     */
+    public function assignChildAccount(User $user): bool
+    {
+        // Only admins and verified resellers can assign child accounts
+        return $user->operator_level <= 20 || 
+               ($user->is_reseller ?? false) === true;
+    }
 }
