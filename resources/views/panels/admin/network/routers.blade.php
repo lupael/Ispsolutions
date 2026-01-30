@@ -327,7 +327,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Check Router API buttons
     document.querySelectorAll('.check-router-api').forEach(function(button) {
-        button.addEventListener('click', async function(event) {
+        button.addEventListener('click', async function() {
             const routerId = this.getAttribute('data-router-id');
             const originalHTML = this.innerHTML;
             
