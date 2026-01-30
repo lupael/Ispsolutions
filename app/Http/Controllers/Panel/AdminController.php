@@ -2179,7 +2179,7 @@ class AdminController extends Controller
      */
     public function routers(): View
     {
-        $routers = MikrotikRouter::with('pppoeUsers')->paginate(20);
+        $routers = MikrotikRouter::with('pppoeUsers', 'nas')->paginate(20);
 
         $stats = [
             'total' => MikrotikRouter::count(),
@@ -2272,7 +2272,7 @@ class AdminController extends Controller
      */
     public function routersEdit($id): View
     {
-        $router = MikrotikRouter::findOrFail($id);
+        $router = MikrotikRouter::with('nas')->findOrFail($id);
 
         return view('panels.admin.network.routers-edit', compact('router'));
     }
