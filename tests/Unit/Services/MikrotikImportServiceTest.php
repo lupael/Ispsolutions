@@ -45,6 +45,11 @@ class MikrotikImportServiceTest extends TestCase
     /**
      * Test that the normalized secrets array includes both 'username' and 'name' fields
      * This validates the fix for "Undefined array key 'username'" error
+     * 
+     * Note: We test the normalization logic directly rather than calling fetchPppSecretsFromRouter
+     * because that private method has complex dependencies (database, MikroTik API) that would
+     * require extensive mocking. This focused test verifies the critical normalization fix
+     * that resolves the production error.
      */
     public function test_secret_normalization_includes_username_field(): void
     {

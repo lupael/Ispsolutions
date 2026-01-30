@@ -12,8 +12,10 @@ return new class extends Migration
     /**
      * Run the migrations.
      * 
-     * Note: This migration uses MySQL-specific ALTER TABLE syntax for ENUM modification.
-     * For non-MySQL databases, the migration will need to be adapted.
+     * Note: This migration is compatible with both MySQL and non-MySQL databases.
+     * ENUM modifications use MySQL-specific syntax and are only applied when running on MySQL.
+     * On other databases (like SQLite), ENUM modifications are skipped and the migration
+     * will still succeed by adding the necessary columns.
      * 
      * tenant_id and nas_id are intentionally added without foreign key constraints
      * to allow for flexible installation scenarios where referenced tables may not exist.
@@ -54,9 +56,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert the enum changes
-        DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `pool_type` ENUM('public', 'private') DEFAULT 'public'");
-        DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `status` ENUM('active', 'inactive') DEFAULT 'active'");
+        // Only revert ENUMs for MySQL (skip for SQLite/other databases)
+        if (DB::connection()->getDriverName() === 'mysql') {
+            // Revert the enum changes
+            DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `pool_type` ENUM('public', 'private') DEFAULT 'public'");
+            DB::statement("ALTER TABLE `ip_pools` MODIFY COLUMN `status` ENUM('active', 'inactive') DEFAULT 'active'");
+        }
 
         Schema::table('ip_pools', function (Blueprint $table) {
             if (Schema::hasColumn('ip_pools', 'nas_id')) {
