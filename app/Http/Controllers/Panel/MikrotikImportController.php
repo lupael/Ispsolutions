@@ -38,6 +38,9 @@ class MikrotikImportController extends Controller
      */
     public function importIpPools(Request $request): JsonResponse
     {
+        // Extend execution time for large imports
+        set_time_limit(300); // 5 minutes
+        
         $validated = $request->validate([
             'router_id' => 'required|integer|exists:mikrotik_routers,id',
         ]);
@@ -116,6 +119,9 @@ class MikrotikImportController extends Controller
      */
     public function importSecrets(Request $request): JsonResponse
     {
+        // Extend execution time for large imports
+        set_time_limit(300); // 5 minutes
+        
         $validated = $request->validate([
             'router_id' => 'required|integer|exists:mikrotik_routers,id',
             'filter_disabled' => 'nullable|boolean',
