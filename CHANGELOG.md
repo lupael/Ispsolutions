@@ -100,20 +100,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-30
 
-### ✨ Features
-
-- enhance RouterCommentHelper with IspBills pattern support and improve RADIUS configuration ([894f876](../../commit/894f876122c84ddeab08cb32ead6256ec40f1f5d))
-
-### 🐛 Bug Fixes
-
-- address PR review comments - use customer data from relationship, add comprehensive tests, fix RADIUS config placeholder ([464478e](../../commit/464478ecb0cfac34b3174ca23b90fe07dba382e1))
-- address code review feedback - add error handling, deprecation annotations, and documentation ([06b6eda](../../commit/06b6eda3581b969a80876bc438d85e695c7cf1a4))
-
-### 📚 Documentation
-
-- add final implementation report for IspBills pattern integration ([123f15d](../../commit/123f15df15acc473d1b20f573625548a40a03cc5))
-- add comprehensive IspBills pattern user guide and update documentation index ([e355413](../../commit/e355413040e9479a5fafd7527f16dca27e125a89))
-
 ---
 
 ## Previous Releases
