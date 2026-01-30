@@ -39,7 +39,28 @@ class Customer extends User
             if (!isset($customer->operator_level)) {
                 $customer->operator_level = 100;
             }
+            
+            // Auto-generate customer_id if not set
+            if (empty($customer->customer_id)) {
+                $customer->customer_id = static::generateCustomerId();
+            }
         });
+    }
+
+    /**
+     * Generate a unique 5-6 digit customer ID.
+     */
+    private static function generateCustomerId(): string
+    {
+        do {
+            // Generate a random 5-6 digit number
+            $customerId = str_pad((string) random_int(10000, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Check if it already exists (check in parent User table)
+            $exists = \App\Models\User::withoutGlobalScope('customer')->where('customer_id', $customerId)->exists();
+        } while ($exists);
+
+        return $customerId;
     }
 
     /**
