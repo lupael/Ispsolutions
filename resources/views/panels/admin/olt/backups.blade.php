@@ -340,42 +340,26 @@ function backupManagement() {
             this.loadSchedules();
         },
         async loadBackups() {
-            // Mock data - replace with actual API call
-            this.backups = [
-                {
-                    id: 1,
-                    olt_id: 1,
-                    olt_name: 'Main OLT',
-                    file_name: 'olt_1_backup_2024-01-17_120530.cfg',
-                    file_size: 148650,
-                    backup_type: 'auto',
-                    created_at: new Date(Date.now() - 86400000).toISOString()
-                },
-                {
-                    id: 2,
-                    olt_id: 1,
-                    olt_name: 'Main OLT',
-                    file_name: 'olt_1_backup_2024-01-16_120530.cfg',
-                    file_size: 147200,
-                    backup_type: 'auto',
-                    created_at: new Date(Date.now() - 172800000).toISOString()
+            try {
+                const response = await fetchJson('/api/v1/olt/backups/all');
+                if (response.success && response.data) {
+                    this.backups = response.data.map(backup => ({
+                        id: backup.id,
+                        olt_id: backup.olt_id,
+                        olt_name: backup.olt_name,
+                        file_name: backup.file_name,
+                        file_size: backup.file_size,
+                        backup_type: backup.backup_type,
+                        created_at: backup.created_at
+                    }));
                 }
-            ];
+            } catch (error) {
+                console.error('Failed to load backups:', error);
+            }
         },
         async loadSchedules() {
-            // Mock data
-            this.schedules = [
-                {
-                    id: 1,
-                    olt_id: 1,
-                    olt_name: 'Main OLT',
-                    frequency: 'daily',
-                    time: '02:00',
-                    last_backup: new Date(Date.now() - 86400000).toISOString(),
-                    next_backup: new Date(Date.now() + (86400000 - new Date().getHours() * 3600000)).toISOString(),
-                    is_active: true
-                }
-            ];
+            // Mock data for schedules - TODO: implement API endpoint
+            this.schedules = [];
         },
         formatBytes(bytes) {
             if (bytes === 0) return '0 B';

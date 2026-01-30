@@ -2777,7 +2777,24 @@ class AdminController extends Controller
         $deviceMonitors = DeviceMonitor::with('monitorable')
             ->latest()
             ->limit(50)
-            ->get();
+            ->get()
+            ->map(function ($monitor) {
+                $device = $monitor->monitorable;
+                
+                return (object) [
+                    'id' => $monitor->id,
+                    'name' => $device?->name ?? 'Unknown Device',
+                    'ip_address' => $device?->ip_address ?? 'N/A',
+                    'type' => class_basename($monitor->monitorable_type),
+                    'status' => $monitor->status,
+                    'cpu_usage' => $monitor->cpu_usage,
+                    'memory_usage' => $monitor->memory_usage,
+                    'uptime' => $monitor->getUptimeHuman(),
+                    'ping' => $device?->response_time_ms ?? null,
+                    'load' => max($monitor->cpu_usage ?? 0, $monitor->memory_usage ?? 0),
+                    'last_check_at' => $monitor->last_check_at,
+                ];
+            });
 
         // Calculate health statistics based on device monitoring data
         $onlineCount = DeviceMonitor::online()->count();
@@ -2807,7 +2824,9 @@ class AdminController extends Controller
         $tenantId = getCurrentTenantId();
 
         // Collect all network devices (routers, NAS, OLT) with location data
+        // Only include active/online devices (filter out inactive/deleted)
         $routers = MikrotikRouter::where('tenant_id', $tenantId)
+            ->whereIn('status', ['active', 'online'])
             ->select('id', 'name', 'ip_address', 'status')
             ->get()
             ->map(function ($router) {
@@ -2824,6 +2843,7 @@ class AdminController extends Controller
             });
 
         $nas = Nas::where('tenant_id', $tenantId)
+            ->whereIn('status', ['active', 'online'])
             ->select('id', 'short_name', 'nas_name', 'description', 'status')
             ->get()
             ->map(function ($device) {
@@ -2839,7 +2859,25 @@ class AdminController extends Controller
                 ];
             });
 
-        $devices = $routers->concat($nas);
+        // Add OLT devices
+        $olts = Olt::where('tenant_id', $tenantId)
+            ->whereIn('status', ['active', 'online'])
+            ->select('id', 'name', 'ip_address', 'location', 'status')
+            ->get()
+            ->map(function ($olt) {
+                return (object) [
+                    'id' => $olt->id,
+                    'name' => $olt->name,
+                    'type' => 'olt',
+                    'ip_address' => $olt->ip_address,
+                    'location' => $olt->location ?? 'N/A',
+                    'latitude' => 0,
+                    'longitude' => 0,
+                    'status' => $olt->status ?? 'unknown',
+                ];
+            });
+
+        $devices = $routers->concat($nas)->concat($olts);
 
         $stats = [
             'online' => $devices->where('status', 'online')->count(),
