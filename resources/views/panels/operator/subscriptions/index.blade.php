@@ -133,7 +133,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 async function subscribeToPlan(planId) {
     if (!confirm('Are you sure you want to subscribe to this plan?')) {
         return;

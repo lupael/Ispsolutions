@@ -15,7 +15,7 @@
     
     <div id="revenue-trend-chart" style="min-height: 300px;"></div>
     
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof ApexCharts === 'undefined') {
                 console.error('ApexCharts is not loaded');

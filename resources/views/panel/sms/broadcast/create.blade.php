@@ -82,7 +82,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     document.getElementById('message').addEventListener('input', function() {
         document.getElementById('charCount').textContent = this.value.length;
     });

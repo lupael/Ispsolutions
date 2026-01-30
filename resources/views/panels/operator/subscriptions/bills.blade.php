@@ -149,7 +149,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 function payBill(billId) {
     if (!confirm('Proceed with payment?')) {
         return;

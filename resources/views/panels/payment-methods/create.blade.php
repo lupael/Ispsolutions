@@ -145,7 +145,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('agreementForm');
     const submitBtn = document.getElementById('submitBtn');

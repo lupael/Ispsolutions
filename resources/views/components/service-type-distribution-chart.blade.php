@@ -35,7 +35,7 @@
         </div>
     </div>
     
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof ApexCharts === 'undefined') {
                 console.error('ApexCharts is not loaded');

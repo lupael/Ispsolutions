@@ -205,7 +205,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 document.addEventListener('DOMContentLoaded', function() {
     const enableCheckbox = document.getElementById('auto_debit_enabled');
     const paymentMethodSection = document.getElementById('payment-method-section');

@@ -842,7 +842,7 @@
 
 <!-- Action Handler Script -->
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     // Refresh real-time usage function
     function refreshUsage() {
         const downloadEl = document.getElementById('download-usage');
