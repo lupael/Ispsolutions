@@ -563,7 +563,7 @@ class SuperAdminController extends Controller
     }
 
     /**
-     * Update an ISP.
+     * Update an ISP admin profile.
      */
     public function ispUpdate(Request $request, $id): RedirectResponse
     {
@@ -580,7 +580,7 @@ class SuperAdminController extends Controller
         $isp->update($validated);
 
         return redirect()->route('panel.super-admin.isp.index')
-            ->with('success', 'ISP updated successfully.');
+            ->with('success', 'ISP admin profile updated successfully.');
     }
 
     /**
@@ -589,7 +589,7 @@ class SuperAdminController extends Controller
     public function paymentGatewayEdit($id): View
     {
         $gateway = \App\Models\PaymentGateway::findOrFail($id);
-        return view('panels.super-admin.payment-gateway.edit', compact('gateway'));
+        return view('panels.super-admin.payment-gateway.create', compact('gateway'));
     }
 
     /**
@@ -605,6 +605,10 @@ class SuperAdminController extends Controller
             'configuration' => 'nullable|array',
             'is_active' => 'boolean',
         ]);
+
+        // Map provider to slug column
+        $validated['slug'] = $validated['provider'];
+        unset($validated['provider']);
 
         $gateway->update($validated);
 
@@ -630,7 +634,7 @@ class SuperAdminController extends Controller
     public function smsGatewayEdit($id): View
     {
         $gateway = \App\Models\SmsGateway::findOrFail($id);
-        return view('panels.super-admin.sms-gateway.edit', compact('gateway'));
+        return view('panels.super-admin.sms-gateway.create', compact('gateway'));
     }
 
     /**
@@ -646,6 +650,10 @@ class SuperAdminController extends Controller
             'configuration' => 'nullable|array',
             'is_active' => 'boolean',
         ]);
+
+        // Map provider to slug column
+        $validated['slug'] = $validated['provider'];
+        unset($validated['provider']);
 
         $gateway->update($validated);
 

@@ -56,26 +56,6 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Created At</label>
                 <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $admin->created_at->format('Y-m-d H:i:s') }}</p>
             </div>
-
-            <!-- Subscriptions -->
-            @if($admin->subscriptions && $admin->subscriptions->count() > 0)
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subscriptions</label>
-                <div class="mt-2 space-y-2">
-                    @foreach($admin->subscriptions as $subscription)
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-3">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $subscription->plan->name ?? 'N/A' }}</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">
-                            Status: {{ $subscription->status }}
-                            @if($subscription->expires_at)
-                            | Expires: {{ $subscription->expires_at->format('Y-m-d') }}
-                            @endif
-                        </p>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
         </div>
     </div>
 </div>

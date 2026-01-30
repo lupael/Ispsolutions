@@ -32,7 +32,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-start">
-                            <input type="checkbox" id="feature_mikrotik" name="features[]" value="mikrotik" checked 
+                            <input type="checkbox" id="feature_mikrotik" name="features[]" value="mikrotik" 
+                                   {{ in_array('mikrotik', $features ?? []) ? 'checked' : '' }}
                                    class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500">
                             <div class="ml-3">
                                 <label for="feature_mikrotik" class="text-sm font-medium text-gray-900 dark:text-white">MikroTik Integration</label>
@@ -43,7 +44,8 @@
 
                     <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-start">
-                            <input type="checkbox" id="feature_olt" name="features[]" value="olt" checked 
+                            <input type="checkbox" id="feature_olt" name="features[]" value="olt" 
+                                   {{ in_array('olt', $features ?? []) ? 'checked' : '' }}
                                    class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500">
                             <div class="ml-3">
                                 <label for="feature_olt" class="text-sm font-medium text-gray-900 dark:text-white">OLT Management</label>
@@ -54,7 +56,8 @@
 
                     <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-start">
-                            <input type="checkbox" id="feature_billing" name="features[]" value="billing" checked 
+                            <input type="checkbox" id="feature_billing" name="features[]" value="billing" 
+                                   {{ in_array('billing', $features ?? []) ? 'checked' : '' }}
                                    class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500">
                             <div class="ml-3">
                                 <label for="feature_billing" class="text-sm font-medium text-gray-900 dark:text-white">Billing System</label>
@@ -65,7 +68,8 @@
 
                     <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-start">
-                            <input type="checkbox" id="feature_sms" name="features[]" value="sms" checked 
+                            <input type="checkbox" id="feature_sms" name="features[]" value="sms" 
+                                   {{ in_array('sms', $features ?? []) ? 'checked' : '' }}
                                    class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500">
                             <div class="ml-3">
                                 <label for="feature_sms" class="text-sm font-medium text-gray-900 dark:text-white">SMS Gateway</label>
@@ -76,7 +80,8 @@
 
                     <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-start">
-                            <input type="checkbox" id="feature_reports" name="features[]" value="reports" checked 
+                            <input type="checkbox" id="feature_reports" name="features[]" value="reports" 
+                                   {{ in_array('reports', $features ?? []) ? 'checked' : '' }}
                                    class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500">
                             <div class="ml-3">
                                 <label for="feature_reports" class="text-sm font-medium text-gray-900 dark:text-white">Advanced Reports</label>
@@ -88,6 +93,7 @@
                     <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-start">
                             <input type="checkbox" id="feature_api" name="features[]" value="api" 
+                                   {{ in_array('api', $features ?? []) ? 'checked' : '' }}
                                    class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500">
                             <div class="ml-3">
                                 <label for="feature_api" class="text-sm font-medium text-gray-900 dark:text-white">API Access</label>
@@ -129,7 +135,7 @@
                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
                                id="max_admins" 
                                name="max_admins" 
-                               value="5"
+                               value="{{ old('max_admins', $limits['max_admins'] ?? 5) }}"
                                min="1">
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Number of admin panels Super Admins can sell</p>
                     </div>
@@ -142,7 +148,7 @@
                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
                                id="max_users_per_panel" 
                                name="max_users_per_panel" 
-                               value="1000"
+                               value="{{ old('max_users_per_panel', $limits['max_users_per_panel'] ?? 1000) }}"
                                min="1">
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default maximum users per admin panel</p>
                     </div>
@@ -155,7 +161,7 @@
                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
                                id="max_routers" 
                                name="max_routers" 
-                               value="10"
+                               value="{{ old('max_routers', $limits['max_routers'] ?? 10) }}"
                                min="1">
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default maximum routers per panel</p>
                     </div>
@@ -168,7 +174,7 @@
                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
                                id="max_olts" 
                                name="max_olts" 
-                               value="5"
+                               value="{{ old('max_olts', $limits['max_olts'] ?? 5) }}"
                                min="1">
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default maximum OLTs per panel</p>
                     </div>

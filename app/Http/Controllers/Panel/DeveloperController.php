@@ -668,7 +668,7 @@ class DeveloperController extends Controller
     public function editSubscription($id): View
     {
         $plan = \App\Models\SubscriptionPlan::findOrFail($id);
-        return view('panels.developer.subscriptions.edit', compact('plan'));
+        return view('panels.developer.subscriptions.create', compact('plan'));
     }
 
     /**
@@ -729,6 +729,16 @@ class DeveloperController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // Map provider to slug column
+        $validated['slug'] = $validated['provider'];
+        unset($validated['provider']);
+
+        // Set tenant_id if user has one
+        $user = $request->user();
+        if ($user && property_exists($user, 'tenant_id') && $user->tenant_id) {
+            $validated['tenant_id'] = $user->tenant_id;
+        }
+
         PaymentGateway::create($validated);
 
         return redirect()->route('panel.developer.gateways.payment')
@@ -741,7 +751,7 @@ class DeveloperController extends Controller
     public function editPaymentGateway($id): View
     {
         $gateway = PaymentGateway::findOrFail($id);
-        return view('panels.developer.gateways.payment-edit', compact('gateway'));
+        return view('panels.developer.gateways.payment-create', compact('gateway'));
     }
 
     /**
@@ -757,6 +767,10 @@ class DeveloperController extends Controller
             'configuration' => 'nullable|array',
             'is_active' => 'boolean',
         ]);
+
+        // Map provider to slug column
+        $validated['slug'] = $validated['provider'];
+        unset($validated['provider']);
 
         $gateway->update($validated);
 
@@ -796,6 +810,16 @@ class DeveloperController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // Map provider to slug column
+        $validated['slug'] = $validated['provider'];
+        unset($validated['provider']);
+
+        // Set tenant_id if user has one
+        $user = $request->user();
+        if ($user && property_exists($user, 'tenant_id') && $user->tenant_id) {
+            $validated['tenant_id'] = $user->tenant_id;
+        }
+
         \App\Models\SmsGateway::create($validated);
 
         return redirect()->route('panel.developer.gateways.sms')
@@ -808,7 +832,7 @@ class DeveloperController extends Controller
     public function editSmsGateway($id): View
     {
         $gateway = \App\Models\SmsGateway::findOrFail($id);
-        return view('panels.developer.gateways.sms-edit', compact('gateway'));
+        return view('panels.developer.gateways.sms-create', compact('gateway'));
     }
 
     /**
@@ -824,6 +848,10 @@ class DeveloperController extends Controller
             'configuration' => 'nullable|array',
             'is_active' => 'boolean',
         ]);
+
+        // Map provider to slug column
+        $validated['slug'] = $validated['provider'];
+        unset($validated['provider']);
 
         $gateway->update($validated);
 
@@ -900,7 +928,7 @@ class DeveloperController extends Controller
     {
         $admin = User::allTenants()
             ->where('operator_level', 20)
-            ->with(['tenant', 'subscriptions'])
+            ->with(['tenant'])
             ->findOrFail($id);
 
         return view('panels.developer.admins.show', compact('admin'));

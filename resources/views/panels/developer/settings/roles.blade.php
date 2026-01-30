@@ -37,7 +37,7 @@
                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
                                id="operator_name" 
                                name="operator_name" 
-                               value="Operator"
+                               value="{{ old('operator_name', $roleNames['operator'] ?? 'Operator') }}"
                                placeholder="Operator">
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default: Operator (Operator Level: 30)</p>
                     </div>
@@ -50,7 +50,7 @@
                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" 
                                id="sub_operator_name" 
                                name="sub_operator_name" 
-                               value="Sub-Operator"
+                               value="{{ old('sub_operator_name', $roleNames['sub_operator'] ?? 'Sub-Operator') }}"
                                placeholder="Sub-Operator">
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default: Sub-Operator (Operator Level: 40)</p>
                     </div>
