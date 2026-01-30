@@ -9,7 +9,7 @@
 └────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┬─────────────────────┬─────────────────────┐
-│  ISP Information    │ Sub-Operator Info   │ Clients of Sub-Op   │
+│  ISP Information    │ Operator Info   │ Clients of Operator   │
 │                     │                     │                     │
 │ ┌─────────────────┐ │ ┌─────────────────┐ │ ┌─────────────────┐ │
 │ │ Status: Active  │ │ │ Total: 8        │ │ │ Total: 570      │ │
@@ -31,7 +31,7 @@
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │ ┌──────────────────┬──────────────────┬──────────────────┐         │
-│ │   ISP's MRC      │   Clients MRC    │  Sub-Op Clients  │         │
+│ │   ISP's MRC      │   Clients MRC    │  Operator Clients  │         │
 │ │                  │                  │      MRC         │         │
 │ │ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │         │
 │ │ │ Current MRC  │ │ │ Current MRC  │ │ │ Current MRC  │ │         │
@@ -64,7 +64,7 @@
 │              0 ┴─┴───┴───┴──┴───┴──┴───┴──┴─┴──┴─┴─                 │
 │                  Nov 2025   Dec 2025   Jan 2026                     │
 │                                                                     │
-│         Legend:  █ ISP's MRC   █ Clients MRC   █ Sub-Op MRC        │
+│         Legend:  █ ISP's MRC   █ Clients MRC   █ Operator MRC        │
 │                  (Blue)        (Green)         (Purple)            │
 └────────────────────────────────────────────────────────────────────┘
 
@@ -86,12 +86,12 @@
 - **In-Active Clients**: Yellow gradient (#f59e0b)
 - **Expired Clients**: Red gradient (#ef4444)
 
-### Sub-Operator Information Widget
+### Operator Information Widget
 - **Total**: Purple gradient (#8b5cf6)
 - **Active**: Green gradient (#10b981)
 - **In-Active**: Gray gradient (#6b7280)
 
-### Clients of Sub-Operator Widget
+### Clients of Operator Widget
 - **Total Clients**: Indigo gradient (#6366f1)
 - **Active Clients**: Green gradient (#10b981)
 - **In-Active Clients**: Yellow gradient (#f59e0b)
@@ -100,13 +100,13 @@
 ### Revenue MRC Widget
 - **ISP's MRC Current**: Blue gradient (#3b82f6)
 - **Clients MRC Current**: Green gradient (#10b981)
-- **Sub-Op MRC Current**: Purple gradient (#8b5cf6)
+- **Operator MRC Current**: Purple gradient (#8b5cf6)
 - **Average Values**: Gray background (#f3f4f6)
 
 ### Chart Colors
 - **ISP's MRC Line**: #3b82f6 (Blue)
 - **Clients MRC Line**: #10b981 (Green)
-- **Sub-Operator Clients MRC Line**: #8b5cf6 (Purple)
+- **Operator Clients MRC Line**: #8b5cf6 (Purple)
 
 ## Component Hierarchy
 
@@ -115,14 +115,14 @@ dashboard.blade.php
 ├── Page Header
 ├── ISP Information Section
 │   ├── isp-information-widget
-│   ├── sub-operator-information-widget
-│   └── sub-operator-clients-widget
+│   ├── operator-information-widget
+│   └── operator-clients-widget
 ├── Revenue MRC Section
 │   └── revenue-mrc-widget
 │       ├── MRC Statistics Grid
 │       │   ├── ISP's MRC column
 │       │   ├── Clients MRC column
-│       │   └── Sub-Operator Clients MRC column
+│       │   └── Operator Clients MRC column
 │       └── 3-Month Comparison Chart (ApexCharts)
 └── [Existing Sections]
     ├── Customer Statistics
@@ -184,10 +184,10 @@ dashboard.blade.php
 │  │ │ x-isp-information-widget              │ │              │
 │  │ └───────────────────────────────────────┘ │              │
 │  │ ┌───────────────────────────────────────┐ │              │
-│  │ │ x-sub-operator-information-widget     │ │              │
+│  │ │ x-operator-information-widget     │ │              │
 │  │ └───────────────────────────────────────┘ │              │
 │  │ ┌───────────────────────────────────────┐ │              │
-│  │ │ x-sub-operator-clients-widget         │ │              │
+│  │ │ x-operator-clients-widget         │ │              │
 │  │ └───────────────────────────────────────┘ │              │
 │  │ ┌───────────────────────────────────────┐ │              │
 │  │ │ x-revenue-mrc-widget                  │ │              │
@@ -216,7 +216,7 @@ dashboard.blade.php
 ## Responsive Behavior
 
 ### Desktop (≥1024px)
-- 3-column grid for ISP/Sub-Operator/Clients widgets
+- 3-column grid for ISP/Operator/Clients widgets
 - 3-column grid for MRC statistics
 - Full-width chart with optimal height
 

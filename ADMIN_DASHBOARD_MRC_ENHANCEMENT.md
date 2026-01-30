@@ -22,7 +22,7 @@ This document describes the new dashboard features added to the ISP Solution adm
 - Yellow gradient for In-Active Clients
 - Red gradient for Expired Clients
 
-### 2. Sub-Operator Information Widget
+### 2. Operator Information Widget
 **Purpose**: Track operator and sub-operator account statistics.
 
 **Metrics Displayed**:
@@ -36,7 +36,7 @@ This document describes the new dashboard features added to the ISP Solution adm
 - Green gradient for Active
 - Gray gradient for In-Active
 
-### 3. Client's of Sub-Operator Widget
+### 3. Client's of Operator Widget
 **Purpose**: Display statistics for customers managed by operators and sub-operators.
 
 **Metrics Displayed**:
@@ -66,7 +66,7 @@ This document describes the new dashboard features added to the ISP Solution adm
 - Same metrics as ISP's MRC (duplicate for clarity)
 - Represents all client revenue
 
-#### C. Client's Of Sub-Operator MRC
+#### C. Client's Of Operator MRC
 - **Current MRC**: Sum of package prices for sub-operator clients
 - **This Month Avg. MRC**: Average invoice for sub-operator clients this month
 - **Last Month Avg. MRC**: Average invoice for sub-operator clients last month
@@ -75,7 +75,7 @@ This document describes the new dashboard features added to the ISP Solution adm
 - 3-column grid for MRC statistics
 - Blue gradient for ISP's MRC
 - Green gradient for Client's MRC
-- Purple gradient for Sub-Operator Client's MRC
+- Purple gradient for Operator Client's MRC
 - Interactive bar chart showing 3-month comparison
 
 **Chart Features**:
@@ -114,16 +114,16 @@ This document describes the new dashboard features added to the ISP Solution adm
 ```
 resources/views/components/
 ├── isp-information-widget.blade.php
-├── sub-operator-information-widget.blade.php
-├── sub-operator-clients-widget.blade.php
+├── operator-information-widget.blade.php
+├── operator-clients-widget.blade.php
 └── revenue-mrc-widget.blade.php
 ```
 
 #### Component Props:
 - **isp-information-widget**: `$ispInfo` array
-- **sub-operator-information-widget**: `$subOperatorInfo` array
-- **sub-operator-clients-widget**: `$subOperatorClients` array
-- **revenue-mrc-widget**: `$ispMRC`, `$clientsMRC`, `$subOperatorClientsMRC`, `$mrcComparison`
+- **operator-information-widget**: `$operatorInfo` array
+- **operator-clients-widget**: `$operatorClients` array
+- **revenue-mrc-widget**: `$ispMRC`, `$clientsMRC`, `$operatorClientsMRC`, `$mrcComparison`
 
 ### Dashboard View Integration
 
