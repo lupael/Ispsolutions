@@ -22,8 +22,12 @@ class CustomerImportController extends Controller
     public function index(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        $routers = MikrotikRouter::where('tenant_id', $tenantId)->get();
-        $nasDevices = Nas::where('tenant_id', $tenantId)->get();
+        $routers = MikrotikRouter::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->get();
+        $nasDevices = Nas::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->get();
         $packages = Package::where('tenant_id', $tenantId)->get();
 
         // Get recent imports

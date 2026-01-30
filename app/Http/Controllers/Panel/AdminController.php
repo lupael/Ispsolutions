@@ -2959,18 +2959,34 @@ class AdminController extends Controller
      */
     public function routerLogs(): View
     {
+        $tenantId = auth()->user()->tenant_id;
+        
         // Get router connection logs from audit logs
-        $logs = \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)
-            ->orWhere('event', 'like', '%router%')
+        $logs = \App\Models\AuditLog::where('tenant_id', $tenantId)
+            ->where(function($query) {
+                $query->where('auditable_type', MikrotikRouter::class)
+                    ->orWhere('event', 'like', '%router%');
+            })
             ->with(['user', 'auditable'])
             ->latest()
             ->paginate(50);
 
         $stats = [
-            'total' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->count(),
-            'today' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereDate('created_at', today())->count(),
-            'this_week' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-            'this_month' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereMonth('created_at', now()->month)->count(),
+            'total' => \App\Models\AuditLog::where('tenant_id', $tenantId)
+                ->where('auditable_type', MikrotikRouter::class)
+                ->count(),
+            'today' => \App\Models\AuditLog::where('tenant_id', $tenantId)
+                ->where('auditable_type', MikrotikRouter::class)
+                ->whereDate('created_at', today())
+                ->count(),
+            'this_week' => \App\Models\AuditLog::where('tenant_id', $tenantId)
+                ->where('auditable_type', MikrotikRouter::class)
+                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+                ->count(),
+            'this_month' => \App\Models\AuditLog::where('tenant_id', $tenantId)
+                ->where('auditable_type', MikrotikRouter::class)
+                ->whereMonth('created_at', now()->month)
+                ->count(),
         ];
 
         return view('panels.admin.logs.router', compact('logs', 'stats'));
@@ -2981,17 +2997,56 @@ class AdminController extends Controller
      */
     public function radiusLogs(): View
     {
+        $tenantId = auth()->user()->tenant_id;
+        
         try {
-            // Get RADIUS accounting logs
-            $logs = \App\Models\RadAcct::with('user')
+            // Get RADIUS accounting logs filtered by tenant users
+            $logs = \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
+                    $query->select('username')
+                        ->from('users')
+                        ->where('tenant_id', $tenantId)
+                        ->whereNotNull('username');
+                })
                 ->latest('acctstarttime')
                 ->paginate(50);
 
             $stats = [
-                'total' => \App\Models\RadAcct::count(),
-                'today' => \App\Models\RadAcct::whereDate('acctstarttime', today())->count(),
-                'active_sessions' => \App\Models\RadAcct::whereNull('acctstoptime')->count(),
-                'total_bandwidth' => \App\Models\RadAcct::sum('acctinputoctets') + \App\Models\RadAcct::sum('acctoutputoctets'),
+                'total' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
+                        $query->select('username')
+                            ->from('users')
+                            ->where('tenant_id', $tenantId)
+                            ->whereNotNull('username');
+                    })->count(),
+                'today' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
+                        $query->select('username')
+                            ->from('users')
+                            ->where('tenant_id', $tenantId)
+                            ->whereNotNull('username');
+                    })
+                    ->whereDate('acctstarttime', today())
+                    ->count(),
+                'active_sessions' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
+                        $query->select('username')
+                            ->from('users')
+                            ->where('tenant_id', $tenantId)
+                            ->whereNotNull('username');
+                    })
+                    ->whereNull('acctstoptime')
+                    ->count(),
+                'total_bandwidth' => \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
+                        $query->select('username')
+                            ->from('users')
+                            ->where('tenant_id', $tenantId)
+                            ->whereNotNull('username');
+                    })
+                    ->sum('acctinputoctets') + 
+                    \App\Models\RadAcct::whereIn('username', function($query) use ($tenantId) {
+                        $query->select('username')
+                            ->from('users')
+                            ->where('tenant_id', $tenantId)
+                            ->whereNotNull('username');
+                    })
+                    ->sum('acctoutputoctets'),
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle missing RADIUS tables gracefully

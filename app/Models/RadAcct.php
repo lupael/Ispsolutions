@@ -56,6 +56,14 @@ class RadAcct extends Model
     ];
 
     /**
+     * Get the user that owns the session
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'username', 'username');
+    }
+
+    /**
      * Get formatted duration
      */
     public function getDurationFormattedAttribute(): string
