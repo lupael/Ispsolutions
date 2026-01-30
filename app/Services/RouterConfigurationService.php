@@ -12,10 +12,11 @@ class RouterConfigurationService
 {
     /**
      * Configure RADIUS authentication on the router
+     * Complete one-click setup following IspBills pattern
      * 
-     * Note: This is a placeholder implementation. The current MikrotikService implementation
-     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
-     * This method requires future implementation when RouterOS API support is added.
+     * Note: This is a placeholder for future implementation when RouterOS API client
+     * with comm() method is available. Current MikrotikService implementation uses
+     * a different API pattern.
      */
     public function configureRadius(MikrotikRouter $router): array
     {
@@ -28,13 +29,15 @@ class RouterConfigurationService
             ];
         }
 
-        Log::warning('RADIUS configuration is not fully implemented for the current MikrotikService', [
+        Log::warning('RADIUS configuration requires RouterOS API client implementation', [
             'router_id' => $router->id,
+            'note' => 'MikrotikService::getConnectedRouter() and comm() methods need to be implemented',
         ]);
 
         return [
             'success' => false,
-            'error' => 'RADIUS configuration requires RouterOS API implementation',
+            'error' => 'RADIUS configuration requires RouterOS API client with comm() method. Feature coming soon.',
+            'note' => 'Use manual configuration or wait for API implementation',
         ];
     }
 
