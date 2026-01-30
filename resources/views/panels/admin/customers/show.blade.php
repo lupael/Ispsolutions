@@ -31,16 +31,8 @@
         </div>
     </div>
 
-    <!-- Inline Editable Customer Details -->
-    <x-inline-editable-customer-details 
-        :customer="$customer" 
-        :packages="$packages ?? []"
-        :operators="$operators ?? []"
-        :zones="$zones ?? []"
-        :routers="$routers ?? []"
-    />
-
     <!-- Tabbed Customer Details (Profile, Network, Billing, Sessions, History, Activity) -->
+    <!-- Moved to top for better visibility and user experience -->
     <x-tabbed-customer-details 
         :customer="$customer"
         :onu="$onu"
@@ -48,6 +40,15 @@
         :recentInvoices="$recentInvoices ?? collect()"
         :recentSmsLogs="$recentSmsLogs ?? collect()"
         :recentAuditLogs="$recentAuditLogs ?? collect()"
+    />
+
+    <!-- Inline Editable Customer Details -->
+    <x-inline-editable-customer-details 
+        :customer="$customer" 
+        :packages="$packages ?? []"
+        :operators="$operators ?? []"
+        :zones="$zones ?? []"
+        :routers="$routers ?? []"
     />
 
     <!-- Action Buttons Grid - Compact Layout -->
