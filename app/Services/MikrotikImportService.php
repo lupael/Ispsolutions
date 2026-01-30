@@ -294,49 +294,84 @@ class MikrotikImportService
             $failed = 0;
             $errors = [];
 
-            DB::beginTransaction();
-            foreach ($secrets as $secretData) {
+            // Process in chunks to avoid timeout and memory issues
+            $chunkSize = 50; // Process 50 records at a time
+            $chunks = array_chunk($secrets, $chunkSize);
+
+            foreach ($chunks as $chunkIndex => $secretsChunk) {
+                DB::beginTransaction();
                 try {
-                    // Create user account if not exists
-                    $user = User::firstOrCreate(
-                        [
-                            'mobile' => $secretData['mobile'] ?? $secretData['username'],
-                            'tenant_id' => $tenantId,
-                        ],
-                        [
-                            'name' => $secretData['name'] ?? $secretData['username'],
-                            'email' => $secretData['email'] ?? null,
-                            'password' => bcrypt($secretData['password']),
-                            'role_id' => $this->getCustomerRoleId(),
-                            'is_active' => true,
-                        ]
-                    );
+                    $chunkImported = 0;
+                    $chunkFailed = 0;
+                    
+                    foreach ($secretsChunk as $secretData) {
+                        try {
+                            // Create user account if not exists
+                            // Use a lower bcrypt cost (4 instead of default 10) for bulk imports to improve performance
+                            // This is acceptable as users should be prompted to change passwords after import
+                            // Using Laravel's Hash facade with custom rounds to ensure compatibility with Auth system
+                            $hashedPassword = \Illuminate\Support\Facades\Hash::make($secretData['password'], ['rounds' => 4]);
+                            
+                            $user = User::firstOrCreate(
+                                [
+                                    'mobile' => $secretData['mobile'] ?? $secretData['username'],
+                                    'tenant_id' => $tenantId,
+                                ],
+                                [
+                                    'name' => $secretData['name'] ?? $secretData['username'],
+                                    'email' => $secretData['email'] ?? null,
+                                    'password' => $hashedPassword,
+                                    'role_id' => $this->getCustomerRoleId(),
+                                    'is_active' => true,
+                                ]
+                            );
 
-                    // Create network user
-                    NetworkUser::create([
-                        'username' => $secretData['username'],
-                        'password' => $secretData['password'],
-                        'user_id' => $user->id,
-                        'tenant_id' => $tenantId,
-                        'service_type' => 'pppoe',
-                        'package_id' => $secretData['package_id'] ?? null,
-                        'status' => $secretData['disabled'] ? 'inactive' : 'active',
-                        'is_active' => ! $secretData['disabled'],
-                    ]);
+                            // Create network user
+                            NetworkUser::create([
+                                'username' => $secretData['username'],
+                                'password' => $secretData['password'],
+                                'user_id' => $user->id,
+                                'tenant_id' => $tenantId,
+                                'service_type' => 'pppoe',
+                                'package_id' => $secretData['package_id'] ?? null,
+                                'status' => $secretData['disabled'] ? 'inactive' : 'active',
+                                'is_active' => ! $secretData['disabled'],
+                            ]);
 
-                    // Generate initial bill if requested
-                    if ($generateBills && ! $secretData['disabled']) {
-                        // This would call BillingService to generate bill
-                        // Skipped for brevity
+                            // Generate initial bill if requested
+                            if ($generateBills && ! $secretData['disabled']) {
+                                // This would call BillingService to generate bill
+                                // Skipped for brevity
+                            }
+
+                            $chunkImported++;
+                        } catch (\Exception $e) {
+                            $chunkFailed++;
+                            $errors[] = "Failed to import customer {$secretData['username']}: {$e->getMessage()}";
+                        }
                     }
-
-                    $imported++;
+                    
+                    // Only update totals and commit if chunk processing succeeded
+                    $imported += $chunkImported;
+                    $failed += $chunkFailed;
+                    DB::commit();
+                    
+                    Log::info("Processed chunk {$chunkIndex} of secrets import", [
+                        'chunk_size' => count($secretsChunk),
+                        'chunk_imported' => $chunkImported,
+                        'chunk_failed' => $chunkFailed,
+                        'total_imported' => $imported,
+                        'total_failed' => $failed,
+                    ]);
                 } catch (\Exception $e) {
-                    $failed++;
-                    $errors[] = "Failed to import customer {$secretData['username']}: {$e->getMessage()}";
+                    DB::rollBack();
+                    Log::error("Failed to process chunk {$chunkIndex} of secrets import", [
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Entire chunk failed - all records in this chunk are considered failed
+                    $failed += count($secretsChunk);
                 }
             }
-            DB::commit();
 
             return [
                 'success' => true,
@@ -345,7 +380,6 @@ class MikrotikImportService
                 'errors' => $errors,
             ];
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Failed to import PPP secrets', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
@@ -353,9 +387,9 @@ class MikrotikImportService
 
             return [
                 'success' => false,
-                'imported' => 0,
-                'failed' => 0,
-                'errors' => [$e->getMessage()],
+                'imported' => $imported, // Return actual counts, not zeros
+                'failed' => $failed,
+                'errors' => array_merge($errors, [$e->getMessage()]),
             ];
         }
     }
@@ -550,7 +584,7 @@ class MikrotikImportService
             $failed = 0;
             $errors = [];
 
-            DB::beginTransaction();
+            // Process each pool from router
             foreach ($pools as $poolData) {
                 try {
                     // Parse the ranges field from MikroTik format
@@ -566,26 +600,62 @@ class MikrotikImportService
                     $ipList = $parseResult['ips'];
                     $calculatedSubnetMask = $parseResult['subnet_mask'];
 
-                    foreach ($ipList as $ip) {
-                        IpPool::create([
-                            'name' => isset($poolData['name']) ? "{$poolData['name']}-{$ip}" : "Pool-{$ip}",
-                            'ip_address' => $ip,
-                            'subnet_mask' => $calculatedSubnetMask ?? '255.255.255.0',
-                            'gateway' => null,
-                            'pool_type' => 'pppoe',
-                            'tenant_id' => $tenantId,
-                            'nas_id' => null,
-                            'status' => 'available',
-                        ]);
-                        $imported++;
+                    // Process IPs in chunks to avoid memory issues and timeout
+                    $chunkSize = 100; // Process 100 IPs at a time
+                    $ipChunks = array_chunk($ipList, $chunkSize);
+                    
+                    foreach ($ipChunks as $chunkIndex => $ipChunk) {
+                        DB::beginTransaction();
+                        try {
+                            // Prepare bulk insert data
+                            $bulkData = [];
+                            foreach ($ipChunk as $ip) {
+                                $bulkData[] = [
+                                    'name' => isset($poolData['name']) ? "{$poolData['name']}-{$ip}" : "Pool-{$ip}",
+                                    'ip_address' => $ip,
+                                    'subnet_mask' => $calculatedSubnetMask ?? '255.255.255.0',
+                                    'gateway' => null,
+                                    'pool_type' => 'pppoe',
+                                    'tenant_id' => $tenantId,
+                                    'nas_id' => null,
+                                    'status' => 'available',
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                            }
+                            
+                            // Bulk insert for better performance
+                            IpPool::insert($bulkData);
+                            $imported += count($bulkData);
+                            DB::commit();
+                            
+                            Log::info("Processed chunk {$chunkIndex} of IP pool import", [
+                                'pool_name' => $poolData['name'] ?? 'Unknown',
+                                'chunk_size' => count($bulkData),
+                                'total_imported' => $imported,
+                            ]);
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            $failed += count($ipChunk);
+                            $poolName = $poolData['name'] ?? 'Unknown';
+                            $errors[] = "Failed to import chunk {$chunkIndex} of pool {$poolName}: {$e->getMessage()}";
+                            Log::error("Failed to import IP pool chunk", [
+                                'pool_name' => $poolName,
+                                'chunk_index' => $chunkIndex,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
                     }
                 } catch (\Exception $e) {
-                    $failed++;
                     $poolName = $poolData['name'] ?? 'Unknown';
-                    $errors[] = "Failed to import pool {$poolName}: {$e->getMessage()}";
+                    $errors[] = "Failed to process pool {$poolName}: {$e->getMessage()}";
+                    $failed++; // Increment failed count for the pool that couldn't be parsed
+                    Log::error("Failed to process IP pool", [
+                        'pool_name' => $poolName,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
-            DB::commit();
 
             return [
                 'success' => true,
@@ -594,7 +664,6 @@ class MikrotikImportService
                 'errors' => $errors,
             ];
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Failed to import IP pools from router', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
@@ -602,9 +671,9 @@ class MikrotikImportService
 
             return [
                 'success' => false,
-                'imported' => 0,
-                'failed' => 0,
-                'errors' => [$e->getMessage()],
+                'imported' => $imported, // Return actual counts, not zeros
+                'failed' => $failed,
+                'errors' => array_merge($errors, [$e->getMessage()]),
             ];
         }
     }
