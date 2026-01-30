@@ -79,7 +79,7 @@
                         max="100"
                         value="{{ old('discount_percentage') }}"
                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('discount_percentage') border-red-500 @enderror">
-                    <p class="mt-1 text-sm text-gray-500">Optional: Percentage discount from original price</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Optional: Percentage discount from original price</p>
                     @error('discount_percentage')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
