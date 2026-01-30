@@ -188,6 +188,8 @@ class OltService implements OltServiceInterface
             $output = $connection->exec($commands['onu_state']);
 
             if ($output === false) {
+                // Clean up connection on failure
+                $this->disconnect($oltId);
                 throw new RuntimeException('Failed to execute discovery command');
             }
 
@@ -202,6 +204,9 @@ class OltService implements OltServiceInterface
                         'onu_id' => (int) $matches[2],
                         'serial_number' => $matches[3],
                         'status' => strtolower($matches[4]),
+                        'signal_rx' => null,
+                        'signal_tx' => null,
+                        'distance' => null,
                     ];
                 }
             }
@@ -211,6 +216,11 @@ class OltService implements OltServiceInterface
             return $onus;
         } catch (\Exception $e) {
             Log::error("Error discovering ONUs on OLT {$oltId}: " . $e->getMessage());
+            
+            // Ensure connection is cleaned up on error
+            if (isset($this->connections[$oltId])) {
+                $this->disconnect($oltId);
+            }
 
             return [];
         }
@@ -223,7 +233,8 @@ class OltService implements OltServiceInterface
     {
         return !empty($olt->ip_address) 
             && !empty($olt->snmp_community) 
-            && !empty($olt->snmp_version);
+            && !empty($olt->snmp_version)
+            && in_array(strtolower($olt->management_protocol ?? ''), ['snmp', 'both']);
     }
 
     /**
@@ -277,40 +288,24 @@ class OltService implements OltServiceInterface
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
             
-            // Try SNMP first for real-time power levels
+            // Try SNMP first if configured
             if ($this->canUseSNMP($onu->olt)) {
                 $snmpService = app(OltSnmpService::class);
-                $signalData = $snmpService->getOnuSignalLevels($onu->olt, $onu);
                 
-                if ($signalData) {
-                    Log::debug('Retrieved ONU status via SNMP', [
-                        'onu_id' => $onuId,
-                        'status' => $signalData['status'],
-                    ]);
-                    
-                    return [
-                        'status' => $signalData['status'],
-                        'signal_rx' => $signalData['rx_power'],
-                        'signal_tx' => $signalData['tx_power'],
-                        'distance' => $signalData['distance'],
-                        'uptime' => null, // Not available via SNMP
-                        'last_update' => now()->toIso8601String(),
-                    ];
-                }
-            }
-
-            // Try SNMP first if configured
-            $oltSnmpService = app(\App\Services\OltSnmpService::class);
-            
-            if ($onu->olt->snmp_community && $onu->olt->snmp_version) {
                 Log::info('Attempting SNMP-based ONU status retrieval', [
                     'onu_id' => $onuId,
                     'olt_id' => $onu->olt_id,
                 ]);
                 
-                $snmpStatus = $oltSnmpService->getOnuOpticalPower($onu);
+                $snmpStatus = $snmpService->getOnuOpticalPower($onu);
                 
                 if ($snmpStatus['rx_power'] !== null || $snmpStatus['tx_power'] !== null) {
+                    Log::debug('Retrieved ONU status via SNMP', [
+                        'onu_id' => $onuId,
+                        'rx_power' => $snmpStatus['rx_power'],
+                        'tx_power' => $snmpStatus['tx_power'],
+                    ]);
+                    
                     return [
                         'status' => $onu->status,
                         'signal_rx' => $snmpStatus['rx_power'],
@@ -601,7 +596,8 @@ class OltService implements OltServiceInterface
                 ->where('id', $backupId)
                 ->firstOrFail();
 
-            if (! $backup->exists()) {
+            // Check if backup file exists in storage
+            if (! Storage::exists($backup->file_path)) {
                 Log::warning("Backup file not found: {$backup->file_path}");
 
                 return null;

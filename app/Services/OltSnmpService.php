@@ -104,6 +104,34 @@ class OltSnmpService
                 } catch (\Exception $e) {
                     // Continue without status
                 }
+                
+                // Try to get optical power levels during discovery
+                try {
+                    $rxPower = $this->snmpGet($olt, $oids['onu_rx_power'] . '.' . $index);
+                    if ($rxPower !== null && $rxPower !== false) {
+                        $onu['signal_rx'] = $this->convertOpticalPower($rxPower, $vendor);
+                    }
+                } catch (\Exception $e) {
+                    // Continue without RX power
+                }
+                
+                try {
+                    $txPower = $this->snmpGet($olt, $oids['onu_tx_power'] . '.' . $index);
+                    if ($txPower !== null && $txPower !== false) {
+                        $onu['signal_tx'] = $this->convertOpticalPower($txPower, $vendor);
+                    }
+                } catch (\Exception $e) {
+                    // Continue without TX power
+                }
+                
+                try {
+                    $distance = $this->snmpGet($olt, $oids['onu_distance'] . '.' . $index);
+                    if ($distance !== null && $distance !== false) {
+                        $onu['distance'] = $this->convertDistance($distance, $vendor);
+                    }
+                } catch (\Exception $e) {
+                    // Continue without distance
+                }
 
                 $discoveredOnus[] = $onu;
             }
@@ -124,6 +152,23 @@ class OltSnmpService
 
             return [];
         }
+    }
+
+    /**
+     * Get ONU signal levels (alias for getOnuOpticalPower for backward compatibility).
+     *
+     * @return array Array with status, rx_power, tx_power, and distance
+     */
+    public function getOnuSignalLevels(Olt $olt, Onu $onu): array
+    {
+        $powerData = $this->getOnuOpticalPower($onu);
+        
+        return [
+            'status' => $onu->status ?? 'unknown',
+            'rx_power' => $powerData['rx_power'],
+            'tx_power' => $powerData['tx_power'],
+            'distance' => $powerData['distance'],
+        ];
     }
 
     /**
