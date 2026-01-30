@@ -53,6 +53,11 @@ This is the central documentation hub for the ISP Solution project. All document
 - **[ROUTER_RADIUS_IMPLEMENTATION_SUMMARY.md](ROUTER_RADIUS_IMPLEMENTATION_SUMMARY.md)** - ⭐ Executive summary and project overview (START HERE)
 - **[ROUTER_RADIUS_DEVELOPER_NOTES.md](ROUTER_RADIUS_DEVELOPER_NOTES.md)** - Complete implementation guide with code examples (55KB)
 - **[ROUTER_RADIUS_TODO.md](ROUTER_RADIUS_TODO.md)** - Detailed phase-by-phase task checklist (24KB)
+- **[ISPBILLS_FEATURE_MAPPING.md](ISPBILLS_FEATURE_MAPPING.md)** - ⭐ NEW: IspBills pattern comparison and implementation guide
+- **[ROUTER_RADIUS_USER_GUIDE.md](ROUTER_RADIUS_USER_GUIDE.md)** - ⭐ NEW: Complete user guide with step-by-step instructions
+- **[ROUTER_RADIUS_FAILOVER.md](ROUTER_RADIUS_FAILOVER.md)** - Automatic failover configuration
+- **[ROUTER_BACKUP_RESTORE.md](ROUTER_BACKUP_RESTORE.md)** - Backup and recovery procedures
+- **[ROUTEROS_DUAL_API_SUPPORT.md](ROUTEROS_DUAL_API_SUPPORT.md)** - Binary and HTTP API support
 
 ### Payment & Billing
 - **[PAYMENT_GATEWAY_GUIDE.md](PAYMENT_GATEWAY_GUIDE.md)** - Payment gateway integration

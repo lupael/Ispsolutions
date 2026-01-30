@@ -17,16 +17,16 @@ class RouterCommentHelperTest extends TestCase
     /** @test */
     public function it_generates_ispbills_format_comment_for_network_user(): void
     {
-        $user = new NetworkUser([
-            'id' => 123,
-            'username' => 'testuser',
-            'name' => 'Test User',
-            'mobile' => '01712345678',
-            'zone_id' => 5,
-            'package_id' => 10,
-            'expiry_date' => now()->addDays(30),
-            'status' => 'active',
-        ]);
+        $user = new NetworkUser();
+        $user->id = 123;
+        $user->username = 'testuser';
+        $user->name = 'Test User';
+        $user->mobile = '01712345678';
+        $user->zone_id = 5;
+        $user->package_id = 10;
+        $user->expiry_date = now()->addDays(30);
+        $user->status = 'active';
+        $user->exists = true; // Mark as existing to get ID
 
         $comment = RouterCommentHelper::getComment($user);
 
