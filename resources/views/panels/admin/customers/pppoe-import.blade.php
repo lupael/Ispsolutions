@@ -36,8 +36,8 @@
                 <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">Import Instructions</h3>
                 <div class="mt-2 text-sm text-blue-700 dark:text-blue-400">
                     <ul class="list-disc list-inside space-y-1">
-                        <li>Select a NAS device or Mikrotik router from your configured devices</li>
-                        <li>The system will fetch all PPPoE accounts from the selected device</li>
+                        <li>Select a MikroTik router from your configured devices</li>
+                        <li>The system will fetch all PPPoE accounts from the selected router</li>
                         <li>Choose a default package for imported customers (optional)</li>
                         <li>Review and confirm before importing</li>
                     </ul>
@@ -110,7 +110,7 @@
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Preview & Confirmation</h3>
                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                         <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Select a NAS device and click "Preview Import" to see what will be imported.
+                            Select a router and click "Preview Import" to see what will be imported.
                         </p>
                     </div>
                 </div>
