@@ -13,9 +13,10 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Manage system roles and permissions</p>
                 </div>
                 <div>
-                    <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
+                    {{-- TODO: Implement role creation functionality --}}
+                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest cursor-not-allowed opacity-60" title="Role creation feature coming soon">
                         Add New Role
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
