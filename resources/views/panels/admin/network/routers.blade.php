@@ -272,12 +272,12 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                             </svg>
                                         </a>
-                                        <button type="button" onclick="checkRouterApi({{ $router->id }}, event)" class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300" title="Check API Status">
+                                        <button type="button" data-router-id="{{ $router->id }}" class="check-router-api text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300" title="Check API Status">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                         </button>
-                                        <form action="{{ route('panel.admin.network.routers.destroy', $router->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this router?');">
+                                        <form action="{{ route('panel.admin.network.routers.destroy', $router->id) }}" method="POST" class="inline delete-router-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
@@ -323,37 +323,52 @@
     }
 @endif
 
-async function checkRouterApi(routerId, event) {
-    const button = event.target.closest('button');
-    const originalHTML = button.innerHTML;
-    
-    // Show loading state
-    button.disabled = true;
-    button.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-    
-    try {
-        const response = await fetch(`{{ route('panel.admin.network.routers.test-connection', ['id' => '__ID__']) }}`.replace('__ID__', routerId), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+// Add event listeners for check router API buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Check Router API buttons
+    document.querySelectorAll('.check-router-api').forEach(function(button) {
+        button.addEventListener('click', async function() {
+            const routerId = this.getAttribute('data-router-id');
+            const originalHTML = this.innerHTML;
+            
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            
+            try {
+                const response = await fetch(`{{ route('panel.admin.network.routers.test-connection', ['id' => '__ID__']) }}`.replace('__ID__', routerId), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✓ Router API is accessible\n\n' + data.message);
+                } else {
+                    alert('✗ Router API check failed\n\n' + (data.message || 'Connection failed'));
+                }
+            } catch (error) {
+                alert('✗ Error checking router API\n\n' + error.message);
+            } finally {
+                this.disabled = false;
+                this.innerHTML = originalHTML;
             }
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('✓ Router API is accessible\n\n' + data.message);
-        } else {
-            alert('✗ Router API check failed\n\n' + (data.message || 'Connection failed'));
-        }
-    } catch (error) {
-        alert('✗ Error checking router API\n\n' + error.message);
-    } finally {
-        button.disabled = false;
-        button.innerHTML = originalHTML;
-    }
-}
+    });
+
+    // Delete router forms
+    document.querySelectorAll('.delete-router-form').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!confirm('Are you sure you want to delete this router?')) {
+                event.preventDefault();
+            }
+        });
+    });
+});
 </script>
 @endpush
 @endsection
