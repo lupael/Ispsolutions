@@ -181,7 +181,7 @@ class MikrotikService implements MikrotikServiceInterface
             
             // First, find the secret by name to get its .id
             $findQuery = (new Query('/ppp/secret/print'))
-                ->where('name', $username);
+                ->equal('name', $username);
             $secrets = $client->query($findQuery)->read();
             
             if (empty($secrets)) {
@@ -264,7 +264,7 @@ class MikrotikService implements MikrotikServiceInterface
             
             // First, find the secret by name to get its .id
             $findQuery = (new Query('/ppp/secret/print'))
-                ->where('name', $username);
+                ->equal('name', $username);
             $secrets = $client->query($findQuery)->read();
             
             if (empty($secrets)) {
@@ -477,8 +477,8 @@ class MikrotikService implements MikrotikServiceInterface
                 ->equal('local-address', $profileData['local_address'] ?? '')
                 ->equal('remote-address', $profileData['remote_address'] ?? '')
                 ->equal('rate-limit', $profileData['rate_limit'] ?? '')
-                ->equal('session-timeout', $profileData['session_timeout'] ?? '0')
-                ->equal('idle-timeout', $profileData['idle_timeout'] ?? '0');
+                ->equal('session-timeout', isset($profileData['session_timeout']) ? (string) $profileData['session_timeout'] : '0')
+                ->equal('idle-timeout', isset($profileData['idle_timeout']) ? (string) $profileData['idle_timeout'] : '0');
             
             $client->query($query)->read();
 
@@ -1462,9 +1462,10 @@ class MikrotikService implements MikrotikServiceInterface
             $client = $this->createClient($router);
             $query = new Query('/ip/firewall/filter/add');
             
-            // Add all rule data as parameters
+            // Add all rule data as parameters, normalizing keys for MikroTik (underscores -> hyphens)
             foreach ($ruleData as $key => $value) {
-                $query->equal($key, $value);
+                $normalizedKey = str_replace('_', '-', (string) $key);
+                $query->equal($normalizedKey, $value);
             }
             
             $client->query($query)->read();
@@ -1666,7 +1667,7 @@ class MikrotikService implements MikrotikServiceInterface
     }
 
     /**
-     * Create Binary API client for router
+     * Create Binary API client for router with SSL/TLS support
      * 
      * @param MikrotikRouter $router Router instance with encrypted credentials
      * @return Client Connected Binary API client
@@ -1680,6 +1681,11 @@ class MikrotikService implements MikrotikServiceInterface
             ->set('pass', $router->password) // Already decrypted by Laravel
             ->set('port', $router->api_port)
             ->set('timeout', config('services.mikrotik.timeout', 60));
+
+        // Enable SSL/TLS if configured (recommended for production)
+        if (config('services.mikrotik.ssl', false)) {
+            $config->set('ssl', true);
+        }
 
         return new Client($config);
     }

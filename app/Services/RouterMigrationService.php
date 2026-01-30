@@ -20,8 +20,20 @@ class RouterMigrationService
         $this->mikrotik = $mikrotik;
     }
     
+    /**
+     * Create RouterOS Binary API client for the router with SSL/TLS support
+     * 
+     * @param MikrotikRouter $router Router instance
+     * @return Client Connected Binary API client
+     * @throws \Exception If router IP validation fails (SSRF protection)
+     */
     private function createClient(MikrotikRouter $router): Client
     {
+        // Validate router IP to prevent SSRF attacks
+        if (! $this->isValidRouterIpAddress($router->ip_address)) {
+            throw new \Exception('Invalid router IP address - potential SSRF attempt');
+        }
+
         $config = (new Config())
             ->set('host', $router->ip_address)
             ->set('user', $router->username)
@@ -29,7 +41,41 @@ class RouterMigrationService
             ->set('port', $router->api_port)
             ->set('timeout', config('services.mikrotik.timeout', 60));
         
+        // Enable SSL/TLS if configured (recommended for production)
+        if (config('services.mikrotik.ssl', false)) {
+            $config->set('ssl', true);
+        }
+
         return new Client($config);
+    }
+
+    /**
+     * Validate router IP address to prevent SSRF attacks
+     * 
+     * @param string $ipAddress IP address to validate
+     * @return bool True if valid and safe
+     */
+    private function isValidRouterIpAddress(string $ipAddress): bool
+    {
+        // Validate it's a valid IP
+        if (! filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+            return false;
+        }
+
+        // Block private/internal IPs if configured
+        if (config('services.mikrotik.block_private_ips', false)) {
+            if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return false;
+            }
+        }
+
+        // Block specific dangerous IPs (metadata services, etc.)
+        $blockedIps = config('services.mikrotik.blocked_ips', ['169.254.169.254', '127.0.0.1', '0.0.0.0']);
+        if (in_array($ipAddress, $blockedIps, true)) {
+            return false;
+        }
+
+        return true;
     }
     
     public function verifyRadiusConnectivity(MikrotikRouter $router): bool

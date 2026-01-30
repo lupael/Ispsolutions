@@ -346,7 +346,7 @@ class RouterProvisioningService
                 ->equal('hotspot-address', $config['hotspot_address'] ?? '10.5.50.1')
                 ->equal('dns-name', $config['dns_name'] ?? 'hotspot.local')
                 ->equal('login-by', $config['login_by'] ?? 'mac,http-chap')
-                ->equal('use-radius', $config['use_radius'] ?? true ? 'yes' : 'no')
+                ->equal('use-radius', ($config['use_radius'] ?? true) ? 'yes' : 'no')
                 ->equal('mac-auth-mode', $config['mac_auth_mode'] ?? 'mac-as-username')
                 ->equal('cookie-timeout', $config['cookie_timeout'] ?? '3d')
                 ->equal('idle-timeout', $config['idle_timeout'] ?? 'none')
@@ -405,7 +405,7 @@ class RouterProvisioningService
                 ->equal('default-profile', $config['default_profile'] ?? 'default')
                 ->equal('authentication', $config['authentication'] ?? 'pap,chap,mschap1,mschap2')
                 ->equal('keepalive-timeout', (string)($config['keepalive_timeout'] ?? 10))
-                ->equal('one-session-per-host', $config['one_session_per_host'] ?? true ? 'yes' : 'no')
+                ->equal('one-session-per-host', ($config['one_session_per_host'] ?? true) ? 'yes' : 'no')
                 ->equal('max-sessions', (string)($config['max_sessions'] ?? 1000));
 
             $client->query($serverQuery)->read();
@@ -1079,10 +1079,19 @@ class RouterProvisioningService
     }
 
     /**
-     * Create RouterOS Binary API client for the router
+     * Create RouterOS Binary API client for the router with SSL/TLS support
+     * 
+     * @param MikrotikRouter $router Router instance
+     * @return Client Connected Binary API client
+     * @throws \Exception If router IP validation fails (SSRF protection)
      */
     private function createClient(MikrotikRouter $router): Client
     {
+        // Validate router IP to prevent SSRF attacks
+        if (! $this->isValidRouterIpAddress($router->ip_address)) {
+            throw new \Exception('Invalid router IP address - potential SSRF attempt');
+        }
+
         $config = (new Config())
             ->set('host', $router->ip_address)
             ->set('user', $router->username)
@@ -1090,6 +1099,40 @@ class RouterProvisioningService
             ->set('port', $router->api_port)
             ->set('timeout', config('services.mikrotik.timeout', 60));
 
+        // Enable SSL/TLS if configured (recommended for production)
+        if (config('services.mikrotik.ssl', false)) {
+            $config->set('ssl', true);
+        }
+
         return new Client($config);
+    }
+
+    /**
+     * Validate router IP address to prevent SSRF attacks
+     * 
+     * @param string $ipAddress IP address to validate
+     * @return bool True if valid and safe
+     */
+    private function isValidRouterIpAddress(string $ipAddress): bool
+    {
+        // Validate it's a valid IP
+        if (! filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+            return false;
+        }
+
+        // Block private/internal IPs if configured
+        if (config('services.mikrotik.block_private_ips', false)) {
+            if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return false;
+            }
+        }
+
+        // Block specific dangerous IPs (metadata services, etc.)
+        $blockedIps = config('services.mikrotik.blocked_ips', ['169.254.169.254', '127.0.0.1', '0.0.0.0']);
+        if (in_array($ipAddress, $blockedIps, true)) {
+            return false;
+        }
+
+        return true;
     }
 }
