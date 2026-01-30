@@ -274,8 +274,9 @@ Route::prefix('sms-payments')
             ->name('complete');
     });
 
-// SMS Payment Webhook (no auth, no rate limit for payment gateway callbacks)
+// SMS Payment Webhook (no auth, rate limited for payment gateway callbacks)
 Route::post('/sms-payments/webhook', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'webhook'])
+    ->middleware('rate_limit:webhooks')
     ->name('api.sms-payments.webhook');
 
 // Auto-Debit API Routes
@@ -286,6 +287,7 @@ Route::prefix('auto-debit')
         Route::get('/settings', [\App\Http\Controllers\Panel\AutoDebitController::class, 'show'])->name('show');
         Route::put('/settings', [\App\Http\Controllers\Panel\AutoDebitController::class, 'update'])->name('update');
         Route::get('/history', [\App\Http\Controllers\Panel\AutoDebitController::class, 'history'])->name('history');
+        Route::get('/history/{history}', [\App\Http\Controllers\Panel\AutoDebitController::class, 'showHistory'])->name('history.show');
         Route::get('/failed-report', [\App\Http\Controllers\Panel\AutoDebitController::class, 'failedReport'])
             ->middleware('role:admin,operator,super-admin')
             ->name('failed-report');

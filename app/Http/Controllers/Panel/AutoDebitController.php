@@ -106,6 +106,45 @@ class AutoDebitController extends Controller
     }
 
     /**
+     * Show auto-debit history detail
+     */
+    public function showHistory(Request $request, AutoDebitHistory $history): JsonResponse
+    {
+        $user = $request->user();
+
+        // Load customer relationship first (needed for authorization check)
+        $history->load('customer');
+
+        // Authorization: User can only view their own history
+        // Admins/operators can view history for their customers
+        if ($history->customer_id !== $user->id) {
+            if (!$user->hasAnyRole(['admin', 'operator', 'superadmin'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+
+            // Operator can only view their own customers
+            if ($user->hasRole('operator') && $history->customer->operator_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+        }
+
+        // Load additional relationships for detail view
+        // Note: AutoDebitHistory model has 'customer' and 'bill' relationships (not 'invoice' or 'payment')
+        $history->load('bill');
+
+        return response()->json([
+            'success' => true,
+            'data' => $history,
+        ]);
+    }
+
+    /**
      * Get failed auto-debit attempts report
      */
     public function failedReport(Request $request): JsonResponse
