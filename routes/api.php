@@ -274,8 +274,9 @@ Route::prefix('sms-payments')
             ->name('complete');
     });
 
-// SMS Payment Webhook (no auth, no rate limit for payment gateway callbacks)
+// SMS Payment Webhook (no auth, rate limited for payment gateway callbacks)
 Route::post('/sms-payments/webhook', [\App\Http\Controllers\Panel\SmsPaymentController::class, 'webhook'])
+    ->middleware('rate_limit:webhooks')
     ->name('api.sms-payments.webhook');
 
 // Auto-Debit API Routes

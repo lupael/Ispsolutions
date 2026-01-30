@@ -65,8 +65,10 @@ Route::prefix('payments')->name('payments.')->middleware(['auth'])->group(functi
     Route::get('cancel', [PaymentController::class, 'cancel'])->name('cancel');
 });
 
-// Payment webhooks (no auth required) - webhook signature verification must be implemented in PaymentController::webhook
-Route::post('webhooks/payment/{gateway}', [PaymentController::class, 'webhook'])->name('webhooks.payment');
+// Payment webhooks (no auth required) - webhook signature verification is implemented in PaymentGatewayService
+Route::post('webhooks/payment/{gateway}', [PaymentController::class, 'webhook'])
+    ->middleware('rate_limit:webhooks')
+    ->name('webhooks.payment');
 
 /*
 |--------------------------------------------------------------------------
