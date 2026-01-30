@@ -300,22 +300,23 @@ class AdminController extends Controller
                 ->count(),
         ];
 
-        // Sub-Operator Information (Operator level 30 and Sub-Operator level 40)
-        $subOperatorInfo = [
-            'total' => User::whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR])->count(),
-            'active' => User::whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR])
+        // Operator Information (Only Operator level 30, NOT Sub-Operator level 40)
+        // Fixed to show only Operators, not Sub-Operators
+        $operatorInfo = [
+            'total' => User::where('operator_level', User::OPERATOR_LEVEL_OPERATOR)->count(),
+            'active' => User::where('operator_level', User::OPERATOR_LEVEL_OPERATOR)
                 ->where('is_active', true)
                 ->count(),
-            'inactive' => User::whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR])
+            'inactive' => User::where('operator_level', User::OPERATOR_LEVEL_OPERATOR)
                 ->where('is_active', false)
                 ->count(),
         ];
 
-        // Clients of Sub-Operator (customers created by operators/sub-operators)
+        // Clients of Operator (customers created by operators AND sub-operators - both levels 30 and 40)
         // Using subquery instead of pluck for better performance with large datasets
         // Note: Only counts customers with non-null created_by field (i.e., created by operators/sub-operators)
         // Customers created directly by admin or with null created_by are not included in these statistics
-        $subOperatorClients = [
+        $operatorClients = [
             'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
                 ->whereIn('created_by', function($query) {
                     $query->select('id')
@@ -398,8 +399,8 @@ class AdminController extends Controller
         // Clients MRC (same as ISP's MRC for all clients)
         $clientsMRC = $ispMRC;
 
-        // Clients of Sub-Operator MRC (customers created by operators/sub-operators)
-        $subOperatorClientsMRC = [
+        // Clients of Operator MRC (customers created by operators AND sub-operators - both levels 30 and 40)
+        $operatorClientsMRC = [
             'current_mrc' => $calculateCurrentMRC($operatorSubquery),
             'this_month_avg_mrc' => $calculateMonthlyAvgMRC(now()->year, now()->month, $operatorSubquery),
             'last_month_avg_mrc' => $calculateMonthlyAvgMRC($lastMonth->year, $lastMonth->month, $operatorSubquery),
@@ -418,7 +419,7 @@ class AdminController extends Controller
                 'month' => $month->format('M Y'),
                 'isp_mrc' => $monthlyIspMrc,
                 'clients_mrc' => $monthlyIspMrc, // Same as ISP
-                'sub_operator_clients_mrc' => $calculateMonthlyAvgMRC($month->year, $month->month, $operatorSubquery),
+                'operator_clients_mrc' => $calculateMonthlyAvgMRC($month->year, $month->month, $operatorSubquery),
             ]);
         }
 
@@ -432,11 +433,11 @@ class AdminController extends Controller
             'revenueTrend',
             'customerGrowth',
             'ispInfo',
-            'subOperatorInfo',
-            'subOperatorClients',
+            'operatorInfo',
+            'operatorClients',
             'ispMRC',
             'clientsMRC',
-            'subOperatorClientsMRC',
+            'operatorClientsMRC',
             'mrcComparison'
         ));
     }

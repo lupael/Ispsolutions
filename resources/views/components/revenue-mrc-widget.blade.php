@@ -1,10 +1,10 @@
-@props(['ispMRC', 'clientsMRC', 'subOperatorClientsMRC', 'mrcComparison'])
+@props(['ispMRC', 'clientsMRC', 'operatorClientsMRC', 'mrcComparison'])
 
 @php
     $months = $mrcComparison->pluck('month')->toArray();
     $ispMRCData = $mrcComparison->pluck('isp_mrc')->toArray();
     $clientsMRCData = $mrcComparison->pluck('clients_mrc')->toArray();
-    $subOperatorMRCData = $mrcComparison->pluck('sub_operator_clients_mrc')->toArray();
+    $operatorMRCData = $mrcComparison->pluck('operator_clients_mrc')->toArray();
 @endphp
 
 <div {{ $attributes->merge(['class' => 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6']) }}>
@@ -53,21 +53,21 @@
             </div>
         </div>
 
-        <!-- Client's Of Sub-Operator MRC -->
+        <!-- Clients of Operator MRC -->
         <div class="space-y-3">
-            <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Clients of Sub-Operator MRC</h4>
+            <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Clients of Operator MRC</h4>
             <div class="space-y-2">
                 <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3">
                     <p class="text-xs font-medium text-purple-700 dark:text-purple-300 mb-0.5">Current MRC</p>
-                    <p class="text-2xl font-bold text-purple-900 dark:text-purple-100">{{ number_format($subOperatorClientsMRC['current_mrc'], 2) }}</p>
+                    <p class="text-2xl font-bold text-purple-900 dark:text-purple-100">{{ number_format($operatorClientsMRC['current_mrc'], 2) }}</p>
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                     <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">This Month Avg. MRC</p>
-                    <p class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($subOperatorClientsMRC['this_month_avg_mrc'], 2) }}</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($operatorClientsMRC['this_month_avg_mrc'], 2) }}</p>
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                     <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">Last Month Avg. MRC</p>
-                    <p class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($subOperatorClientsMRC['last_month_avg_mrc'], 2) }}</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($operatorClientsMRC['last_month_avg_mrc'], 2) }}</p>
                 </div>
             </div>
         </div>
@@ -77,13 +77,13 @@
     <div class="mt-6" aria-labelledby="mrc-comparison-heading" aria-describedby="mrc-comparison-summary">
         <h4 id="mrc-comparison-heading" class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">3-Month MRC Comparison</h4>
         <p id="mrc-comparison-summary" class="sr-only">
-            Bar chart comparing ISP MRC, Clients MRC, and Clients of Sub-Operator MRC over the last three months
+            Bar chart comparing ISP MRC, Clients MRC, and Clients of Operator MRC over the last three months
             ({{ implode(', ', $months) }}). The chart shows how these monthly recurring charges change over time for each group.
         </p>
         <div
             id="mrc-comparison-chart"
             role="img"
-            aria-label="3-month bar chart showing the trend of ISP, Clients, and Sub-Operator clients monthly recurring charges over {{ implode(', ', $months) }}."
+            aria-label="3-month bar chart showing the trend of ISP, Clients, and Operator clients monthly recurring charges over {{ implode(', ', $months) }}."
             style="min-height: 350px;"
         ></div>
     </div>
@@ -114,8 +114,8 @@
                             data: @json($clientsMRCData)
                         },
                         {
-                            name: "Sub-Operator Clients MRC",
-                            data: @json($subOperatorMRCData)
+                            name: "Operator Clients MRC",
+                            data: @json($operatorMRCData)
                         }
                     ],
                     chart: {
