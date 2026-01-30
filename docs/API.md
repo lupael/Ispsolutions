@@ -1,25 +1,27 @@
 # API Documentation
 
-**Version:** 2.1  
+**Version:** 2.2  
 **Base URL:** `/api`  
 **Format:** JSON  
 **Authentication:** Laravel Sanctum (Token-based)  
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-30
 
 ## Table of Contents
 
 1. [Authentication](#authentication)
 2. [Data API](#data-api)
-3. [Chart API](#chart-api)
-4. [IPAM Endpoints](#ipam-endpoints)
-5. [RADIUS Endpoints](#radius-endpoints)
-6. [MikroTik Endpoints](#mikrotik-endpoints)
-7. [Network Users Endpoints](#network-users-endpoints)
-8. [OLT API](#olt-api)
-9. [Monitoring API](#monitoring-api)
-10. [Error Handling](#error-handling)
-11. [Rate Limiting](#rate-limiting)
-12. [Pagination](#pagination)
+3. [Customer API Extensions](#customer-api-extensions)
+4. [Package API Extensions](#package-api-extensions)
+5. [Chart API](#chart-api)
+6. [IPAM Endpoints](#ipam-endpoints)
+7. [RADIUS Endpoints](#radius-endpoints)
+8. [MikroTik Endpoints](#mikrotik-endpoints)
+9. [Network Users Endpoints](#network-users-endpoints)
+10. [OLT API](#olt-api)
+11. [Monitoring API](#monitoring-api)
+12. [Error Handling](#error-handling)
+13. [Rate Limiting](#rate-limiting)
+14. [Pagination](#pagination)
 
 ---
 
@@ -203,6 +205,362 @@ $token = $user->createToken('api-token')->plainTextToken;
     "timestamp": "2026-01-15T10:25:00.000000Z"
   }
 ]
+```
+
+---
+
+## Customer API Extensions
+
+### Enhanced Customer Fields
+
+**New in Version 2.2:** The following computed fields have been added to customer responses:
+
+#### Overall Status
+Customers now include an `overall_status` field that combines payment type and service status:
+
+**Possible Values:**
+- `prepaid_active` - Prepaid customer with active service
+- `prepaid_suspended` - Prepaid customer with suspended service  
+- `prepaid_expired` - Prepaid customer with expired service
+- `prepaid_inactive` - Prepaid customer with inactive service
+- `postpaid_active` - Postpaid customer with active service
+- `postpaid_suspended` - Postpaid customer with suspended service
+- `postpaid_expired` - Postpaid customer with expired service
+- `postpaid_inactive` - Postpaid customer with inactive service
+
+**Example Response:**
+```json
+{
+  "id": 1,
+  "name": "John Doe",
+  "username": "johndoe",
+  "payment_type": "prepaid",
+  "status": "active",
+  "overall_status": "prepaid_active",
+  "status_badge": {
+    "label": "Active (Prepaid)",
+    "color": "green"
+  }
+}
+```
+
+#### Filter by Overall Status
+
+**Endpoint:** `GET /api/data/customers?overall_status={status}`
+
+**Example:**
+```bash
+GET /api/data/customers?overall_status=prepaid_active
+GET /api/data/customers?overall_status=postpaid_suspended
+```
+
+#### Reseller Hierarchy
+
+Customers now support parent-child relationships for reseller accounts:
+
+**New Fields:**
+- `parent_id` (integer, nullable) - ID of parent reseller account
+- `is_reseller` (boolean) - Whether this account is a reseller
+- `child_accounts_count` (integer) - Number of child accounts
+- `commission_rate` (decimal) - Commission percentage for resellers
+
+**Example Response:**
+```json
+{
+  "id": 5,
+  "name": "Reseller Corp",
+  "is_reseller": true,
+  "parent_id": null,
+  "child_accounts_count": 25,
+  "commission_rate": 15.00,
+  "total_revenue": 12500.00,
+  "commission_earned": 1875.00
+}
+```
+
+**Endpoint:** `GET /api/data/customers/{id}/child-accounts`
+
+**Description:** Get all child accounts for a reseller
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": 10,
+      "name": "Child Customer 1",
+      "parent_id": 5,
+      "package": {...},
+      "monthly_revenue": 500.00
+    }
+  ],
+  "summary": {
+    "total_children": 25,
+    "total_revenue": 12500.00,
+    "commission_earned": 1875.00
+  }
+}
+```
+
+#### Customer Activity Timeline
+
+**Endpoint:** `GET /api/data/customers/{id}/activity`
+
+**Description:** Get customer activity timeline with recent events
+
+**Query Parameters:**
+- `limit` (integer, optional): Number of events to return (default: 10)
+- `days` (integer, optional): Number of days to look back (default: 30)
+
+**Response:**
+```json
+{
+  "customer_id": 1,
+  "stats": {
+    "payments_count": 12,
+    "payments_total": 18000.00,
+    "package_changes": 2,
+    "status_changes": 3,
+    "tickets_count": 5
+  },
+  "activities": [
+    {
+      "type": "payment",
+      "icon": "currency-dollar",
+      "color": "green",
+      "title": "Payment Received",
+      "description": "Payment of $1500.00 via Bkash",
+      "timestamp": "2026-01-28T10:30:00.000000Z"
+    },
+    {
+      "type": "package_change",
+      "icon": "refresh",
+      "color": "blue",
+      "title": "Package Changed",
+      "description": "Upgraded from 10Mbps to 20Mbps",
+      "timestamp": "2026-01-25T14:20:00.000000Z"
+    }
+  ]
+}
+```
+
+---
+
+## Package API Extensions
+
+### Enhanced Package Fields
+
+**New in Version 2.2:** The following computed fields have been added to package responses:
+
+#### Validity Unit Conversions
+
+Packages now include validity in multiple formats:
+
+**New Fields:**
+- `validity_in_days` (integer) - Validity converted to days
+- `validity_in_hours` (integer) - Validity converted to hours
+- `validity_in_minutes` (integer) - Validity converted to minutes
+- `readable_rate_unit` (string) - Human-readable speed unit (e.g., "Mbps")
+- `total_octet_limit` (integer) - Volume limit in bytes
+
+**Example Response:**
+```json
+{
+  "id": 1,
+  "name": "10Mbps Plan",
+  "price": 1500.00,
+  "validity": 30,
+  "validity_unit": "Day",
+  "validity_formats": {
+    "days": 30,
+    "hours": 720,
+    "minutes": 43200
+  },
+  "bandwidth_download": 10,
+  "bandwidth_upload": 10,
+  "rate_unit": "M",
+  "readable_rate_unit": "Mbps",
+  "volume_limit": 100,
+  "volume_unit": "GB",
+  "total_octet_limit": 107374182400
+}
+```
+
+#### Package Hierarchy
+
+Packages now support parent-child relationships:
+
+**New Fields:**
+- `parent_package_id` (integer, nullable) - ID of parent package
+- `child_packages_count` (integer) - Number of child packages
+- `is_parent` (boolean) - Whether this package has children
+- `upgrade_path` (array) - List of packages this can upgrade to
+
+**Endpoint:** `GET /api/data/packages/{id}/hierarchy`
+
+**Description:** Get package hierarchy tree
+
+**Response:**
+```json
+{
+  "package": {
+    "id": 1,
+    "name": "Basic 10Mbps",
+    "parent_package_id": null,
+    "is_parent": true
+  },
+  "children": [
+    {
+      "id": 2,
+      "name": "Standard 10Mbps",
+      "parent_package_id": 1,
+      "price_difference": 500.00
+    },
+    {
+      "id": 3,
+      "name": "Premium 10Mbps",
+      "parent_package_id": 1,
+      "price_difference": 1000.00
+    }
+  ],
+  "upgrade_paths": [
+    {
+      "id": 10,
+      "name": "20Mbps Plan",
+      "price_difference": 1500.00,
+      "speed_increase": "10Mbps → 20Mbps"
+    }
+  ]
+}
+```
+
+#### Package Comparison
+
+**Endpoint:** `GET /api/data/packages/compare`
+
+**Description:** Compare multiple packages side-by-side
+
+**Query Parameters:**
+- `packages[]` (array) - Array of package IDs to compare (max 4)
+
+**Example:**
+```bash
+GET /api/data/packages/compare?packages[]=1&packages[]=2&packages[]=3
+```
+
+**Response:**
+```json
+{
+  "packages": [
+    {
+      "id": 1,
+      "name": "10Mbps Plan",
+      "price": 1500.00,
+      "bandwidth_download": 10,
+      "bandwidth_upload": 10,
+      "validity_days": 30,
+      "data_limit": "Unlimited",
+      "customer_count": 150,
+      "features": {
+        "fup": false,
+        "static_ip": false,
+        "priority_support": false
+      }
+    },
+    {
+      "id": 2,
+      "name": "20Mbps Plan",
+      "price": 2500.00,
+      "bandwidth_download": 20,
+      "bandwidth_upload": 20,
+      "validity_days": 30,
+      "data_limit": "Unlimited",
+      "customer_count": 95,
+      "features": {
+        "fup": true,
+        "static_ip": true,
+        "priority_support": false
+      }
+    }
+  ],
+  "comparison_matrix": {
+    "best_value": 1,
+    "fastest_speed": 2,
+    "most_popular": 1
+  }
+}
+```
+
+#### Cached Customer Count
+
+Packages now return cached customer counts for better performance:
+
+**New Fields:**
+- `customer_count` (integer) - Cached count of customers using this package
+- `customer_count_last_updated` (datetime) - When the count was last updated
+- `cache_ttl_seconds` (integer) - Cache time-to-live (150 seconds)
+
+**Note:** Customer counts are automatically refreshed every 2.5 minutes
+
+---
+
+## Multi-Language Support
+
+### Language Negotiation
+
+**New in Version 2.2:** API responses can be localized based on user preference or request header.
+
+#### Set Language Header
+
+Include the `Accept-Language` header in your requests:
+
+```bash
+curl -H "Accept-Language: bn" https://api.example.com/api/data/customers
+```
+
+**Supported Languages:**
+- `en` - English (default)
+- `bn` - Bengali (বাংলা)
+
+#### User Language Preference
+
+**Endpoint:** `PUT /api/v1/user/language`
+
+**Description:** Set user's preferred language
+
+**Request Body:**
+```json
+{
+  "language": "bn"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Language preference updated",
+  "language": "bn"
+}
+```
+
+#### Localized Responses
+
+When a language preference is set, the following fields will be localized:
+
+- Status messages
+- Validation errors
+- Date formats
+- Currency formats
+- Enum labels (e.g., payment types, statuses)
+
+**Example (Bengali):**
+```json
+{
+  "status": "সক্রিয়",
+  "payment_type": "প্রিপেইড",
+  "expiry_date": "৩০ জানুয়ারি ২০২৬",
+  "remaining_validity": "৫ দিন বাকি"
+}
 ```
 
 ---
