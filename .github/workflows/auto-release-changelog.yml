@@ -41,16 +41,27 @@ jobs:
           php artisan key:generate --force
 
       # Safe version check (doesn't require custom artisan command)
-      - name: Get Version from TODO.md
+      - name: Get Version
         id: version
         run: |
-          # Grabs the first version number found in TODO.md (e.g. 1.0.0)
-          VERSION=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' TODO.md | head -n 1)
-
-          if [ -z "$VERSION" ]; then
-            echo "Error: Failed to extract version from TODO.md"
-            exit 1
+          # Try to get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LATEST_TAG" ]; then
+            # No tags exist, start with 1.0.0
+            VERSION="1.0.0"
+            echo "No existing tags found, using initial version: $VERSION"
+          else
+            # Extract version from tag (remove 'v' prefix if present)
+            LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+            
+            # Increment patch version
+            IFS='.' read -r major minor patch <<< "$LATEST_VERSION"
+            patch=$((patch + 1))
+            VERSION="${major}.${minor}.${patch}"
+            echo "Latest tag: $LATEST_TAG, new version: $VERSION"
           fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
