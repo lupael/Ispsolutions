@@ -110,7 +110,7 @@
                             <label for="nas_shortname" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 NAS Short Name <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="nas_shortname" id="nas_shortname" value="{{ old('nas_shortname', optional($router->nas)->short_name) }}" required
+                            <input type="text" name="nas_shortname" id="nas_shortname" value="{{ old('nas_shortname', optional($router->nas)->short_name ?: strtolower(str_replace(' ', '-', $router->name))) }}" required
                                 class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Unique identifier for RADIUS NAS</p>
                             @error('nas_shortname')

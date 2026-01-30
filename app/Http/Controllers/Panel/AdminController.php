@@ -2263,7 +2263,7 @@ class AdminController extends Controller
             ]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create router: ' . $e->getMessage());
+                ->with('error', 'Failed to create router. Please try again later.');
         }
     }
 
@@ -2368,7 +2368,7 @@ class AdminController extends Controller
             ]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update router: ' . $e->getMessage());
+                ->with('error', 'Failed to update router. Please try again later.');
         }
     }
 
