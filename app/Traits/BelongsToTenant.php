@@ -32,7 +32,8 @@ trait BelongsToTenant
             $currentTenant = $tenancyService->getCurrentTenant();
 
             if ($currentTenant) {
-                $builder->where('tenant_id', $currentTenant->id);
+                // Use table-qualified column name to avoid ambiguity in joins
+                $builder->where($builder->getModel()->getTable() . '.tenant_id', $currentTenant->id);
             }
         });
     }
@@ -50,7 +51,7 @@ trait BelongsToTenant
      */
     public function scopeForTenant(Builder $query, int $tenantId): Builder
     {
-        return $query->where('tenant_id', $tenantId);
+        return $query->where($query->getModel()->getTable() . '.tenant_id', $tenantId);
     }
 
     /**
