@@ -151,13 +151,23 @@
     </div>
     
     <!-- Main Content Area with Tabs -->
-    <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg" x-data="{ activeTab: window.location.hash.substring(1) || 'profile' }">
+    <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg" x-data="{ 
+        activeTab: (() => {
+            const hash = window.location.hash.substring(1);
+            const validTabs = ['profile', 'network', 'billing', 'sessions', 'history', 'activity'];
+            return validTabs.includes(hash) ? hash : 'profile';
+        })()
+    }">
         <!-- Modern Tab Navigation -->
         <div class="border-b border-gray-200 dark:border-gray-700">
-            <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+            <nav class="-mb-px flex space-x-8 px-6 overflow-x-auto" role="tablist" aria-label="Customer information tabs">
                 <button @click="activeTab = 'profile'; window.location.hash = 'profile'" 
                         :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'profile', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'profile' }"
-                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm">
+                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap focus:outline-none"
+                        role="tab"
+                        :aria-selected="activeTab === 'profile'"
+                        aria-controls="profile-panel"
+                        id="profile-tab">
                     <svg class="w-5 h-5 mr-2" :class="{ 'text-indigo-500': activeTab === 'profile', 'text-gray-400 group-hover:text-gray-500': activeTab !== 'profile' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -166,7 +176,11 @@
                 
                 <button @click="activeTab = 'network'; window.location.hash = 'network'"
                         :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'network', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'network' }"
-                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm">
+                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap focus:outline-none"
+                        role="tab"
+                        :aria-selected="activeTab === 'network'"
+                        aria-controls="network-panel"
+                        id="network-tab">
                     <svg class="w-5 h-5 mr-2" :class="{ 'text-indigo-500': activeTab === 'network', 'text-gray-400 group-hover:text-gray-500': activeTab !== 'network' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                     </svg>
@@ -175,7 +189,11 @@
                 
                 <button @click="activeTab = 'billing'; window.location.hash = 'billing'"
                         :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'billing', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'billing' }"
-                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm">
+                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap focus:outline-none"
+                        role="tab"
+                        :aria-selected="activeTab === 'billing'"
+                        aria-controls="billing-panel"
+                        id="billing-tab">
                     <svg class="w-5 h-5 mr-2" :class="{ 'text-indigo-500': activeTab === 'billing', 'text-gray-400 group-hover:text-gray-500': activeTab !== 'billing' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
@@ -184,7 +202,11 @@
                 
                 <button @click="activeTab = 'sessions'; window.location.hash = 'sessions'"
                         :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'sessions', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'sessions' }"
-                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm">
+                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap focus:outline-none"
+                        role="tab"
+                        :aria-selected="activeTab === 'sessions'"
+                        aria-controls="sessions-panel"
+                        id="sessions-tab">
                     <svg class="w-5 h-5 mr-2" :class="{ 'text-indigo-500': activeTab === 'sessions', 'text-gray-400 group-hover:text-gray-500': activeTab !== 'sessions' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -193,7 +215,11 @@
                 
                 <button @click="activeTab = 'history'; window.location.hash = 'history'"
                         :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'history', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'history' }"
-                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm">
+                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap focus:outline-none"
+                        role="tab"
+                        :aria-selected="activeTab === 'history'"
+                        aria-controls="history-panel"
+                        id="history-tab">
                     <svg class="w-5 h-5 mr-2" :class="{ 'text-indigo-500': activeTab === 'history', 'text-gray-400 group-hover:text-gray-500': activeTab !== 'history' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -202,7 +228,11 @@
                 
                 <button @click="activeTab = 'activity'; window.location.hash = 'activity'"
                         :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'activity', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300': activeTab !== 'activity' }"
-                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm">
+                        class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap focus:outline-none"
+                        role="tab"
+                        :aria-selected="activeTab === 'activity'"
+                        aria-controls="activity-panel"
+                        id="activity-tab">
                     <svg class="w-5 h-5 mr-2" :class="{ 'text-indigo-500': activeTab === 'activity', 'text-gray-400 group-hover:text-gray-500': activeTab !== 'activity' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -214,7 +244,14 @@
         <!-- Tab Content -->
         <div class="p-6">
             <!-- Profile Tab -->
-            <div x-show="activeTab === 'profile'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+            <div x-show="activeTab === 'profile'" 
+                 x-transition:enter="transition ease-out duration-200" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100"
+                 role="tabpanel"
+                 id="profile-panel"
+                 aria-labelledby="profile-tab"
+                 :aria-hidden="activeTab !== 'profile'">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Contact Information -->
                     <div class="space-y-6">
@@ -271,7 +308,15 @@
             </div>
             
             <!-- Network Tab -->
-            <div x-show="activeTab === 'network'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+            <div x-show="activeTab === 'network'" 
+                 x-transition:enter="transition ease-out duration-200" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 style="display: none;"
+                 role="tabpanel"
+                 id="network-panel"
+                 aria-labelledby="network-tab"
+                 :aria-hidden="activeTab !== 'network'">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Network Details</h3>
@@ -316,7 +361,15 @@
             </div>
             
             <!-- Billing Tab -->
-            <div x-show="activeTab === 'billing'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+            <div x-show="activeTab === 'billing'" 
+                 x-transition:enter="transition ease-out duration-200" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 style="display: none;"
+                 role="tabpanel"
+                 id="billing-panel"
+                 aria-labelledby="billing-tab"
+                 :aria-hidden="activeTab !== 'billing'">
                 <div class="space-y-6">
                     <!-- Recent Payments -->
                     <div>
@@ -401,7 +454,15 @@
             </div>
             
             <!-- Sessions Tab -->
-            <div x-show="activeTab === 'sessions'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+            <div x-show="activeTab === 'sessions'" 
+                 x-transition:enter="transition ease-out duration-200" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 style="display: none;"
+                 role="tabpanel"
+                 id="sessions-panel"
+                 aria-labelledby="sessions-tab"
+                 :aria-hidden="activeTab !== 'sessions'">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Active Sessions</h3>
                 @if($customer->networkUser && $customer->networkUser->sessions && $customer->networkUser->sessions->isNotEmpty())
                     <div class="overflow-x-auto">
@@ -442,7 +503,15 @@
             </div>
             
             <!-- History Tab -->
-            <div x-show="activeTab === 'history'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+            <div x-show="activeTab === 'history'" 
+                 x-transition:enter="transition ease-out duration-200" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 style="display: none;"
+                 role="tabpanel"
+                 id="history-panel"
+                 aria-labelledby="history-tab"
+                 :aria-hidden="activeTab !== 'history'">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Change History</h3>
                 @if($recentAuditLogs && $recentAuditLogs->count() > 0)
                     <div class="flow-root">
@@ -491,7 +560,15 @@
             </div>
             
             <!-- Activity Tab -->
-            <div x-show="activeTab === 'activity'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+            <div x-show="activeTab === 'activity'" 
+                 x-transition:enter="transition ease-out duration-200" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 style="display: none;"
+                 role="tabpanel"
+                 id="activity-panel"
+                 aria-labelledby="activity-tab"
+                 :aria-hidden="activeTab !== 'activity'">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Customer Activity</h3>
                 <x-customer-activity-feed :customer="$customer" :recentSmsLogs="$recentSmsLogs" />
             </div>
@@ -546,7 +623,7 @@
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Package & Billing</h3>
                     <div class="space-y-2">
-                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('update', $customer))
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('changePackage', $customer))
                             <a href="{{ route('panel.admin.customers.change-package.edit', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -555,7 +632,7 @@
                             </a>
                         @endif
                         
-                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('update', $customer))
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('generateBill', $customer))
                             <a href="{{ route('panel.admin.customers.bills.create', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -564,7 +641,7 @@
                             </a>
                         @endif
                         
-                        @if(auth()->user()->operator_level <= 20)
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('advancePayment', $customer))
                             <a href="{{ route('panel.admin.customers.other-payment.create', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -579,7 +656,7 @@
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Communication</h3>
                     <div class="space-y-2">
-                        @if(auth()->user()->operator_level <= 20)
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('sendSms', $customer))
                             <a href="{{ route('panel.admin.customers.send-sms', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-pink-600 hover:bg-pink-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -588,12 +665,45 @@
                             </a>
                         @endif
                         
-                        @if(auth()->user()->operator_level <= 20)
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('sendLink', $customer))
                             <a href="{{ route('panel.admin.customers.send-payment-link', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                 </svg>
                                 Send Payment Link
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                
+                <!-- Additional Actions -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Additional Actions</h3>
+                    <div class="space-y-2">
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('editSpeedLimit', $customer))
+                            <a href="{{ route('panel.customers.speed-limit.show', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-orange-600 hover:bg-orange-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Speed Limit
+                            </a>
+                        @endif
+                        
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('removeMacBind', $customer))
+                            <a href="{{ route('panel.customers.mac-binding.index', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-slate-600 hover:bg-slate-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                MAC Binding
+                            </a>
+                        @endif
+                        
+                        @if(auth()->user()->operator_level <= 20 || auth()->user()->can('changeOperator', $customer))
+                            <a href="{{ route('panel.admin.customers.change-operator.edit', $customer->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-lg font-medium text-sm text-white transition">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                Change Operator
                             </a>
                         @endif
                     </div>

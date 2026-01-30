@@ -427,13 +427,22 @@ The redesign follows these key principles:
 
 ### What Stayed the Same
 - All 6 tabs (Profile, Network, Billing, Sessions, History, Activity)
-- All customer actions
-- All data sources
-- All permissions
-- All routes
+- Core customer workflows and routes
+- Underlying data sources and models
+- Role-based permission system structure
+- Essential customer actions remain accessible
 
-### Breaking Changes
-- **None** - All functionality preserved
+### Breaking Changes/Adjustments
+- **UI Component Changes**: Replaced inline-editable component with integrated card-based design
+- **Action Organization**: Actions regrouped into logical categories (Status, Package & Billing, Communication, Additional)
+- **Permission Implementation**: Now uses proper policy abilities (`changePackage`, `generateBill`, `advancePayment`, `sendSms`, `sendLink`) instead of generic `update` check
+- **Action Visibility**: Some legacy actions moved to "Additional Actions" section for cleaner primary interface
+- **Design Paradigm**: Complete shift from form-heavy to dashboard-style presentation
+
+### What Was Adjusted
+- Some previously separate action buttons consolidated into organized groups
+- Permission checks updated to use specific policy methods for better granularity
+- Visual presentation modernized while maintaining all core functionality
 
 ## Future Enhancements
 
