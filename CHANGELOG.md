@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- Change generateInvoiceNumber() visibility to public ([8f6a929](../../commit/8f6a92935440702444fb07badacbb3af1c834c0c))
 - Update customer-status-badge component to accept customer prop ([f2c082e](../../commit/f2c082e53043f801183a92eaf1779b3001d649c2))
 - Add ARIA attributes, correct permissions, restore missing actions, update docs ([5b90d47](../../commit/5b90d47c498e8890faf462097052a5d0fce372a0))
 - Revert back button font-weight to font-semibold ([ab5d273](../../commit/ab5d27389d681b13a95db21e915f91282bdeaf51))
