@@ -13,6 +13,15 @@ return new class extends Migration
      * 
      * Renames network_users table to customers table as part of the
      * refactoring to deprecate "network_users" terminology in favor of "Customer".
+     * 
+     * CRITICAL: This migration MUST be run with the application in maintenance mode
+     * to prevent database errors during table rename operations. Table renames are
+     * not atomic and any queries to network_users or network_user_sessions tables
+     * will fail during the rename operation.
+     * 
+     * Run: php artisan down
+     * Then: php artisan migrate
+     * Then: php artisan up
      */
     public function up(): void
     {

@@ -449,7 +449,7 @@ class AdminController extends Controller
     {
         $users = User::with('roles')
             ->where('tenant_id', auth()->user()->tenant_id)
-            ->where('operator_level', '<', 100) // Exclude customers (is_subscriber = true)
+            ->where('is_subscriber', false) // Exclude customers (subscribers)
             ->latest()
             ->paginate(20);
 

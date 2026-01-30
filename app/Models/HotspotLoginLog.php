@@ -86,7 +86,7 @@ class HotspotLoginLog extends Model
      */
     public function networkUser(): BelongsTo
     {
-        return $this->customer();
+        return $this->belongsTo(NetworkUser::class, 'customer_id');
     }
 
     /**

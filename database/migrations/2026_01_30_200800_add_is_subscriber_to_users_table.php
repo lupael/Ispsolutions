@@ -15,6 +15,9 @@ return new class extends Migration
      * Adds is_subscriber flag to users table to identify customers/subscribers.
      * Customers are external subscribers (Internet/PPP/Hotspot/CableTV) and are
      * not part of the administrative hierarchy (Levels 0-80).
+     * 
+     * IMPORTANT: This migration should be run with the application in maintenance mode
+     * to prevent inconsistent state during the data migration.
      */
     public function up(): void
     {
@@ -28,12 +31,15 @@ return new class extends Migration
 
         // Migrate existing customers (operator_level = 100) to is_subscriber = true
         // and set their operator_level to null as they're not in the hierarchy
-        DB::table('users')
-            ->where('operator_level', 100)
-            ->update([
-                'is_subscriber' => true,
-                'operator_level' => null,
-            ]);
+        // Use transaction to ensure atomicity
+        DB::transaction(function () {
+            DB::table('users')
+                ->where('operator_level', 100)
+                ->update([
+                    'is_subscriber' => true,
+                    'operator_level' => null,
+                ]);
+        });
     }
 
     /**
@@ -42,16 +48,22 @@ return new class extends Migration
     public function down(): void
     {
         // Revert subscribers back to operator_level = 100
-        DB::table('users')
-            ->where('is_subscriber', true)
-            ->update([
-                'operator_level' => 100,
-                'is_subscriber' => false,
-            ]);
+        DB::transaction(function () {
+            DB::table('users')
+                ->where('is_subscriber', true)
+                ->update([
+                    'operator_level' => 100,
+                    'is_subscriber' => false,
+                ]);
+        });
 
         Schema::table('users', function (Blueprint $table) {
             if (Schema::hasColumn('users', 'is_subscriber')) {
-                $table->dropIndex(['is_subscriber']);
+                try {
+                    $table->dropIndex(['is_subscriber']);
+                } catch (\Exception $e) {
+                    // Index might not exist or have a different name
+                }
                 $table->dropColumn('is_subscriber');
             }
         });

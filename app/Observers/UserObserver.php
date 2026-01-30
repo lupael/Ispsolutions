@@ -20,7 +20,7 @@ class UserObserver
     public function creating(User $user): void
     {
         // Only generate customer_id for customers (is_subscriber = true)
-        if ($user->operator_level === 100 && empty($user->customer_id)) {
+        if ($user->is_subscriber === true && empty($user->customer_id)) {
             $user->customer_id = $this->generateCustomerId();
         }
     }

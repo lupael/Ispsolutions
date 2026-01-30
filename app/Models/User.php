@@ -76,8 +76,9 @@ class User extends Authenticatable
     public const OPERATOR_LEVEL_STAFF = 80;
 
     /**
-     * @deprecated Customers are no longer identified by operator_level.
-     *             Use is_subscriber flag instead.
+     * @deprecated since version 1.0 (2026-01-30). Use is_subscriber flag instead.
+     *             Customers are no longer identified by operator_level.
+     *             Will be removed in version 2.0.
      */
     public const OPERATOR_LEVEL_CUSTOMER = 100;
 
