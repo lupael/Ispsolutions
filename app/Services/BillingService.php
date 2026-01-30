@@ -230,7 +230,7 @@ class BillingService
     /**
      * Generate unique invoice number
      */
-    protected function generateInvoiceNumber(): string
+    public function generateInvoiceNumber(): string
     {
         return 'INV-' . date('Ymd') . '-' . str_pad(Invoice::whereDate('created_at', today())->count() + 1, 5, '0', STR_PAD_LEFT);
     }
