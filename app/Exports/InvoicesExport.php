@@ -49,9 +49,9 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
         
         return [
             $invoice->invoice_number,
-            $invoice->user->name ?? 'N/A',
-            $invoice->user->username ?? 'N/A',
-            $invoice->package->name ?? 'N/A',
+            $this->sanitizeForExcel($invoice->user->name ?? 'N/A'),
+            $this->sanitizeForExcel($invoice->user->username ?? 'N/A'),
+            $this->sanitizeForExcel($invoice->package->name ?? 'N/A'),
             number_format($invoice->amount, 2),
             number_format($invoice->tax_amount ?? 0, 2),
             number_format($invoice->total_amount, 2),
@@ -62,6 +62,24 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
             $invoice->due_date?->format('Y-m-d') ?? 'N/A',
             $invoice->paid_at?->format('Y-m-d') ?? 'N/A',
         ];
+    }
+
+    /**
+     * Sanitize cell values to prevent formula injection in Excel
+     */
+    private function sanitizeForExcel(?string $value): string
+    {
+        if ($value === null) {
+            return 'N/A';
+        }
+
+        // Check if the value starts with formula trigger characters
+        if (preg_match('/^[\=\+\-\@]/', $value)) {
+            // Prefix with a single quote to force Excel to treat it as text
+            return "'" . $value;
+        }
+
+        return $value;
     }
 
     public function styles(Worksheet $sheet): array

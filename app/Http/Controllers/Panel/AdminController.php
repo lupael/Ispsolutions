@@ -3608,7 +3608,7 @@ class AdminController extends Controller
                     'invoice_number' => $invoice->invoice_number,
                     'customer_name' => $invoice->user->name ?? 'N/A',
                     'date' => $invoice->created_at->format('Y-m-d'),
-                    'subtotal' => $invoice->subtotal ?? $invoice->total_amount / 1.15,
+                    'subtotal' => $invoice->amount ?? $invoice->total_amount / 1.15,
                     'vat_rate' => 15,
                     'vat_amount' => $invoice->vat_amount ?? ($invoice->total_amount * 0.15 / 1.15),
                     'total_amount' => $invoice->total_amount,
