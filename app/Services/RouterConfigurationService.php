@@ -13,6 +13,10 @@ class RouterConfigurationService
     /**
      * Configure RADIUS authentication on the router
      * Complete one-click setup following IspBills pattern
+     * 
+     * Note: This is a placeholder for future implementation when RouterOS API client
+     * with comm() method is available. Current MikrotikService implementation uses
+     * a different API pattern.
      */
     public function configureRadius(MikrotikRouter $router): array
     {
@@ -25,88 +29,16 @@ class RouterConfigurationService
             ];
         }
 
-        try {
-            $mikrotikService = app(MikrotikService::class);
-            
-            if (!$mikrotikService->connectRouter($router->id)) {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to connect to router',
-                ];
-            }
+        Log::warning('RADIUS configuration requires RouterOS API client implementation', [
+            'router_id' => $router->id,
+            'note' => 'MikrotikService::getConnectedRouter() and comm() methods need to be implemented',
+        ]);
 
-            $api = $mikrotikService->getConnectedRouter($router->id);
-            if (!$api) {
-                return [
-                    'success' => false,
-                    'error' => 'Router connection not available',
-                ];
-            }
-
-            $results = [
-                'radius_client' => false,
-                'ppp_aaa' => false,
-                'radius_incoming' => false,
-            ];
-
-            // 1. Configure RADIUS client with error handling
-            try {
-                $this->configureRadiusClient($api, $router, $nas);
-                $results['radius_client'] = true;
-            } catch (\Exception $e) {
-                Log::error('Failed to configure RADIUS client', [
-                    'router_id' => $router->id,
-                    'error' => $e->getMessage(),
-                ]);
-                throw new \Exception('RADIUS client configuration failed: ' . $e->getMessage());
-            }
-
-            // 2. Configure PPP AAA with error handling
-            try {
-                $this->configurePppAaa($api);
-                $results['ppp_aaa'] = true;
-            } catch (\Exception $e) {
-                Log::error('Failed to configure PPP AAA', [
-                    'router_id' => $router->id,
-                    'error' => $e->getMessage(),
-                ]);
-                throw new \Exception('PPP AAA configuration failed: ' . $e->getMessage());
-            }
-
-            // 3. Enable RADIUS incoming with error handling
-            try {
-                $this->configureRadiusIncoming($api);
-                $results['radius_incoming'] = true;
-            } catch (\Exception $e) {
-                Log::error('Failed to configure RADIUS incoming', [
-                    'router_id' => $router->id,
-                    'error' => $e->getMessage(),
-                ]);
-                // This is non-critical, so we don't throw
-                $results['radius_incoming'] = false;
-            }
-
-            Log::info('RADIUS configuration completed', [
-                'router_id' => $router->id,
-                'results' => $results,
-            ]);
-
-            return [
-                'success' => true,
-                'message' => 'RADIUS configuration completed successfully',
-                'results' => $results,
-            ];
-        } catch (\Exception $e) {
-            Log::error('RADIUS configuration failed', [
-                'router_id' => $router->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-            ];
-        }
+        return [
+            'success' => false,
+            'error' => 'RADIUS configuration requires RouterOS API client with comm() method. Feature coming soon.',
+            'note' => 'Use manual configuration or wait for API implementation',
+        ];
     }
 
     /**

@@ -68,15 +68,30 @@ class RouterCommentHelper
     
     /**
      * Generate comment for NetworkUser (PPPoE user) - IspBills pattern
-     * Format: uid--123,name--John Doe,mobile--01712345678,zone--5,pkg--10,exp--2026-12-31,status--active
+     * Format: uid--123,nid--456,name--John Doe,mobile--01712345678,zone--5,pkg--10,exp--2026-12-31,status--active
+     * 
+     * Pulls customer information from related user where available
      */
     protected static function getNetworkUserComment(NetworkUser $user): string
     {
+        // Get related customer information if available
+        $customer = $user->relationLoaded('user') ? $user->user : null;
+        $customerId = $user->user_id ?? null;
+        $customerName = $customer?->name;
+        $customerMobile = $customer?->mobile ?? $customer?->phone ?? null;
+        $customerZone = $customer?->zone_id ?? null;
+        
         $parts = [
-            'uid' => $user->id,
-            'name' => self::sanitize($user->name ?? $user->username),
-            'mobile' => self::sanitize($user->mobile ?? 'N/A'),
-            'zone' => $user->zone_id ?? 'N/A',
+            // uid: owning customer id where possible (falls back to network user id)
+            'uid' => $customerId ?? $user->id,
+            // nid: explicit network user id for troubleshooting/audit
+            'nid' => $user->id,
+            // name: customer name if available, otherwise fall back to username
+            'name' => self::sanitize($customerName ?? $user->username),
+            // mobile: customer mobile/phone if available, otherwise N/A
+            'mobile' => self::sanitize($customerMobile ?? 'N/A'),
+            // zone: prefer customer zone, then network user zone, then N/A
+            'zone' => $customerZone ?? $user->zone_id ?? 'N/A',
             'pkg' => $user->package_id ?? 'N/A',
             'exp' => $user->expiry_date?->format('Y-m-d') ?? 'N/A',
             'status' => $user->status ?? 'active',
