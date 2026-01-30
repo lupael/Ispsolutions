@@ -185,34 +185,40 @@ class CustomerCacheService
         }
 
         try {
-            // Query radacct table for active sessions using radius connection
-            // Note: This assumes you have a radacct table. Adjust based on your schema.
+            // First, fetch usernames and create a mapping from the main database
+            $usernameToId = DB::table('users')
+                ->select('id', 'username')
+                ->whereIn('id', $customerIds)
+                ->where('operator_level', 100)
+                ->pluck('id', 'username')
+                ->toArray();
+
+            if (empty($usernameToId)) {
+                return array_fill_keys($customerIds, false);
+            }
+
+            // Then, query radacct table for active sessions using radius connection
             $activeSessions = DB::connection('radius')->table('radacct')
                 ->select('username')
-                ->whereIn('username', function ($query) use ($customerIds) {
-                    $query->select('username')
-                        ->from('users')
-                        ->whereIn('id', $customerIds)
-                        ->where('operator_level', 100);
-                })
+                ->whereIn('username', array_keys($usernameToId))
                 ->whereNull('acctstoptime')
                 ->get()
                 ->pluck('username')
                 ->unique()
                 ->toArray();
 
-            // Convert usernames back to customer IDs
-            $onlineCustomers = DB::table('users')
-                ->select('id')
-                ->where('operator_level', 100)
-                ->whereIn('username', $activeSessions)
-                ->pluck('id')
-                ->toArray();
+            // Convert usernames to customer IDs using the mapping
+            $onlineCustomerIds = [];
+            foreach ($activeSessions as $username) {
+                if (isset($usernameToId[$username])) {
+                    $onlineCustomerIds[] = $usernameToId[$username];
+                }
+            }
 
             // Create status array
             $statusArray = [];
             foreach ($customerIds as $customerId) {
-                $statusArray[$customerId] = in_array($customerId, $onlineCustomers);
+                $statusArray[$customerId] = in_array($customerId, $onlineCustomerIds);
             }
 
             return $statusArray;
