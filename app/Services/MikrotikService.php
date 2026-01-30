@@ -13,8 +13,10 @@ use App\Models\MikrotikRouter;
 use App\Models\MikrotikVpnAccount;
 use App\Models\RouterConfiguration;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RouterOS\Client;
+use RouterOS\Config;
+use RouterOS\Query;
 
 /**
  * MikroTik Service
@@ -64,26 +66,27 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
-            // Test connection to router (using HTTP API for mock server)
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/health");
+            // Test connection to router using Binary API
+            $client = $this->createClient($router);
+            $query = new Query('/system/identity/print');
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                $this->currentRouter = $router;
-                Log::info('Connected to MikroTik router', ['router_id' => $routerId]);
+            $this->currentRouter = $router;
+            Log::info('Connected to MikroTik router via Binary API', ['router_id' => $routerId]);
 
-                return true;
-            }
-
-            Log::warning('Failed to connect to MikroTik router', [
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router', [
                 'router_id' => $routerId,
-                'status' => $response->status(),
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error connecting to MikroTik router', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -103,42 +106,46 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
-            // Create user on MikroTik via API
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/add", [
-                    'name' => $userData['username'],
-                    'password' => $userData['password'],
-                    'service' => $userData['service'] ?? 'pppoe',
-                    'profile' => $userData['profile'] ?? 'default',
-                    'local-address' => $userData['local_address'] ?? '',
-                    'remote-address' => $userData['remote_address'] ?? '',
-                ]);
+            // Create user on MikroTik via Binary API
+            $client = $this->createClient($router);
+            $query = (new Query('/ppp/secret/add'))
+                ->equal('name', $userData['username'])
+                ->equal('password', $userData['password'])
+                ->equal('service', $userData['service'] ?? 'pppoe')
+                ->equal('profile', $userData['profile'] ?? 'default');
 
-            if ($response->successful()) {
-                // Store in local database
-                MikrotikPppoeUser::create([
-                    'router_id' => $router->id,
-                    'username' => $userData['username'],
-                    'password' => $userData['password'],
-                    'service' => $userData['service'] ?? 'pppoe',
-                    'profile' => $userData['profile'] ?? 'default',
-                    'local_address' => $userData['local_address'] ?? null,
-                    'remote_address' => $userData['remote_address'] ?? null,
-                    'status' => 'synced',
-                ]);
-
-                Log::info('PPPoE user created on MikroTik', [
-                    'router_id' => $router->id,
-                    'username' => $userData['username'],
-                ]);
-
-                return true;
+            if (!empty($userData['local_address'])) {
+                $query->equal('local-address', $userData['local_address']);
+            }
+            if (!empty($userData['remote_address'])) {
+                $query->equal('remote-address', $userData['remote_address']);
             }
 
-            Log::error('Failed to create PPPoE user on MikroTik', [
+            $client->query($query)->read();
+
+            // Store in local database
+            MikrotikPppoeUser::create([
                 'router_id' => $router->id,
                 'username' => $userData['username'],
-                'response' => $response->body(),
+                'password' => $userData['password'],
+                'service' => $userData['service'] ?? 'pppoe',
+                'profile' => $userData['profile'] ?? 'default',
+                'local_address' => $userData['local_address'] ?? null,
+                'remote_address' => $userData['remote_address'] ?? null,
+                'status' => 'synced',
+            ]);
+
+            Log::info('PPPoE user created on MikroTik via Binary API', [
+                'router_id' => $router->id,
+                'username' => $userData['username'],
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout while creating PPPoE user', [
+                'router_id' => $userData['router_id'] ?? null,
+                'username' => $userData['username'] ?? 'unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -169,45 +176,64 @@ class MikrotikService implements MikrotikServiceInterface
             /** @var MikrotikRouter $router */
             $router = $localUser->router;
 
-            // Update user on MikroTik via API
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/set", [
-                    'name' => $username,
-                    'password' => $userData['password'] ?? $localUser->password,
-                    'service' => $userData['service'] ?? $localUser->service,
-                    'profile' => $userData['profile'] ?? $localUser->profile,
-                    'local-address' => $userData['local_address'] ?? $localUser->local_address,
-                    'remote-address' => $userData['remote_address'] ?? $localUser->remote_address,
-                ]);
-
-            if ($response->successful()) {
-                // Update local database
-                $localUser->update([
-                    'password' => $userData['password'] ?? $localUser->password,
-                    'service' => $userData['service'] ?? $localUser->service,
-                    'profile' => $userData['profile'] ?? $localUser->profile,
-                    'local_address' => $userData['local_address'] ?? $localUser->local_address,
-                    'remote_address' => $userData['remote_address'] ?? $localUser->remote_address,
-                    'status' => 'synced',
-                ]);
-
-                Log::info('PPPoE user updated on MikroTik', [
+            // Update user on MikroTik via Binary API
+            $client = $this->createClient($router);
+            
+            // First, find the secret by name to get its .id
+            $findQuery = (new Query('/ppp/secret/print'))
+                ->where('name', $username);
+            $secrets = $client->query($findQuery)->read();
+            
+            if (empty($secrets)) {
+                Log::error('PPPoE user not found on MikroTik router', [
                     'router_id' => $router->id,
+                    'router_name' => $router->name,
                     'username' => $username,
                 ]);
-
-                return true;
+                return false;
             }
+            
+            // Update using the .id
+            $setQuery = (new Query('/ppp/secret/set'))
+                ->equal('.id', $secrets[0]['.id'])
+                ->equal('password', $userData['password'] ?? $localUser->password)
+                ->equal('service', $userData['service'] ?? $localUser->service)
+                ->equal('profile', $userData['profile'] ?? $localUser->profile)
+                ->equal('local-address', $userData['local_address'] ?? $localUser->local_address)
+                ->equal('remote-address', $userData['remote_address'] ?? $localUser->remote_address);
+            
+            $client->query($setQuery)->read();
 
-            Log::error('Failed to update PPPoE user on MikroTik', [
+            // Update local database
+            $localUser->update([
+                'password' => $userData['password'] ?? $localUser->password,
+                'service' => $userData['service'] ?? $localUser->service,
+                'profile' => $userData['profile'] ?? $localUser->profile,
+                'local_address' => $userData['local_address'] ?? $localUser->local_address,
+                'remote_address' => $userData['remote_address'] ?? $localUser->remote_address,
+                'status' => 'synced',
+            ]);
+
+            Log::info('PPPoE user updated on MikroTik', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'username' => $username,
-                'response' => $response->body(),
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while updating PPPoE user', [
+                'router_id' => $localUser->router->id ?? null,
+                'router_name' => $localUser->router->name ?? 'Unknown',
+                'username' => $username,
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error updating PPPoE user', [
+                'router_id' => $localUser->router->id ?? null,
+                'router_name' => $localUser->router->name ?? 'Unknown',
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
@@ -233,33 +259,54 @@ class MikrotikService implements MikrotikServiceInterface
             /** @var MikrotikRouter $router */
             $router = $localUser->router;
 
-            // Delete user from MikroTik via API
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/remove", [
-                    'name' => $username,
-                ]);
-
-            if ($response->successful()) {
-                // Update local database status
-                $localUser->update(['status' => 'inactive']);
-
-                Log::info('PPPoE user deleted from MikroTik', [
+            // Delete user from MikroTik via Binary API
+            $client = $this->createClient($router);
+            
+            // First, find the secret by name to get its .id
+            $findQuery = (new Query('/ppp/secret/print'))
+                ->where('name', $username);
+            $secrets = $client->query($findQuery)->read();
+            
+            if (empty($secrets)) {
+                Log::warning('PPPoE user not found on MikroTik router for deletion', [
                     'router_id' => $router->id,
+                    'router_name' => $router->name,
                     'username' => $username,
                 ]);
-
+                // Still update local database as user doesn't exist on router
+                $localUser->update(['status' => 'inactive']);
                 return true;
             }
+            
+            // Remove using the .id
+            $removeQuery = (new Query('/ppp/secret/remove'))
+                ->equal('.id', $secrets[0]['.id']);
+            
+            $client->query($removeQuery)->read();
 
-            Log::error('Failed to delete PPPoE user from MikroTik', [
+            // Update local database status
+            $localUser->update(['status' => 'inactive']);
+
+            Log::info('PPPoE user deleted from MikroTik', [
                 'router_id' => $router->id,
+                'router_name' => $router->name,
                 'username' => $username,
-                'response' => $response->body(),
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while deleting PPPoE user', [
+                'router_id' => $localUser->router->id ?? null,
+                'router_name' => $localUser->router->name ?? 'Unknown',
+                'username' => $username,
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error deleting PPPoE user', [
+                'router_id' => $localUser->router->id ?? null,
+                'router_name' => $localUser->router->name ?? 'Unknown',
                 'username' => $username,
                 'error' => $e->getMessage(),
             ]);
@@ -282,25 +329,24 @@ class MikrotikService implements MikrotikServiceInterface
                 return [];
             }
 
-            // Get active sessions from MikroTik via API
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/active/print");
+            // Get active sessions from MikroTik via Binary API
+            $client = $this->createClient($router);
+            $query = new Query('/ppp/active/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return $data['sessions'] ?? [];
-            }
-
-            Log::error('Failed to get active sessions from MikroTik', [
+            return $this->normalizeApiResponse($response);
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while getting active sessions', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error getting active sessions', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -320,30 +366,33 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
-            // Disconnect session on MikroTik via API
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$this->currentRouter->ip_address}:{$this->currentRouter->api_port}/api/ppp/active/remove", [
-                    'id' => $sessionId,
-                ]);
+            // Disconnect session on MikroTik via Binary API
+            $client = $this->createClient($this->currentRouter);
+            $query = (new Query('/ppp/active/remove'))
+                ->equal('.id', $sessionId);
+            
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                Log::info('Session disconnected on MikroTik', [
-                    'router_id' => $this->currentRouter->id,
-                    'session_id' => $sessionId,
-                ]);
-
-                return true;
-            }
-
-            Log::error('Failed to disconnect session on MikroTik', [
+            Log::info('Session disconnected on MikroTik', [
                 'router_id' => $this->currentRouter->id,
+                'router_name' => $this->currentRouter->name,
                 'session_id' => $sessionId,
-                'response' => $response->body(),
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while disconnecting session', [
+                'router_id' => $this->currentRouter->id ?? null,
+                'router_name' => $this->currentRouter->name ?? 'Unknown',
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error disconnecting session', [
+                'router_id' => $this->currentRouter->id ?? null,
+                'router_name' => $this->currentRouter->name ?? 'Unknown',
                 'session_id' => $sessionId,
                 'error' => $e->getMessage(),
             ]);
@@ -366,25 +415,29 @@ class MikrotikService implements MikrotikServiceInterface
                 return [];
             }
 
-            // Get PPPoE profiles from MikroTik via API
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/profile/print");
+            // Get PPPoE profiles from MikroTik via Binary API
+            $client = $this->createClient($router);
+            $query = new Query('/ppp/profile/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return $data['profiles'] ?? [];
-            }
-
-            Log::error('Failed to get profiles from MikroTik', [
+            Log::info('Successfully fetched profiles from MikroTik via Binary API', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'count' => count($response),
+            ]);
+
+            return $this->normalizeApiResponse($response);
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout while getting profiles', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error getting profiles', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -418,48 +471,50 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/profile/add", [
-                    'name' => $profileData['name'],
-                    'local-address' => $profileData['local_address'] ?? '',
-                    'remote-address' => $profileData['remote_address'] ?? '',
-                    'rate-limit' => $profileData['rate_limit'] ?? '',
-                    'session-timeout' => $profileData['session_timeout'] ?? 0,
-                    'idle-timeout' => $profileData['idle_timeout'] ?? 0,
-                ]);
+            $client = $this->createClient($router);
+            $query = (new Query('/ppp/profile/add'))
+                ->equal('name', $profileData['name'])
+                ->equal('local-address', $profileData['local_address'] ?? '')
+                ->equal('remote-address', $profileData['remote_address'] ?? '')
+                ->equal('rate-limit', $profileData['rate_limit'] ?? '')
+                ->equal('session-timeout', $profileData['session_timeout'] ?? '0')
+                ->equal('idle-timeout', $profileData['idle_timeout'] ?? '0');
+            
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                MikrotikProfile::updateOrCreate(
-                    [
-                        'router_id' => $routerId,
-                        'name' => $profileData['name'],
-                    ],
-                    [
-                        'local_address' => $profileData['local_address'] ?? null,
-                        'remote_address' => $profileData['remote_address'] ?? null,
-                        'rate_limit' => $profileData['rate_limit'] ?? null,
-                        'session_timeout' => $profileData['session_timeout'] ?? null,
-                        'idle_timeout' => $profileData['idle_timeout'] ?? null,
-                    ]
-                );
-
-                Log::info('PPPoE profile created', [
+            MikrotikProfile::updateOrCreate(
+                [
                     'router_id' => $routerId,
-                    'profile' => $profileData['name'],
-                ]);
+                    'name' => $profileData['name'],
+                ],
+                [
+                    'local_address' => $profileData['local_address'] ?? null,
+                    'remote_address' => $profileData['remote_address'] ?? null,
+                    'rate_limit' => $profileData['rate_limit'] ?? null,
+                    'session_timeout' => $profileData['session_timeout'] ?? null,
+                    'idle_timeout' => $profileData['idle_timeout'] ?? null,
+                ]
+            );
 
-                return true;
-            }
-
-            Log::error('Failed to create profile on MikroTik', [
+            Log::info('PPPoE profile created', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'router_name' => $router->name,
+                'profile' => $profileData['name'],
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while creating PPPoE profile', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error creating PPPoE profile', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -560,40 +615,42 @@ class MikrotikService implements MikrotikServiceInterface
 
             $ranges = is_array($poolData['ranges']) ? implode(',', $poolData['ranges']) : $poolData['ranges'];
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/pool/add", [
-                    'name' => $poolData['name'],
-                    'ranges' => $ranges,
-                ]);
+            $client = $this->createClient($router);
+            $query = (new Query('/ip/pool/add'))
+                ->equal('name', $poolData['name'])
+                ->equal('ranges', $ranges);
+            
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                MikrotikIpPool::updateOrCreate(
-                    [
-                        'router_id' => $routerId,
-                        'name' => $poolData['name'],
-                    ],
-                    [
-                        'ranges' => is_array($poolData['ranges']) ? $poolData['ranges'] : [$poolData['ranges']],
-                    ]
-                );
-
-                Log::info('IP pool created', [
+            MikrotikIpPool::updateOrCreate(
+                [
                     'router_id' => $routerId,
-                    'pool' => $poolData['name'],
-                ]);
+                    'name' => $poolData['name'],
+                ],
+                [
+                    'ranges' => is_array($poolData['ranges']) ? $poolData['ranges'] : [$poolData['ranges']],
+                ]
+            );
 
-                return true;
-            }
-
-            Log::error('Failed to create IP pool on MikroTik', [
+            Log::info('IP pool created', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'router_name' => $router->name,
+                'pool' => $poolData['name'],
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while creating IP pool', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error creating IP pool', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -615,24 +672,29 @@ class MikrotikService implements MikrotikServiceInterface
                 return [];
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/ip/pool/print");
+            // Use Binary API to get IP pools
+            $client = $this->createClient($router);
+            $query = new Query('/ip/pool/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return $data['pools'] ?? [];
-            }
-
-            Log::error('Failed to import IP pools from MikroTik', [
+            Log::info('Successfully imported IP pools from MikroTik via Binary API', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'count' => count($response),
+            ]);
+
+            return $this->normalizeApiResponse($response);
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout while importing IP pools', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error importing IP pools', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -706,24 +768,29 @@ class MikrotikService implements MikrotikServiceInterface
                 return [];
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/print");
+            // Use Binary API to get PPP secrets
+            $client = $this->createClient($router);
+            $query = new Query('/ppp/secret/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return $data['secrets'] ?? [];
-            }
-
-            Log::error('Failed to import secrets from MikroTik', [
+            Log::info('Successfully imported secrets from MikroTik via Binary API', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'count' => count($response),
+            ]);
+
+            return $this->normalizeApiResponse($response);
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout while importing secrets', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error importing secrets', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1194,40 +1261,42 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ppp/secret/add", [
-                    'name' => $vpnData['username'],
-                    'password' => $vpnData['password'],
-                    'service' => $vpnData['service'] ?? 'l2tp',
-                    'profile' => $vpnData['profile'] ?? 'default',
-                ]);
+            $client = $this->createClient($router);
+            $query = (new Query('/ppp/secret/add'))
+                ->equal('name', $vpnData['username'])
+                ->equal('password', $vpnData['password'])
+                ->equal('service', $vpnData['service'] ?? 'l2tp')
+                ->equal('profile', $vpnData['profile'] ?? 'default');
+            
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                MikrotikVpnAccount::create([
-                    'router_id' => $routerId,
-                    'username' => $vpnData['username'],
-                    'password' => $vpnData['password'],
-                    'profile' => $vpnData['profile'] ?? 'default',
-                    'enabled' => $vpnData['enabled'] ?? true,
-                ]);
-
-                Log::info('VPN account created', [
-                    'router_id' => $routerId,
-                    'username' => $vpnData['username'],
-                ]);
-
-                return true;
-            }
-
-            Log::error('Failed to create VPN account on MikroTik', [
+            MikrotikVpnAccount::create([
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'username' => $vpnData['username'],
+                'password' => $vpnData['password'],
+                'profile' => $vpnData['profile'] ?? 'default',
+                'enabled' => $vpnData['enabled'] ?? true,
+            ]);
+
+            Log::info('VPN account created', [
+                'router_id' => $routerId,
+                'router_name' => $router->name,
+                'username' => $vpnData['username'],
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while creating VPN account', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error creating VPN account', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1249,24 +1318,23 @@ class MikrotikService implements MikrotikServiceInterface
                 return [];
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/interface/l2tp-server/print");
+            $client = $this->createClient($router);
+            $query = new Query('/ppp/active/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return $data['servers'] ?? [];
-            }
-
-            Log::error('Failed to get VPN status from MikroTik', [
+            return $this->normalizeApiResponse($response);
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while getting VPN status', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error getting VPN status', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1288,48 +1356,50 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/queue/simple/add", [
-                    'name' => $queueData['name'],
-                    'target' => $queueData['target'],
-                    'parent' => $queueData['parent'] ?? 'none',
-                    'max-limit' => $queueData['max_limit'] ?? '',
-                    'burst-limit' => $queueData['burst_limit'] ?? '',
-                    'burst-threshold' => $queueData['burst_threshold'] ?? '',
-                    'burst-time' => $queueData['burst_time'] ?? 0,
-                    'priority' => $queueData['priority'] ?? 8,
-                ]);
+            $client = $this->createClient($router);
+            $query = (new Query('/queue/simple/add'))
+                ->equal('name', $queueData['name'])
+                ->equal('target', $queueData['target'])
+                ->equal('parent', $queueData['parent'] ?? 'none')
+                ->equal('max-limit', $queueData['max_limit'] ?? '')
+                ->equal('burst-limit', $queueData['burst_limit'] ?? '')
+                ->equal('burst-threshold', $queueData['burst_threshold'] ?? '')
+                ->equal('burst-time', $queueData['burst_time'] ?? '0')
+                ->equal('priority', $queueData['priority'] ?? '8');
+            
+            $client->query($query)->read();
 
-            if ($response->successful()) {
-                MikrotikQueue::create([
-                    'router_id' => $routerId,
-                    'name' => $queueData['name'],
-                    'target' => $queueData['target'],
-                    'parent' => $queueData['parent'] ?? null,
-                    'max_limit' => $queueData['max_limit'] ?? null,
-                    'burst_limit' => $queueData['burst_limit'] ?? null,
-                    'burst_threshold' => $queueData['burst_threshold'] ?? null,
-                    'burst_time' => $queueData['burst_time'] ?? null,
-                    'priority' => $queueData['priority'] ?? 8,
-                ]);
-
-                Log::info('Queue created', [
-                    'router_id' => $routerId,
-                    'queue' => $queueData['name'],
-                ]);
-
-                return true;
-            }
-
-            Log::error('Failed to create queue on MikroTik', [
+            MikrotikQueue::create([
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'name' => $queueData['name'],
+                'target' => $queueData['target'],
+                'parent' => $queueData['parent'] ?? null,
+                'max_limit' => $queueData['max_limit'] ?? null,
+                'burst_limit' => $queueData['burst_limit'] ?? null,
+                'burst_threshold' => $queueData['burst_threshold'] ?? null,
+                'burst_time' => $queueData['burst_time'] ?? null,
+                'priority' => $queueData['priority'] ?? 8,
+            ]);
+
+            Log::info('Queue created', [
+                'router_id' => $routerId,
+                'router_name' => $router->name,
+                'queue' => $queueData['name'],
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while creating queue', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error creating queue', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1351,24 +1421,23 @@ class MikrotikService implements MikrotikServiceInterface
                 return [];
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/queue/simple/print");
+            $client = $this->createClient($router);
+            $query = new Query('/queue/simple/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return $data['queues'] ?? [];
-            }
-
-            Log::error('Failed to get queues from MikroTik', [
+            return $this->normalizeApiResponse($response);
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while getting queues', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error getting queues', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1390,27 +1459,35 @@ class MikrotikService implements MikrotikServiceInterface
                 return false;
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->post("http://{$router->ip_address}:{$router->api_port}/api/ip/firewall/filter/add", $ruleData);
-
-            if ($response->successful()) {
-                Log::info('Firewall rule added', [
-                    'router_id' => $routerId,
-                    'chain' => $ruleData['chain'] ?? 'forward',
-                ]);
-
-                return true;
+            $client = $this->createClient($router);
+            $query = new Query('/ip/firewall/filter/add');
+            
+            // Add all rule data as parameters
+            foreach ($ruleData as $key => $value) {
+                $query->equal($key, $value);
             }
+            
+            $client->query($query)->read();
 
-            Log::error('Failed to add firewall rule on MikroTik', [
+            Log::info('Firewall rule added', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'router_name' => $router->name,
+                'chain' => $ruleData['chain'] ?? 'forward',
+            ]);
+
+            return true;
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while adding firewall rule', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('Error adding firewall rule', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1432,24 +1509,23 @@ class MikrotikService implements MikrotikServiceInterface
                 return [];
             }
 
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/ip/firewall/filter/print");
+            $client = $this->createClient($router);
+            $query = new Query('/ip/firewall/filter/print');
+            $response = $client->query($query)->read();
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return $data['rules'] ?? [];
-            }
-
-            Log::error('Failed to get firewall rules from MikroTik', [
+            return $this->normalizeApiResponse($response);
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while getting firewall rules', [
                 'router_id' => $routerId,
-                'response' => $response->body(),
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error getting firewall rules', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1524,51 +1600,55 @@ class MikrotikService implements MikrotikServiceInterface
             if (! $this->isValidRouterIpAddress($router->ip_address)) {
                 Log::error('Router IP address validation failed - potential SSRF attempt', [
                     'router_id' => $routerId,
+                    'router_name' => $router->name,
                     'ip_address' => $router->ip_address,
                 ]);
 
                 return [];
             }
 
-            // Get system resources from MikroTik via API
-            $response = Http::timeout(config('services.mikrotik.timeout', 30))
-                ->get("http://{$router->ip_address}:{$router->api_port}/api/system/resource");
+            // Get system resources from MikroTik via Binary API
+            $startTime = microtime(true);
+            $client = $this->createClient($router);
+            $query = new Query('/system/resource/print');
+            $response = $client->query($query)->read();
+            $responseTime = (int)((microtime(true) - $startTime) * 1000);
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                Log::info('System resources retrieved from MikroTik', [
-                    'router_id' => $routerId,
-                ]);
-
-                // Update router status
-                $router->update([
-                    'api_status' => 'online',
-                    'last_checked_at' => now(),
-                    'response_time_ms' => $response->transferStats && $response->transferStats->getTransferTime() ? (int)($response->transferStats->getTransferTime() * 1000) : null,
-                    'last_error' => null, // Clear previous error on success
-                ]);
-
-                return $data;
-            }
-
-            Log::error('Failed to get system resources from MikroTik', [
+            Log::info('System resources retrieved from MikroTik', [
                 'router_id' => $routerId,
-                'status' => $response->status(),
-                'response' => $response->body(),
+                'router_name' => $router->name,
             ]);
 
-            // Update router status to offline on failure
+            // Update router status
             $router->update([
-                'api_status' => 'offline',
+                'api_status' => 'online',
                 'last_checked_at' => now(),
-                'last_error' => 'Failed to get resources: HTTP ' . $response->status(),
+                'response_time_ms' => $responseTime,
+                'last_error' => null,
             ]);
+
+            return !empty($response) ? $response[0] : [];
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            Log::error('Socket connection timeout to MikroTik router while getting system resources', [
+                'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
+                'error' => $e->getMessage(),
+            ]);
+
+            // Update router with error status
+            if (isset($router)) {
+                $router->update([
+                    'api_status' => 'offline',
+                    'last_checked_at' => now(),
+                    'last_error' => 'Connection timeout: ' . $e->getMessage(),
+                ]);
+            }
 
             return [];
         } catch (\Exception $e) {
             Log::error('Error getting system resources from MikroTik', [
                 'router_id' => $routerId,
+                'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -1583,5 +1663,55 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         }
+    }
+
+    /**
+     * Create Binary API client for router
+     * 
+     * @param MikrotikRouter $router Router instance with encrypted credentials
+     * @return Client Connected Binary API client
+     */
+    private function createClient(MikrotikRouter $router): Client
+    {
+        // Laravel automatically decrypts password via encrypted cast
+        $config = (new Config())
+            ->set('host', $router->ip_address)
+            ->set('user', $router->username)
+            ->set('pass', $router->password) // Already decrypted by Laravel
+            ->set('port', $router->api_port)
+            ->set('timeout', config('services.mikrotik.timeout', 60));
+
+        return new Client($config);
+    }
+
+    /**
+     * Normalize Binary API response to match expected format
+     * 
+     * @param array $response Raw response from Binary API
+     * @return array Normalized response
+     */
+    private function normalizeApiResponse(array $response): array
+    {
+        return array_map(function ($item) {
+            $normalized = [];
+            
+            foreach ($item as $key => $value) {
+                // Keep original key
+                $normalized[$key] = $value;
+                
+                // Skip dot-prefixed keys like .id for underscore conversion
+                if (strpos($key, '.') === 0) {
+                    continue;
+                }
+                
+                // Convert hyphen to underscore for compatibility
+                $underscoreKey = str_replace('-', '_', $key);
+                if ($underscoreKey !== $key) {
+                    $normalized[$underscoreKey] = $value;
+                }
+            }
+            
+            return $normalized;
+        }, $response);
     }
 }
