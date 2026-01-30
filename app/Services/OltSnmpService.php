@@ -157,6 +157,11 @@ class OltSnmpService
     /**
      * Get ONU signal levels (alias for getOnuOpticalPower for backward compatibility).
      *
+     * Note: The $olt parameter is kept for backward compatibility with code that
+     * passes it, but is not used. The OLT relationship is accessed via $onu->olt.
+     *
+     * @param Olt $olt OLT instance (unused, kept for backward compatibility)
+     * @param Onu $onu ONU instance
      * @return array Array with status, rx_power, tx_power, and distance
      */
     public function getOnuSignalLevels(Olt $olt, Onu $onu): array
@@ -431,6 +436,8 @@ class OltSnmpService
 
     /**
      * Build SNMP index from PON port and ONU ID.
+     * 
+     * @throws \RuntimeException If PON port format is invalid and cannot be parsed
      */
     private function buildSnmpIndex(string $ponPort, int $onuId, string $vendor): string
     {
@@ -440,12 +447,13 @@ class OltSnmpService
         
         // Validate port format (should have at least 2 parts: slot/port or chassis/slot/port)
         if (count($parts) < 2) {
-            Log::warning('Invalid PON port format for SNMP index', [
+            $message = "Invalid PON port format for SNMP index: {$ponPort}. Expected format: slot/port (e.g., '0/1')";
+            Log::error($message, [
                 'pon_port' => $ponPort,
                 'vendor' => $vendor,
+                'onu_id' => $onuId,
             ]);
-            // Default to 0/0 format if invalid
-            $parts = ['0', '0'];
+            throw new \RuntimeException($message);
         }
 
         return match ($vendor) {

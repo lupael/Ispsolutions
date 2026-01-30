@@ -147,6 +147,8 @@ class OltService implements OltServiceInterface
      */
     public function discoverOnus(int $oltId): array
     {
+        $sshConnectionCreated = false;
+        
         try {
             $olt = Olt::findOrFail($oltId);
 
@@ -176,9 +178,13 @@ class OltService implements OltServiceInterface
             }
 
             // Fallback to SSH-based discovery
+            $wasAlreadyConnected = isset($this->connections[$oltId]);
+            
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
+            
+            $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$oltId];
             $commands = $this->getVendorCommands($olt);
@@ -188,8 +194,6 @@ class OltService implements OltServiceInterface
             $output = $connection->exec($commands['onu_state']);
 
             if ($output === false) {
-                // Clean up connection on failure
-                $this->disconnect($oltId);
                 throw new RuntimeException('Failed to execute discovery command');
             }
 
@@ -217,8 +221,8 @@ class OltService implements OltServiceInterface
         } catch (\Exception $e) {
             Log::error("Error discovering ONUs on OLT {$oltId}: " . $e->getMessage());
             
-            // Ensure connection is cleaned up on error
-            if (isset($this->connections[$oltId])) {
+            // Only clean up connection if we created it in this method call
+            if ($sshConnectionCreated && isset($this->connections[$oltId])) {
                 $this->disconnect($oltId);
             }
 
@@ -285,6 +289,8 @@ class OltService implements OltServiceInterface
      */
     public function getOnuStatus(int $onuId): array
     {
+        $sshConnectionCreated = false;
+        
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
             
@@ -323,6 +329,8 @@ class OltService implements OltServiceInterface
             }
 
             // Fallback to SSH-based status retrieval
+            $wasAlreadyConnected = isset($this->connections[$onu->olt_id]);
+            
             if (! $this->ensureConnected($onu->olt_id)) {
                 Log::error("Failed to connect to OLT via SSH for ONU status", [
                     'onu_id' => $onuId,
@@ -330,6 +338,8 @@ class OltService implements OltServiceInterface
                 ]);
                 throw new RuntimeException("Failed to connect to OLT {$onu->olt_id}");
             }
+            
+            $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$onu->olt_id];
             $commands = $this->getVendorCommands($onu->olt);
@@ -342,8 +352,6 @@ class OltService implements OltServiceInterface
             $output = $connection->exec($command);
 
             if ($output === false) {
-                // Clean up connection on failure
-                $this->disconnect($onu->olt_id);
                 throw new RuntimeException('Failed to execute status command');
             }
 
@@ -362,8 +370,8 @@ class OltService implements OltServiceInterface
         } catch (\Exception $e) {
             Log::error("Error getting ONU {$onuId} status: " . $e->getMessage());
             
-            // Ensure connection is cleaned up on error
-            if (isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
+            // Only clean up connection if we created it in this method call
+            if ($sshConnectionCreated && isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
                 $this->disconnect($onu->olt_id);
             }
 
@@ -520,12 +528,18 @@ class OltService implements OltServiceInterface
      */
     public function createBackup(int $oltId): bool
     {
+        $sshConnectionCreated = false;
+        
         try {
             $olt = Olt::findOrFail($oltId);
 
+            $wasAlreadyConnected = isset($this->connections[$oltId]);
+            
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
+            
+            $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$oltId];
             $commands = $this->getVendorCommands($olt);
@@ -534,8 +548,6 @@ class OltService implements OltServiceInterface
             $output = $connection->exec($commands['backup']);
 
             if ($output === false || empty($output)) {
-                // Clean up connection on failure
-                $this->disconnect($oltId);
                 throw new RuntimeException('Failed to retrieve configuration');
             }
 
@@ -576,8 +588,8 @@ class OltService implements OltServiceInterface
         } catch (\Exception $e) {
             Log::error("Error creating backup for OLT {$oltId}: " . $e->getMessage());
             
-            // Ensure connection is cleaned up on error
-            if (isset($this->connections[$oltId])) {
+            // Only clean up connection if we created it in this method call
+            if ($sshConnectionCreated && isset($this->connections[$oltId])) {
                 $this->disconnect($oltId);
             }
 
