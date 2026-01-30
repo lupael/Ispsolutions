@@ -18,7 +18,7 @@
             @php $data = $widgets['collection_target']; @endphp
             
             <div class="mb-3">
-                <div class="flex justify-content-between mb-2">
+                <div class="flex justify-between mb-2">
                     <span class="text-sm text-gray-500 dark:text-gray-400">Target: {{ number_format($data['target_amount'], 2) }} BDT</span>
                     <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ $data['percentage_collected'] }}%</span>
                 </div>
