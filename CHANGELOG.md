@@ -102,25 +102,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Previous Releases
-
-### [1.0.0] - 2026-01-16
-
-#### Added
-- Initial ISP Solution implementation
-- RADIUS integration with authentication and accounting
-- MikroTik management via RouterOS API
-- IPAM (IP Address Management)
-- Billing service with invoice generation
-- Payment gateway integration foundations
-- OLT management
-- Network device monitoring
-- Existing test suite
-- Docker development environment
-- GitHub Actions CI/CD pipelines
-
----
-
 ## Development Commands
 
 ```bash
