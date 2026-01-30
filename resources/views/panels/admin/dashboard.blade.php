@@ -116,6 +116,34 @@
         </div>
     </div>
 
+    <!-- Enhanced Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Trend Chart -->
+        @if(isset($revenueTrend))
+            <x-revenue-trend-chart :revenueTrend="$revenueTrend" />
+        @endif
+
+        <!-- Customer Growth Chart -->
+        @if(isset($customerGrowth))
+            <x-customer-growth-chart :customerGrowth="$customerGrowth" />
+        @endif
+    </div>
+
+    <!-- Operator Performance and Service Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Operator Performance Widget (spans 2 columns) -->
+        @if(isset($operatorPerformance) && $operatorPerformance->isNotEmpty())
+            <div class="lg:col-span-2">
+                <x-operator-performance-widget :operatorPerformance="$operatorPerformance" />
+            </div>
+        @endif
+
+        <!-- Service Type Distribution Chart -->
+        @if(isset($serviceTypeDistribution))
+            <x-service-type-distribution-chart :serviceTypeDistribution="$serviceTypeDistribution" />
+        @endif
+    </div>
+
     <!-- Task 18: Dashboard Enhancements - New Widgets -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Task 18.1: Overall Status Distribution Widget -->
