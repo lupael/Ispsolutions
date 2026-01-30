@@ -1033,12 +1033,6 @@ parameters:
 			path: app/Services/StaticIpBillingService.php
 
 		-
-			message: '#^Call to protected method generateInvoiceNumber\(\) of class App\\Services\\BillingService\.$#'
-			identifier: method.protected
-			count: 1
-			path: app/Services/StaticIpBillingService.php
-
-		-
 			message: '#^Method App\\Services\\StaticIpBillingService\:\:getStaticIpPackage\(\) should return App\\Models\\ServicePackage\|null but returns Illuminate\\Database\\Eloquent\\Model\.$#'
 			identifier: return.type
 			count: 1
