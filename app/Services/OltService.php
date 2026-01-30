@@ -147,6 +147,8 @@ class OltService implements OltServiceInterface
      */
     public function discoverOnus(int $oltId): array
     {
+        $sshConnectionCreated = false;
+        
         try {
             $olt = Olt::findOrFail($oltId);
 
@@ -176,9 +178,13 @@ class OltService implements OltServiceInterface
             }
 
             // Fallback to SSH-based discovery
+            $wasAlreadyConnected = isset($this->connections[$oltId]);
+            
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
+            
+            $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$oltId];
             $commands = $this->getVendorCommands($olt);
@@ -202,6 +208,9 @@ class OltService implements OltServiceInterface
                         'onu_id' => (int) $matches[2],
                         'serial_number' => $matches[3],
                         'status' => strtolower($matches[4]),
+                        'signal_rx' => null,
+                        'signal_tx' => null,
+                        'distance' => null,
                     ];
                 }
             }
@@ -211,6 +220,11 @@ class OltService implements OltServiceInterface
             return $onus;
         } catch (\Exception $e) {
             Log::error("Error discovering ONUs on OLT {$oltId}: " . $e->getMessage());
+            
+            // Only clean up connection if we created it in this method call
+            if ($sshConnectionCreated && isset($this->connections[$oltId])) {
+                $this->disconnect($oltId);
+            }
 
             return [];
         }
@@ -223,7 +237,8 @@ class OltService implements OltServiceInterface
     {
         return !empty($olt->ip_address) 
             && !empty($olt->snmp_community) 
-            && !empty($olt->snmp_version);
+            && !empty($olt->snmp_version)
+            && in_array(strtolower($olt->management_protocol ?? ''), ['snmp', 'both']);
     }
 
     /**
@@ -274,43 +289,29 @@ class OltService implements OltServiceInterface
      */
     public function getOnuStatus(int $onuId): array
     {
+        $sshConnectionCreated = false;
+        
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
             
-            // Try SNMP first for real-time power levels
+            // Try SNMP first if configured
             if ($this->canUseSNMP($onu->olt)) {
                 $snmpService = app(OltSnmpService::class);
-                $signalData = $snmpService->getOnuSignalLevels($onu->olt, $onu);
                 
-                if ($signalData) {
-                    Log::debug('Retrieved ONU status via SNMP', [
-                        'onu_id' => $onuId,
-                        'status' => $signalData['status'],
-                    ]);
-                    
-                    return [
-                        'status' => $signalData['status'],
-                        'signal_rx' => $signalData['rx_power'],
-                        'signal_tx' => $signalData['tx_power'],
-                        'distance' => $signalData['distance'],
-                        'uptime' => null, // Not available via SNMP
-                        'last_update' => now()->toIso8601String(),
-                    ];
-                }
-            }
-
-            // Try SNMP first if configured
-            $oltSnmpService = app(\App\Services\OltSnmpService::class);
-            
-            if ($onu->olt->snmp_community && $onu->olt->snmp_version) {
                 Log::info('Attempting SNMP-based ONU status retrieval', [
                     'onu_id' => $onuId,
                     'olt_id' => $onu->olt_id,
                 ]);
                 
-                $snmpStatus = $oltSnmpService->getOnuOpticalPower($onu);
+                $snmpStatus = $snmpService->getOnuOpticalPower($onu);
                 
                 if ($snmpStatus['rx_power'] !== null || $snmpStatus['tx_power'] !== null) {
+                    Log::debug('Retrieved ONU status via SNMP', [
+                        'onu_id' => $onuId,
+                        'rx_power' => $snmpStatus['rx_power'],
+                        'tx_power' => $snmpStatus['tx_power'],
+                    ]);
+                    
                     return [
                         'status' => $onu->status,
                         'signal_rx' => $snmpStatus['rx_power'],
@@ -328,9 +329,17 @@ class OltService implements OltServiceInterface
             }
 
             // Fallback to SSH-based status retrieval
+            $wasAlreadyConnected = isset($this->connections[$onu->olt_id]);
+            
             if (! $this->ensureConnected($onu->olt_id)) {
+                Log::error("Failed to connect to OLT via SSH for ONU status", [
+                    'onu_id' => $onuId,
+                    'olt_id' => $onu->olt_id,
+                ]);
                 throw new RuntimeException("Failed to connect to OLT {$onu->olt_id}");
             }
+            
+            $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$onu->olt_id];
             $commands = $this->getVendorCommands($onu->olt);
@@ -360,6 +369,11 @@ class OltService implements OltServiceInterface
             return $status;
         } catch (\Exception $e) {
             Log::error("Error getting ONU {$onuId} status: " . $e->getMessage());
+            
+            // Only clean up connection if we created it in this method call
+            if ($sshConnectionCreated && isset($onu) && isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
+                $this->disconnect($onu->olt_id);
+            }
 
             return [
                 'status' => 'unknown',
@@ -514,12 +528,18 @@ class OltService implements OltServiceInterface
      */
     public function createBackup(int $oltId): bool
     {
+        $sshConnectionCreated = false;
+        
         try {
             $olt = Olt::findOrFail($oltId);
 
+            $wasAlreadyConnected = isset($this->connections[$oltId]);
+            
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
+            
+            $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$oltId];
             $commands = $this->getVendorCommands($olt);
@@ -541,7 +561,11 @@ class OltService implements OltServiceInterface
             $filepath = $backupDir . '/' . $filename;
 
             // Save backup
-            Storage::put($filepath, $output);
+            if (!Storage::put($filepath, $output)) {
+                Log::error("Failed to save backup file: {$filepath}");
+                throw new RuntimeException("Failed to save backup file");
+            }
+            
             $fileSize = strlen($output);
 
             // Create backup record
@@ -555,11 +579,19 @@ class OltService implements OltServiceInterface
             // Update OLT last backup timestamp
             $olt->update(['last_backup_at' => now()]);
 
-            Log::info("Created backup for OLT {$oltId}: {$filename}");
+            Log::info("Created backup for OLT {$oltId}: {$filename}", [
+                'size' => $fileSize,
+                'path' => $filepath,
+            ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error("Error creating backup for OLT {$oltId}: " . $e->getMessage());
+            
+            // Only clean up connection if we created it in this method call
+            if ($sshConnectionCreated && isset($this->connections[$oltId])) {
+                $this->disconnect($oltId);
+            }
 
             return false;
         }
@@ -601,7 +633,8 @@ class OltService implements OltServiceInterface
                 ->where('id', $backupId)
                 ->firstOrFail();
 
-            if (! $backup->exists()) {
+            // Check if backup file exists in storage
+            if (! Storage::exists($backup->file_path)) {
                 Log::warning("Backup file not found: {$backup->file_path}");
 
                 return null;
