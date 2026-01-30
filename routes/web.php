@@ -1054,6 +1054,15 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     Route::get('/settings', [DeveloperController::class, 'settings'])->name('settings');
     Route::get('/debug', [DeveloperController::class, 'debug'])->name('debug');
 
+    // Role Settings
+    Route::get('/settings/roles', [DeveloperController::class, 'showRoleSettings'])->name('settings.roles');
+    Route::put('/settings/roles', [DeveloperController::class, 'updateRoleNames'])->name('settings.roles.update');
+
+    // Subscription Features Configuration
+    Route::get('/subscriptions/features', [DeveloperController::class, 'showSubscriptionFeatures'])->name('subscriptions.features');
+    Route::put('/subscriptions/features', [DeveloperController::class, 'updateSubscriptionFeatures'])->name('subscriptions.features.update');
+    Route::put('/subscriptions/limits', [DeveloperController::class, 'updateSubscriptionLimits'])->name('subscriptions.limits.update');
+
     // Command Execution
     Route::get('/commands', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'index'])->name('commands.index');
     Route::post('/commands/artisan', [\App\Http\Controllers\Panel\CommandExecutionController::class, 'executeArtisan'])->name('commands.execute-artisan');

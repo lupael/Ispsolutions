@@ -905,4 +905,88 @@ class DeveloperController extends Controller
 
         return view('panels.developer.admins.show', compact('admin'));
     }
+
+    /**
+     * Show role settings form.
+     */
+    public function showRoleSettings(): View
+    {
+        // Get current role names from all tenants (for display purposes)
+        // In a multi-tenant system, this would typically be tenant-specific
+        $roleNames = [
+            'operator' => \App\Models\RoleLabelSetting::where('role_slug', 'operator')->value('custom_label') ?? 'Operator',
+            'sub_operator' => \App\Models\RoleLabelSetting::where('role_slug', 'sub-operator')->value('custom_label') ?? 'Sub-Operator',
+        ];
+
+        return view('panels.developer.settings.roles', compact('roleNames'));
+    }
+
+    /**
+     * Update role names.
+     */
+    public function updateRoleNames(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'operator_name' => 'required|string|max:50',
+            'sub_operator_name' => 'required|string|max:50',
+        ]);
+
+        // Get the first tenant or use a global tenant_id = 1 for system-wide settings
+        $tenantId = \App\Models\Tenant::first()->id ?? 1;
+
+        // Update or create role labels
+        \App\Models\RoleLabelSetting::setCustomLabel($tenantId, 'operator', $validated['operator_name']);
+        \App\Models\RoleLabelSetting::setCustomLabel($tenantId, 'sub-operator', $validated['sub_operator_name']);
+
+        return redirect()->back()->with('success', 'Role names updated successfully.');
+    }
+
+    /**
+     * Show subscription features configuration form.
+     */
+    public function showSubscriptionFeatures(): View
+    {
+        // Get current features and limits from settings
+        $features = \App\Models\Setting::get('subscription_features', []);
+        $limits = \App\Models\Setting::get('subscription_limits', [
+            'max_admins' => 5,
+            'max_users_per_panel' => 1000,
+            'max_routers' => 10,
+            'max_olts' => 5,
+        ]);
+
+        return view('panels.developer.subscriptions.features', compact('features', 'limits'));
+    }
+
+    /**
+     * Update subscription features.
+     */
+    public function updateSubscriptionFeatures(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'features' => 'array',
+            'features.*' => 'in:mikrotik,olt,billing,sms,reports,api',
+        ]);
+
+        \App\Models\Setting::set('subscription_features', $validated['features'] ?? []);
+
+        return redirect()->back()->with('success', 'Subscription features updated successfully.');
+    }
+
+    /**
+     * Update subscription limits.
+     */
+    public function updateSubscriptionLimits(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'max_admins' => 'required|integer|min:1',
+            'max_users_per_panel' => 'required|integer|min:1',
+            'max_routers' => 'required|integer|min:1',
+            'max_olts' => 'required|integer|min:1',
+        ]);
+
+        \App\Models\Setting::set('subscription_limits', $validated);
+
+        return redirect()->back()->with('success', 'Subscription limits updated successfully.');
+    }
 }
