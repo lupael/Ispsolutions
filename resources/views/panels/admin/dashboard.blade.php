@@ -12,6 +12,25 @@
         </div>
     </div>
 
+    <!-- ISP Information Section -->
+    @if(isset($ispInfo))
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <x-isp-information-widget :ispInfo="$ispInfo" />
+        <x-sub-operator-information-widget :subOperatorInfo="$subOperatorInfo" />
+        <x-sub-operator-clients-widget :subOperatorClients="$subOperatorClients" />
+    </div>
+    @endif
+
+    <!-- Revenue Section with MRC and 3-Month Comparison -->
+    @if(isset($ispMRC) && isset($clientsMRC) && isset($subOperatorClientsMRC) && isset($mrcComparison))
+    <x-revenue-mrc-widget 
+        :ispMRC="$ispMRC" 
+        :clientsMRC="$clientsMRC" 
+        :subOperatorClientsMRC="$subOperatorClientsMRC" 
+        :mrcComparison="$mrcComparison" 
+    />
+    @endif
+
     <!-- Key Metrics Section: Customer Statistics & Today's Update combined -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Customer Statistics Detail -->
