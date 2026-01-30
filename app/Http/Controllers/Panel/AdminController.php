@@ -3391,7 +3391,7 @@ class AdminController extends Controller
             'total' => (clone $baseStatsQuery)->count(),
             'today' => (clone $baseStatsQuery)->whereDate('created_at', today())->count(),
             'this_week' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-            'this_month' => (clone $baseStatsQuery)->whereMonth('created_at', now()->month)->count(),
+            'this_month' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
         ];
 
         return view('panels.admin.logs.activity', compact('logs', 'stats'));
@@ -3501,7 +3501,12 @@ class AdminController extends Controller
                             ->whereNotNull('username')
                             ->pluck('username')
                             ->toArray();
-                        $query->whereIn('username', $customerUsernames);
+                        if (!empty($customerUsernames)) {
+                            $query->whereIn('username', $customerUsernames);
+                        } else {
+                            // No customers with usernames, return empty
+                            $query->whereRaw('1 = 0');
+                        }
                     } else {
                         // No customers assigned, return empty
                         $query->whereRaw('1 = 0');
@@ -3519,7 +3524,9 @@ class AdminController extends Controller
                 'total' => (clone $query)->count(),
                 'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
                 'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
-                'total_bandwidth' => (clone $query)->sum('acctinputoctets') + (clone $query)->sum('acctoutputoctets'),
+                'total_bandwidth' => (clone $query)
+                    ->selectRaw('SUM(acctinputoctets) + SUM(acctoutputoctets) as total')
+                    ->value('total') ?? 0,
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle case where radacct table doesn't exist
@@ -3592,7 +3599,12 @@ class AdminController extends Controller
                             ->whereNotNull('username')
                             ->pluck('username')
                             ->toArray();
-                        $query->whereIn('username', $customerUsernames);
+                        if (!empty($customerUsernames)) {
+                            $query->whereIn('username', $customerUsernames);
+                        } else {
+                            // No customers with usernames, return empty
+                            $query->whereRaw('1 = 0');
+                        }
                     } else {
                         // No customers assigned, return empty
                         $query->whereRaw('1 = 0');
@@ -3610,7 +3622,9 @@ class AdminController extends Controller
                 'total' => (clone $query)->count(),
                 'today' => (clone $query)->whereDate('acctstarttime', today())->count(),
                 'active_sessions' => (clone $query)->whereNull('acctstoptime')->count(),
-                'total_bandwidth' => (clone $query)->sum('acctinputoctets') + (clone $query)->sum('acctoutputoctets'),
+                'total_bandwidth' => (clone $query)
+                    ->selectRaw('SUM(acctinputoctets) + SUM(acctoutputoctets) as total')
+                    ->value('total') ?? 0,
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle case where radacct table doesn't exist
