@@ -2,7 +2,7 @@
 
 <div {{ $attributes->merge(['class' => 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6']) }}>
     <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Client's of Sub-Operator</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Clients of Sub-Operator</h3>
     </div>
     
     <div class="grid grid-cols-2 gap-4">

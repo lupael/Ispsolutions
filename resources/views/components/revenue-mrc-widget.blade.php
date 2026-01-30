@@ -36,7 +36,7 @@
 
         <!-- Client's MRC -->
         <div class="space-y-3">
-            <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Client's MRC</h4>
+            <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Clients MRC</h4>
             <div class="space-y-2">
                 <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-700 rounded-lg p-3">
                     <p class="text-xs font-medium text-green-700 dark:text-green-300 mb-0.5">Current MRC</p>
@@ -55,7 +55,7 @@
 
         <!-- Client's Of Sub-Operator MRC -->
         <div class="space-y-3">
-            <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Client's Of Sub-Operator MRC</h4>
+            <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Clients of Sub-Operator MRC</h4>
             <div class="space-y-2">
                 <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3">
                     <p class="text-xs font-medium text-purple-700 dark:text-purple-300 mb-0.5">Current MRC</p>
@@ -96,11 +96,11 @@
                         data: @json($ispMRCData)
                     },
                     {
-                        name: "Client's MRC",
+                        name: "Clients MRC",
                         data: @json($clientsMRCData)
                     },
                     {
-                        name: "Sub-Operator Client's MRC",
+                        name: "Sub-Operator Clients MRC",
                         data: @json($subOperatorMRCData)
                     }
                 ],

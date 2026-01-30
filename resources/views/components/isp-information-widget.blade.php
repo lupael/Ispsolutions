@@ -20,19 +20,19 @@
 
         <!-- Active Clients -->
         <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
-            <p class="text-sm font-medium text-green-700 dark:text-green-300 mb-1">Active Client</p>
+            <p class="text-sm font-medium text-green-700 dark:text-green-300 mb-1">Active Clients</p>
             <p class="text-3xl font-bold text-green-900 dark:text-green-100">{{ number_format($ispInfo['active_clients']) }}</p>
         </div>
 
         <!-- In-Active Clients -->
         <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-            <p class="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1">In-Active Client</p>
+            <p class="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1">In-Active Clients</p>
             <p class="text-3xl font-bold text-yellow-900 dark:text-yellow-100">{{ number_format($ispInfo['inactive_clients']) }}</p>
         </div>
 
         <!-- Expired Clients -->
         <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
-            <p class="text-sm font-medium text-red-700 dark:text-red-300 mb-1">Expired Client</p>
+            <p class="text-sm font-medium text-red-700 dark:text-red-300 mb-1">Expired Clients</p>
             <p class="text-3xl font-bold text-red-900 dark:text-red-100">{{ number_format($ispInfo['expired_clients']) }}</p>
         </div>
     </div>
