@@ -7,11 +7,12 @@ namespace App\Models;
 /**
  * Customer Model
  *
- * Type alias for User model when representing customers.
- * In this system, customers are Users with operator_level = 100.
+ * Represents external subscribers (Internet/PPP/Hotspot/CableTV).
+ * Customers are NOT part of the administrative hierarchy (Levels 0-80).
+ * They are identified by the is_subscriber flag, not by operator_level.
  *
- * This class exists to improve code readability and make the intent
- * clearer when working with customer-specific operations.
+ * This model represents customers as assets/subscribers managed by
+ * Operators (Level 30) and Sub-Operators (Level 40).
  */
 class Customer extends User
 {
@@ -29,15 +30,21 @@ class Customer extends User
     {
         parent::booted();
 
-        // Automatically scope to customer-level users
+        // Automatically scope to subscribers (customers)
         static::addGlobalScope('customer', function ($query) {
-            $query->where('operator_level', 100);
+            $query->where('is_subscriber', true);
         });
         
-        // Set default operator_level when creating a new customer
+        // Set default is_subscriber when creating a new customer
         static::creating(function ($customer) {
+            // Customers are subscribers, not operators
+            if (!isset($customer->is_subscriber)) {
+                $customer->is_subscriber = true;
+            }
+            
+            // Customers should not have operator_level
             if (!isset($customer->operator_level)) {
-                $customer->operator_level = 100;
+                $customer->operator_level = null;
             }
             
             // Auto-generate customer_id if not set
@@ -64,12 +71,12 @@ class Customer extends User
     }
 
     /**
-     * Check if the user is a customer.
+     * Check if the user is a customer/subscriber.
      *
      * @return bool
      */
     public function isCustomer(): bool
     {
-        return $this->operator_level === 100;
+        return $this->is_subscriber === true;
     }
 }
