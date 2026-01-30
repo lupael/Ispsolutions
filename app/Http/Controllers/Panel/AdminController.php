@@ -203,11 +203,12 @@ class AdminController extends Controller
         if ($operators->isNotEmpty()) {
             $operatorIds = $operators->pluck('id');
             
-            // Bulk fetch all customers for all operators
-            $allCustomers = User::whereIn('operator_id', $operatorIds)
-                ->select('id', 'operator_id', 'status', 'created_at')
+            // Bulk fetch all customers for all operators using created_by relationship
+            $allCustomers = User::whereIn('created_by', $operatorIds)
+                ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->select('id', 'created_by', 'status', 'created_at')
                 ->get()
-                ->groupBy('operator_id');
+                ->groupBy('created_by');
             
             // Bulk fetch payments for all operator customers
             $allCustomerIds = $allCustomers->flatten()->pluck('id');

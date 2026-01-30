@@ -305,8 +305,8 @@ All components automatically adapt to dark mode:
 ## Accessibility
 
 - ✅ Keyboard navigable
-- ✅ Screen reader compatible
-- ✅ ARIA labels on interactive elements
+- ⚠️ Screen reader support for chart components pending (charts currently rendered as non-semantic `<div>` containers without alternative text)
+- ⚠️ ARIA labels for chart interactive elements to be implemented
 - ✅ Color contrast WCAG AA compliant
 - ✅ Touch-friendly tap targets (44px+)
 
