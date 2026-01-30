@@ -2971,22 +2971,15 @@ class AdminController extends Controller
             ->latest()
             ->paginate(50);
 
+        // Build base query for stats
+        $baseStatsQuery = \App\Models\AuditLog::where('tenant_id', $tenantId)
+            ->where('auditable_type', MikrotikRouter::class);
+
         $stats = [
-            'total' => \App\Models\AuditLog::where('tenant_id', $tenantId)
-                ->where('auditable_type', MikrotikRouter::class)
-                ->count(),
-            'today' => \App\Models\AuditLog::where('tenant_id', $tenantId)
-                ->where('auditable_type', MikrotikRouter::class)
-                ->whereDate('created_at', today())
-                ->count(),
-            'this_week' => \App\Models\AuditLog::where('tenant_id', $tenantId)
-                ->where('auditable_type', MikrotikRouter::class)
-                ->whereBetween('created_at', [now()->copy()->startOfWeek(), now()->copy()->endOfWeek()])
-                ->count(),
-            'this_month' => \App\Models\AuditLog::where('tenant_id', $tenantId)
-                ->where('auditable_type', MikrotikRouter::class)
-                ->whereBetween('created_at', [now()->copy()->startOfMonth(), now()->copy()->endOfMonth()])
-                ->count(),
+            'total' => (clone $baseStatsQuery)->count(),
+            'today' => (clone $baseStatsQuery)->whereDate('created_at', today())->count(),
+            'this_week' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->copy()->startOfWeek(), now()->copy()->endOfWeek()])->count(),
+            'this_month' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->copy()->startOfMonth(), now()->copy()->endOfMonth()])->count(),
         ];
 
         return view('panels.admin.logs.router', compact('logs', 'stats'));
@@ -3000,28 +2993,25 @@ class AdminController extends Controller
         $tenantId = auth()->user()->tenant_id;
         
         try {
-            // Define tenant filter subquery for reuse (note: subquery still executes per query)
-            $tenantUsersQuery = function($query) use ($tenantId) {
-                $query->select('username')
-                    ->from('users')
-                    ->where('tenant_id', $tenantId)
-                    ->whereNotNull('username');
-            };
+            // Get tenant usernames once to avoid subquery repetition
+            $tenantUsernames = \App\Models\User::where('tenant_id', $tenantId)
+                ->whereNotNull('username')
+                ->pluck('username')
+                ->toArray();
             
             // Get RADIUS accounting logs filtered by tenant users
-            $logs = \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
+            $logs = \App\Models\RadAcct::whereIn('username', $tenantUsernames)
                 ->latest('acctstarttime')
                 ->paginate(50);
 
+            // Build base query for stats
+            $baseStatsQuery = \App\Models\RadAcct::whereIn('username', $tenantUsernames);
+
             $stats = [
-                'total' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)->count(),
-                'today' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
-                    ->whereDate('acctstarttime', today())
-                    ->count(),
-                'active_sessions' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
-                    ->whereNull('acctstoptime')
-                    ->count(),
-                'total_bandwidth' => \App\Models\RadAcct::whereIn('username', $tenantUsersQuery)
+                'total' => (clone $baseStatsQuery)->count(),
+                'today' => (clone $baseStatsQuery)->whereDate('acctstarttime', today())->count(),
+                'active_sessions' => (clone $baseStatsQuery)->whereNull('acctstoptime')->count(),
+                'total_bandwidth' => (clone $baseStatsQuery)
                     ->selectRaw('SUM(acctinputoctets) + SUM(acctoutputoctets) as total')
                     ->value('total') ?? 0,
             ];

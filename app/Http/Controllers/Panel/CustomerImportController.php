@@ -44,14 +44,51 @@ class CustomerImportController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $tenantId = auth()->user()->tenant_id;
+        
         $validated = $request->validate([
-            'router_id' => 'required|integer|exists:mikrotik_routers,id',
+            'router_id' => [
+                'required',
+                'integer',
+                'exists:mikrotik_routers,id',
+            ],
             'filter_disabled' => 'nullable|boolean',
             'generate_bills' => 'nullable|boolean',
-            'package_id' => 'nullable|integer|exists:packages,id',
+            'package_id' => [
+                'nullable',
+                'integer',
+                'exists:packages,id',
+            ],
         ]);
 
         try {
+            // Verify router belongs to tenant and is active (security check)
+            $router = MikrotikRouter::where('id', $validated['router_id'])
+                ->where('tenant_id', $tenantId)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$router) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid router selected. Router must be active and belong to your tenant.',
+                ], 422);
+            }
+
+            // Verify package belongs to tenant if provided (security check)
+            if (!empty($validated['package_id'])) {
+                $package = Package::where('id', $validated['package_id'])
+                    ->where('tenant_id', $tenantId)
+                    ->first();
+
+                if (!$package) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid package selected. Package must belong to your tenant.',
+                    ], 422);
+                }
+            }
+
             // Check for duplicate import today
             $existingImport = CustomerImport::where('operator_id', auth()->id())
                 ->whereDate('created_at', today())
