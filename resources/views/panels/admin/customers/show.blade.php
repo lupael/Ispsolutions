@@ -66,6 +66,22 @@
                             Edit Profile
                         </a>
                     @endif
+                    
+                    @if(auth()->user()->operator_level <= 40)
+                        <a href="{{ route('panel.admin.customers.advance-payment.create', $customer->id) }}" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 border border-transparent rounded-lg font-medium text-sm text-white transition">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Recharge / Add Payment
+                        </a>
+                        
+                        <a href="{{ route('panel.admin.customers.send-payment-link', $customer->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 border border-transparent rounded-lg font-medium text-sm text-white transition">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Send Payment Link
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -156,7 +172,8 @@
             const hash = window.location.hash.substring(1);
             const validTabs = ['profile', 'network', 'billing', 'sessions', 'history', 'activity'];
             return validTabs.includes(hash) ? hash : 'profile';
-        })()
+        })(),
+        usagePeriod: 'hourly'
     }">
         <!-- Modern Tab Navigation -->
         <div class="border-b border-gray-200 dark:border-gray-700">
@@ -270,6 +287,12 @@
                                     <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $customer->phone }}</dd>
                                 </div>
                                 @endif
+                                @if($customer->mobile)
+                                <div class="flex items-start">
+                                    <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">Mobile</dt>
+                                    <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $customer->mobile }}</dd>
+                                </div>
+                                @endif
                                 @if($customer->address)
                                 <div class="flex items-start">
                                     <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">Address</dt>
@@ -297,8 +320,38 @@
                                 </div>
                                 @if($customer->expiry_date)
                                 <div class="flex items-start">
-                                    <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">Expiry Date</dt>
+                                    <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">Expires On</dt>
                                     <dd class="text-sm text-gray-900 dark:text-gray-100">{{ \Carbon\Carbon::parse($customer->expiry_date)->format('M d, Y') }}</dd>
+                                </div>
+                                @else
+                                <div class="flex items-start">
+                                    <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">Expires On</dt>
+                                    <dd class="text-sm text-gray-500 dark:text-gray-400">Not set</dd>
+                                </div>
+                                @endif
+                                @if($customer->username)
+                                <div class="flex items-start">
+                                    <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">PPP Username</dt>
+                                    <dd class="text-sm font-mono text-gray-900 dark:text-gray-100 select-all">{{ $customer->username }}</dd>
+                                </div>
+                                @endif
+                                @if($customer->radius_password)
+                                <div class="flex items-start" x-data="{ showPassword: false }">
+                                    <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">PPP Password</dt>
+                                    <dd class="flex items-center gap-2">
+                                        <span x-show="!showPassword" class="text-sm font-mono text-gray-900 dark:text-gray-100">
+                                            {{ str_repeat('●', min(strlen($customer->radius_password), 12)) }}
+                                        </span>
+                                        <span x-show="showPassword" class="text-sm font-mono text-gray-900 dark:text-gray-100 select-all">
+                                            {{ $customer->radius_password }}
+                                        </span>
+                                        <button @click="showPassword = !showPassword" 
+                                                type="button"
+                                                class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
+                                            <span x-show="!showPassword">Show</span>
+                                            <span x-show="showPassword">Hide</span>
+                                        </button>
+                                    </dd>
                                 </div>
                                 @endif
                             </dl>
@@ -357,6 +410,79 @@
                         </dl>
                     </div>
                     @endif
+                </div>
+                
+                <!-- Bandwidth Usage Section -->
+                <div class="mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Bandwidth Usage</h3>
+                        <div class="flex gap-2">
+                            <button @click="usagePeriod = 'hourly'" 
+                                    :class="{ 'bg-indigo-600 text-white': usagePeriod === 'hourly', 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300': usagePeriod !== 'hourly' }"
+                                    class="px-3 py-1 rounded-md text-xs font-medium transition">
+                                Hourly
+                            </button>
+                            <button @click="usagePeriod = 'daily'" 
+                                    :class="{ 'bg-indigo-600 text-white': usagePeriod === 'daily', 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300': usagePeriod !== 'daily' }"
+                                    class="px-3 py-1 rounded-md text-xs font-medium transition">
+                                7 Days
+                            </button>
+                            <button @click="usagePeriod = 'monthly'" 
+                                    :class="{ 'bg-indigo-600 text-white': usagePeriod === 'monthly', 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300': usagePeriod !== 'monthly' }"
+                                    class="px-3 py-1 rounded-md text-xs font-medium transition">
+                                Monthly
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Real-time Usage Card -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 mb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Real-time Usage</h4>
+                            <button onclick="refreshUsage()" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
+                                Refresh
+                            </button>
+                        </div>
+                        <div id="realtime-usage-data" class="grid grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Download</p>
+                                <p class="text-xl font-bold text-gray-900 dark:text-gray-100" id="download-usage">--</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Upload</p>
+                                <p class="text-xl font-bold text-gray-900 dark:text-gray-100" id="upload-usage">--</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                                <p class="text-xl font-bold text-gray-900 dark:text-gray-100" id="total-usage">--</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400" id="session-info">
+                            Click refresh to check current session
+                        </div>
+                    </div>
+                    
+                    <!-- Usage Graph Placeholder -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <div x-show="usagePeriod === 'hourly'" class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Hourly usage graph (Last 24 hours)</p>
+                        </div>
+                        <div x-show="usagePeriod === 'daily'" class="text-center py-8" style="display: none;">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Daily usage graph (Last 7 days)</p>
+                        </div>
+                        <div x-show="usagePeriod === 'monthly'" class="text-center py-8" style="display: none;">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Monthly usage graph (Last 30 days)</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -717,6 +843,48 @@
 <!-- Action Handler Script -->
 @push('scripts')
 <script>
+    // Refresh real-time usage function
+    function refreshUsage() {
+        const downloadEl = document.getElementById('download-usage');
+        const uploadEl = document.getElementById('upload-usage');
+        const totalEl = document.getElementById('total-usage');
+        const sessionInfoEl = document.getElementById('session-info');
+        
+        // Show loading state
+        downloadEl.textContent = '...';
+        uploadEl.textContent = '...';
+        totalEl.textContent = '...';
+        sessionInfoEl.textContent = 'Loading...';
+        
+        // Fetch usage data
+        fetch(`{{ route('panel.admin.customers.check-usage', ['customer' => $customer->id]) }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.online) {
+                const downloadMB = parseFloat(data.session.download_mb) || 0;
+                const uploadMB = parseFloat(data.session.upload_mb) || 0;
+                const totalMB = downloadMB + uploadMB;
+                
+                downloadEl.textContent = data.session.download_formatted;
+                uploadEl.textContent = data.session.upload_formatted;
+                totalEl.textContent = totalMB.toFixed(2) + ' MB';
+                sessionInfoEl.textContent = `Session started: ${data.session.start_time} (${data.session.duration_formatted})`;
+            } else {
+                downloadEl.textContent = '0 MB';
+                uploadEl.textContent = '0 MB';
+                totalEl.textContent = '0 MB';
+                sessionInfoEl.textContent = data.message || 'Customer is currently offline';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            downloadEl.textContent = 'Error';
+            uploadEl.textContent = 'Error';
+            totalEl.textContent = 'Error';
+            sessionInfoEl.textContent = 'Failed to load usage data';
+        });
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Handle action buttons
         document.querySelectorAll('.action-button[data-action]').forEach(button => {
