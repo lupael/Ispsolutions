@@ -313,6 +313,8 @@ class AdminController extends Controller
 
         // Clients of Sub-Operator (customers created by operators/sub-operators)
         // Using subquery instead of pluck for better performance with large datasets
+        // Note: Only counts customers with non-null created_by field (i.e., created by operators/sub-operators)
+        // Customers created directly by admin or with null created_by are not included in these statistics
         $subOperatorClients = [
             'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
                 ->whereIn('created_by', function($query) {
@@ -357,8 +359,8 @@ class AdminController extends Controller
                 $query->whereIn('created_by', $whereInCallback);
             }
             
-            return $query->join('service_packages', 'users.service_package_id', '=', 'service_packages.id')
-                ->sum('service_packages.price');
+            return $query->join('packages', 'users.service_package_id', '=', 'packages.id')
+                ->sum('packages.price') ?? 0;
         };
 
         // Helper function to calculate monthly average MRC from invoices
@@ -409,10 +411,13 @@ class AdminController extends Controller
         for ($i = $monthsToCompare - 1; $i >= 0; $i--) {
             $month = now()->subMonths($i);
             
+            // Cache ISP MRC to avoid duplicate query
+            $monthlyIspMrc = $calculateMonthlyAvgMRC($month->year, $month->month);
+            
             $mrcComparison->push([
                 'month' => $month->format('M Y'),
-                'isp_mrc' => $calculateMonthlyAvgMRC($month->year, $month->month),
-                'clients_mrc' => $calculateMonthlyAvgMRC($month->year, $month->month), // Same as ISP
+                'isp_mrc' => $monthlyIspMrc,
+                'clients_mrc' => $monthlyIspMrc, // Same as ISP
                 'sub_operator_clients_mrc' => $calculateMonthlyAvgMRC($month->year, $month->month, $operatorSubquery),
             ]);
         }
