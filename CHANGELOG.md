@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- Add explicit isset check for $onu variable in error handler ([7787f86](../../commit/7787f86bb62c5f91a203532ee78ff7ff980ce976))
 - add version validation to prevent malformed tags ([e293a66](../../commit/e293a6675eaa7aaf49c5deb5744d84d37b27cff2))
 - update workflow to auto-generate version from git tags ([14fc60a](../../commit/14fc60ab2f0bbe1fe9817dd83323a19574cf8f73))
 - Change generateInvoiceNumber() visibility to public ([8f6a929](../../commit/8f6a92935440702444fb07badacbb3af1c834c0c))
