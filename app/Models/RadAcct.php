@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RadAcct extends Model
 {
@@ -54,6 +55,18 @@ class RadAcct extends Model
         'acctupdatetime' => 'datetime',
         'acctstoptime' => 'datetime',
     ];
+
+    /**
+     * Get the user that owns the session.
+     * 
+     * Note: This creates a cross-database relationship between the 'radius' connection 
+     * and the default connection. Do not eager load this relationship as it may cause 
+     * performance issues. Use subquery filtering instead for better performance.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'username', 'username');
+    }
 
     /**
      * Get formatted duration

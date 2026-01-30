@@ -2959,18 +2959,27 @@ class AdminController extends Controller
      */
     public function routerLogs(): View
     {
+        $tenantId = auth()->user()->tenant_id;
+        
         // Get router connection logs from audit logs
-        $logs = \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)
-            ->orWhere('event', 'like', '%router%')
+        $logs = \App\Models\AuditLog::where('tenant_id', $tenantId)
+            ->where(function($query) {
+                $query->where('auditable_type', MikrotikRouter::class)
+                    ->orWhere('event', 'like', '%router%');
+            })
             ->with(['user', 'auditable'])
             ->latest()
             ->paginate(50);
 
+        // Build base query for stats
+        $baseStatsQuery = \App\Models\AuditLog::where('tenant_id', $tenantId)
+            ->where('auditable_type', MikrotikRouter::class);
+
         $stats = [
-            'total' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->count(),
-            'today' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereDate('created_at', today())->count(),
-            'this_week' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-            'this_month' => \App\Models\AuditLog::where('auditable_type', MikrotikRouter::class)->whereMonth('created_at', now()->month)->count(),
+            'total' => (clone $baseStatsQuery)->count(),
+            'today' => (clone $baseStatsQuery)->whereDate('created_at', today())->count(),
+            'this_week' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->copy()->startOfWeek(), now()->copy()->endOfWeek()])->count(),
+            'this_month' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->copy()->startOfMonth(), now()->copy()->endOfMonth()])->count(),
         ];
 
         return view('panels.admin.logs.router', compact('logs', 'stats'));
@@ -2981,17 +2990,43 @@ class AdminController extends Controller
      */
     public function radiusLogs(): View
     {
+        $tenantId = auth()->user()->tenant_id;
+        
         try {
-            // Get RADIUS accounting logs
-            $logs = \App\Models\RadAcct::with('user')
+            // Get tenant usernames once to avoid subquery repetition
+            $tenantUsernames = \App\Models\User::where('tenant_id', $tenantId)
+                ->whereNotNull('username')
+                ->pluck('username')
+                ->toArray();
+            
+            // If no users with usernames, return empty results
+            if (empty($tenantUsernames)) {
+                return view('panels.admin.logs.radius', [
+                    'logs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
+                    'stats' => [
+                        'total' => 0,
+                        'today' => 0,
+                        'active_sessions' => 0,
+                        'total_bandwidth' => 0,
+                    ],
+                ]);
+            }
+            
+            // Get RADIUS accounting logs filtered by tenant users
+            $logs = \App\Models\RadAcct::whereIn('username', $tenantUsernames)
                 ->latest('acctstarttime')
                 ->paginate(50);
 
+            // Build base query for stats
+            $baseStatsQuery = \App\Models\RadAcct::whereIn('username', $tenantUsernames);
+
             $stats = [
-                'total' => \App\Models\RadAcct::count(),
-                'today' => \App\Models\RadAcct::whereDate('acctstarttime', today())->count(),
-                'active_sessions' => \App\Models\RadAcct::whereNull('acctstoptime')->count(),
-                'total_bandwidth' => \App\Models\RadAcct::sum('acctinputoctets') + \App\Models\RadAcct::sum('acctoutputoctets'),
+                'total' => (clone $baseStatsQuery)->count(),
+                'today' => (clone $baseStatsQuery)->whereDate('acctstarttime', today())->count(),
+                'active_sessions' => (clone $baseStatsQuery)->whereNull('acctstoptime')->count(),
+                'total_bandwidth' => (clone $baseStatsQuery)
+                    ->selectRaw('SUM(acctinputoctets) + SUM(acctoutputoctets) as total')
+                    ->value('total') ?? 0,
             ];
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle missing RADIUS tables gracefully

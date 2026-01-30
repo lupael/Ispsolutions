@@ -36,8 +36,8 @@
                 <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">Import Instructions</h3>
                 <div class="mt-2 text-sm text-blue-700 dark:text-blue-400">
                     <ul class="list-disc list-inside space-y-1">
-                        <li>Select a NAS device or Mikrotik router from your configured devices</li>
-                        <li>The system will fetch all PPPoE accounts from the selected device</li>
+                        <li>Select a MikroTik router from your configured devices</li>
+                        <li>The system will fetch all PPPoE accounts from the selected router</li>
                         <li>Choose a default package for imported customers (optional)</li>
                         <li>Review and confirm before importing</li>
                     </ul>
@@ -52,29 +52,16 @@
             @csrf
             
             <div class="space-y-6">
-                <!-- NAS Device Selection -->
+                <!-- Router Selection -->
                 <div>
-                    <label for="device_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select NAS Device or Router *</label>
-                    <select name="device_select" id="device_select" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Choose a device...</option>
-                        @if($nasDevices && $nasDevices->count() > 0)
-                            <optgroup label="NAS Devices">
-                                @foreach($nasDevices as $nas)
-                                    <option value="nas-{{ $nas->id }}">{{ $nas->nas_name }} ({{ $nas->short_name }}) - NAS</option>
-                                @endforeach
-                            </optgroup>
-                        @endif
-                        @if($routers && $routers->count() > 0)
-                            <optgroup label="Mikrotik Routers">
-                                @foreach($routers as $router)
-                                    <option value="router-{{ $router->id }}">{{ $router->name }} ({{ $router->ip_address }}) - Router</option>
-                                @endforeach
-                            </optgroup>
-                        @endif
+                    <label for="router_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select MikroTik Router *</label>
+                    <select name="router_id" id="router_id" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Choose a router...</option>
+                        @foreach($routers as $router)
+                            <option value="{{ $router->id }}">{{ $router->name }} ({{ $router->ip_address }})</option>
+                        @endforeach
                     </select>
-                    <input type="hidden" name="nas_id" id="nas_id" value="">
-                    <input type="hidden" name="router_id" id="router_id" value="">
-                    <p class="mt-1 text-sm text-gray-500">Select the NAS device or Mikrotik router to import PPPoE customers from</p>
+                    <p class="mt-1 text-sm text-gray-500">Select the MikroTik router to import PPPoE customers from</p>
                 </div>
 
                 <!-- Default Package -->
@@ -123,7 +110,7 @@
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Preview & Confirmation</h3>
                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                         <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Select a NAS device and click "Preview Import" to see what will be imported.
+                            Select a router and click "Preview Import" to see what will be imported.
                         </p>
                     </div>
                 </div>
@@ -163,59 +150,6 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const deviceSelect = document.getElementById('device_select');
-    const nasIdInput = document.getElementById('nas_id');
-    const routerIdInput = document.getElementById('router_id');
-    const form = deviceSelect ? deviceSelect.closest('form') : null;
-
-    if (deviceSelect && nasIdInput && routerIdInput) {
-        deviceSelect.addEventListener('change', function() {
-            const value = this.value;
-
-            // Clear both hidden fields
-            nasIdInput.value = '';
-            routerIdInput.value = '';
-
-            if (value) {
-                // Split on first hyphen only to handle IDs or names with hyphens
-                const hyphenIndex = value.indexOf('-');
-                if (hyphenIndex !== -1) {
-                    const type = value.substring(0, hyphenIndex);
-                    const id = value.substring(hyphenIndex + 1);
-
-                    if (type === 'nas') {
-                        nasIdInput.value = id;
-                    } else if (type === 'router') {
-                        routerIdInput.value = id;
-                    }
-                }
-            }
-        });
-
-        // Trigger change event on page load if a device is already selected
-        if (deviceSelect.value) {
-            deviceSelect.dispatchEvent(new Event('change'));
-        }
-    }
-
-    // Add form submit handler to ensure hidden fields are populated
-    if (form && nasIdInput && routerIdInput) {
-        form.addEventListener('submit', function(e) {
-            // Check if at least one hidden field has a value
-            if (!nasIdInput.value && !routerIdInput.value) {
-                e.preventDefault();
-                if (deviceSelect) {
-                    deviceSelect.setCustomValidity('Please select a NAS device or Mikrotik router before submitting.');
-                    deviceSelect.reportValidity();
-                    deviceSelect.focus();
-                }
-            } else if (deviceSelect) {
-                // Clear any previous custom validation message
-                deviceSelect.setCustomValidity('');
-            }
-        });
-    }
-});
+// No additional JavaScript needed - router_id is directly used in the select
 </script>
 @endsection
