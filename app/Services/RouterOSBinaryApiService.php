@@ -285,7 +285,7 @@ class RouterOSBinaryApiService
             ->set('user', $router->username)
             ->set('pass', $router->password)
             ->set('port', $router->api_port)
-            ->set('timeout', config('services.mikrotik.timeout', 60));
+            ->set('timeout', config('services.mikrotik.timeout', 30));
         
         return new Client($config);
     }
