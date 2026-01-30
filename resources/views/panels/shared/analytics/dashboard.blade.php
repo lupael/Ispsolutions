@@ -157,7 +157,7 @@ function refreshWidget(widgetName) {
     .catch(error => {
         console.error('Error refreshing widget:', error);
         if (cardBody) {
-            cardBody.innerHTML = '<div class="alert alert-danger">Failed to refresh widget. Please try again.</div>';
+            cardBody.innerHTML = '<div class="p-4 rounded-md mb-4 bg-red-50 border border-red-200 text-red-800">Failed to refresh widget. Please try again.</div>';
         }
         // Restore original content after 2 seconds
         setTimeout(() => {

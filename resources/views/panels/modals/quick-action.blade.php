@@ -106,7 +106,7 @@ document.getElementById('quickActionForm')?.addEventListener('submit', function(
         if (data.success) {
             // Show success message
             alert(data.message);
-            // Close modal - Note: Bootstrap modals require JavaScript framework
+            // TODO: Replace Bootstrap modal with Alpine.js or custom Tailwind modal
             bootstrap.Modal.getInstance(document.getElementById('quickActionModal'))?.hide();
             // Reload page to reflect changes
             window.location.reload();

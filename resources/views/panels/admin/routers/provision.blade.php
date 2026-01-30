@@ -359,6 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 document.getElementById('config-preview').textContent = JSON.stringify(data.configuration, null, 2);
+                // TODO: Replace Bootstrap modal with Alpine.js or custom Tailwind modal
                 const modal = new bootstrap.Modal(document.getElementById('preview-modal'));
                 modal.show();
             } else {
@@ -377,6 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('apply-from-preview').addEventListener('click', function() {
+        // TODO: Replace Bootstrap modal with Alpine.js or custom Tailwind modal
         bootstrap.Modal.getInstance(document.getElementById('preview-modal')).hide();
         executeProvisioning();
     });
