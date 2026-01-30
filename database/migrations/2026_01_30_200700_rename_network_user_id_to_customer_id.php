@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -13,6 +12,7 @@ return new class extends Migration
      * Run the migrations.
      * 
      * Renames all network_user_id columns to customer_id across tables.
+     * Uses raw SQL to avoid dependency on doctrine/dbal.
      */
     public function up(): void
     {
@@ -27,14 +27,12 @@ return new class extends Migration
                 }
             });
 
-            // Rename the column
-            Schema::table('onus', function (Blueprint $table) {
-                $table->renameColumn('network_user_id', 'customer_id');
-            });
+            // Rename the column using raw SQL (avoids doctrine/dbal dependency)
+            \DB::statement('ALTER TABLE onus CHANGE network_user_id customer_id BIGINT UNSIGNED NULL');
 
-            // Re-add the foreign key constraint pointing to customers table
+            // Re-add the foreign key constraint pointing to customers table with original onDelete behavior
             Schema::table('onus', function (Blueprint $table) {
-                $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+                $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
             });
         }
 
@@ -46,10 +44,12 @@ return new class extends Migration
                 } catch (\Exception $e) {
                     // Foreign key might not exist
                 }
-                $table->renameColumn('network_user_id', 'customer_id');
             });
 
-            // Re-add foreign key if needed
+            // Rename the column using raw SQL
+            \DB::statement('ALTER TABLE hotspot_login_logs CHANGE network_user_id customer_id BIGINT UNSIGNED NULL');
+
+            // Re-add foreign key
             Schema::table('hotspot_login_logs', function (Blueprint $table) {
                 if (Schema::hasTable('customers')) {
                     $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
@@ -76,12 +76,15 @@ return new class extends Migration
                 } catch (\Exception $e) {
                     // Foreign key might not exist
                 }
-                $table->renameColumn('customer_id', 'network_user_id');
             });
 
+            // Rename back using raw SQL
+            \DB::statement('ALTER TABLE onus CHANGE customer_id network_user_id BIGINT UNSIGNED NULL');
+
+            // Restore foreign key - reference customers table as it hasn't been renamed yet in rollback
             Schema::table('onus', function (Blueprint $table) {
-                if (Schema::hasTable('network_users')) {
-                    $table->foreign('network_user_id')->references('id')->on('network_users')->onDelete('cascade');
+                if (Schema::hasTable('customers')) {
+                    $table->foreign('network_user_id')->references('id')->on('customers')->onDelete('set null');
                 }
             });
         }
@@ -94,12 +97,15 @@ return new class extends Migration
                 } catch (\Exception $e) {
                     // Foreign key might not exist
                 }
-                $table->renameColumn('customer_id', 'network_user_id');
             });
 
+            // Rename back using raw SQL
+            \DB::statement('ALTER TABLE hotspot_login_logs CHANGE customer_id network_user_id BIGINT UNSIGNED NULL');
+
+            // Restore foreign key
             Schema::table('hotspot_login_logs', function (Blueprint $table) {
-                if (Schema::hasTable('network_users')) {
-                    $table->foreign('network_user_id')->references('id')->on('network_users')->onDelete('set null');
+                if (Schema::hasTable('customers')) {
+                    $table->foreign('network_user_id')->references('id')->on('customers')->onDelete('set null');
                 }
             });
         }

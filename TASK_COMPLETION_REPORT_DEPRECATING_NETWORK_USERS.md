@@ -10,7 +10,8 @@ Refactor the ISP solution to deprecate the `network_users` terminology and imple
 - Customers are external subscribers (not part of the administrative hierarchy)
 - Customers identified by `is_subscriber` flag instead of `operator_level = 100`
 - The roles hierarchy stops at Level 80 (Staff)
-- All references to `network_users` table/terminology updated to `customers`
+- All table/column references to `network_users` updated to `customers`
+- All validation rules updated to reference `customers` table
 
 ## Implementation Summary
 

@@ -42,10 +42,8 @@ class Customer extends User
                 $customer->is_subscriber = true;
             }
             
-            // Customers should not have operator_level (or handle migration period)
-            if ($customer->operator_level === null || $customer->operator_level === 100) {
-                $customer->operator_level = null;
-            }
+            // Customers should never have operator_level; enforce null
+            $customer->operator_level = null;
             
             // Auto-generate customer_id if not set
             if (empty($customer->customer_id)) {

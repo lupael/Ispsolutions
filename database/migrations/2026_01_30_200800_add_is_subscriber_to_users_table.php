@@ -21,6 +21,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // First, make operator_level nullable to support customers with no level
+        Schema::table('users', function (Blueprint $table) {
+            $table->integer('operator_level')->nullable()->change();
+        });
+
         Schema::table('users', function (Blueprint $table) {
             // Add is_subscriber boolean column
             if (!Schema::hasColumn('users', 'is_subscriber')) {
@@ -66,6 +71,11 @@ return new class extends Migration
                 }
                 $table->dropColumn('is_subscriber');
             }
+        });
+
+        // Revert operator_level to non-nullable
+        Schema::table('users', function (Blueprint $table) {
+            $table->integer('operator_level')->default(100)->change();
         });
     }
 };

@@ -632,7 +632,7 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'username' => 'required|string|max:255|unique:network_users,username',
+            'username' => 'required|string|max:255|unique:customers,username',
             'password' => 'required|string|min:6',
             'package_id' => 'required|exists:packages,id',
             'service_type' => 'required|in:pppoe,hotspot,static',
@@ -742,7 +742,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'username' => 'required|string|max:255|unique:network_users,username,' . $id,
+            'username' => 'required|string|max:255|unique:customers,username,' . $id,
             'password' => 'nullable|string|min:6',
             'package_id' => 'required|exists:packages,id',
             'service_type' => 'required|in:pppoe,hotspot,static',
@@ -1350,7 +1350,7 @@ class AdminController extends Controller
             // Credentials section
             if ($request->has(['username', 'password'])) {
                 $validated = $request->validate([
-                    'username' => 'sometimes|string|min:3|max:255|unique:network_users,username,' . $networkUser->id . '|regex:/^[a-zA-Z0-9_-]+$/',
+                    'username' => 'sometimes|string|min:3|max:255|unique:customers,username,' . $networkUser->id . '|regex:/^[a-zA-Z0-9_-]+$/',
                     'password' => 'nullable|string|min:8',
                 ]);
 
