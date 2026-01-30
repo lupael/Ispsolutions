@@ -205,19 +205,11 @@
         @endif
     </div>
 
-    <!-- Operator Performance and Service Distribution -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Operator Performance Widget (spans 2 columns) -->
-        @if(isset($operatorPerformance) && $operatorPerformance->isNotEmpty())
-            <div class="lg:col-span-2">
-                <x-operator-performance-widget :operatorPerformance="$operatorPerformance" />
-            </div>
-        @endif
-
-        <!-- Service Type Distribution Chart -->
-        @if(isset($serviceTypeDistribution))
-            <x-service-type-distribution-chart :serviceTypeDistribution="$serviceTypeDistribution" />
-        @endif
-    </div>
+    <!-- Operator Performance -->
+    @if(isset($operatorPerformance) && $operatorPerformance->isNotEmpty())
+        <div>
+            <x-operator-performance-widget :operatorPerformance="$operatorPerformance" />
+        </div>
+    @endif
 </div>
 @endsection
