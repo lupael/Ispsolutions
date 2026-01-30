@@ -68,18 +68,18 @@
                     @endif
                     
                     @if(auth()->user()->operator_level <= 40)
-                        <a href="{{ route('panel.admin.payments.create', ['customer_id' => $customer->id]) }}" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 border border-transparent rounded-lg font-medium text-sm text-white transition">
+                        <a href="{{ route('panel.admin.customers.advance-payment.create', $customer->id) }}" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 border border-transparent rounded-lg font-medium text-sm text-white transition">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            Recharge
+                            Recharge / Add Payment
                         </a>
                         
-                        <a href="{{ route('panel.admin.invoices.create', ['customer_id' => $customer->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 border border-transparent rounded-lg font-medium text-sm text-white transition">
+                        <a href="{{ route('panel.admin.customers.send-payment-link', $customer->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 border border-transparent rounded-lg font-medium text-sm text-white transition">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
-                            New Invoice
+                            Send Payment Link
                         </a>
                     @endif
                 </div>
