@@ -142,6 +142,7 @@ class User extends Authenticatable
         'ip_address',
         'status',
         'zone_id',
+        'customer_id',
     ];
 
     /**

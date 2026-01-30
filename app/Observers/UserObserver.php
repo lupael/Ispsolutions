@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\Log;
 class UserObserver
 {
     /**
+     * Handle the User "creating" event.
+     * Auto-generate customer_id for customers before creation.
+     */
+    public function creating(User $user): void
+    {
+        // Only generate customer_id for customers (operator_level = 100)
+        if ($user->operator_level === 100 && empty($user->customer_id)) {
+            $user->customer_id = $this->generateCustomerId();
+        }
+    }
+
+    /**
      * Handle the User "created" event.
      * Automatically provision customer to RADIUS on creation.
      */
@@ -38,6 +50,22 @@ class UserObserver
             ]);
             // Don't throw exception to avoid blocking customer creation
         }
+    }
+
+    /**
+     * Generate a unique 5-6 digit customer ID.
+     */
+    private function generateCustomerId(): string
+    {
+        do {
+            // Generate a random 5-6 digit number
+            $customerId = str_pad((string) random_int(10000, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Check if it already exists
+            $exists = User::where('customer_id', $customerId)->exists();
+        } while ($exists);
+
+        return $customerId;
     }
 
     /**

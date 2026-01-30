@@ -127,6 +127,10 @@
                     <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
                     Offline
                 </a>
+                <a href="{{ route('panel.admin.customers.index', ['status' => 'suspended']) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 {{ request('status') === 'suspended' ? 'bg-yellow-50 border-yellow-300 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-600' : '' }}">
+                    <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                    Suspended
+                </a>
                 <a href="{{ route('panel.admin.customers.deleted') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -147,45 +151,6 @@
                     </svg>
                     Parent Accounts
                 </a>
-            </div>
-            
-            <!-- Task 15.3: Add status filter sidebar with count badges -->
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase">By Overall Status</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_active']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 rounded-md text-sm hover:bg-green-100 dark:hover:bg-green-900/30 {{ request('overall_status') === 'prepaid_active' ? 'ring-2 ring-green-500' : '' }}">
-                        <span class="text-green-700 dark:text-green-300">Prepaid Active</span>
-                    </a>
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_active']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm hover:bg-blue-100 dark:hover:bg-blue-900/30 {{ request('overall_status') === 'postpaid_active' ? 'ring-2 ring-blue-500' : '' }}">
-                        <span class="text-blue-700 dark:text-blue-300">Postpaid Active</span>
-                    </a>
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_suspended']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 rounded-md text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 {{ request('overall_status') === 'prepaid_suspended' ? 'ring-2 ring-orange-500' : '' }}">
-                        <span class="text-orange-700 dark:text-orange-300">Prepaid Suspended</span>
-                    </a>
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_suspended']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 rounded-md text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 {{ request('overall_status') === 'postpaid_suspended' ? 'ring-2 ring-orange-500' : '' }}">
-                        <span class="text-orange-700 dark:text-orange-300">Postpaid Suspended</span>
-                    </a>
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_expired']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-md text-sm hover:bg-red-100 dark:hover:bg-red-900/30 {{ request('overall_status') === 'prepaid_expired' ? 'ring-2 ring-red-500' : '' }}">
-                        <span class="text-red-700 dark:text-red-300">Prepaid Expired</span>
-                    </a>
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_expired']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-md text-sm hover:bg-red-100 dark:hover:bg-red-900/30 {{ request('overall_status') === 'postpaid_expired' ? 'ring-2 ring-red-500' : '' }}">
-                        <span class="text-red-700 dark:text-red-300">Postpaid Expired</span>
-                    </a>
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'prepaid_inactive']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/20 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/30 {{ request('overall_status') === 'prepaid_inactive' ? 'ring-2 ring-gray-500' : '' }}">
-                        <span class="text-gray-700 dark:text-gray-300">Prepaid Inactive</span>
-                    </a>
-                    <a href="{{ route('panel.admin.customers.index', ['overall_status' => 'postpaid_inactive']) }}" 
-                       class="flex items-center justify-between px-3 py-2 border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/20 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/30 {{ request('overall_status') === 'postpaid_inactive' ? 'ring-2 ring-gray-500' : '' }}">
-                        <span class="text-gray-700 dark:text-gray-300">Postpaid Inactive</span>
-                    </a>
-                </div>
             </div>
         </div>
     </div>
@@ -228,19 +193,25 @@
                                 <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" aria-label="Select all customers">
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Cus ID
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Username
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Service Type
+                                Mobile
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                UP/DL
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Session
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Package
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Overall Status
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Created
+                                Expaired Date
                             </th>
                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Actions
@@ -254,56 +225,45 @@
                                     <input type="checkbox" data-bulk-select-item data-customer-id="{{ $customer->id }}" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" aria-label="Select {{ $customer->username }}">
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <div class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center">
-                                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                <a href="{{ route('panel.admin.customers.show', $customer->id) }}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline">
-                                                    {{ $customer->username }}
-                                                    <svg class="w-3 h-3 inline-block ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                    </svg>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <a href="{{ route('panel.admin.customers.show', $customer->id) }}" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:underline">
+                                        {{ $customer->customer_id ?? 'N/A' }}
+                                    </a>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $customer->service_type === 'pppoe' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800' }}">
-                                        {{ strtoupper($customer->service_type) }}
-                                    </span>
+                                    <a href="{{ route('panel.admin.customers.show', $customer->id) }}" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline">
+                                        {{ $customer->username }}
+                                        <svg class="w-3 h-3 inline-block ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-gray-100">{{ $customer->package->name ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- Task 15.2: Update customer list table with overall_status -->
-                                    @if($customer->overall_status)
-                                        <x-customer-status-badge :status="$customer->overall_status" />
-                                    @else
-                                        @if($customer->status === 'active')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                                Active
-                                            </span>
-                                        @elseif($customer->status === 'suspended')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                                Suspended
-                                            </span>
-                                        @else
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                                Inactive
-                                            </span>
-                                        @endif
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    {{ $customer->mobile ?? $customer->phone ?? 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $customer->created_at->format('M d, Y') }}
+                                    @if($customer->package)
+                                        <span class="text-green-600">↑{{ $customer->package->bandwidth_upload ?? 'N/A' }}</span> / 
+                                        <span class="text-blue-600">↓{{ $customer->package->bandwidth_download ?? 'N/A' }}</span>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($customer->online_status ?? false)
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            Online
+                                        </span>
+                                    @else
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                                            Offline
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    {{ $customer->package->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    {{ $customer->expiry_date ? $customer->expiry_date->format('M d, Y') : 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <x-action-dropdown :customer="$customer" />
@@ -311,7 +271,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center">
+                                <td colspan="9" class="px-6 py-12 text-center">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
