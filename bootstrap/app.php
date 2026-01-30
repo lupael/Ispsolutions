@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class, // Task 6.2: Set locale based on user preference
         ]);
 
+        // Add Sanctum middleware for SPA authentication
+        $middleware->api(prepend: [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+
         // Add CSRF verification middleware
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
