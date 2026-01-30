@@ -18,10 +18,14 @@ class IpPool extends Model
         'pool_type',
         'start_ip',
         'end_ip',
+        'ip_address',
+        'subnet_mask',
         'gateway',
         'dns_servers',
         'vlan_id',
         'status',
+        'tenant_id',
+        'nas_id',
     ];
 
     protected $casts = [

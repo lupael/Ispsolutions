@@ -17,6 +17,7 @@ class MikrotikProfile extends Model
         'rate_limit',
         'session_timeout',
         'idle_timeout',
+        'tenant_id',
     ];
 
     protected $casts = [

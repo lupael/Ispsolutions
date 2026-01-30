@@ -475,6 +475,7 @@ class MikrotikImportService
             // Normalize secrets to expected format
             return array_map(function ($secret) {
                 return [
+                    'username' => $secret['name'] ?? '',
                     'name' => $secret['name'] ?? '',
                     'password' => $secret['password'] ?? '',
                     'service' => $secret['service'] ?? 'pppoe',
