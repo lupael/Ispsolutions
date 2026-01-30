@@ -38,39 +38,32 @@ class MikrotikImportController extends Controller
      */
     public function importIpPools(Request $request): JsonResponse
     {
-        // Extend execution time for large imports
-        set_time_limit(300); // 5 minutes
-        
         $validated = $request->validate([
             'router_id' => 'required|integer|exists:mikrotik_routers,id',
         ]);
 
         try {
-            $result = $this->importService->importIpPoolsFromRouter((int) $validated['router_id']);
+            $user = auth()->user();
+
+            // Dispatch job for async processing to avoid gateway timeout
+            \App\Jobs\ImportIpPoolsJob::dispatch(
+                (int) $validated['router_id'],
+                $user->tenant_id,
+                $user->id
+            );
 
             return response()->json([
-                'success' => $result['success'],
-                'message' => $result['success'] 
-                    ? "Successfully imported {$result['imported']} IP pool entries from router"
-                    : 'Import failed: ' . implode(', ', $result['errors']),
-                'data' => $result,
+                'success' => true,
+                'message' => 'IP pool import has been queued and will be processed in the background. Check the logs for completion status.',
+                'data' => [
+                    'router_id' => $validated['router_id'],
+                    'status' => 'queued',
+                ],
             ]);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Connection to router failed. Please check if the router is reachable and credentials are correct.',
-                'error' => 'Connection timeout or network error',
-            ], 503);
-        } catch (\Illuminate\Http\Client\RequestException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Router request failed. The router may be overloaded or the API endpoint is not responding.',
-                'error' => 'Request timeout',
-            ], 504);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Import failed: ' . $e->getMessage(),
+                'message' => 'Failed to queue import: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -89,7 +82,7 @@ class MikrotikImportController extends Controller
 
             return response()->json([
                 'success' => $result['success'],
-                'message' => $result['success'] 
+                'message' => $result['success']
                     ? "Successfully imported {$result['imported']} profiles"
                     : 'Import failed',
                 'data' => $result,
@@ -121,7 +114,7 @@ class MikrotikImportController extends Controller
     {
         // Extend execution time for large imports
         set_time_limit(300); // 5 minutes
-        
+
         $validated = $request->validate([
             'router_id' => 'required|integer|exists:mikrotik_routers,id',
             'filter_disabled' => 'nullable|boolean',
@@ -138,7 +131,7 @@ class MikrotikImportController extends Controller
 
             return response()->json([
                 'success' => $result['success'],
-                'message' => $result['success'] 
+                'message' => $result['success']
                     ? "Successfully imported {$result['imported']} customers"
                     : 'Import failed',
                 'data' => $result,
