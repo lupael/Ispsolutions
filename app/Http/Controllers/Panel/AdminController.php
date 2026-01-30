@@ -1131,7 +1131,7 @@ class AdminController extends Controller
             'username' => 'required|string|min:3|max:255|unique:users,username,' . $customer->id . '|regex:/^[a-zA-Z0-9_-]+$/',
             'password' => 'nullable|string|min:8',
             'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
-            'package_id' => 'required|exists:packages,id',
+            'package_id' => 'required|exists:service_packages,id,tenant_id,' . $tenantId,
             'status' => 'required|in:active,inactive,suspended',
         ]);
 
@@ -1139,10 +1139,11 @@ class AdminController extends Controller
         $updateData = [
             'username' => $validated['username'],
             'service_type' => $validated['service_type'],
+            'service_package_id' => $validated['package_id'], // Map package_id from form to service_package_id field
             'status' => $validated['status'],
         ];
 
-        // Only update password if provided
+        // Only update password if provided (RADIUS password stored in plain text as required by RADIUS protocol)
         if (! empty($validated['password'])) {
             $updateData['radius_password'] = $validated['password'];
         }

@@ -336,9 +336,22 @@
                                 </div>
                                 @endif
                                 @if($customer->radius_password)
-                                <div class="flex items-start">
+                                <div class="flex items-start" x-data="{ showPassword: false }">
                                     <dt class="w-32 text-sm font-medium text-gray-500 dark:text-gray-400">PPP Password</dt>
-                                    <dd class="text-sm font-mono text-gray-900 dark:text-gray-100 select-all">{{ $customer->radius_password }}</dd>
+                                    <dd class="flex items-center gap-2">
+                                        <span x-show="!showPassword" class="text-sm font-mono text-gray-900 dark:text-gray-100">
+                                            {{ str_repeat('●', min(strlen($customer->radius_password), 12)) }}
+                                        </span>
+                                        <span x-show="showPassword" class="text-sm font-mono text-gray-900 dark:text-gray-100 select-all">
+                                            {{ $customer->radius_password }}
+                                        </span>
+                                        <button @click="showPassword = !showPassword" 
+                                                type="button"
+                                                class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
+                                            <span x-show="!showPassword">Show</span>
+                                            <span x-show="showPassword">Hide</span>
+                                        </button>
+                                    </dd>
                                 </div>
                                 @endif
                             </dl>
@@ -426,7 +439,7 @@
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 mb-4">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Real-time Usage</h4>
-                            <button onclick="refreshUsage({{ $customer->id }})" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
+                            <button onclick="refreshUsage()" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
                                 Refresh
                             </button>
                         </div>
@@ -831,7 +844,7 @@
 @push('scripts')
 <script>
     // Refresh real-time usage function
-    function refreshUsage(customerId) {
+    function refreshUsage() {
         const downloadEl = document.getElementById('download-usage');
         const uploadEl = document.getElementById('upload-usage');
         const totalEl = document.getElementById('total-usage');
@@ -844,17 +857,17 @@
         sessionInfoEl.textContent = 'Loading...';
         
         // Fetch usage data
-        fetch(`{{ route('panel.admin.customers.check-usage', ['customer' => $customer->id]) }}`, {
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
+        fetch(`{{ route('panel.admin.customers.check-usage', ['customer' => $customer->id]) }}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.online) {
+                const downloadMB = parseFloat(data.session.download_mb) || 0;
+                const uploadMB = parseFloat(data.session.upload_mb) || 0;
+                const totalMB = downloadMB + uploadMB;
+                
                 downloadEl.textContent = data.session.download_formatted;
                 uploadEl.textContent = data.session.upload_formatted;
-                totalEl.textContent = data.session.download_formatted + ' + ' + data.session.upload_formatted;
+                totalEl.textContent = totalMB.toFixed(2) + ' MB';
                 sessionInfoEl.textContent = `Session started: ${data.session.start_time} (${data.session.duration_formatted})`;
             } else {
                 downloadEl.textContent = '0 MB';
