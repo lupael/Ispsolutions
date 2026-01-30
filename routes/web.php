@@ -310,6 +310,16 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     // Billing Profiles Management
     Route::resource('billing-profiles', \App\Http\Controllers\Panel\BillingProfileController::class);
 
+    // Onboarding Management
+    Route::get('/onboarding', [\App\Http\Controllers\Panel\MinimumConfigurationController::class, 'index'])->name('onboarding');
+
+    // Backup Settings Management
+    Route::get('/backup-settings', [\App\Http\Controllers\Panel\BackupSettingController::class, 'index'])->name('backup-settings.index');
+    Route::get('/backup-settings/create', [\App\Http\Controllers\Panel\BackupSettingController::class, 'create'])->name('backup-settings.create');
+    Route::post('/backup-settings', [\App\Http\Controllers\Panel\BackupSettingController::class, 'store'])->name('backup-settings.store');
+    Route::get('/backup-settings/edit', [\App\Http\Controllers\Panel\BackupSettingController::class, 'edit'])->name('backup-settings.edit');
+    Route::put('/backup-settings', [\App\Http\Controllers\Panel\BackupSettingController::class, 'update'])->name('backup-settings.update');
+
     // Special Permissions Management
     Route::resource('special-permissions', \App\Http\Controllers\Panel\SpecialPermissionController::class)->except(['show', 'edit', 'update']);
 
