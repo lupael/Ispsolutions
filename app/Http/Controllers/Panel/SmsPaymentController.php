@@ -732,6 +732,30 @@ class SmsPaymentController extends Controller
     }
 
     /**
+     * Display SMS payment detail page (Web UI)
+     */
+    public function webShow(Request $request, SmsPayment $smsPayment): View
+    {
+        $user = $request->user();
+
+        // Only allow operators, sub-operators, and admins
+        if (! $user->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Admins and superadmins can view all payments, others can only view their own
+        $isAdmin = $user->hasAnyRole(['admin', 'superadmin']);
+        if (! $isAdmin && $smsPayment->operator_id !== $user->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Load the operator relationship
+        $smsPayment->load('operator');
+
+        return view('panels.operator.sms-payments.show', compact('smsPayment'));
+    }
+
+    /**
      * Display SMS payment purchase page (Web UI)
      */
     public function webCreate(): View
