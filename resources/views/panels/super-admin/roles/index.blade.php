@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     {{-- TODO: Implement role creation functionality --}}
-                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest cursor-not-allowed opacity-60" title="Role creation feature coming soon">
+                    <button type="button" disabled aria-disabled="true" class="inline-flex items-center px-4 py-2 bg-gray-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest cursor-not-allowed opacity-60" title="Role creation feature coming soon">
                         Add New Role
                     </button>
                 </div>
