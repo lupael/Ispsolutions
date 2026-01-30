@@ -1121,7 +1121,7 @@ class AdminController extends Controller
             'username' => 'required|string|min:3|max:255|unique:users,username,' . $customer->id . '|regex:/^[a-zA-Z0-9_-]+$/',
             'password' => 'nullable|string|min:8',
             'service_type' => 'required|in:pppoe,hotspot,cable-tv,static-ip,other',
-            'package_id' => 'required|exists:service_packages,id,tenant_id,' . $tenantId,
+            'package_id' => 'required|exists:packages,id,tenant_id,' . $tenantId,
             'status' => 'required|in:active,inactive,suspended',
         ]);
 
