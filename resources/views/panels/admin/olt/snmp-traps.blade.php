@@ -305,58 +305,89 @@ function snmpTraps() {
             setInterval(() => this.loadTraps(), 30000);
         },
         async loadTraps() {
-            // Mock data - replace with actual API call
-            this.traps = [
-                {
-                    id: 1,
-                    olt_id: 1,
-                    olt_name: 'Main OLT',
-                    source_ip: '192.168.1.1',
-                    trap_type: 'ONU_OFFLINE',
-                    oid: '1.3.6.1.4.1.2011.6.128.1.1.2.43',
-                    severity: 'critical',
-                    message: 'ONU SN:ABCD12345678 went offline on PON 0/1/1',
-                    trap_data: { pon_port: '0/1/1', onu_id: 5, serial_number: 'ABCD12345678' },
-                    is_acknowledged: false,
-                    created_at: new Date(Date.now() - 3600000).toISOString()
-                },
-                {
-                    id: 2,
-                    olt_id: 1,
-                    olt_name: 'Main OLT',
-                    source_ip: '192.168.1.1',
-                    trap_type: 'HIGH_TEMPERATURE',
-                    oid: '1.3.6.1.4.1.2011.6.128.1.1.2.50',
-                    severity: 'warning',
-                    message: 'OLT temperature reached 75°C',
-                    trap_data: { temperature: 75, threshold: 70 },
-                    is_acknowledged: true,
-                    created_at: new Date(Date.now() - 7200000).toISOString()
+            try {
+                // Build query parameters based on filters
+                const params = new URLSearchParams();
+                if (this.filter.oltId) params.append('olt_id', this.filter.oltId);
+                if (this.filter.severity) params.append('severity', this.filter.severity);
+                if (this.filter.acknowledged !== '') params.append('acknowledged', this.filter.acknowledged);
+
+                const queryString = params.toString();
+                const url = `/api/v1/olt/snmp-traps${queryString ? '?' + queryString : ''}`;
+                
+                const response = await fetchJson(url);
+                if (response.success && response.data) {
+                    this.traps = response.data.map(trap => ({
+                        id: trap.id,
+                        olt_id: trap.olt_id,
+                        olt_name: trap.olt?.name || 'Unknown OLT',
+                        source_ip: trap.source_ip,
+                        trap_type: trap.trap_type,
+                        oid: trap.oid,
+                        severity: trap.severity,
+                        message: trap.message,
+                        trap_data: trap.trap_data,
+                        is_acknowledged: trap.is_acknowledged,
+                        created_at: trap.created_at
+                    }));
                 }
-            ];
+            } catch (error) {
+                console.error('Failed to load SNMP traps:', error);
+            }
         },
         refreshData() {
             this.loadTraps();
         },
         clearFilters() {
             this.filter = { severity: '', acknowledged: '', oltId: '' };
+            this.loadTraps();
         },
         async acknowledgeTrap(trapId) {
-            // API call to acknowledge trap
-            const trap = this.traps.find(t => t.id === trapId);
-            if (trap) {
-                trap.is_acknowledged = true;
+            try {
+                const response = await fetchJson(`/api/v1/olt/snmp-traps/${trapId}/acknowledge`, {
+                    method: 'POST'
+                });
+                
+                if (response.success) {
+                    const trap = this.traps.find(t => t.id === trapId);
+                    if (trap) {
+                        trap.is_acknowledged = true;
+                    }
+                    alert('Trap acknowledged');
+                }
+            } catch (error) {
+                console.error('Failed to acknowledge trap:', error);
+                alert('Failed to acknowledge trap');
             }
-            alert('Trap acknowledged');
         },
         async acknowledgeAll() {
             if (!confirm('Acknowledge all unacknowledged traps?')) return;
-            this.traps.forEach(trap => {
-                if (!trap.is_acknowledged) {
-                    trap.is_acknowledged = true;
+            
+            try {
+                const params = new URLSearchParams();
+                if (this.filter.oltId) params.append('olt_id', this.filter.oltId);
+                if (this.filter.severity) params.append('severity', this.filter.severity);
+                
+                const queryString = params.toString();
+                const url = `/api/v1/olt/snmp-traps/acknowledge-all${queryString ? '?' + queryString : ''}`;
+                
+                const response = await fetchJson(url, {
+                    method: 'POST'
+                });
+                
+                if (response.success) {
+                    this.traps.forEach(trap => {
+                        if (!trap.is_acknowledged) {
+                            trap.is_acknowledged = true;
+                        }
+                    });
+                    alert(response.message || 'All traps acknowledged');
+                    this.loadTraps(); // Reload to get fresh data
                 }
-            });
-            alert('All traps acknowledged');
+            } catch (error) {
+                console.error('Failed to acknowledge all traps:', error);
+                alert('Failed to acknowledge all traps');
+            }
         },
         viewDetails(trap) {
             this.selectedTrap = trap;

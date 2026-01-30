@@ -216,9 +216,15 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
         Route::get('/{id}/statistics', [OltController::class, 'statistics'])->name('api.olt.statistics');
         Route::post('/{id}/backup', [OltController::class, 'createBackup'])->name('api.olt.backup');
         Route::get('/{id}/backups', [OltController::class, 'backups'])->name('api.olt.backups');
+        Route::get('/backups/all', [OltController::class, 'allBackups'])->name('api.olt.backups.all');
         Route::get('/{id}/port-utilization', [OltController::class, 'portUtilization'])->name('api.olt.port-utilization');
         Route::get('/{id}/bandwidth-usage', [OltController::class, 'bandwidthUsage'])->name('api.olt.bandwidth-usage');
         Route::get('/{id}/monitor-onus', [OltController::class, 'monitorOnus'])->name('api.olt.monitor-onus');
+
+        // SNMP Traps
+        Route::get('/snmp-traps', [OltController::class, 'snmpTraps'])->name('api.olt.snmp-traps');
+        Route::post('/snmp-traps/{trapId}/acknowledge', [OltController::class, 'acknowledgeTrap'])->name('api.olt.snmp-traps.acknowledge');
+        Route::post('/snmp-traps/acknowledge-all', [OltController::class, 'acknowledgeAllTraps'])->name('api.olt.snmp-traps.acknowledge-all');
 
         // ONU Operations
         Route::get('/onu/{onuId}', [OltController::class, 'onuDetails'])->name('api.olt.onu.details');

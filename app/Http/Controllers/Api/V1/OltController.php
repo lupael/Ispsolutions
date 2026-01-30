@@ -7,9 +7,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Contracts\OltServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Olt;
+use App\Models\OltSnmpTrap;
 use App\Models\Onu;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class OltController extends Controller
@@ -108,13 +110,26 @@ class OltController extends Controller
      */
     public function syncOnus(int $id): JsonResponse
     {
-        $count = $this->oltService->syncOnus($id);
+        // Increase time limit for this operation as it can take a while for large OLTs
+        set_time_limit(300); // 5 minutes
 
-        return response()->json([
-            'success' => $count !== null,
-            'message' => $count !== null ? "Synced {$count} ONUs" : 'Sync failed',
-            'count' => $count,
-        ]);
+        try {
+            $count = $this->oltService->syncOnus($id);
+
+            return response()->json([
+                'success' => $count !== null && $count >= 0,
+                'message' => $count !== null ? "Synced {$count} ONUs" : 'Sync failed',
+                'count' => $count,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("ONU sync failed for OLT {$id}: " . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync operation failed: ' . $e->getMessage(),
+                'count' => 0,
+            ], 500);
+        }
     }
 
     /**
@@ -153,6 +168,36 @@ class OltController extends Controller
         return response()->json([
             'success' => true,
             'data' => $backups,
+        ]);
+    }
+
+    /**
+     * Get all backups across all OLTs
+     */
+    public function allBackups(): JsonResponse
+    {
+        $olts = Olt::all();
+        $allBackups = [];
+
+        foreach ($olts as $olt) {
+            $backups = $this->oltService->getBackupList($olt->id);
+            foreach ($backups as $backup) {
+                $allBackups[] = array_merge($backup, [
+                    'olt_id' => $olt->id,
+                    'olt_name' => $olt->name,
+                    'file_name' => basename($backup['file_path'] ?? ''),
+                ]);
+            }
+        }
+
+        // Sort by created_at descending
+        usort($allBackups, function ($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $allBackups,
         ]);
     }
 
@@ -389,5 +434,88 @@ class OltController extends Controller
         } else {
             return 'poor';
         }
+    }
+
+    /**
+     * Get SNMP traps for all OLTs or a specific OLT
+     */
+    public function snmpTraps(Request $request): JsonResponse
+    {
+        $query = OltSnmpTrap::with(['olt:id,name', 'acknowledgedByUser:id,name'])
+            ->orderBy('created_at', 'desc');
+
+        // Filter by OLT if specified
+        if ($oltId = $request->input('olt_id')) {
+            $query->where('olt_id', $oltId);
+        }
+
+        // Filter by severity if specified
+        if ($severity = $request->input('severity')) {
+            $query->where('severity', $severity);
+        }
+
+        // Filter by acknowledged status if specified
+        if ($request->has('acknowledged')) {
+            $acknowledged = filter_var($request->input('acknowledged'), FILTER_VALIDATE_BOOLEAN);
+            $query->where('is_acknowledged', $acknowledged);
+        }
+
+        $traps = $query->paginate(50);
+
+        return response()->json([
+            'success' => true,
+            'data' => $traps->items(),
+            'pagination' => [
+                'current_page' => $traps->currentPage(),
+                'last_page' => $traps->lastPage(),
+                'per_page' => $traps->perPage(),
+                'total' => $traps->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Acknowledge a specific SNMP trap
+     */
+    public function acknowledgeTrap(int $trapId): JsonResponse
+    {
+        $trap = OltSnmpTrap::findOrFail($trapId);
+        $trap->acknowledge(auth()->id());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Trap acknowledged successfully',
+        ]);
+    }
+
+    /**
+     * Acknowledge all unacknowledged SNMP traps
+     */
+    public function acknowledgeAllTraps(Request $request): JsonResponse
+    {
+        $query = OltSnmpTrap::unacknowledged();
+
+        // Optionally filter by OLT
+        if ($oltId = $request->input('olt_id')) {
+            $query->where('olt_id', $oltId);
+        }
+
+        // Optionally filter by severity
+        if ($severity = $request->input('severity')) {
+            $query->where('severity', $severity);
+        }
+
+        $count = $query->count();
+        $query->update([
+            'is_acknowledged' => true,
+            'acknowledged_at' => now(),
+            'acknowledged_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Acknowledged {$count} traps",
+            'count' => $count,
+        ]);
     }
 }

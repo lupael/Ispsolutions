@@ -248,31 +248,41 @@ class OltService implements OltServiceInterface
     {
         try {
             $olt = Olt::findOrFail($oltId);
+            
+            // Set a reasonable timeout for the operation
+            set_time_limit(300); // 5 minutes
+            
             $discoveredOnus = $this->discoverOnus($oltId);
             $syncedCount = 0;
 
-            DB::transaction(function () use ($olt, $discoveredOnus, &$syncedCount): void {
-                foreach ($discoveredOnus as $onuData) {
-                    $onu = Onu::updateOrCreate(
-                        [
-                            'olt_id' => $olt->id,
-                            'serial_number' => $onuData['serial_number'],
-                        ],
-                        [
-                            'pon_port' => $onuData['pon_port'],
-                            'onu_id' => $onuData['onu_id'],
-                            'status' => $onuData['status'],
-                            'signal_rx' => $onuData['signal_rx'] ?? null,
-                            'signal_tx' => $onuData['signal_tx'] ?? null,
-                            'last_seen_at' => now(),
-                            'last_sync_at' => now(),
-                            'tenant_id' => $olt->tenant_id,
-                        ]
-                    );
+            // Process in batches to avoid memory issues with large OLT configurations
+            $batchSize = 100;
+            $batches = array_chunk($discoveredOnus, $batchSize);
+            
+            foreach ($batches as $batch) {
+                DB::transaction(function () use ($olt, $batch, &$syncedCount): void {
+                    foreach ($batch as $onuData) {
+                        $onu = Onu::updateOrCreate(
+                            [
+                                'olt_id' => $olt->id,
+                                'serial_number' => $onuData['serial_number'],
+                            ],
+                            [
+                                'pon_port' => $onuData['pon_port'],
+                                'onu_id' => $onuData['onu_id'],
+                                'status' => $onuData['status'],
+                                'signal_rx' => $onuData['signal_rx'] ?? null,
+                                'signal_tx' => $onuData['signal_tx'] ?? null,
+                                'last_seen_at' => now(),
+                                'last_sync_at' => now(),
+                                'tenant_id' => $olt->tenant_id,
+                            ]
+                        );
 
-                    $syncedCount++;
-                }
-            });
+                        $syncedCount++;
+                    }
+                });
+            }
 
             Log::info("Synced {$syncedCount} ONUs from OLT {$oltId}");
 
