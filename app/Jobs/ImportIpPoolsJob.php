@@ -6,13 +6,14 @@ namespace App\Jobs;
 
 use App\Services\MikrotikImportService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class ImportIpPoolsJob implements ShouldQueue
+class ImportIpPoolsJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -24,6 +25,11 @@ class ImportIpPoolsJob implements ShouldQueue
     public int $tries = 1; // Don't retry to avoid duplicates
 
     /**
+     * The number of seconds after which the job's unique lock will be released.
+     */
+    public int $uniqueFor = 600;
+
+    /**
      * Create a new job instance.
      */
     public function __construct(
@@ -31,6 +37,14 @@ class ImportIpPoolsJob implements ShouldQueue
         public int $tenantId,
         public int $userId
     ) {}
+
+    /**
+     * Get the unique ID for the job.
+     */
+    public function uniqueId(): string
+    {
+        return "import-ip-pools-{$this->tenantId}-{$this->routerId}";
+    }
 
     /**
      * Execute the job.

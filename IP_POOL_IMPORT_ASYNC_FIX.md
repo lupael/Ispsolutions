@@ -177,7 +177,11 @@ tail -100 storage/logs/laravel.log
 
 **Solution: Clear stuck jobs and restart worker**
 ```bash
-# Clear jobs table
+# Clear pending jobs from the database queue
+php artisan queue:clear database
+# (Optionally target a specific queue with --queue=QUEUE_NAME)
+
+# Clear failed jobs
 php artisan queue:flush
 
 # Restart queue worker

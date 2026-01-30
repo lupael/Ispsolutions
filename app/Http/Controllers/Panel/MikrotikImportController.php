@@ -53,6 +53,18 @@ class MikrotikImportController extends Controller
                 ], 401);
             }
 
+            // Validate router belongs to user's tenant
+            $router = MikrotikRouter::where('id', $validated['router_id'])
+                ->where('tenant_id', $user->tenant_id)
+                ->first();
+
+            if (! $router) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Router not found or access denied.',
+                ], 403);
+            }
+
             // Dispatch job for async processing to avoid gateway timeout
             ImportIpPoolsJob::dispatch(
                 (int) $validated['router_id'],

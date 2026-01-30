@@ -559,16 +559,22 @@ class MikrotikImportService
         $errors = [];
 
         try {
+            // Validate router exists and belongs to the tenant
+            $router = MikrotikRouter::where('id', $routerId)
+                ->where('tenant_id', $tenantId)
+                ->first();
+
+            if (! $router) {
+                Log::error('Router not found or access denied for tenant', [
+                    'router_id' => $routerId,
+                    'tenant_id' => $tenantId,
+                ]);
+                throw new \Exception('Router not found or access denied');
+            }
+
             // Connect to router
             if (! $this->mikrotikService->connectRouter($routerId)) {
                 throw new \Exception('Failed to connect to router');
-            }
-
-            $router = MikrotikRouter::find($routerId);
-
-            if (! $router) {
-                Log::error('Router not found for fetching IP pools', ['router_id' => $routerId]);
-                throw new \Exception('Router not found');
             }
 
             // Fetch IP pools from router using API service
