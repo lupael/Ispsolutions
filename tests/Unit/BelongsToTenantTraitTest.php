@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Package;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenancyService;
@@ -101,5 +102,50 @@ class BelongsToTenantTraitTest extends TestCase
         ]);
 
         $this->assertEquals($tenant2->id, $user->tenant_id);
+    }
+
+    /**
+     * Test that queries with joins don't produce ambiguous column errors.
+     *
+     * This test replicates the scenario from the bug report where a User
+     * query with a Package join fails due to ambiguous tenant_id column.
+     *
+     * Related issue: SQLSTATE[23000]: Integrity constraint violation: 1052
+     * Column 'tenant_id' in where clause is ambiguous
+     */
+    public function test_user_package_join_does_not_produce_ambiguous_column_error(): void
+    {
+        // Seed roles
+        $this->artisan('db:seed', ['--class' => 'RoleSeeder']);
+
+        // Create a tenant
+        $tenant = Tenant::factory()->create();
+        $this->tenancyService->setCurrentTenant($tenant);
+
+        // Create a package
+        $package = Package::factory()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Test Package',
+            'price' => 100.00,
+        ]);
+
+        // Create a customer with the package
+        $customer = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'operator_level' => User::OPERATOR_LEVEL_CUSTOMER,
+            'service_package_id' => $package->id,
+            'status' => 'active',
+        ]);
+
+        // This query should NOT throw an ambiguous column error
+        // It mimics the query from AdminController that was failing
+        $result = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            ->whereNotNull('service_package_id')
+            ->join('packages', 'users.service_package_id', '=', 'packages.id')
+            ->where('users.status', 'active')
+            ->sum('packages.price');
+
+        // Assert that the query executed successfully and returned expected value
+        $this->assertEquals(100.00, $result);
     }
 }
