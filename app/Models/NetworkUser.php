@@ -16,6 +16,13 @@ class NetworkUser extends Model
     use HasFactory;
     use HasOnlineStatus;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'customers';
+
     protected $fillable = [
         'username',
         'password',

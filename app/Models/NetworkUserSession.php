@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NetworkUserSession extends Model
 {
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'customer_sessions';
+
     protected $fillable = [
         'user_id',
         'session_id',
