@@ -210,13 +210,13 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
     Route::prefix('olt')->middleware(['auth:sanctum', 'rate_limit:api'])->group(function () {
         // OLT Management
         Route::get('/', [OltController::class, 'index'])->name('api.olt.index');
+        Route::get('/backups/all', [OltController::class, 'allBackups'])->name('api.olt.backups.all');
         Route::get('/{id}', [OltController::class, 'show'])->name('api.olt.show');
         Route::post('/{id}/test-connection', [OltController::class, 'testConnection'])->name('api.olt.test-connection');
         Route::post('/{id}/sync-onus', [OltController::class, 'syncOnus'])->name('api.olt.sync-onus');
         Route::get('/{id}/statistics', [OltController::class, 'statistics'])->name('api.olt.statistics');
         Route::post('/{id}/backup', [OltController::class, 'createBackup'])->name('api.olt.backup');
         Route::get('/{id}/backups', [OltController::class, 'backups'])->name('api.olt.backups');
-        Route::get('/backups/all', [OltController::class, 'allBackups'])->name('api.olt.backups.all');
         Route::get('/{id}/port-utilization', [OltController::class, 'portUtilization'])->name('api.olt.port-utilization');
         Route::get('/{id}/bandwidth-usage', [OltController::class, 'bandwidthUsage'])->name('api.olt.bandwidth-usage');
         Route::get('/{id}/monitor-onus', [OltController::class, 'monitorOnus'])->name('api.olt.monitor-onus');

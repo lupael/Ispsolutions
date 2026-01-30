@@ -249,9 +249,6 @@ class OltService implements OltServiceInterface
         try {
             $olt = Olt::findOrFail($oltId);
             
-            // Set a reasonable timeout for the operation
-            set_time_limit(300); // 5 minutes
-            
             $discoveredOnus = $this->discoverOnus($oltId);
             $syncedCount = 0;
 

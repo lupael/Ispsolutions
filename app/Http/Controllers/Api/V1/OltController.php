@@ -117,8 +117,8 @@ class OltController extends Controller
             $count = $this->oltService->syncOnus($id);
 
             return response()->json([
-                'success' => $count !== null && $count >= 0,
-                'message' => $count !== null ? "Synced {$count} ONUs" : 'Sync failed',
+                'success' => $count > 0,
+                'message' => $count > 0 ? "Synced {$count} ONUs" : 'No ONUs found or sync failed',
                 'count' => $count,
             ]);
         } catch (\Exception $e) {
@@ -126,7 +126,7 @@ class OltController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Sync operation failed: ' . $e->getMessage(),
+                'message' => 'Sync operation failed. Please try again later.',
                 'count' => 0,
             ], 500);
         }
@@ -176,7 +176,10 @@ class OltController extends Controller
      */
     public function allBackups(): JsonResponse
     {
-        $olts = Olt::all();
+        $tenantId = getCurrentTenantId();
+        
+        // Filter OLTs by tenant
+        $olts = Olt::where('tenant_id', $tenantId)->get();
         $allBackups = [];
 
         foreach ($olts as $olt) {
@@ -441,7 +444,12 @@ class OltController extends Controller
      */
     public function snmpTraps(Request $request): JsonResponse
     {
+        $tenantId = getCurrentTenantId();
+        
         $query = OltSnmpTrap::with(['olt:id,name', 'acknowledgedByUser:id,name'])
+            ->whereHas('olt', function ($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
+            })
             ->orderBy('created_at', 'desc');
 
         // Filter by OLT if specified
@@ -479,7 +487,12 @@ class OltController extends Controller
      */
     public function acknowledgeTrap(int $trapId): JsonResponse
     {
-        $trap = OltSnmpTrap::findOrFail($trapId);
+        $tenantId = getCurrentTenantId();
+        
+        $trap = OltSnmpTrap::whereHas('olt', function ($q) use ($tenantId) {
+            $q->where('tenant_id', $tenantId);
+        })->findOrFail($trapId);
+        
         $trap->acknowledge(auth()->id());
 
         return response()->json([
@@ -493,7 +506,12 @@ class OltController extends Controller
      */
     public function acknowledgeAllTraps(Request $request): JsonResponse
     {
-        $query = OltSnmpTrap::unacknowledged();
+        $tenantId = getCurrentTenantId();
+        
+        $query = OltSnmpTrap::unacknowledged()
+            ->whereHas('olt', function ($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
+            });
 
         // Optionally filter by OLT
         if ($oltId = $request->input('olt_id')) {
