@@ -553,6 +553,11 @@ class MikrotikImportService
             }
             $tenantId = $user->tenant_id;
         }
+
+        $imported = 0;
+        $failed = 0;
+        $errors = [];
+
         try {
             // Connect to router
             if (! $this->mikrotikService->connectRouter($routerId)) {
@@ -581,10 +586,6 @@ class MikrotikImportService
 
             // Create backup
             $this->backupIpPools($tenantId);
-
-            $imported = 0;
-            $failed = 0;
-            $errors = [];
 
             // Process each pool from router
             foreach ($pools as $poolData) {

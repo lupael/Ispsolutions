@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ImportIpPoolsJob;
 use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Services\MikrotikImportService;
@@ -45,8 +46,15 @@ class MikrotikImportController extends Controller
         try {
             $user = auth()->user();
 
+            if (! $user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+
             // Dispatch job for async processing to avoid gateway timeout
-            \App\Jobs\ImportIpPoolsJob::dispatch(
+            ImportIpPoolsJob::dispatch(
                 (int) $validated['router_id'],
                 $user->tenant_id,
                 $user->id
