@@ -57,7 +57,7 @@ class MikrotikImportController extends Controller
                 'success' => false,
                 'message' => 'Connection to router failed. Please check if the router is reachable and credentials are correct.',
                 'error' => 'Connection timeout or network error',
-            ], 504);
+            ], 503);
         } catch (\Illuminate\Http\Client\RequestException $e) {
             return response()->json([
                 'success' => false,
@@ -96,7 +96,7 @@ class MikrotikImportController extends Controller
                 'success' => false,
                 'message' => 'Connection to router failed. Please check if the router is reachable and credentials are correct.',
                 'error' => 'Connection timeout or network error',
-            ], 504);
+            ], 503);
         } catch (\Illuminate\Http\Client\RequestException $e) {
             return response()->json([
                 'success' => false,
@@ -142,7 +142,7 @@ class MikrotikImportController extends Controller
                 'success' => false,
                 'message' => 'Connection to router failed. Please check if the router is reachable and credentials are correct.',
                 'error' => 'Connection timeout or network error',
-            ], 504);
+            ], 503);
         } catch (\Illuminate\Http\Client\RequestException $e) {
             return response()->json([
                 'success' => false,

@@ -26,6 +26,7 @@ class RouterOSBinaryApiService
      * @param array $query Optional query filters
      *
      * @return array Array of rows from the router
+     * @throws \Exception When connection or query fails
      */
     public function getMktRows(MikrotikRouter $router, string $menu, array $query = []): array
     {
@@ -58,7 +59,8 @@ class RouterOSBinaryApiService
                 'error' => $e->getMessage(),
             ]);
             
-            return [];
+            // Re-throw the exception so it can be handled by the controller
+            throw $e;
         }
     }
 

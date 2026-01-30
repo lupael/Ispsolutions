@@ -43,6 +43,8 @@ class MikrotikApiService
      * @param array $query Optional query filters
      *
      * @return array Array of rows from the router
+     * @throws \Illuminate\Http\Client\ConnectionException When connection to router fails
+     * @throws \Illuminate\Http\Client\RequestException When request times out or fails
      */
     public function getMktRows(MikrotikRouter $router, string $menu, array $query = []): array
     {
