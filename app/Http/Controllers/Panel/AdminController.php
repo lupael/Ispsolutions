@@ -351,15 +351,15 @@ class AdminController extends Controller
 
         // Helper function to calculate current MRC for a set of customers
         $calculateCurrentMRC = function($whereInCallback = null) {
-            $query = User::where('users.operator_level', User::OPERATOR_LEVEL_CUSTOMER)
-                ->where('users.status', 'active')
-                ->whereNotNull('users.service_package_id');
+            $query = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->whereNotNull('service_package_id');
             
             if ($whereInCallback) {
-                $query->whereIn('users.created_by', $whereInCallback);
+                $query->whereIn('created_by', $whereInCallback);
             }
             
             return $query->join('packages', 'users.service_package_id', '=', 'packages.id')
+                ->where('users.status', 'active')
                 ->sum('packages.price') ?? 0;
         };
 
