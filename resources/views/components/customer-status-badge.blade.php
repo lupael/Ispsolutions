@@ -1,6 +1,15 @@
-@props(['status'])
+@props(['customer' => null, 'status' => null])
 
 @php
+    // Extract status from customer object if provided, otherwise use direct status
+    $statusValue = null;
+    if ($customer) {
+        // Get overall_status from customer object
+        $statusValue = $customer->overall_status;
+    } elseif ($status) {
+        $statusValue = $status;
+    }
+    
     $colors = [
         'prepaid_active' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
         'postpaid_active' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -35,10 +44,10 @@
     ];
 
     // Handle both enum objects and string values
-    $statusValue = is_object($status) ? $status->value : $status;
-    $colorClass = $colors[$statusValue] ?? 'bg-gray-100 text-gray-800';
-    $iconPath = $icons[$statusValue] ?? 'M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z';
-    $label = $labels[$statusValue] ?? ucfirst(str_replace('_', ' ', $statusValue));
+    $statusValueStr = is_object($statusValue) ? $statusValue->value : $statusValue;
+    $colorClass = $colors[$statusValueStr] ?? 'bg-gray-100 text-gray-800';
+    $iconPath = $icons[$statusValueStr] ?? 'M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z';
+    $label = $labels[$statusValueStr] ?? ucfirst(str_replace('_', ' ', (string)$statusValueStr));
 @endphp
 
 <span {{ $attributes->merge(['class' => "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {$colorClass}"]) }}
