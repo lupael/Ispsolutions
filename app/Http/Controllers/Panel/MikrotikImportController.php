@@ -52,6 +52,18 @@ class MikrotikImportController extends Controller
                     : 'Import failed: ' . implode(', ', $result['errors']),
                 'data' => $result,
             ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection to router failed. Please check if the router is reachable and credentials are correct.',
+                'error' => 'Connection timeout or network error',
+            ], 503);
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Router request failed. The router may be overloaded or the API endpoint is not responding.',
+                'error' => 'Request timeout',
+            ], 504);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -79,6 +91,18 @@ class MikrotikImportController extends Controller
                     : 'Import failed',
                 'data' => $result,
             ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection to router failed. Please check if the router is reachable and credentials are correct.',
+                'error' => 'Connection timeout or network error',
+            ], 503);
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Router request failed. The router may be overloaded or the API endpoint is not responding.',
+                'error' => 'Request timeout',
+            ], 504);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -113,6 +137,18 @@ class MikrotikImportController extends Controller
                     : 'Import failed',
                 'data' => $result,
             ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection to router failed. Please check if the router is reachable and credentials are correct.',
+                'error' => 'Connection timeout or network error',
+            ], 503);
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Router request failed. The router may be overloaded or the API endpoint is not responding.',
+                'error' => 'Request timeout',
+            ], 504);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

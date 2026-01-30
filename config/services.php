@@ -36,7 +36,8 @@ return [
     ],
 
     'mikrotik' => [
-        'timeout' => env('MIKROTIK_API_TIMEOUT', 60),
+        'timeout' => env('MIKROTIK_API_TIMEOUT', 30),
+        'connect_timeout' => env('MIKROTIK_CONNECT_TIMEOUT', 5),
         'default_port' => env('MIKROTIK_DEFAULT_PORT', 8728),
         'max_retries' => env('MIKROTIK_MAX_RETRIES', 3),
         'retry_delay' => env('MIKROTIK_RETRY_DELAY', 1000), // milliseconds
