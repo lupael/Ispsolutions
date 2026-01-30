@@ -334,57 +334,113 @@ class AdminController extends Controller
                 ->count(),
         ];
 
-        // Helper function to calculate MRC for a set of customers
-        $calculateMRC = function($customerQuery) {
-            return $customerQuery
-                ->join('service_packages', 'users.service_package_id', '=', 'service_packages.id')
-                ->where('users.status', 'active')
-                ->sum('service_packages.price');
-        };
-
-        // Helper function to calculate average MRC for a month
-        $calculateMonthAvgMRC = function($customerQuery, $year, $month) {
-            // Get customers who were active at any point during the month
-            return DB::table('invoices')
-                ->whereIn('user_id', $customerQuery->pluck('id'))
-                ->whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
-                ->avg('total_amount') ?? 0;
-        };
-
         // ISP's MRC (all customers directly under Admin)
-        $ispCustomerQuery = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
+        // Current MRC: Sum of active customer package prices
+        $ispCurrentMRC = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            ->where('status', 'active')
+            ->whereNotNull('service_package_id')
+            ->join('service_packages', 'users.service_package_id', '=', 'service_packages.id')
+            ->sum('service_packages.price');
+
+        // This month average MRC from invoices
+        $ispThisMonthAvgMRC = Invoice::whereIn('user_id', function($query) {
+                $query->select('id')
+                    ->from('users')
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
+            })
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->avg('total_amount') ?? 0;
+
+        // Last month average MRC from invoices
+        $lastMonth = now()->subMonth();
+        $ispLastMonthAvgMRC = Invoice::whereIn('user_id', function($query) {
+                $query->select('id')
+                    ->from('users')
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
+            })
+            ->whereYear('created_at', $lastMonth->year)
+            ->whereMonth('created_at', $lastMonth->month)
+            ->avg('total_amount') ?? 0;
+
         $ispMRC = [
-            'current_mrc' => $calculateMRC(clone $ispCustomerQuery),
-            'this_month_avg_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, now()->year, now()->month),
-            'last_month_avg_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, now()->subMonth()->year, now()->subMonth()->month),
+            'current_mrc' => $ispCurrentMRC,
+            'this_month_avg_mrc' => $ispThisMonthAvgMRC,
+            'last_month_avg_mrc' => $ispLastMonthAvgMRC,
         ];
 
-        // Client's MRC (breakdown for all clients)
+        // Client's MRC (breakdown for all clients - same as ISP's MRC)
         $clientsMRC = [
-            'current_mrc' => $ispMRC['current_mrc'],
-            'this_month_avg_mrc' => $ispMRC['this_month_avg_mrc'],
-            'last_month_avg_mrc' => $ispMRC['last_month_avg_mrc'],
+            'current_mrc' => $ispCurrentMRC,
+            'this_month_avg_mrc' => $ispThisMonthAvgMRC,
+            'last_month_avg_mrc' => $ispLastMonthAvgMRC,
         ];
 
         // Client's of Sub-Operator MRC (customers created by operators/sub-operators)
-        $subOperatorCustomerQuery = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
-            ->whereIn('created_by', $operatorIds);
+        $subOpCurrentMRC = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            ->whereIn('created_by', $operatorIds)
+            ->where('status', 'active')
+            ->whereNotNull('service_package_id')
+            ->join('service_packages', 'users.service_package_id', '=', 'service_packages.id')
+            ->sum('service_packages.price');
+
+        $subOpThisMonthAvgMRC = Invoice::whereIn('user_id', function($query) use ($operatorIds) {
+                $query->select('id')
+                    ->from('users')
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->whereIn('created_by', $operatorIds);
+            })
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->avg('total_amount') ?? 0;
+
+        $subOpLastMonthAvgMRC = Invoice::whereIn('user_id', function($query) use ($operatorIds) {
+                $query->select('id')
+                    ->from('users')
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->whereIn('created_by', $operatorIds);
+            })
+            ->whereYear('created_at', $lastMonth->year)
+            ->whereMonth('created_at', $lastMonth->month)
+            ->avg('total_amount') ?? 0;
+
         $subOperatorClientsMRC = [
-            'current_mrc' => $calculateMRC(clone $subOperatorCustomerQuery),
-            'this_month_avg_mrc' => $calculateMonthAvgMRC(clone $subOperatorCustomerQuery, now()->year, now()->month),
-            'last_month_avg_mrc' => $calculateMonthAvgMRC(clone $subOperatorCustomerQuery, now()->subMonth()->year, now()->subMonth()->month),
+            'current_mrc' => $subOpCurrentMRC,
+            'this_month_avg_mrc' => $subOpThisMonthAvgMRC,
+            'last_month_avg_mrc' => $subOpLastMonthAvgMRC,
         ];
 
         // 3-Month MRC Comparison Data for graphs
         $mrcComparison = collect();
         for ($i = 2; $i >= 0; $i--) {
             $month = now()->subMonths($i);
+            
+            // ISP MRC for this month
+            $monthIspMRC = Invoice::whereIn('user_id', function($query) {
+                    $query->select('id')
+                        ->from('users')
+                        ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
+                })
+                ->whereYear('created_at', $month->year)
+                ->whereMonth('created_at', $month->month)
+                ->avg('total_amount') ?? 0;
+            
+            // Sub-operator clients MRC for this month
+            $monthSubOpMRC = Invoice::whereIn('user_id', function($query) use ($operatorIds) {
+                    $query->select('id')
+                        ->from('users')
+                        ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                        ->whereIn('created_by', $operatorIds);
+                })
+                ->whereYear('created_at', $month->year)
+                ->whereMonth('created_at', $month->month)
+                ->avg('total_amount') ?? 0;
+
             $mrcComparison->push([
                 'month' => $month->format('M Y'),
-                'isp_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, $month->year, $month->month),
-                'clients_mrc' => $calculateMonthAvgMRC(clone $ispCustomerQuery, $month->year, $month->month),
-                'sub_operator_clients_mrc' => $calculateMonthAvgMRC(clone $subOperatorCustomerQuery, $month->year, $month->month),
+                'isp_mrc' => $monthIspMRC,
+                'clients_mrc' => $monthIspMRC, // Same as ISP
+                'sub_operator_clients_mrc' => $monthSubOpMRC,
             ]);
         }
 
