@@ -227,6 +227,7 @@ class MikrotikApiService
                 $response = Http::withBasicAuth($router->username, $router->password)
                     ->timeout((int) config('services.mikrotik.timeout', 30))
                     ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
+                    ->throw()
                     ->get($url, $query);
 
                 if ($response->successful()) {
@@ -271,7 +272,8 @@ class MikrotikApiService
                 ]);
 
                 if ($attempt >= $maxRetries) {
-                    return [];
+                    // Re-throw the exception on final attempt so it can be caught by controller
+                    throw $e;
                 }
                 
                 usleep($retryDelay * 1000);
@@ -310,6 +312,7 @@ class MikrotikApiService
                     $response = Http::withBasicAuth($router->username, $router->password)
                         ->timeout((int) config('services.mikrotik.timeout', 30))
                         ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
+                        ->throw()
                         ->post($url, $row);
 
                     if ($response->successful()) {
@@ -414,6 +417,7 @@ class MikrotikApiService
             $response = Http::withBasicAuth($router->username, $router->password)
                 ->timeout((int) config('services.mikrotik.timeout', 30))
                 ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
+                ->throw()
                 ->put($url, $payload);
 
             if ($response->successful()) {
@@ -473,6 +477,7 @@ class MikrotikApiService
                 $response = Http::withBasicAuth($router->username, $router->password)
                     ->timeout((int) config('services.mikrotik.timeout', 30))
                     ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
+                    ->throw()
                     ->delete($url);
 
                 if ($response->successful()) {
@@ -525,6 +530,7 @@ class MikrotikApiService
             $response = Http::withBasicAuth($router->username, $router->password)
                 ->timeout((int) config('services.mikrotik.timeout', 30))
                 ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
+                ->throw()
                 ->post($url, [
                     'command' => $command,
                     'params' => $params,
