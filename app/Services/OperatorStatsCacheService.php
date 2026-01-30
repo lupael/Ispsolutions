@@ -211,6 +211,7 @@ class OperatorStatsCacheService
                 ->where('users.operator_level', 100)
                 ->where('users.status', 'active')
                 ->where('users.payment_type', 'postpaid')
+                ->whereNotNull('users.service_package_id')
                 ->join('packages', 'users.service_package_id', '=', 'packages.id')
                 ->sum('packages.price');
 
@@ -219,6 +220,7 @@ class OperatorStatsCacheService
                 ->where('users.operator_level', 100)
                 ->where('users.status', 'active')
                 ->where('users.payment_type', 'prepaid')
+                ->whereNotNull('users.service_package_id')
                 ->join('packages', 'users.service_package_id', '=', 'packages.id')
                 ->sum('packages.price');
 
