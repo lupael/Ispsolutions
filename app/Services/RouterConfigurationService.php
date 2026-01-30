@@ -12,10 +12,7 @@ class RouterConfigurationService
 {
     /**
      * Configure RADIUS authentication on the router
-     * 
-     * Note: This is a placeholder implementation. The current MikrotikService implementation
-     * is HTTP-based and does not expose a RouterOS API client with a comm() method.
-     * This method requires future implementation when RouterOS API support is added.
+     * Complete one-click setup following IspBills pattern
      */
     public function configureRadius(MikrotikRouter $router): array
     {
@@ -28,14 +25,63 @@ class RouterConfigurationService
             ];
         }
 
-        Log::warning('RADIUS configuration is not fully implemented for the current MikrotikService', [
-            'router_id' => $router->id,
-        ]);
+        try {
+            $mikrotikService = app(MikrotikService::class);
+            
+            if (!$mikrotikService->connectRouter($router->id)) {
+                return [
+                    'success' => false,
+                    'error' => 'Failed to connect to router',
+                ];
+            }
 
-        return [
-            'success' => false,
-            'error' => 'RADIUS configuration requires RouterOS API implementation',
-        ];
+            $api = $mikrotikService->getConnectedRouter($router->id);
+            if (!$api) {
+                return [
+                    'success' => false,
+                    'error' => 'Router connection not available',
+                ];
+            }
+
+            $results = [
+                'radius_client' => false,
+                'ppp_aaa' => false,
+                'radius_incoming' => false,
+            ];
+
+            // 1. Configure RADIUS client
+            $this->configureRadiusClient($api, $router, $nas);
+            $results['radius_client'] = true;
+
+            // 2. Configure PPP AAA
+            $this->configurePppAaa($api);
+            $results['ppp_aaa'] = true;
+
+            // 3. Enable RADIUS incoming
+            $this->configureRadiusIncoming($api);
+            $results['radius_incoming'] = true;
+
+            Log::info('RADIUS configuration completed', [
+                'router_id' => $router->id,
+                'results' => $results,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'RADIUS configuration completed successfully',
+                'results' => $results,
+            ];
+        } catch (\Exception $e) {
+            Log::error('RADIUS configuration failed', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     /**
