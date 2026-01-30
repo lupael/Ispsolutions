@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
             'hotspot.auth' => \App\Http\Middleware\EnsureHotspotAuth::class,
             'distributor.api' => \App\Http\Middleware\ValidateDistributorApiKey::class,
+            'onboarding.complete' => \App\Http\Middleware\EnsureOnboardingComplete::class,
         ]);
 
         // Add global middleware
