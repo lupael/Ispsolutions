@@ -49,11 +49,14 @@ return [
     'target_package' => 'Target Package',
     'upgrade_cost' => 'Upgrade Cost',
     'upgrade_preview' => 'Upgrade Preview',
-    'confirm_upgrade' => 'Confirm Upgrade',
+    'confirm_upgrade' => 'Are you sure you want to upgrade this package?',
     'upgrade_benefits' => 'Upgrade Benefits',
     'price_difference' => 'Price Difference',
     'speed_increase' => 'Speed Increase',
     'no_upgrades_available' => 'No upgrade options available',
+    'already_on_best_package' => 'You are already on the best available package',
+    'no_package_selected' => 'No package selected',
+    'upgrade_wizard_help' => 'Choose a better package with improved features and performance',
     
     // Package Comparison
     'compare' => 'Compare Packages',
