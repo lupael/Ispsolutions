@@ -796,13 +796,6 @@ class AdminController extends Controller
      * Displays paginated list of Network Access Server devices for admin users with full management access.
      * Includes 20 items per page with tenant isolation automatically applied via BelongsToTenant trait.
      */
-    public function nasDevices(): View
-    {
-        $devices = Nas::latest()->paginate(20);
-
-        return view('panels.admin.nas.index', compact('devices'));
-    }
-
     /**
      * Display Cisco devices listing.
      *

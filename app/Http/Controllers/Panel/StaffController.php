@@ -106,20 +106,6 @@ class StaffController extends Controller
     }
 
     /**
-     * Display NAS devices listing (if permitted).
-     */
-    public function nasDevices(): View
-    {
-        if (! auth()->user()->hasPermission('devices.nas.view')) {
-            abort(403, 'Unauthorized access to NAS devices.');
-        }
-
-        $devices = Nas::latest()->paginate(20);
-
-        return view('panels.staff.nas.index', compact('devices'));
-    }
-
-    /**
      * Display Cisco devices listing (if permitted).
      */
     public function ciscoDevices(): View
