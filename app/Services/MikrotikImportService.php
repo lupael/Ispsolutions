@@ -161,22 +161,22 @@ class MikrotikImportService
         if (preg_match('/^(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+\.\d+\.\d+)$/', $range, $matches)) {
             $startIp = $matches[1];
             $endIp = $matches[2];
-            
+
             $start = ip2long($startIp);
             $end = ip2long($endIp);
-            
+
             if ($start === false || $end === false || $start > $end) {
                 throw new \InvalidArgumentException("Invalid IP range format: {$range}");
             }
-            
+
             $ips = [];
             for ($i = $start; $i <= $end; $i++) {
                 $ips[] = long2ip($i);
             }
-            
+
             return $ips;
         }
-        
+
         // Try short format (192.168.1.1-254)
         if (preg_match('/^(\d+\.\d+\.\d+\.)(\d+)-(\d+)$/', $range, $matches)) {
             $prefix = $matches[1];
@@ -194,7 +194,7 @@ class MikrotikImportService
 
             return $ips;
         }
-        
+
         throw new \InvalidArgumentException("Invalid IP range format: {$range}");
     }
 
@@ -303,7 +303,7 @@ class MikrotikImportService
                 try {
                     $chunkImported = 0;
                     $chunkFailed = 0;
-                    
+
                     foreach ($secretsChunk as $secretData) {
                         try {
                             // Create user account if not exists
@@ -311,7 +311,7 @@ class MikrotikImportService
                             // This is acceptable as users should be prompted to change passwords after import
                             // Using Laravel's Hash facade with custom rounds to ensure compatibility with Auth system
                             $hashedPassword = \Illuminate\Support\Facades\Hash::make($secretData['password'], ['rounds' => 4]);
-                            
+
                             $user = User::firstOrCreate(
                                 [
                                     'mobile' => $secretData['mobile'] ?? $secretData['username'],
@@ -350,12 +350,12 @@ class MikrotikImportService
                             $errors[] = "Failed to import customer {$secretData['username']}: {$e->getMessage()}";
                         }
                     }
-                    
+
                     // Only update totals and commit if chunk processing succeeded
                     $imported += $chunkImported;
                     $failed += $chunkFailed;
                     DB::commit();
-                    
+
                     Log::info("Processed chunk {$chunkIndex} of secrets import", [
                         'chunk_size' => count($secretsChunk),
                         'chunk_imported' => $chunkImported,
@@ -534,34 +534,47 @@ class MikrotikImportService
     /**
      * Import IP pools from router.
      */
-    public function importIpPoolsFromRouter(int $routerId): array
+    public function importIpPoolsFromRouter(int $routerId, ?int $tenantId = null): array
     {
-        $user = auth()->user();
-        if (! $user) {
-            Log::warning('Attempt to import IP pools without authenticated user', [
-                'router_id' => $routerId,
-            ]);
+        // Use provided tenant_id or fall back to auth user (for web requests)
+        if ($tenantId === null) {
+            $user = auth()->user();
+            if (! $user) {
+                Log::warning('Attempt to import IP pools without authenticated user', [
+                    'router_id' => $routerId,
+                ]);
 
-            return [
-                'success' => false,
-                'imported' => 0,
-                'failed' => 0,
-                'errors' => ['User not authenticated'],
-            ];
+                return [
+                    'success' => false,
+                    'imported' => 0,
+                    'failed' => 0,
+                    'errors' => ['User not authenticated'],
+                ];
+            }
+            $tenantId = $user->tenant_id;
         }
 
-        $tenantId = $user->tenant_id;
+        $imported = 0;
+        $failed = 0;
+        $errors = [];
+
         try {
+            // Validate router exists and belongs to the tenant
+            $router = MikrotikRouter::where('id', $routerId)
+                ->where('tenant_id', $tenantId)
+                ->first();
+
+            if (! $router) {
+                Log::error('Router not found or access denied for tenant', [
+                    'router_id' => $routerId,
+                    'tenant_id' => $tenantId,
+                ]);
+                throw new \Exception('Router not found or access denied');
+            }
+
             // Connect to router
             if (! $this->mikrotikService->connectRouter($routerId)) {
                 throw new \Exception('Failed to connect to router');
-            }
-
-            $router = MikrotikRouter::find($routerId);
-
-            if (! $router) {
-                Log::error('Router not found for fetching IP pools', ['router_id' => $routerId]);
-                throw new \Exception('Router not found');
             }
 
             // Fetch IP pools from router using API service
@@ -580,10 +593,6 @@ class MikrotikImportService
             // Create backup
             $this->backupIpPools($tenantId);
 
-            $imported = 0;
-            $failed = 0;
-            $errors = [];
-
             // Process each pool from router
             foreach ($pools as $poolData) {
                 try {
@@ -592,6 +601,7 @@ class MikrotikImportService
                     if (empty($ranges)) {
                         $errors[] = "Pool {$poolData['name']} has no ranges defined";
                         $failed++;
+
                         continue;
                     }
 
@@ -603,7 +613,7 @@ class MikrotikImportService
                     // Process IPs in chunks to avoid memory issues and timeout
                     $chunkSize = 100; // Process 100 IPs at a time
                     $ipChunks = array_chunk($ipList, $chunkSize);
-                    
+
                     foreach ($ipChunks as $chunkIndex => $ipChunk) {
                         DB::beginTransaction();
                         try {
@@ -623,12 +633,12 @@ class MikrotikImportService
                                     'updated_at' => now(),
                                 ];
                             }
-                            
+
                             // Bulk insert for better performance
                             IpPool::insert($bulkData);
                             $imported += count($bulkData);
                             DB::commit();
-                            
+
                             Log::info("Processed chunk {$chunkIndex} of IP pool import", [
                                 'pool_name' => $poolData['name'] ?? 'Unknown',
                                 'chunk_size' => count($bulkData),
@@ -639,7 +649,7 @@ class MikrotikImportService
                             $failed += count($ipChunk);
                             $poolName = $poolData['name'] ?? 'Unknown';
                             $errors[] = "Failed to import chunk {$chunkIndex} of pool {$poolName}: {$e->getMessage()}";
-                            Log::error("Failed to import IP pool chunk", [
+                            Log::error('Failed to import IP pool chunk', [
                                 'pool_name' => $poolName,
                                 'chunk_index' => $chunkIndex,
                                 'error' => $e->getMessage(),
@@ -650,7 +660,7 @@ class MikrotikImportService
                     $poolName = $poolData['name'] ?? 'Unknown';
                     $errors[] = "Failed to process pool {$poolName}: {$e->getMessage()}";
                     $failed++; // Increment failed count for the pool that couldn't be parsed
-                    Log::error("Failed to process IP pool", [
+                    Log::error('Failed to process IP pool', [
                         'pool_name' => $poolName,
                         'error' => $e->getMessage(),
                     ]);
