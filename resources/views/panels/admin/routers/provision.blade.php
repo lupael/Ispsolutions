@@ -3,26 +3,26 @@
 @section('title', 'Zero-Touch Router Provisioning')
 
 @section('content')
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-cogs me-2"></i>Zero-Touch Router Provisioning
+<div class="w-full px-4 py-4">
+    <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h5 class="mb-0 text-lg font-semibold">
+                        <i class="fas fa-cogs mr-2"></i>Zero-Touch Router Provisioning
                     </h5>
                     <div>
-                        <a href="{{ route('panel.admin.routers.provision.templates') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-file-code me-1"></i>Manage Templates
+                        <a href="{{ route('panel.admin.routers.provision.templates') }}" class="px-3 py-1 text-sm px-4 py-2 rounded border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white">
+                            <i class="fas fa-file-code mr-1"></i>Manage Templates
                         </a>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     <!-- Router Selection -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label for="router-select" class="form-label fw-bold">Select Router</label>
-                            <select id="router-select" class="form-select">
+                    <div class="grid grid-cols-12 gap-4 mb-4">
+                        <div class="md:col-span-6 col-span-12">
+                            <label for="router-select" class="block text-sm font-medium text-gray-700 mb-1 font-bold">Select Router</label>
+                            <select id="router-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">-- Select a Router --</option>
                                 @foreach($routers as $router)
                                     <option value="{{ $router->id }}" 
@@ -33,35 +33,35 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <button id="test-connection" class="btn btn-outline-info" disabled>
-                                <i class="fas fa-network-wired me-1"></i>Test Connection
+                        <div class="md:col-span-6 col-span-12 flex items-end">
+                            <button id="test-connection" class="px-4 py-2 rounded border border-cyan-600 text-cyan-600 hover:bg-cyan-600 hover:text-white" disabled>
+                                <i class="fas fa-network-wired mr-1"></i>Test Connection
                             </button>
                         </div>
                     </div>
 
                     <!-- Router Info Panel -->
-                    <div id="router-info" class="alert alert-info d-none mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
+                    <div id="router-info" class="p-4 rounded-md mb-4 bg-blue-50 border border-blue-200 text-blue-800 hidden">
+                        <div class="flex justify-between items-center">
                             <div>
                                 <strong>Router:</strong> <span id="router-name"></span><br>
                                 <strong>IP:</strong> <span id="router-ip"></span><br>
-                                <strong>Status:</strong> <span id="router-status" class="badge"></span>
+                                <strong>Status:</strong> <span id="router-status" class="px-2 py-1 text-xs rounded-full"></span>
                             </div>
                             <div>
-                                <button id="create-backup" class="btn btn-sm btn-secondary">
-                                    <i class="fas fa-save me-1"></i>Create Backup
+                                <button id="create-backup" class="px-3 py-1 text-sm px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700">
+                                    <i class="fas fa-save mr-1"></i>Create Backup
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Template Selection & Variables -->
-                    <div id="provisioning-form" class="d-none">
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <label for="template-select" class="form-label fw-bold">Configuration Template</label>
-                                <select id="template-select" class="form-select">
+                    <div id="provisioning-form" class="hidden">
+                        <div class="grid grid-cols-12 gap-4 mb-4">
+                            <div class="md:col-span-12 col-span-12">
+                                <label for="template-select" class="block text-sm font-medium text-gray-700 mb-1 font-bold">Configuration Template</label>
+                                <select id="template-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">-- Select a Template --</option>
                                     @foreach($templates as $template)
                                         <option value="{{ $template->id }}" data-type="{{ $template->template_type }}">
@@ -69,92 +69,93 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">Select a pre-configured template or create a custom one</small>
+                                <small class="text-gray-500">Select a pre-configured template or create a custom one</small>
                             </div>
                         </div>
 
                         <!-- Configuration Variables -->
-                        <div id="variables-section" class="d-none">
-                            <h6 class="mb-3">Configuration Variables</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-central-server-ip" class="form-label">Central Server IP</label>
-                                    <input type="text" id="var-central-server-ip" class="form-control" 
+                        <div id="variables-section" class="hidden">
+                            <h6 class="mb-3 font-semibold">Configuration Variables</h6>
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-central-server-ip" class="block text-sm font-medium text-gray-700 mb-1">Central Server IP</label>
+                                    <input type="text" id="var-central-server-ip" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="192.168.1.100" value="{{ request()->getHost() }}">
-                                    <small class="text-muted">IP address of the central management server</small>
+                                    <small class="text-gray-500">IP address of the central management server</small>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-radius-server" class="form-label">RADIUS Server</label>
-                                    <input type="text" id="var-radius-server" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-radius-server" class="block text-sm font-medium text-gray-700 mb-1">RADIUS Server</label>
+                                    <input type="text" id="var-radius-server" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="127.0.0.1" value="127.0.0.1">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-radius-secret" class="form-label">RADIUS Secret</label>
-                                    <input type="text" id="var-radius-secret" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-radius-secret" class="block text-sm font-medium text-gray-700 mb-1">RADIUS Secret</label>
+                                    <input type="text" id="var-radius-secret" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="mysecretkey" value="testing123">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-system-identity" class="form-label">System Identity</label>
-                                    <input type="text" id="var-system-identity" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-system-identity" class="block text-sm font-medium text-gray-700 mb-1">System Identity</label>
+                                    <input type="text" id="var-system-identity" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="ISP-Router-01">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-hotspot-address" class="form-label">Hotspot Address</label>
-                                    <input type="text" id="var-hotspot-address" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-hotspot-address" class="block text-sm font-medium text-gray-700 mb-1">Hotspot Address</label>
+                                    <input type="text" id="var-hotspot-address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="10.5.50.1" value="10.5.50.1">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-dns-name" class="form-label">Hotspot DNS Name</label>
-                                    <input type="text" id="var-dns-name" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-dns-name" class="block text-sm font-medium text-gray-700 mb-1">Hotspot DNS Name</label>
+                                    <input type="text" id="var-dns-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="hotspot.local" value="hotspot.local">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-pppoe-pool-start" class="form-label">PPPoE Pool Start</label>
-                                    <input type="text" id="var-pppoe-pool-start" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-pppoe-pool-start" class="block text-sm font-medium text-gray-700 mb-1">PPPoE Pool Start</label>
+                                    <input type="text" id="var-pppoe-pool-start" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="10.0.0.2" value="10.0.0.2">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-pppoe-pool-end" class="form-label">PPPoE Pool End</label>
-                                    <input type="text" id="var-pppoe-pool-end" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-pppoe-pool-end" class="block text-sm font-medium text-gray-700 mb-1">PPPoE Pool End</label>
+                                    <input type="text" id="var-pppoe-pool-end" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="10.0.0.254" value="10.0.0.254">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-timezone" class="form-label">Timezone</label>
-                                    <input type="text" id="var-timezone" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-timezone" class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                                    <input type="text" id="var-timezone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="Asia/Kolkata" value="UTC">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="var-ntp-server" class="form-label">NTP Server</label>
-                                    <input type="text" id="var-ntp-server" class="form-control" 
+                                <div class="md:col-span-6 col-span-12 mb-3">
+                                    <label for="var-ntp-server" class="block text-sm font-medium text-gray-700 mb-1">NTP Server</label>
+                                    <input type="text" id="var-ntp-server" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="pool.ntp.org" value="pool.ntp.org">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="d-flex gap-2 mt-4">
-                            <button id="preview-config" class="btn btn-outline-secondary" disabled>
-                                <i class="fas fa-eye me-1"></i>Preview Configuration
+                        <div class="flex gap-2 mt-4">
+                            <button id="preview-config" class="px-4 py-2 rounded border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white" disabled>
+                                <i class="fas fa-eye mr-1"></i>Preview Configuration
                             </button>
-                            <button id="execute-provision" class="btn btn-primary" disabled>
-                                <i class="fas fa-play me-1"></i>Execute Provisioning
+                            <button id="execute-provision" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" disabled>
+                                <i class="fas fa-play mr-1"></i>Execute Provisioning
                             </button>
                         </div>
                     </div>
 
                     <!-- Progress Section -->
-                    <div id="progress-section" class="d-none mt-4">
-                        <h6>Provisioning Progress</h6>
-                        <div class="progress mb-3" style="height: 30px;">
-                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                    <div id="progress-section" class="hidden mt-4">
+                        <h6 class="font-semibold">Provisioning Progress</h6>
+                        <div class="bg-gray-200 rounded-full h-8 mb-3">
+                            <div id="progress-bar" class="bg-blue-600 h-8 rounded-full text-center text-white leading-8 transition-all duration-300" 
                                  role="progressbar" style="width: 0%">0%</div>
                         </div>
-                        <div id="progress-steps" class="list-group">
+                        <div id="progress-steps" class="space-y-2">
                             <!-- Steps will be added dynamically -->
                         </div>
                     </div>
 
                     <!-- Configuration Preview Modal -->
+                    <!-- Note: Bootstrap modals require JavaScript framework - consider Alpine.js or similar -->
                     <div class="modal fade" id="preview-modal" tabindex="-1">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
@@ -163,11 +164,11 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <pre id="config-preview" class="bg-light p-3 rounded" style="max-height: 500px; overflow-y: auto;"></pre>
+                                    <pre id="config-preview" class="bg-gray-100 p-3 rounded" style="max-height: 500px; overflow-y: auto;"></pre>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    <button type="button" class="btn btn-primary" id="apply-from-preview">Apply Configuration</button>
+                                    <button type="button" class="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" id="apply-from-preview">Apply Configuration</button>
                                 </div>
                             </div>
                         </div>
@@ -176,30 +177,30 @@
                     <!-- Recent Logs & Backups -->
                     @if(isset($provisioningLogs) && $provisioningLogs->count() > 0)
                     <div class="mt-5">
-                        <h6>Recent Provisioning Logs</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm">
+                        <h6 class="font-semibold mb-3">Recent Provisioning Logs</h6>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Action</th>
-                                        <th>Template</th>
-                                        <th>Status</th>
-                                        <th>User</th>
+                                        <th class="text-left p-2">Date</th>
+                                        <th class="text-left p-2">Action</th>
+                                        <th class="text-left p-2">Template</th>
+                                        <th class="text-left p-2">Status</th>
+                                        <th class="text-left p-2">User</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($provisioningLogs as $log)
-                                    <tr>
-                                        <td>{{ $log->created_at->format('Y-m-d H:i') }}</td>
-                                        <td>{{ ucfirst($log->action) }}</td>
-                                        <td>{{ $log->template->name ?? 'N/A' }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ $log->status === 'success' ? 'success' : ($log->status === 'failed' ? 'danger' : 'warning') }}">
+                                    <tr class="border-t">
+                                        <td class="p-2">{{ $log->created_at->format('Y-m-d H:i') }}</td>
+                                        <td class="p-2">{{ ucfirst($log->action) }}</td>
+                                        <td class="p-2">{{ $log->template->name ?? 'N/A' }}</td>
+                                        <td class="p-2">
+                                            <span class="px-2 py-1 text-xs rounded-full {{ $log->status === 'success' ? 'bg-green-500 text-white' : ($log->status === 'failed' ? 'bg-red-500 text-white' : 'bg-yellow-500 text-white') }}">
                                                 {{ ucfirst($log->status) }}
                                             </span>
                                         </td>
-                                        <td>{{ $log->user->name ?? 'System' }}</td>
+                                        <td class="p-2">{{ $log->user->name ?? 'System' }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -210,27 +211,27 @@
 
                     @if(isset($backups) && $backups->count() > 0)
                     <div class="mt-4">
-                        <h6>Configuration Backups</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm">
+                        <h6 class="font-semibold mb-3">Configuration Backups</h6>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Type</th>
-                                        <th>Created By</th>
-                                        <th>Action</th>
+                                        <th class="text-left p-2">Date</th>
+                                        <th class="text-left p-2">Type</th>
+                                        <th class="text-left p-2">Created By</th>
+                                        <th class="text-left p-2">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($backups as $backup)
-                                    <tr>
-                                        <td>{{ $backup->created_at->format('Y-m-d H:i') }}</td>
-                                        <td>{{ ucfirst($backup->backup_type) }}</td>
-                                        <td>{{ $backup->creator->name ?? 'System' }}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-warning rollback-btn" 
+                                    <tr class="border-t">
+                                        <td class="p-2">{{ $backup->created_at->format('Y-m-d H:i') }}</td>
+                                        <td class="p-2">{{ ucfirst($backup->backup_type) }}</td>
+                                        <td class="p-2">{{ $backup->creator->name ?? 'System' }}</td>
+                                        <td class="p-2">
+                                            <button class="px-3 py-1 text-sm px-4 py-2 rounded border border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white rollback-btn" 
                                                     data-backup-id="{{ $backup->id }}">
-                                                <i class="fas fa-undo me-1"></i>Rollback
+                                                <i class="fas fa-undo mr-1"></i>Rollback
                                             </button>
                                         </td>
                                     </tr>
@@ -271,12 +272,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const option = this.options[this.selectedIndex];
             document.getElementById('router-name').textContent = option.text;
             document.getElementById('router-ip').textContent = option.dataset.ip;
-            routerInfo.classList.remove('d-none');
-            provisioningForm.classList.remove('d-none');
+            routerInfo.classList.remove('hidden');
+            provisioningForm.classList.remove('hidden');
         } else {
             testConnectionBtn.disabled = true;
-            routerInfo.classList.add('d-none');
-            provisioningForm.classList.add('d-none');
+            routerInfo.classList.add('hidden');
+            provisioningForm.classList.add('hidden');
         }
     });
 
@@ -303,11 +304,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const statusBadge = document.getElementById('router-status');
             
             if (data.success) {
-                statusBadge.className = 'badge bg-success';
+                statusBadge.className = 'px-2 py-1 text-xs rounded-full bg-green-500 text-white';
                 statusBadge.textContent = 'Connected';
                 showAlert('success', data.message);
             } else {
-                statusBadge.className = 'badge bg-danger';
+                statusBadge.className = 'px-2 py-1 text-xs rounded-full bg-red-500 text-white';
                 statusBadge.textContent = 'Disconnected';
                 showAlert('danger', data.message);
             }
@@ -323,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
     templateSelect.addEventListener('change', function() {
         selectedTemplateId = this.value;
         if (selectedTemplateId) {
-            variablesSection.classList.remove('d-none');
+            variablesSection.classList.remove('hidden');
             previewBtn.disabled = false;
             executeBtn.disabled = false;
             
@@ -331,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const routerName = document.getElementById('router-name').textContent;
             document.getElementById('var-system-identity').value = routerName.split(' ')[0] || 'ISP-Router';
         } else {
-            variablesSection.classList.add('d-none');
+            variablesSection.classList.add('hidden');
             previewBtn.disabled = true;
             executeBtn.disabled = true;
         }
@@ -382,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function executeProvisioning() {
         const variables = getVariables();
-        progressSection.classList.remove('d-none');
+        progressSection.classList.remove('hidden');
         document.getElementById('progress-steps').innerHTML = '';
         executeBtn.disabled = true;
 
@@ -442,10 +443,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         steps.forEach(step => {
             const stepElement = document.createElement('div');
-            stepElement.className = `list-group-item ${step.success ? 'list-group-item-success' : 'list-group-item-danger'}`;
+            stepElement.className = `p-3 bg-white border rounded ${step.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
             stepElement.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-${step.success ? 'check' : 'times'} me-2"></i>${step.step}</span>
+                <div class="flex justify-between items-center">
+                    <span><i class="fas fa-${step.success ? 'check' : 'times'} mr-2"></i>${step.step}</span>
                     <small>${step.message}</small>
                 </div>
             `;
@@ -523,12 +524,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showAlert(type, message) {
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        const bgColor = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800';
+        alertDiv.className = `p-4 rounded-md mb-4 border ${bgColor} fixed top-0 left-1/2 -translate-x-1/2 mt-3`;
         alertDiv.style.zIndex = '9999';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        alertDiv.innerHTML = message;
         document.body.appendChild(alertDiv);
         
         setTimeout(() => alertDiv.remove(), 5000);
