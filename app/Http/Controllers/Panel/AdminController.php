@@ -2981,11 +2981,11 @@ class AdminController extends Controller
                 ->count(),
             'this_week' => \App\Models\AuditLog::where('tenant_id', $tenantId)
                 ->where('auditable_type', MikrotikRouter::class)
-                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+                ->whereBetween('created_at', [now()->copy()->startOfWeek(), now()->copy()->endOfWeek()])
                 ->count(),
             'this_month' => \App\Models\AuditLog::where('tenant_id', $tenantId)
                 ->where('auditable_type', MikrotikRouter::class)
-                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                ->whereBetween('created_at', [now()->copy()->startOfMonth(), now()->copy()->endOfMonth()])
                 ->count(),
         ];
 
@@ -3000,7 +3000,7 @@ class AdminController extends Controller
         $tenantId = auth()->user()->tenant_id;
         
         try {
-            // Build tenant filter subquery once for reuse
+            // Define tenant filter subquery for reuse (note: subquery still executes per query)
             $tenantUsersQuery = function($query) use ($tenantId) {
                 $query->select('username')
                     ->from('users')

@@ -56,9 +56,13 @@ class RadAcct extends Model
     ];
 
     /**
-     * Get the user that owns the session
+     * Get the user that owns the session.
+     * 
+     * Note: This creates a cross-database relationship between the 'radius' connection 
+     * and the default connection. Do not eager load this relationship as it may cause 
+     * performance issues. Use subquery filtering instead for better performance.
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'username', 'username');
     }
