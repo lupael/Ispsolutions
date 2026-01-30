@@ -2783,14 +2783,14 @@ class AdminController extends Controller
                 
                 return (object) [
                     'id' => $monitor->id,
-                    'name' => $device->name ?? 'Unknown Device',
-                    'ip_address' => $device->ip_address ?? 'N/A',
+                    'name' => $device?->name ?? 'Unknown Device',
+                    'ip_address' => $device?->ip_address ?? 'N/A',
                     'type' => class_basename($monitor->monitorable_type),
                     'status' => $monitor->status,
                     'cpu_usage' => $monitor->cpu_usage,
                     'memory_usage' => $monitor->memory_usage,
                     'uptime' => $monitor->getUptimeHuman(),
-                    'ping' => $device->response_time_ms ?? null,
+                    'ping' => $device?->response_time_ms ?? null,
                     'load' => max($monitor->cpu_usage ?? 0, $monitor->memory_usage ?? 0),
                     'last_check_at' => $monitor->last_check_at,
                 ];

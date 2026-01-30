@@ -117,8 +117,8 @@ class OltController extends Controller
             $count = $this->oltService->syncOnus($id);
 
             return response()->json([
-                'success' => $count > 0,
-                'message' => $count > 0 ? "Synced {$count} ONUs" : 'No ONUs found or sync failed',
+                'success' => true,
+                'message' => $count > 0 ? "Synced {$count} ONUs" : 'No ONUs found to sync',
                 'count' => $count,
             ]);
         } catch (\Exception $e) {
@@ -178,29 +178,35 @@ class OltController extends Controller
     {
         $tenantId = getCurrentTenantId();
         
-        // Filter OLTs by tenant
-        $olts = Olt::where('tenant_id', $tenantId)->get();
-        $allBackups = [];
-
-        foreach ($olts as $olt) {
-            $backups = $this->oltService->getBackupList($olt->id);
-            foreach ($backups as $backup) {
-                $allBackups[] = array_merge($backup, [
-                    'olt_id' => $olt->id,
-                    'olt_name' => $olt->name,
-                    'file_name' => basename($backup['file_path'] ?? ''),
-                ]);
-            }
-        }
-
-        // Sort by created_at descending
-        usort($allBackups, function ($a, $b) {
-            return strtotime($b['created_at']) - strtotime($a['created_at']);
-        });
+        // Use a single query with join for better performance
+        $backups = \App\Models\OltBackup::join('olts', 'olt_backups.olt_id', '=', 'olts.id')
+            ->where('olts.tenant_id', $tenantId)
+            ->select([
+                'olt_backups.id',
+                'olt_backups.olt_id',
+                'olts.name as olt_name',
+                'olt_backups.file_size',
+                'olt_backups.backup_type',
+                'olt_backups.created_at',
+            ])
+            ->selectRaw('SUBSTRING_INDEX(olt_backups.file_path, "/", -1) as file_name')
+            ->orderBy('olt_backups.created_at', 'desc')
+            ->get()
+            ->map(function ($backup) {
+                return [
+                    'id' => $backup->id,
+                    'olt_id' => $backup->olt_id,
+                    'olt_name' => $backup->olt_name,
+                    'file_name' => $backup->file_name,
+                    'file_size' => $backup->file_size,
+                    'backup_type' => $backup->backup_type,
+                    'created_at' => $backup->created_at->toIso8601String(),
+                ];
+            });
 
         return response()->json([
             'success' => true,
-            'data' => $allBackups,
+            'data' => $backups,
         ]);
     }
 
@@ -523,8 +529,7 @@ class OltController extends Controller
             $query->where('severity', $severity);
         }
 
-        $count = $query->count();
-        $query->update([
+        $count = $query->update([
             'is_acknowledged' => true,
             'acknowledged_at' => now(),
             'acknowledged_by' => auth()->id(),

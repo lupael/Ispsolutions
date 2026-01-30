@@ -259,7 +259,7 @@ class OltService implements OltServiceInterface
             foreach ($batches as $batch) {
                 DB::transaction(function () use ($olt, $batch, &$syncedCount): void {
                     foreach ($batch as $onuData) {
-                        $onu = Onu::updateOrCreate(
+                        Onu::updateOrCreate(
                             [
                                 'olt_id' => $olt->id,
                                 'serial_number' => $onuData['serial_number'],
