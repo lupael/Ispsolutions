@@ -545,6 +545,7 @@ If authentication fails:
 
 ### Getting Started
 - **[INSTALLATION.md](INSTALLATION.md)** - Complete automated installation guide
+- **[ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md](ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md)** - Complete onboarding & router configuration guide
 - **[POST_DEPLOYMENT_STEPS.md](POST_DEPLOYMENT_STEPS.md)** - Essential post-deployment steps
 - **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Complete documentation index
 - **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Current status and roadmap
@@ -584,6 +585,7 @@ If authentication fails:
 - **[REFERENCE_SYSTEM_QUICK_GUIDE.md](REFERENCE_SYSTEM_QUICK_GUIDE.md)** - Original requirements and roadmap
 
 ### MikroTik Integration
+- **[ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md](ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md)** - Complete router setup & configuration (Recommended)
 - **[MIKROTIK_QUICKSTART.md](MIKROTIK_QUICKSTART.md)** - Quick start guide
 - **[MIKROTIK_ADVANCED_FEATURES.md](MIKROTIK_ADVANCED_FEATURES.md)** - Advanced features
 
