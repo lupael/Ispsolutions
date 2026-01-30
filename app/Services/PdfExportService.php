@@ -16,7 +16,7 @@ class PdfExportService
     public function generateInvoicePdf(Invoice $invoice): \Barryvdh\DomPDF\PDF
     {
         $data = [
-            'invoice' => $invoice->load(['networkUser', 'tenant']),
+            'invoice' => $invoice->load(['user', 'tenant']),
             'company' => [
                 'name' => $invoice->tenant->name ?? config('app.name'),
                 'address' => $invoice->tenant->address ?? '',
@@ -62,7 +62,7 @@ class PdfExportService
     public function generateReceiptPdf(Payment $payment): \Barryvdh\DomPDF\PDF
     {
         $data = [
-            'payment' => $payment->load(['invoice.networkUser', 'invoice.tenant']),
+            'payment' => $payment->load(['invoice.user', 'invoice.tenant']),
             'company' => [
                 'name' => $payment->invoice->tenant->name ?? config('app.name'),
                 'address' => $payment->invoice->tenant->address ?? '',
