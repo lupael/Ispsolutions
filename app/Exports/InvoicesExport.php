@@ -45,21 +45,41 @@ class InvoicesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function map($invoice): array
     {
+        $paidAmount = $invoice->payments->sum('amount') ?? 0;
+        
         return [
             $invoice->invoice_number,
-            $invoice->networkUser->name ?? 'N/A',
-            $invoice->networkUser->username ?? 'N/A',
-            $invoice->networkUser->package->name ?? 'N/A',
-            number_format($invoice->subtotal, 2),
+            $this->sanitizeForExcel($invoice->user->name ?? 'N/A'),
+            $this->sanitizeForExcel($invoice->user->username ?? 'N/A'),
+            $this->sanitizeForExcel($invoice->package->name ?? 'N/A'),
+            number_format($invoice->amount, 2),
             number_format($invoice->tax_amount ?? 0, 2),
             number_format($invoice->total_amount, 2),
-            number_format($invoice->paid_amount ?? 0, 2),
-            number_format($invoice->total_amount - ($invoice->paid_amount ?? 0), 2),
+            number_format($paidAmount, 2),
+            number_format($invoice->total_amount - $paidAmount, 2),
             ucfirst($invoice->status),
-            $invoice->issue_date?->format('Y-m-d') ?? 'N/A',
+            $invoice->created_at?->format('Y-m-d') ?? 'N/A',
             $invoice->due_date?->format('Y-m-d') ?? 'N/A',
             $invoice->paid_at?->format('Y-m-d') ?? 'N/A',
         ];
+    }
+
+    /**
+     * Sanitize cell values to prevent formula injection in Excel
+     */
+    private function sanitizeForExcel(?string $value): string
+    {
+        if ($value === null) {
+            return 'N/A';
+        }
+
+        // Check if the value starts with formula trigger characters
+        if (preg_match('/^[\=\+\-\@]/', $value)) {
+            // Prefix with a single quote to force Excel to treat it as text
+            return "'" . $value;
+        }
+
+        return $value;
     }
 
     public function styles(Worksheet $sheet): array

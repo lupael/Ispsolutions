@@ -478,15 +478,15 @@ class PaymentGatewayService
                 'ipn_url' => route('webhooks.payment', ['gateway' => 'sslcommerz']),
 
                 // Customer information
-                'cus_name' => $invoice->networkUser->name ?? 'Customer',
-                'cus_email' => $invoice->networkUser->email ?? 'customer@example.com',
-                'cus_add1' => $invoice->networkUser->address ?? 'N/A',
+                'cus_name' => $invoice->user->name ?? 'Customer',
+                'cus_email' => $invoice->user->email ?? 'customer@example.com',
+                'cus_add1' => $invoice->user->address ?? 'N/A',
                 'cus_add2' => '',
-                'cus_city' => $invoice->networkUser->city ?? 'Dhaka',
-                'cus_state' => $invoice->networkUser->state ?? 'Dhaka',
-                'cus_postcode' => $invoice->networkUser->postcode ?? '1000',
+                'cus_city' => $invoice->user->city ?? 'Dhaka',
+                'cus_state' => $invoice->user->state ?? 'Dhaka',
+                'cus_postcode' => $invoice->user->postal_code ?? '1000',
                 'cus_country' => 'Bangladesh',
-                'cus_phone' => $invoice->networkUser->mobile ?? 'N/A',
+                'cus_phone' => $invoice->user->mobile ?? 'N/A',
                 'cus_fax' => '',
 
                 // Product information
@@ -500,7 +500,7 @@ class PaymentGatewayService
 
                 // Optional parameters - store custom data
                 'value_a' => $invoice->invoice_number,
-                'value_b' => (string) $invoice->network_user_id,
+                'value_b' => (string) $invoice->user_id,
                 'value_c' => (string) $invoice->id,
                 'value_d' => (string) $invoice->tenant_id,
             ];
@@ -590,10 +590,10 @@ class PaymentGatewayService
                     'success_url' => route('webhooks.payment', ['gateway' => 'stripe', 'status' => 'success']) . '?session_id={CHECKOUT_SESSION_ID}',
                     'cancel_url' => route('webhooks.payment', ['gateway' => 'stripe', 'status' => 'cancelled']),
                     'client_reference_id' => $invoice->invoice_number,
-                    'customer_email' => $invoice->networkUser->email ?? null,
+                    'customer_email' => $invoice->user->email ?? null,
                     'metadata[invoice_number]' => $invoice->invoice_number,
                     'metadata[invoice_id]' => $invoice->id,
-                    'metadata[network_user_id]' => $invoice->network_user_id,
+                    'metadata[user_id]' => $invoice->user_id,
                     'metadata[tenant_id]' => $invoice->tenant_id,
                 ]);
 
