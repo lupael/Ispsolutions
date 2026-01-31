@@ -1047,7 +1047,7 @@ class User extends Authenticatable
 
     /**
      * Sync this customer to RADIUS for network authentication.
-     * Only applies to customers (operator_level = 100) with network service types.
+     * Only applies to customers (is_subscriber = true) with network service types.
      *
      * @param array $attributes Additional RADIUS attributes to set
      * @return bool Success status
@@ -1055,7 +1055,8 @@ class User extends Authenticatable
     public function syncToRadius(array $attributes = []): bool
     {
         // Only sync customers with network service types
-        if ($this->operator_level !== 100 || !$this->service_type) {
+        // FIXED: Use is_subscriber instead of operator_level to identify customers
+        if (!$this->is_subscriber || !$this->service_type) {
             return false;
         }
 
@@ -1089,7 +1090,8 @@ class User extends Authenticatable
      */
     public function updateRadius(array $attributes): bool
     {
-        if ($this->operator_level !== 100 || !$this->service_type) {
+        // FIXED: Use is_subscriber instead of operator_level to identify customers
+        if (!$this->is_subscriber || !$this->service_type) {
             return false;
         }
 
@@ -1105,7 +1107,8 @@ class User extends Authenticatable
      */
     public function removeFromRadius(): bool
     {
-        if ($this->operator_level !== 100 || !$this->username) {
+        // FIXED: Use is_subscriber instead of operator_level to identify customers
+        if (!$this->is_subscriber || !$this->username) {
             return false;
         }
 
@@ -1121,7 +1124,8 @@ class User extends Authenticatable
      */
     public function isNetworkCustomer(): bool
     {
-        return $this->operator_level === 100 && 
+        // FIXED: Use is_subscriber instead of operator_level to identify customers
+        return $this->is_subscriber === true && 
                in_array($this->service_type, ['pppoe', 'hotspot', 'static', 'static_ip', 'vpn']);
     }
 

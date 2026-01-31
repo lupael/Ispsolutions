@@ -3029,7 +3029,9 @@ class AdminController extends Controller
             $validated['dns_secondary'] ?? null,
         ]);
 
+        // CRITICAL: Set tenant_id to ensure pool is properly scoped
         IpPool::create([
+            'tenant_id' => auth()->user()->tenant_id,
             'name' => $validated['name'],
             'start_ip' => $validated['start_ip'],
             'end_ip' => $validated['end_ip'],
