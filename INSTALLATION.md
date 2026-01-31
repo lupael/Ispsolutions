@@ -272,7 +272,7 @@ The script opens these ports:
 These ports are used by the application but may not require firewall rules depending on your setup:
 
 - **3306** - MySQL (application database) - Usually internal only
-- **3307** - MySQL (RADIUS database) - Usually internal only
+- **3307** - MySQL (RADIUS database, Docker only) - Host port mapping for separate RADIUS DB container
 - **6379** - Redis (cache and queue server) - Usually internal only
 - **8728** - MikroTik API - Required if managing MikroTik routers remotely
 - **8000** - Application HTTP (Docker development) - Use 80/443 in production
@@ -287,7 +287,7 @@ The ISP Solution uses FreeRADIUS for authenticating PPPoE and Hotspot users. The
 The system uses a two-tier RADIUS architecture:
 
 1. **FreeRADIUS Server** - Handles RADIUS protocol communication (UDP ports 1812/1813)
-2. **RADIUS Database** - Stores user credentials and accounting data (MySQL on port 3306/3307)
+2. **RADIUS Database** - Stores user credentials and accounting data (MySQL on port 3306, or 3307 for Docker host access)
 
 ```
 ┌──────────────┐    RADIUS Protocol     ┌──────────────┐
@@ -321,7 +321,7 @@ The RADIUS database is automatically created during installation. Verify the con
 ```env
 RADIUS_DB_CONNECTION=mysql
 RADIUS_DB_HOST=127.0.0.1
-RADIUS_DB_PORT=3306
+RADIUS_DB_PORT=3306  # Use 3306 for native installation, or 3307 if using Docker from host
 RADIUS_DB_DATABASE=radius
 RADIUS_DB_USERNAME=radius
 RADIUS_DB_PASSWORD=your_password  # Check /root/ispsolution-credentials.txt
@@ -330,6 +330,8 @@ RADIUS_SERVER_IP=127.0.0.1
 RADIUS_AUTH_PORT=1812
 RADIUS_ACCT_PORT=1813
 ```
+
+**Note**: In Docker environments, the RADIUS database container internally uses port 3306 but is mapped to host port 3307. For native installations (using install.sh), use port 3306.
 
 #### 2. Configure FreeRADIUS SQL Module
 
