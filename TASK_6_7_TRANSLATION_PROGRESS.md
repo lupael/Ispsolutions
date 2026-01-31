@@ -16,14 +16,14 @@ This document tracks progress on Task 6.7 from the IMPLEMENTATION_TODO_LIST, whi
 - Started: 14 files (7%)
 - Completed: 19 files (9%)
 - New Files Translated: 5 files
-- Translation Keys Added: 38 keys
+- Translation Keys Added: 42 keys
 - New Translation Files: 4 files
 
 ## Translation Files Created
 
 ### 1. Authentication Translations
 - **File:** `lang/en/auth.php` | `lang/bn/auth.php`
-- **Keys:** 26 translation keys
+- **Keys:** 30 translation keys
 - **Coverage:** Login, password confirmation, roles, security messages
 
 ### 2. Error Page Translations
@@ -53,7 +53,7 @@ This document tracks progress on Task 6.7 from the IMPLEMENTATION_TODO_LIST, whi
 
 ## Translation Keys Reference
 
-### Auth Keys (26)
+### Auth Keys (30)
 ```
 auth.login_title, auth.sign_in_to_panel, auth.app_name
 auth.email, auth.password, auth.remember_me
@@ -182,7 +182,7 @@ errors.go_home, errors.return_home
 ```
 lang/
 ├── en/
-│   ├── auth.php (26 keys)
+│   ├── auth.php (30 keys)
 │   ├── errors.php (12 keys)
 │   ├── billing.php (existing)
 │   ├── customers.php (existing)
@@ -190,7 +190,7 @@ lang/
 │   ├── packages.php (existing)
 │   └── ui.php (existing)
 └── bn/
-    ├── auth.php (26 keys)
+    ├── auth.php (30 keys)
     ├── errors.php (12 keys)
     └── [mirrors en/ structure]
 ```

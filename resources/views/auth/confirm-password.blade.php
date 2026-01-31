@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ __('auth.confirm_password') }} - {{ config('app.name', __('auth.app_name')) }}</title>
+    <title>{{ __('auth.confirm_password') }} - {{ __('auth.app_name') }}</title>
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
