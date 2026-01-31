@@ -95,16 +95,18 @@ This is the central documentation hub for the ISP Solution project. All document
 ## 📊 System Architecture
 
 ### Multi-Tenancy & Roles
-The system supports 9 role levels:
-1. **Developer** - Full system access
-2. **Super Admin** - Tenant management
-3. **Admin** - Complete tenant operations
-4. **Manager** - Operational management
-5. **Staff** - Day-to-day operations
-6. **Reseller** - Customer management and billing
-7. **Sub-Reseller** - Limited reseller capabilities
-8. **Customer** - Self-service portal
-9. **Card Distributor** - Recharge card management
+The system supports a hierarchical role structure (see [ROLE_SYSTEM.md](docs/technical/ROLE_SYSTEM.md)):
+1. **Developer** (Level 0) - Global system access, all ISP tenants
+2. **Super Admin** (Level 10) - Tenancy owner, manages Admins
+3. **Admin** (Level 20) - ISP owner, manages operations
+4. **Operator** (Level 30) - Manages Sub-Operators and Customers
+5. **Sub-Operator** (Level 40) - Manages own customers only
+6. **Manager** (Level 50) - View/Edit if permitted by Admin
+7. **Accountant** (Level 70) - View-only financial access
+8. **Staff** (Level 80) - View/Edit if permitted by Admin
+9. **Customer** - End user/subscriber (identified by `is_subscriber = true`)
+
+**Note:** Deprecated roles (reseller, sub-reseller, card-distributor) have been removed. See [DEPRECATED.md](DEPRECATED.md) for details.
 
 ### Core Components
 - **Billing System** - Daily, monthly, static IP, cable TV billing
