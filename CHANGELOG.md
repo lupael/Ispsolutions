@@ -147,11 +147,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-31
 
-### 🐛 Bug Fixes
-
-- Only pass $customers variable to view for non-customer users to prevent submit button from being disabled for customers ([fdd6333](../../commit/fdd6333a70a524c4d5a1e5718a8262a8e7a086c3))
-- Ensure customer selection is mandatory and filtered correctly for operators/sub-operators when creating tickets ([ce632fd](../../commit/ce632fd0fdde054f0381fbe051e9f262fedbf3e1))
-
 ---
 
 ## [Unreleased] - 2026-01-31
