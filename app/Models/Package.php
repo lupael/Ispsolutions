@@ -35,6 +35,8 @@ class Package extends Model
         'allow_partial_day',
         'status',
         'is_global',
+        'visibility',
+        'pppoe_profile_id',
     ];
 
     protected $casts = [
@@ -48,6 +50,7 @@ class Package extends Model
         'allow_partial_day' => 'boolean',
         'master_package_id' => 'integer',
         'operator_package_rate_id' => 'integer',
+        'pppoe_profile_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -76,6 +79,22 @@ class Package extends Model
     public function masterPackage(): BelongsTo
     {
         return $this->belongsTo(MasterPackage::class, 'master_package_id');
+    }
+
+    /**
+     * Get the operator package rate for this package
+     */
+    public function operatorPackageRate(): BelongsTo
+    {
+        return $this->belongsTo(OperatorPackageRate::class, 'operator_package_rate_id');
+    }
+
+    /**
+     * Get the PPPoE profile associated with this package
+     */
+    public function pppoeProfile(): BelongsTo
+    {
+        return $this->belongsTo(MikrotikProfile::class, 'pppoe_profile_id');
     }
 
     /**
