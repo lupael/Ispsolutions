@@ -1869,18 +1869,47 @@ class AdminController extends Controller
      */
     public function deletedCustomers(): View
     {
-        // Soft delete functionality not yet implemented for customers
-        // This feature requires adding SoftDeletes trait to User model
-        // For now, return empty paginated collection to prevent blade errors
-        $customers = new \Illuminate\Pagination\LengthAwarePaginator(
-            [],
-            0,
-            20,
-            1,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+        $customers = User::onlyTrashed()
+            ->where('is_subscriber', true)
+            ->with(['networkUser', 'zone'])
+            ->latest('deleted_at')
+            ->paginate(20);
 
         return view('panels.admin.customers.deleted', compact('customers'));
+    }
+
+    /**
+     * Restore a soft-deleted customer.
+     */
+    public function restoreCustomer(int $id)
+    {
+        $customer = User::onlyTrashed()
+            ->where('is_subscriber', true)
+            ->findOrFail($id);
+
+        $this->authorize('restore', $customer);
+
+        $customer->restore();
+
+        return redirect()->route('panel.admin.customers.deleted')
+            ->with('success', 'Customer restored successfully.');
+    }
+
+    /**
+     * Permanently delete a customer.
+     */
+    public function forceDeleteCustomer(int $id)
+    {
+        $customer = User::onlyTrashed()
+            ->where('is_subscriber', true)
+            ->findOrFail($id);
+
+        $this->authorize('forceDelete', $customer);
+
+        $customer->forceDelete();
+
+        return redirect()->route('panel.admin.customers.deleted')
+            ->with('success', 'Customer permanently deleted.');
     }
 
     /**

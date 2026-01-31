@@ -159,6 +159,26 @@ class CustomerPolicy
     }
 
     /**
+     * Determine if the user can restore a soft-deleted customer.
+     * ADMIN ONLY - Not available to Operator/Sub-Operator.
+     */
+    public function restore(User $user, User $customer): bool
+    {
+        // Same permissions as delete
+        return $this->delete($user, $customer);
+    }
+
+    /**
+     * Determine if the user can permanently delete a customer.
+     * ADMIN ONLY - Not available to Operator/Sub-Operator.
+     */
+    public function forceDelete(User $user, User $customer): bool
+    {
+        // Same permissions as delete
+        return $this->delete($user, $customer);
+    }
+
+    /**
      * Determine if the user can suspend the customer.
      */
     public function suspend(User $user, User $customer): bool
