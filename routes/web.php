@@ -317,7 +317,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     // Route::put('/network-users/{id}', [AdminController::class, 'networkUsersUpdate'])->name('network-users.update');
     // Route::delete('/network-users/{id}', [AdminController::class, 'networkUsersDestroy'])->middleware('password.confirm')->name('network-users.destroy');
 
-    Route::get('/packages', [AdminController::class, 'packages'])->name('packages');
+    Route::get('/packages', [AdminController::class, 'packages'])->name('packages.index');
     Route::get('/packages/create', [AdminController::class, 'packagesCreate'])->name('packages.create');
     Route::post('/packages', [AdminController::class, 'packagesStore'])->name('packages.store');
     Route::get('/packages/{id}/edit', [AdminController::class, 'packagesEdit'])->name('packages.edit');
