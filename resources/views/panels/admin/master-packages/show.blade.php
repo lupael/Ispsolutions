@@ -122,9 +122,13 @@
                             @endphp
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    <a href="{{ route('panel.admin.operators.profile', $rate->operator->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                                        {{ $rate->operator->name }}
-                                    </a>
+                                    @if($rate->operator)
+                                        <a href="{{ route('panel.admin.operators.profile', $rate->operator->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                            {{ $rate->operator->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-gray-500">Operator Not Found</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${{ number_format($rate->operator_price, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">

@@ -331,14 +331,22 @@ class MasterPackageController extends Controller
             'operator_rates' => $masterPackage->operatorRates()
                 ->with('operator')
                 ->get()
+                ->filter(function ($rate) {
+                    return $rate->operator !== null;
+                })
                 ->map(function ($rate) use ($masterPackage) {
+                    $margin = $masterPackage->base_price > 0 
+                        ? (($rate->operator_price - $masterPackage->base_price) / $masterPackage->base_price) * 100 
+                        : 0;
+                    
                     return [
                         'operator' => $rate->operator->name,
                         'price' => $rate->operator_price,
-                        'margin' => (($rate->operator_price - $masterPackage->base_price) / $masterPackage->base_price) * 100,
+                        'margin' => $margin,
                         'customers' => $rate->packages()->count(),
                     ];
-                }),
+                })
+                ->values(),
         ];
 
         return response()->json($stats);
