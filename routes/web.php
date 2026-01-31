@@ -121,7 +121,7 @@ Route::prefix('hotspot/login')->name('hotspot.login')->group(function () {
 
 // Hotspot user dashboard and logout (requires hotspot session)
 Route::prefix('hotspot')->name('hotspot.')->middleware(['hotspot.auth'])->group(function () {
-    Route::get('/dashboard', [HotspotLoginController::class, 'showDashboard'])->name('dashboard');
+    Route::get('/dashboard', [HotspotLoginController::class, 'showDashboard'])->name('dashboard.hotspot');
     Route::post('/logout', [HotspotLoginController::class, 'logout'])->name('logout');
 
     // Scenario 8: Link login dashboard
@@ -262,7 +262,7 @@ Route::get('/panel/search', [SearchController::class, 'search'])->middleware(['a
 
 // Super Admin Panel
 Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['auth', 'role:super-admin'])->group(function () {
-    Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard.super-admin');
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::get('/users/create', [SuperAdminController::class, 'usersCreate'])->name('users.create');
     Route::post('/users', [SuperAdminController::class, 'usersStore'])->name('users.store');
@@ -310,7 +310,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
 
 // Admin Panel
 Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant', 'role:admin'])->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard.admin');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('users.create');
     Route::post('/users', [AdminController::class, 'usersStore'])->name('users.store');
@@ -646,14 +646,6 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/{routerId}/test-connection', [RouterFailoverController::class, 'testConnection'])->name('test-connection');
     });
 
-    // Router Netwatch Routes (RADIUS Health Monitoring)
-    Route::prefix('routers/netwatch')->name('routers.netwatch.')->group(function () {
-        Route::get('/{routerId}', [NasNetwatchController::class, 'index'])->name('index');
-        Route::post('/{routerId}/configure', [NasNetwatchController::class, 'configure'])->name('configure');
-        Route::get('/{routerId}/status', [NasNetwatchController::class, 'status'])->name('status');
-        Route::post('/{routerId}/test', [NasNetwatchController::class, 'test'])->name('test');
-    });
-
     // Router Auto-Provisioning Routes
     Route::prefix('routers/auto-provision')->name('routers.auto-provision.')->group(function () {
         Route::post('/{routerId}/execute', [\App\Http\Controllers\Panel\RouterAutoProvisionController::class, 'provision'])->name('execute');
@@ -691,11 +683,13 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/validate', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'validate'])->name('validate');
     });
 
-    // NAS NetWatch Routes - RADIUS Health Monitoring
+    // NAS NetWatch Routes - RADIUS Health Monitoring (Consolidated)
     Route::prefix('nas/netwatch')->name('nas.netwatch.')->group(function () {
-        Route::post('/routers/{router}/configure', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'configure'])->name('configure');
-        Route::delete('/routers/{router}', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'remove'])->name('remove');
-        Route::get('/routers/{router}/status', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'status'])->name('status');
+        Route::get('/{routerId}', [NasNetwatchController::class, 'index'])->name('index');
+        Route::post('/{routerId}/configure', [NasNetwatchController::class, 'configure'])->name('configure');
+        Route::get('/{routerId}/status', [NasNetwatchController::class, 'status'])->name('status');
+        Route::post('/{routerId}/test', [NasNetwatchController::class, 'test'])->name('test');
+        Route::delete('/{routerId}', [NasNetwatchController::class, 'remove'])->name('remove');
     });
 
     // Customer Backup Routes - Mirror to Router PPP Secrets
@@ -895,7 +889,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
 
 // Sales Manager Panel
 Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware(['auth', 'tenant', 'role:sales-manager'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Panel\SalesManagerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Panel\SalesManagerController::class, 'dashboard'])->name('dashboard.sales-manager');
 
     // Admin (ISP Client) Management
     Route::get('/admins', [\App\Http\Controllers\Panel\SalesManagerController::class, 'admins'])->name('admins.index');
@@ -925,7 +919,7 @@ Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware([
 
 // Manager Panel
 Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'tenant', 'role:manager'])->group(function () {
-    Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard.manager');
     // DEPRECATED: Network users now managed via Customer model
     // Route::get('/network-users', [ManagerController::class, 'networkUsers'])->name('network-users');
     Route::get('/sessions', [ManagerController::class, 'sessions'])->name('sessions');
@@ -939,7 +933,7 @@ Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'ten
 
 // Operator Panel
 Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 'tenant', 'role:operator'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Panel\OperatorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Panel\OperatorController::class, 'dashboard'])->name('dashboard.operator');
     Route::get('/sub-operators', [\App\Http\Controllers\Panel\OperatorController::class, 'subOperators'])->name('sub-operators.index');
     Route::get('/customers', [\App\Http\Controllers\Panel\OperatorController::class, 'customers'])->name('customers.index');
     Route::get('/customers/{customer}', [\App\Http\Controllers\Panel\OperatorController::class, 'showCustomer'])->name('customers.show');
@@ -975,7 +969,7 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 't
 
 // Sub-Operator Panel
 Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['auth', 'tenant', 'role:sub-operator'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Panel\SubOperatorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Panel\SubOperatorController::class, 'dashboard'])->name('dashboard.sub-operator');
     Route::get('/customers', [\App\Http\Controllers\Panel\SubOperatorController::class, 'customers'])->name('customers.index');
     Route::get('/customers/{customer}', [\App\Http\Controllers\Panel\SubOperatorController::class, 'showCustomer'])->name('customers.show');
     Route::get('/bills', [\App\Http\Controllers\Panel\SubOperatorController::class, 'bills'])->name('bills.index');
@@ -989,7 +983,7 @@ Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['a
 
 // Accountant Panel
 Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth', 'tenant', 'role:accountant'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Panel\AccountantController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Panel\AccountantController::class, 'dashboard'])->name('dashboard.accountant');
     Route::get('/reports/income-expense', [\App\Http\Controllers\Panel\AccountantController::class, 'incomeExpenseReport'])->name('reports.income-expense');
     Route::get('/reports/payments', [\App\Http\Controllers\Panel\AccountantController::class, 'paymentHistory'])->name('reports.payments');
     Route::get('/reports/statements', [\App\Http\Controllers\Panel\AccountantController::class, 'customerStatements'])->name('reports.statements');
@@ -1002,7 +996,7 @@ Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth'
 
 // Staff Panel
 Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'tenant', 'role:staff'])->group(function () {
-    Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard.staff');
     // DEPRECATED: Network users now managed via Customer model
     // Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
     Route::get('/tickets', [StaffController::class, 'tickets'])->name('tickets');
@@ -1019,7 +1013,7 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'tenant'
 
 // Card Distributor Panel
 Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'tenant', 'role:card-distributor'])->group(function () {
-    Route::get('/dashboard', [CardDistributorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [CardDistributorController::class, 'dashboard'])->name('dashboard.card-distributor');
     Route::get('/cards', [CardDistributorController::class, 'cards'])->name('cards');
     Route::get('/cards/{card}', [CardDistributorController::class, 'showCard'])->name('cards.show');
     Route::get('/cards/{card}/sell', [CardDistributorController::class, 'sellCard'])->name('cards.sell');
@@ -1034,7 +1028,7 @@ Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middle
 
 // Customer Panel
 Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'tenant', 'role:customer'])->group(function () {
-    Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard.customer');
     Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
     Route::put('/profile', [CustomerController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/documents', [CustomerController::class, 'submitDocumentVerification'])->name('profile.documents');
@@ -1072,7 +1066,7 @@ Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 't
 
 // Developer Panel (Supreme Authority)
 Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 'role:developer'])->group(function () {
-    Route::get('/dashboard', [DeveloperController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [DeveloperController::class, 'dashboard'])->name('dashboard.developer');
 
     // Tenancy Management
     Route::get('/tenancies', [DeveloperController::class, 'tenancies'])->name('tenancies.index');
@@ -1207,7 +1201,7 @@ Route::prefix('api-keys')->name('api-keys.')->middleware(['auth', 'can:manage-ap
 
 // Analytics Dashboard
 Route::prefix('analytics')->name('analytics.')->middleware(['auth', 'can:view-analytics'])->group(function () {
-    Route::get('/dashboard', [AnalyticsDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [AnalyticsDashboardController::class, 'index'])->name('dashboard.analytics');
     Route::get('/revenue', [AnalyticsDashboardController::class, 'revenue'])->name('revenue');
     Route::get('/customers', [AnalyticsDashboardController::class, 'customers'])->name('customers');
 });
