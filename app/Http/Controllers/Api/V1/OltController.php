@@ -27,7 +27,9 @@ class OltController extends Controller
     {
         $this->authorize('viewAny', Olt::class);
 
-        $olts = Olt::with('onus')->get()->map(function ($olt) {
+        // CRITICAL: Filter by tenant_id to prevent data leakage
+        $tenantId = auth()->user()->tenant_id ?? getCurrentTenantId();
+        $olts = Olt::where('tenant_id', $tenantId)->with('onus')->get()->map(function ($olt) {
             return [
                 'id' => $olt->id,
                 'name' => $olt->name,
@@ -54,9 +56,13 @@ class OltController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $olt = Olt::with(['onus' => function ($query) {
-            $query->latest();
-        }])->findOrFail($id);
+        // CRITICAL: Verify OLT belongs to current tenant
+        $tenantId = auth()->user()->tenant_id ?? getCurrentTenantId();
+        $olt = Olt::where('tenant_id', $tenantId)
+            ->with(['onus' => function ($query) {
+                $query->latest();
+            }])
+            ->findOrFail($id);
 
         $this->authorize('view', $olt);
 
@@ -163,6 +169,10 @@ class OltController extends Controller
      */
     public function backups(int $id): JsonResponse
     {
+        // CRITICAL: Verify OLT belongs to current tenant before accessing backups
+        $tenantId = auth()->user()->tenant_id ?? getCurrentTenantId();
+        $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+        
         $backups = $this->oltService->getBackupList($id);
 
         return response()->json([
@@ -382,8 +392,11 @@ class OltController extends Controller
      */
     public function monitorOnus(int $id): JsonResponse
     {
-        $olt = Olt::findOrFail($id);
-        $onus = Onu::where('olt_id', $id)
+        // CRITICAL: Verify OLT belongs to current tenant
+        $tenantId = auth()->user()->tenant_id ?? getCurrentTenantId();
+        $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+        $onus = Onu::where('tenant_id', $tenantId)
+            ->where('olt_id', $id)
             ->orderBy('status', 'desc')
             ->orderBy('pon_port')
             ->orderBy('onu_id')

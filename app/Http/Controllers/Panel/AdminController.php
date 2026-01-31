@@ -1179,7 +1179,7 @@ class AdminController extends Controller
                 'radius_password' => $validated['password'], // Plain text for RADIUS
                 'phone' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
-                'operator_level' => 100, // Customer level
+                'operator_level' => null, // Customers must have NULL operator_level
                 'is_active' => true,
                 'is_subscriber' => true, // Mark as subscriber for customer list filtering
                 'activated_at' => now(),
@@ -2978,12 +2978,17 @@ class AdminController extends Controller
      */
     public function ipv4Pools(): View
     {
-        $pools = IpPool::with('subnets')->latest()->paginate(20);
+        // CRITICAL: Filter by tenant_id to prevent data leakage
+        $tenantId = auth()->user()->tenant_id;
+        $pools = IpPool::where('tenant_id', $tenantId)
+            ->with('subnets')
+            ->latest()
+            ->paginate(20);
 
         $stats = [
-            'total' => IpPool::count(),
+            'total' => IpPool::where('tenant_id', $tenantId)->count(),
             'available' => 0, // Placeholder for calculating available IPs based on pool capacity minus allocations
-            'allocated' => IpAllocation::count(),
+            'allocated' => IpAllocation::where('tenant_id', $tenantId)->count(),
             'pools' => $pools->total(),
         ];
 
@@ -3039,7 +3044,9 @@ class AdminController extends Controller
      */
     public function ipv4PoolsEdit($id): View
     {
-        $pool = IpPool::findOrFail($id);
+        // CRITICAL: Verify pool belongs to current tenant
+        $tenantId = auth()->user()->tenant_id;
+        $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
 
         return view('panels.admin.network.ipv4-pools-edit', compact('pool'));
     }
@@ -3049,7 +3056,9 @@ class AdminController extends Controller
      */
     public function ipv4PoolsUpdate(Request $request, $id)
     {
-        $pool = IpPool::findOrFail($id);
+        // CRITICAL: Verify pool belongs to current tenant
+        $tenantId = auth()->user()->tenant_id;
+        $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -3085,7 +3094,9 @@ class AdminController extends Controller
      */
     public function ipv4PoolsDestroy($id)
     {
-        $pool = IpPool::findOrFail($id);
+        // CRITICAL: Verify pool belongs to current tenant
+        $tenantId = auth()->user()->tenant_id;
+        $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
         $pool->delete();
 
         return redirect()->route('panel.admin.network.ipv4-pools')
@@ -3103,8 +3114,11 @@ class AdminController extends Controller
         ]);
 
         try {
-            // Use bulk delete for efficiency
-            $deletedCount = IpPool::whereIn('id', $validated['ids'])->delete();
+            // CRITICAL: Filter by tenant_id to prevent cross-tenant deletion
+            $tenantId = auth()->user()->tenant_id;
+            $deletedCount = IpPool::where('tenant_id', $tenantId)
+                ->whereIn('id', $validated['ids'])
+                ->delete();
 
             return redirect()->route('panel.admin.network.ipv4-pools')
                 ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
@@ -3240,17 +3254,22 @@ class AdminController extends Controller
      */
     public function pppoeProfiles(): View
     {
-        $profiles = MikrotikProfile::with(['router', 'ipv4Pool', 'ipv6Pool'])->latest()->paginate(20);
+        // CRITICAL: Filter by tenant_id to prevent data leakage
+        $tenantId = auth()->user()->tenant_id;
+        $profiles = MikrotikProfile::where('tenant_id', $tenantId)
+            ->with(['router', 'ipv4Pool', 'ipv6Pool'])
+            ->latest()
+            ->paginate(20);
 
         $stats = [
-            'total' => MikrotikProfile::count(),
-            'active' => MikrotikProfile::count(), // Currently counts all profiles; adjust if a status field is introduced
-            'users' => NetworkUser::count(),
+            'total' => MikrotikProfile::where('tenant_id', $tenantId)->count(),
+            'active' => MikrotikProfile::where('tenant_id', $tenantId)->count(), // Currently counts all profiles; adjust if a status field is introduced
+            'users' => NetworkUser::where('tenant_id', $tenantId)->count(),
         ];
 
-        $routers = MikrotikRouter::where('status', 'active')->get();
-        $ipv4Pools = IpPool::where('pool_type', 'ipv4')->where('status', 'active')->get();
-        $ipv6Pools = IpPool::where('pool_type', 'ipv6')->where('status', 'active')->get();
+        $routers = MikrotikRouter::where('tenant_id', $tenantId)->where('status', 'active')->get();
+        $ipv4Pools = IpPool::where('tenant_id', $tenantId)->where('pool_type', 'ipv4')->where('status', 'active')->get();
+        $ipv6Pools = IpPool::where('tenant_id', $tenantId)->where('pool_type', 'ipv6')->where('status', 'active')->get();
 
         return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers', 'ipv4Pools', 'ipv6Pools'));
     }

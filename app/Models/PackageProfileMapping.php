@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * PackageProfileMapping Model
+ *
+ * Junction table between packages and MikroTik profiles.
+ * CRITICAL: Uses BelongsToTenant trait to ensure tenant isolation and prevent data leaks.
+ */
 class PackageProfileMapping extends Model
 {
+    use BelongsToTenant;
     protected $fillable = [
         'package_id',
         'router_id',

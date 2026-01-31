@@ -43,12 +43,19 @@ class Customer extends User
             }
             
             // Customers should never have operator_level; enforce null
+            // This ensures customers are ONLY identified by is_subscriber flag
             $customer->operator_level = null;
             
             // Auto-generate customer_id if not set
             if (empty($customer->customer_id)) {
                 $customer->customer_id = static::generateCustomerId();
             }
+        });
+        
+        // Also enforce on update to prevent accidental corruption
+        static::updating(function ($customer) {
+            // Always enforce null operator_level for customers
+            $customer->operator_level = null;
         });
     }
 
