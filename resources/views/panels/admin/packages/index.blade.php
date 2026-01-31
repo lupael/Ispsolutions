@@ -26,7 +26,7 @@
 
     <!-- Search and Filters -->
     @include('panels.partials.search', [
-        'action' => route('panel.admin.packages'),
+        'action' => route('panel.admin.packages.index'),
         'placeholder' => 'Search packages...',
         'filters' => [
             [

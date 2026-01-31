@@ -25,7 +25,7 @@ class PaginationFixesTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('admin');
 
-        $response = $this->actingAs($user)->get(route('panel.admin.packages'));
+        $response = $this->actingAs($user)->get(route('panel.admin.packages.index'));
 
         $response->assertStatus(200);
         $response->assertViewHas('packages', function ($packages) {

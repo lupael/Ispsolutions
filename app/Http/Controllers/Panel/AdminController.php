@@ -964,7 +964,7 @@ class AdminController extends Controller
         // Tenant ID is automatically set by BelongsToTenant trait
         ServicePackage::create($validated);
 
-        return redirect()->route('panel.admin.packages')
+        return redirect()->route('panel.admin.packages.index')
             ->with('success', 'Package created successfully.');
     }
 
@@ -1002,7 +1002,7 @@ class AdminController extends Controller
 
         $package->update($validated);
 
-        return redirect()->route('panel.admin.packages')
+        return redirect()->route('panel.admin.packages.index')
             ->with('success', 'Package updated successfully.');
     }
 
@@ -1015,7 +1015,7 @@ class AdminController extends Controller
         $package = ServicePackage::findOrFail($id);
         $package->delete();
 
-        return redirect()->route('panel.admin.packages')
+        return redirect()->route('panel.admin.packages.index')
             ->with('success', 'Package deleted successfully.');
     }
 
