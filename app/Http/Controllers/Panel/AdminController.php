@@ -4581,6 +4581,7 @@ class AdminController extends Controller
     public function operatorPackageRates(): View
     {
         $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
         
         $operators = User::where('tenant_id', $tenantId)
             ->whereHas('roles', function ($query) {
@@ -4596,6 +4597,7 @@ class AdminController extends Controller
     public function assignOperatorPackageRate(User $operator): View
     {
         $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
         
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
@@ -4620,6 +4622,7 @@ class AdminController extends Controller
     public function storeOperatorPackageRate(Request $request, User $operator)
     {
         $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
         
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
@@ -4633,8 +4636,8 @@ class AdminController extends Controller
             'custom_price.min' => 'Custom price must be at least $1.',
         ]);
 
-        // Verify package belongs to current tenant
-        $package = Package::where('id', $validated['package_id'])
+        // Verify package belongs to current tenant - abort if not found
+        Package::where('id', $validated['package_id'])
             ->where('tenant_id', $tenantId)
             ->firstOrFail();
 
@@ -4664,6 +4667,7 @@ class AdminController extends Controller
     public function deleteOperatorPackageRate(User $operator, $package)
     {
         $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
         
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
