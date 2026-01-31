@@ -11,11 +11,11 @@
 
 Based on the REFERENCE_SYSTEM_QUICK_GUIDE.md, this document tracks the implementation status of the 4 HIGH priority features identified from the reference ISP system analysis.
 
-### Overall Progress: **87% COMPLETE** ✅
+### Overall Progress: **89% COMPLETE** ✅
 
 - **SMS Payment Integration:** ✅ 90% Complete
 - **Auto-Debit System:** ✅ 85% Complete  
-- **Subscription Payments:** ✅ 75% Complete
+- **Subscription Payments:** ✅ 85% Complete
 - **Bkash Tokenization:** ✅ 98% Complete
 
 ---
@@ -214,7 +214,7 @@ Based on the REFERENCE_SYSTEM_QUICK_GUIDE.md, this document tracks the implement
 
 ---
 
-## 3️⃣ Subscription Payments (75% Complete) ✅
+## 3️⃣ Subscription Payments (85% Complete) ✅
 
 ### ✅ Completed Components
 
@@ -255,6 +255,21 @@ Based on the REFERENCE_SYSTEM_QUICK_GUIDE.md, this document tracks the implement
 #### Views
 - [x] `resources/views/panels/operator/subscriptions/index.blade.php`
   - Subscription plans listing
+- [x] `resources/views/panels/operator/subscriptions/show.blade.php`
+  - **Features:**
+    - ✅ Plan details display with pricing
+    - ✅ Features list with checkmarks
+    - ✅ Plan limits (customers, sub-operators, routers)
+    - ✅ Subscribe button with confirmation
+    - ✅ Trial information display
+- [x] `resources/views/panels/operator/subscriptions/bills.blade.php`
+  - **Features:**
+    - ✅ Current pending bill alert
+    - ✅ Billing history table
+    - ✅ Invoice numbers display
+    - ✅ Payment status badges
+    - ✅ Pay now button for pending bills
+    - ✅ Download invoice action
 
 #### Routes
 - [x] API routes registered
@@ -266,12 +281,12 @@ Based on the REFERENCE_SYSTEM_QUICK_GUIDE.md, this document tracks the implement
   Schedule::command('subscription:generate-bills')->monthlyOn(1, '00:30');
   ```
 
-### 🔄 Remaining Work (25%)
+### 🔄 Remaining Work (15%)
 
 1. **UI Completion**
-   - [ ] Create subscription plan details view
+   - [x] Create subscription plan details view ✅
    - [ ] Create payment selection page
-   - [ ] Create invoice viewing page
+   - [x] Create invoice viewing page ✅
    - [ ] Add subscription management dashboard
 
 2. **Payment Flow**
@@ -284,7 +299,7 @@ Based on the REFERENCE_SYSTEM_QUICK_GUIDE.md, this document tracks the implement
    - [ ] Generate PDF invoices
    - [ ] Email invoice to operator
    - [ ] Download invoice feature
-   - [ ] Invoice history page
+   - [x] Invoice history page ✅
 
 4. **Notifications**
    - [ ] Subscription renewal reminder (7 days before)
