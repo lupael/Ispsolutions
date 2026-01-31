@@ -3098,21 +3098,18 @@ class AdminController extends Controller
             'ids.*' => 'required|integer|exists:ip_pools,id',
         ]);
 
-        $deletedCount = 0;
-        
-        foreach ($validated['ids'] as $id) {
-            try {
-                $pool = IpPool::findOrFail($id);
-                $pool->delete();
-                $deletedCount++;
-            } catch (\Exception $e) {
-                // Log error but continue with other deletes
-                \Log::error("Failed to delete IP pool {$id}: " . $e->getMessage());
-            }
-        }
+        try {
+            // Use bulk delete for efficiency
+            $deletedCount = IpPool::whereIn('id', $validated['ids'])->delete();
 
-        return redirect()->route('panel.admin.network.ipv4-pools')
-            ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
+            return redirect()->route('panel.admin.network.ipv4-pools')
+                ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
+        } catch (\Exception $e) {
+            \Log::error("Failed to bulk delete IP pools: " . $e->getMessage());
+            
+            return redirect()->route('panel.admin.network.ipv4-pools')
+                ->with('error', 'Failed to delete IP pools. Please try again.');
+        }
     }
 
     /**
@@ -3362,23 +3359,20 @@ class AdminController extends Controller
             'ids.*' => 'required|integer|exists:mikrotik_profiles,id',
         ]);
 
-        $deletedCount = 0;
-        
-        foreach ($validated['ids'] as $id) {
-            try {
-                $profile = MikrotikProfile::where('id', $id)
-                    ->whereHas('router')
-                    ->firstOrFail();
-                $profile->delete();
-                $deletedCount++;
-            } catch (\Exception $e) {
-                // Log error but continue with other deletes
-                \Log::error("Failed to delete PPPoE profile {$id}: " . $e->getMessage());
-            }
-        }
+        try {
+            // Filter profiles that belong to routers in the current tenant
+            $deletedCount = MikrotikProfile::whereIn('id', $validated['ids'])
+                ->whereHas('router')
+                ->delete();
 
-        return redirect()->route('panel.admin.network.pppoe-profiles')
-            ->with('success', "{$deletedCount} PPPoE profile(s) deleted successfully.");
+            return redirect()->route('panel.admin.network.pppoe-profiles')
+                ->with('success', "{$deletedCount} PPPoE profile(s) deleted successfully.");
+        } catch (\Exception $e) {
+            \Log::error("Failed to bulk delete PPPoE profiles: " . $e->getMessage());
+            
+            return redirect()->route('panel.admin.network.pppoe-profiles')
+                ->with('error', 'Failed to delete PPPoE profiles. Please try again.');
+        }
     }
 
     /**
