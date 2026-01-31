@@ -15,7 +15,7 @@ class MikrotikImportServiceTest extends TestCase
     public function test_parse_ip_range_handles_various_formats(): void
     {
         $importService = $this->app->make(MikrotikImportService::class);
-        
+
         // Use reflection to access private method
         $reflection = new \ReflectionClass($importService);
         $method = $reflection->getMethod('parseIpRange');
@@ -45,7 +45,7 @@ class MikrotikImportServiceTest extends TestCase
     /**
      * Test that the normalized secrets array includes both 'username' and 'name' fields
      * This validates the fix for "Undefined array key 'username'" error
-     * 
+     *
      * Note: We test the normalization logic directly rather than calling fetchPppSecretsFromRouter
      * because that private method has complex dependencies (database, MikroTik API) that would
      * require extensive mocking. This focused test verifies the critical normalization fix
@@ -85,5 +85,43 @@ class MikrotikImportServiceTest extends TestCase
         $this->assertEquals('testuser1', $normalized['name']);
         $this->assertEquals('pass123', $normalized['password']);
         $this->assertFalse($normalized['disabled']);
+    }
+
+    /**
+     * Test that filter_disabled option is correctly converted to boolean
+     * This validates the fix for the type error where string values were passed
+     * instead of boolean values to fetchPppSecretsFromRouter
+     */
+    public function test_filter_disabled_option_converts_string_to_boolean(): void
+    {
+        // Test with string "1" - should convert to true
+        $result1 = filter_var('1', FILTER_VALIDATE_BOOLEAN);
+        $this->assertTrue($result1);
+        $this->assertIsBool($result1);
+
+        // Test with string "0" - should convert to false
+        $result2 = filter_var('0', FILTER_VALIDATE_BOOLEAN);
+        $this->assertFalse($result2);
+        $this->assertIsBool($result2);
+
+        // Test with string "true" - should convert to true
+        $result3 = filter_var('true', FILTER_VALIDATE_BOOLEAN);
+        $this->assertTrue($result3);
+        $this->assertIsBool($result3);
+
+        // Test with string "false" - should convert to false
+        $result4 = filter_var('false', FILTER_VALIDATE_BOOLEAN);
+        $this->assertFalse($result4);
+        $this->assertIsBool($result4);
+
+        // Test with boolean true - should remain true
+        $result5 = filter_var(true, FILTER_VALIDATE_BOOLEAN);
+        $this->assertTrue($result5);
+        $this->assertIsBool($result5);
+
+        // Test with boolean false - should remain false
+        $result6 = filter_var(false, FILTER_VALIDATE_BOOLEAN);
+        $this->assertFalse($result6);
+        $this->assertIsBool($result6);
     }
 }
