@@ -116,13 +116,31 @@
                                     <div class="text-sm text-gray-500 dark:text-gray-400">{{ $profile->description ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    {{ $profile->router->name ?? 'N/A' }}
+                                    @if($profile->router)
+                                        <a href="{{ route('panel.admin.network.routers.edit', $profile->router->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                            {{ $profile->router->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-gray-500">N/A</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $profile->ipv4Pool->name ?? 'Not Set' }}
+                                    @if($profile->ipv4Pool)
+                                        <a href="{{ route('panel.admin.network.ipv4-pools.edit', $profile->ipv4Pool->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                            {{ $profile->ipv4Pool->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-gray-500">Not Set</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $profile->ipv6Pool->name ?? 'Not Set' }}
+                                    @if($profile->ipv6Pool)
+                                        <a href="{{ route('panel.admin.network.ipv6-pools.edit', $profile->ipv6Pool->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                            {{ $profile->ipv6Pool->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-gray-500">Not Set</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $profile->users_count ?? 0 }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
