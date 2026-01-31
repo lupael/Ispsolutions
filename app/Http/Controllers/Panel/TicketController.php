@@ -121,9 +121,12 @@ class TicketController extends Controller
         } else {
             // If no customer_id provided and user is admin/operator, get list of customers for selection
             if ($user->operator_level < User::OPERATOR_LEVEL_CUSTOMER) {
+                // Limit to 1000 customers to avoid performance issues
+                // For larger lists, consider implementing search/autocomplete
                 $customers = User::where('tenant_id', $user->tenant_id)
                     ->where('operator_level', '>=', User::OPERATOR_LEVEL_CUSTOMER)
                     ->orderBy('name')
+                    ->limit(1000)
                     ->get(['id', 'name', 'email']);
             }
         }

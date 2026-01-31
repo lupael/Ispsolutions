@@ -64,7 +64,7 @@
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Select the customer for whom you are creating this ticket
+                            Select the customer for whom you are creating this ticket. Tip: Create tickets directly from the customer details page for faster selection.
                         </p>
                     </div>
                 @endif

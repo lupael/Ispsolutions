@@ -435,6 +435,8 @@
     });
 
     // Auto-refresh dashboard every 40 seconds
+    // Note: This will reload the page unconditionally as per requirements
+    // The refresh maintains current date range filters via URL query parameters
     setInterval(function() {
         location.reload();
     }, 40000); // 40 seconds in milliseconds
