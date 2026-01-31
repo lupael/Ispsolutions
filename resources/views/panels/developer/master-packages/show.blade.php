@@ -109,7 +109,13 @@
                                 $margin = $masterPackage->base_price > 0 ? (($rate->operator_price - $masterPackage->base_price) / $masterPackage->base_price) * 100 : 0;
                             @endphp
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $rate->operator->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    @if($rate->operator)
+                                        {{ $rate->operator->name }}
+                                    @else
+                                        <span class="text-gray-500">Operator Not Found</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${{ number_format($rate->operator_price, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $margin < 10 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800' }}">
