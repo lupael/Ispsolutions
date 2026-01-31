@@ -79,7 +79,11 @@ class AuthController extends Controller
             }
         }
 
-        // Default fallback
-        return redirect('/');
+        // Default fallback - logout user and show error if no valid role found
+        Auth::logout();
+
+        return redirect()->route('login')->withErrors([
+            'email' => 'Your account does not have a valid role assigned. Please contact an administrator.',
+        ]);
     }
 }
