@@ -515,6 +515,13 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     Route::post('/operators/{operator}/deduct-funds', [AdminController::class, 'processDeductOperatorFunds'])->name('operators.process-deduct-funds');
     Route::get('/operators/{operator}/wallet-history', [AdminController::class, 'operatorWalletHistory'])->name('operators.wallet-history');
 
+    // Operator Cost Management (NTTN & Bandwidth)
+    Route::get('/operators/{operator}/add-nttn-cost', [AdminController::class, 'addOperatorNttnCost'])->name('operators.add-nttn-cost');
+    Route::post('/operators/{operator}/add-nttn-cost', [AdminController::class, 'storeOperatorNttnCost'])->name('operators.store-nttn-cost');
+    Route::get('/operators/{operator}/add-bandwidth-cost', [AdminController::class, 'addOperatorBandwidthCost'])->name('operators.add-bandwidth-cost');
+    Route::post('/operators/{operator}/add-bandwidth-cost', [AdminController::class, 'storeOperatorBandwidthCost'])->name('operators.store-bandwidth-cost');
+    Route::get('/operators/{operator}/cost-history', [AdminController::class, 'operatorCostHistory'])->name('operators.cost-history');
+
     // Operator Package Rates (Legacy - keeping for backward compatibility)
     Route::get('/operators/package-rates', [AdminController::class, 'operatorPackageRates'])->name('operators.package-rates');
     Route::get('/operators/{operator}/assign-package-rate', [AdminController::class, 'assignOperatorPackageRate'])->name('operators.assign-package-rate');

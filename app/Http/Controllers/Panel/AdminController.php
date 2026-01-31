@@ -15,6 +15,7 @@ use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Models\NetworkUser;
 use App\Models\Olt;
+use App\Models\OperatorCost;
 use App\Models\OperatorPackageRate;
 use App\Models\OperatorSmsRate;
 use App\Models\OperatorWalletTransaction;
@@ -200,17 +201,17 @@ class AdminController extends Controller
 
         // Operator Performance Data - Optimized to avoid N+1 queries
         $operators = User::whereIn('operator_level', [30, 40])->get(); // Operators and Sub-operators
-        
+
         if ($operators->isNotEmpty()) {
             $operatorIds = $operators->pluck('id');
-            
+
             // Bulk fetch all customers for all operators using created_by relationship
             $allCustomers = User::whereIn('created_by', $operatorIds)
                 ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
                 ->select('id', 'created_by', 'status', 'created_at')
                 ->get()
                 ->groupBy('created_by');
-            
+
             // Bulk fetch payments for all operator customers
             $allCustomerIds = $allCustomers->flatten()->pluck('id');
             $payments = Payment::whereIn('user_id', $allCustomerIds)
@@ -219,7 +220,7 @@ class AdminController extends Controller
                 ->select('user_id', 'amount')
                 ->get()
                 ->groupBy('user_id');
-            
+
             // Bulk fetch tickets for all operator customers
             $tickets = Ticket::whereIn('customer_id', $allCustomerIds)
                 ->where('status', 'resolved')
@@ -227,21 +228,21 @@ class AdminController extends Controller
                 ->select('customer_id', 'id')
                 ->get()
                 ->groupBy('customer_id');
-            
+
             $operatorPerformance = $operators->map(function ($operator) use ($allCustomers, $payments, $tickets) {
                 $operatorCustomers = $allCustomers->get($operator->id, collect());
                 $operatorCustomerIds = $operatorCustomers->pluck('id');
-                
+
                 // Calculate total revenue for this operator's customers
                 $monthlyRevenue = $operatorCustomerIds->sum(function ($customerId) use ($payments) {
                     return $payments->get($customerId, collect())->sum('amount');
                 });
-                
+
                 // Count tickets resolved for this operator's customers
                 $ticketsResolved = $operatorCustomerIds->sum(function ($customerId) use ($tickets) {
                     return $tickets->get($customerId, collect())->count();
                 });
-                
+
                 return [
                     'id' => $operator->id,
                     'name' => $operator->name,
@@ -255,8 +256,8 @@ class AdminController extends Controller
                         ->count(),
                 ];
             })
-            ->sortByDesc('monthly_revenue')
-            ->take(10);
+                ->sortByDesc('monthly_revenue')
+                ->take(10);
         } else {
             $operatorPerformance = collect();
         }
@@ -319,14 +320,14 @@ class AdminController extends Controller
         // Customers created directly by admin or with null created_by are not included in these statistics
         $operatorClients = [
             'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
-                ->whereIn('created_by', function($query) {
+                ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
                         ->whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR]);
                 })
                 ->count(),
             'active_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
-                ->whereIn('created_by', function($query) {
+                ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
                         ->whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR]);
@@ -334,7 +335,7 @@ class AdminController extends Controller
                 ->where('status', 'active')
                 ->count(),
             'inactive_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
-                ->whereIn('created_by', function($query) {
+                ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
                         ->whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR]);
@@ -342,7 +343,7 @@ class AdminController extends Controller
                 ->where('status', 'inactive')
                 ->count(),
             'expired_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
-                ->whereIn('created_by', function($query) {
+                ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
                         ->whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR]);
@@ -352,38 +353,38 @@ class AdminController extends Controller
         ];
 
         // Helper function to calculate current MRC for a set of customers
-        $calculateCurrentMRC = function($whereInCallback = null) {
+        $calculateCurrentMRC = function ($whereInCallback = null) {
             $query = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
                 ->whereNotNull('service_package_id');
-            
+
             if ($whereInCallback) {
                 $query->whereIn('created_by', $whereInCallback);
             }
-            
+
             return $query->join('packages', 'users.service_package_id', '=', 'packages.id')
                 ->where('users.status', 'active')
                 ->sum('packages.price') ?? 0;
         };
 
         // Helper function to calculate monthly average MRC from invoices
-        $calculateMonthlyAvgMRC = function($year, $month, $whereInCallback = null) {
-            $query = Invoice::whereIn('user_id', function($subQuery) use ($whereInCallback) {
+        $calculateMonthlyAvgMRC = function ($year, $month, $whereInCallback = null) {
+            $query = Invoice::whereIn('user_id', function ($subQuery) use ($whereInCallback) {
                 $subQuery->select('id')
                     ->from('users')
                     ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
-                
+
                 if ($whereInCallback) {
                     $subQuery->whereIn('created_by', $whereInCallback);
                 }
             });
-            
+
             return $query->whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->avg('total_amount') ?? 0;
         };
 
         // Reusable subquery for operator/sub-operator IDs
-        $operatorSubquery = function($query) {
+        $operatorSubquery = function ($query) {
             $query->select('id')
                 ->from('users')
                 ->whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR]);
@@ -412,10 +413,10 @@ class AdminController extends Controller
         $mrcComparison = collect();
         for ($i = $monthsToCompare - 1; $i >= 0; $i--) {
             $month = now()->subMonths($i);
-            
+
             // Cache ISP MRC to avoid duplicate query
             $monthlyIspMrc = $calculateMonthlyAvgMRC($month->year, $month->month);
-            
+
             $mrcComparison->push([
                 'month' => $month->format('M Y'),
                 'isp_mrc' => $monthlyIspMrc,
@@ -942,6 +943,7 @@ class AdminController extends Controller
     public function packagesCreate(): View
     {
         $profiles = MikrotikProfile::all();
+
         return view('panels.admin.packages.create', compact('profiles'));
     }
 
@@ -1221,12 +1223,12 @@ class AdminController extends Controller
     public function customersEdit($id): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Try to find as User first (User model now has network fields)
         $customer = User::where('tenant_id', $tenantId)->find($id);
-        
+
         // If not found as User, try finding as NetworkUser and get the related User
-        if (!$customer) {
+        if (! $customer) {
             $networkUser = NetworkUser::with('user')->where('tenant_id', $tenantId)->find($id);
             if ($networkUser && $networkUser->user) {
                 $customer = $networkUser->user;
@@ -1234,7 +1236,7 @@ class AdminController extends Controller
                 abort(404, 'Customer not found');
             }
         }
-        
+
         $packages = ServicePackage::where('tenant_id', $tenantId)->get();
 
         return view('panels.admin.customers.edit', compact('customer', 'packages'));
@@ -1250,12 +1252,12 @@ class AdminController extends Controller
     public function customersUpdate(Request $request, $id)
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Try to find as User first
         $customer = User::where('tenant_id', $tenantId)->find($id);
-        
+
         // If not found as User, try finding as NetworkUser and get the related User
-        if (!$customer) {
+        if (! $customer) {
             $networkUser = NetworkUser::with('user')->where('tenant_id', $tenantId)->find($id);
             if ($networkUser && $networkUser->user) {
                 $customer = $networkUser->user;
@@ -1549,19 +1551,19 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-        
+
         $recentInvoices = \App\Models\Invoice::where('user_id', $customer->id)
             ->where('tenant_id', $tenantId)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-        
+
         $recentSmsLogs = \App\Models\SmsLog::where('user_id', $customer->id)
             ->where('tenant_id', $tenantId)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-        
+
         $recentAuditLogs = \App\Models\AuditLog::where('auditable_type', 'App\Models\User')
             ->where('auditable_id', $customer->id)
             ->where('tenant_id', $tenantId)
@@ -1571,11 +1573,11 @@ class AdminController extends Controller
             ->get();
 
         return view('panels.admin.customers.show', compact(
-            'customer', 
-            'onu', 
-            'packages', 
-            'operators', 
-            'zones', 
+            'customer',
+            'onu',
+            'packages',
+            'operators',
+            'zones',
             'routers',
             'recentPayments',
             'recentInvoices',
@@ -2528,7 +2530,7 @@ class AdminController extends Controller
 
         // Default port to 8728 if not provided, allowing custom ports
         $apiPort = $validated['port'] ?? 8728;
-        
+
         // Validate port is within acceptable range (already done by validation rules, but double-check)
         if ($apiPort < 1 || $apiPort > 65535) {
             return redirect()->back()
@@ -2548,10 +2550,10 @@ class AdminController extends Controller
                 'debug' => false,
             ]);
 
-            if (!$api->connect()) {
+            if (! $api->connect()) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'Cannot connect to the router! Please check: API port ('.$apiPort.'), username, password, and network connectivity. Ensure API service is enabled on the router.');
+                    ->with('error', 'Cannot connect to the router! Please check: API port (' . $apiPort . '), username, password, and network connectivity. Ensure API service is enabled on the router.');
             }
 
             // Disconnect after successful test
@@ -2603,8 +2605,9 @@ class AdminController extends Controller
             DB::rollBack();
             Log::error('Failed to create router and NAS entry', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Failed to create router. Please try again later.');
@@ -2708,8 +2711,9 @@ class AdminController extends Controller
             DB::rollBack();
             Log::error('Failed to update router and NAS entry', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Failed to update router. Please try again later.');
@@ -2860,7 +2864,7 @@ class AdminController extends Controller
             ->get()
             ->map(function ($monitor) {
                 $device = $monitor->monitorable;
-                
+
                 return (object) [
                     'id' => $monitor->id,
                     'name' => $device?->name ?? 'Unknown Device',
@@ -3397,10 +3401,10 @@ class AdminController extends Controller
     public function routerLogs(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Get router connection logs from audit logs
         $logs = \App\Models\AuditLog::where('tenant_id', $tenantId)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('auditable_type', MikrotikRouter::class)
                     ->orWhere('event', 'like', '%router%');
             })
@@ -3428,14 +3432,14 @@ class AdminController extends Controller
     public function radiusLogs(): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         try {
             // Get tenant usernames once to avoid subquery repetition
             $tenantUsernames = \App\Models\User::where('tenant_id', $tenantId)
                 ->whereNotNull('username')
                 ->pluck('username')
                 ->toArray();
-            
+
             // If no users with usernames, return empty results
             if (empty($tenantUsernames)) {
                 return view('panels.admin.logs.radius', [
@@ -3448,7 +3452,7 @@ class AdminController extends Controller
                     ],
                 ]);
             }
-            
+
             // Get RADIUS accounting logs filtered by tenant users
             $logs = \App\Models\RadAcct::whereIn('username', $tenantUsernames)
                 ->latest('acctstarttime')
@@ -3540,7 +3544,7 @@ class AdminController extends Controller
     public function activityLogs(Request $request): View
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $query = \App\Models\AuditLog::where('tenant_id', $tenantId)
             ->with(['user', 'auditable']);
 
@@ -3644,7 +3648,7 @@ class AdminController extends Controller
                 ->whereNotNull('username')
                 ->pluck('username')
                 ->toArray();
-            
+
             // If no users with usernames, return empty results
             if (empty($tenantUsernames)) {
                 return view('panels.admin.logs.ppp', [
@@ -3660,9 +3664,9 @@ class AdminController extends Controller
 
             // Base query for PPP sessions from RADIUS accounting with tenant filtering
             $query = \App\Models\RadAcct::whereIn('username', $tenantUsernames)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('username', 'LIKE', '%ppp%')
-                      ->orWhere('nasporttype', 'PPP');
+                        ->orWhere('nasporttype', 'PPP');
                 });
 
             // Additional filter by ownership for non-admin roles
@@ -3670,12 +3674,12 @@ class AdminController extends Controller
                 // For operators and staff, show only their assigned customers
                 if ($userRole === 'operator' || $userRole === 'staff') {
                     $customerIds = $user->customers()->pluck('id')->toArray();
-                    if (!empty($customerIds)) {
+                    if (! empty($customerIds)) {
                         $customerUsernames = \App\Models\User::whereIn('id', $customerIds)
                             ->whereNotNull('username')
                             ->pluck('username')
                             ->toArray();
-                        if (!empty($customerUsernames)) {
+                        if (! empty($customerUsernames)) {
                             $query->whereIn('username', $customerUsernames);
                         } else {
                             // No customers with usernames, return empty
@@ -3740,7 +3744,7 @@ class AdminController extends Controller
                 ->whereNotNull('username')
                 ->pluck('username')
                 ->toArray();
-            
+
             // If no users with usernames, return empty results
             if (empty($tenantUsernames)) {
                 return view('panels.admin.logs.hotspot', [
@@ -3768,12 +3772,12 @@ class AdminController extends Controller
                 // For operators and staff, show only their assigned customers
                 if ($userRole === 'operator' || $userRole === 'staff') {
                     $customerIds = $user->customers()->pluck('id')->toArray();
-                    if (!empty($customerIds)) {
+                    if (! empty($customerIds)) {
                         $customerUsernames = \App\Models\User::whereIn('id', $customerIds)
                             ->whereNotNull('username')
                             ->pluck('username')
                             ->toArray();
-                        if (!empty($customerUsernames)) {
+                        if (! empty($customerUsernames)) {
                             $query->whereIn('username', $customerUsernames);
                         } else {
                             // No customers with usernames, return empty
@@ -4407,6 +4411,121 @@ class AdminController extends Controller
     }
 
     /**
+     * Show form to add NTTN cost to operator.
+     */
+    public function addOperatorNttnCost(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        return view('panels.admin.operators.add-nttn-cost', compact('operator'));
+    }
+
+    /**
+     * Process adding NTTN cost to operator.
+     */
+    public function storeOperatorNttnCost(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'cost_date' => 'required|date',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Record NTTN cost
+            OperatorCost::create([
+                'operator_id' => $operator->id,
+                'cost_type' => 'nttn',
+                'amount' => $validated['amount'],
+                'cost_date' => $validated['cost_date'],
+                'description' => $validated['description'] ?? 'NTTN cost added by admin',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.operators.cost-history', $operator->id)
+                ->with('success', 'NTTN cost added successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Failed to add NTTN cost: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show form to add Bandwidth cost to operator.
+     */
+    public function addOperatorBandwidthCost(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        return view('panels.admin.operators.add-bandwidth-cost', compact('operator'));
+    }
+
+    /**
+     * Process adding Bandwidth cost to operator.
+     */
+    public function storeOperatorBandwidthCost(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'cost_date' => 'required|date',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Record Bandwidth cost
+            OperatorCost::create([
+                'operator_id' => $operator->id,
+                'cost_type' => 'bandwidth',
+                'amount' => $validated['amount'],
+                'cost_date' => $validated['cost_date'],
+                'description' => $validated['description'] ?? 'Bandwidth cost added by admin',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.operators.cost-history', $operator->id)
+                ->with('success', 'Bandwidth cost added successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Failed to add Bandwidth cost: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display operator cost history.
+     */
+    public function operatorCostHistory(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        $costs = OperatorCost::where('operator_id', $operator->id)
+            ->with('creator')
+            ->latest('cost_date')
+            ->paginate(50);
+
+        $totalNttnCost = OperatorCost::where('operator_id', $operator->id)
+            ->where('cost_type', 'nttn')
+            ->sum('amount');
+
+        $totalBandwidthCost = OperatorCost::where('operator_id', $operator->id)
+            ->where('cost_type', 'bandwidth')
+            ->sum('amount');
+
+        return view('panels.admin.operators.cost-history', compact('operator', 'costs', 'totalNttnCost', 'totalBandwidthCost'));
+    }
+
+    /**
      * Display operator package rates.
      */
     public function operatorPackageRates(): View
@@ -4452,7 +4571,7 @@ class AdminController extends Controller
         ]);
 
         $validated['operator_id'] = $operator->id;
-        
+
         // Ensure commission_percentage has a default value of 0 if not provided
         if ($validated['commission_percentage'] === null) {
             $validated['commission_percentage'] = 0;
@@ -4719,10 +4838,10 @@ class AdminController extends Controller
         ]);
 
         $validated['tenant_id'] = getCurrentTenantId();
-        
+
         // Set port from telnet_port if provided, otherwise default to 23
         $validated['port'] = $validated['telnet_port'] ?? 23;
-        
+
         // Set management protocol based on port or default to telnet
         $validated['management_protocol'] = 'telnet';
 
@@ -4783,10 +4902,10 @@ class AdminController extends Controller
         if (isset($validated['telnet_port'])) {
             $validated['port'] = $validated['telnet_port'];
         }
-        
+
         // Set management protocol
         $validated['management_protocol'] = 'telnet';
-        
+
         // Remove password from validated data if not provided (don't overwrite with null)
         if (empty($validated['password'])) {
             unset($validated['password']);
@@ -5339,10 +5458,12 @@ class AdminController extends Controller
     /**
      * Helper method to find and authorize a customer by ID.
      * Handles both User ID and NetworkUser ID cases.
-     * 
+     *
      * @param mixed $id The customer ID (either User ID or NetworkUser ID)
      * @param string $ability The authorization ability to check (e.g., 'suspend', 'activate')
+     *
      * @return NetworkUser The NetworkUser instance
+     *
      * @throws \Illuminate\Http\Exceptions\HttpResponseException
      */
     private function findAndAuthorizeCustomer($id, string $ability): NetworkUser
