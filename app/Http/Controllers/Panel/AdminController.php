@@ -1179,7 +1179,7 @@ class AdminController extends Controller
                 'radius_password' => $validated['password'], // Plain text for RADIUS
                 'phone' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
-                'operator_level' => null, // Customers must have NULL operator_level
+                'operator_level' => null, // Customers must have null operator_level
                 'is_active' => true,
                 'is_subscriber' => true, // Mark as subscriber for customer list filtering
                 'activated_at' => now(),

@@ -395,8 +395,10 @@ class OltController extends Controller
         // CRITICAL: Verify OLT belongs to current tenant
         $tenantId = auth()->user()->tenant_id ?? getCurrentTenantId();
         $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
-        $onus = Onu::where('tenant_id', $tenantId)
-            ->where('olt_id', $id)
+        
+        // Use relationship to ensure ONUs are properly scoped to this OLT and tenant
+        $onus = $olt->onus()
+            ->where('tenant_id', $tenantId)
             ->orderBy('status', 'desc')
             ->orderBy('pon_port')
             ->orderBy('onu_id')
