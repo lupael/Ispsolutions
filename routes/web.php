@@ -22,6 +22,7 @@ use App\Http\Controllers\Panel\SearchController;
 use App\Http\Controllers\Panel\StaffController;
 use App\Http\Controllers\Panel\SuperAdminController;
 use App\Http\Controllers\Panel\TicketController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -156,6 +157,38 @@ Route::prefix('hotspot')->name('hotspot.')->middleware(['auth'])->group(function
 */
 
 Route::get('/', function () {
+    // If user is authenticated, redirect to their dashboard
+    if (Auth::check()) {
+        $user = Auth::user();
+        
+        // Role to route mapping
+        $roleRoutes = [
+            'super-admin' => 'panel.super-admin.dashboard',
+            'admin' => 'panel.admin.dashboard',
+            'developer' => 'panel.developer.dashboard',
+            'manager' => 'panel.manager.dashboard',
+            'operator' => 'panel.operator.dashboard',
+            'sub-operator' => 'panel.sub-operator.dashboard',
+            'card-distributor' => 'panel.card-distributor.dashboard',
+            'staff' => 'panel.staff.dashboard',
+            'customer' => 'panel.customer.dashboard',
+        ];
+        
+        // Check user roles and redirect accordingly
+        foreach ($roleRoutes as $role => $route) {
+            if ($user->hasRole($role)) {
+                return redirect()->route($route);
+            }
+        }
+        
+        // If no valid role, logout and redirect to login
+        Auth::logout();
+        return redirect()->route('login')->withErrors([
+            'email' => 'Your account does not have a valid role assigned. Please contact an administrator.',
+        ]);
+    }
+    
+    // Guest users go to login page
     return redirect()->route('login');
 });
 
