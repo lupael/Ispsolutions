@@ -274,33 +274,6 @@ class FupService
     {
         $this->resetFupLimits($fup);
     }
-                        $customer->router,
-                        $customer,
-                        $package->download_speed,
-                        $package->upload_speed
-                    );
-                }
-                
-                // Clear FUP exceeded flag
-                $customer->update([
-                    'fup_exceeded' => false,
-                    'fup_exceeded_at' => null,
-                    'fup_reset_at' => now(),
-                ]);
-                
-                // Send reset notification to customer
-                $customer->notify(new FupResetNotification($fup));
-                
-                Log::info("FUP reset for user {$customer->id}");
-            }
-            
-            Log::info("FUP reset completed for package {$fup->package_id}: {$affectedCustomers->count()} customers affected");
-        } catch (\Exception $e) {
-            Log::error("Failed to reset FUP for package {$fup->package_id}", [
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
 
     /**
      * Get FUP statistics for a package.

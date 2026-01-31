@@ -147,6 +147,19 @@ Route::prefix('hotspot')->name('hotspot.')->middleware(['auth'])->group(function
 
 /*
 |--------------------------------------------------------------------------
+| Public Pages
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\PageController;
+
+// Public policy pages
+Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('privacy-policy');
+Route::get('/terms-of-service', [PageController::class, 'termsOfService'])->name('terms-of-service');
+Route::get('/support', [PageController::class, 'support'])->name('support');
+
+/*
+|--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 |
@@ -390,6 +403,8 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     Route::put('/customers/{id}', [AdminController::class, 'customersUpdate'])->name('customers.update');
     Route::patch('/customers/{id}/partial', [AdminController::class, 'customersPartialUpdate'])->name('customers.partial-update');
     Route::delete('/customers/{id}', [AdminController::class, 'customersDestroy'])->middleware('password.confirm')->name('customers.destroy');
+    Route::post('/customers/{id}/restore', [AdminController::class, 'restoreCustomer'])->name('customers.restore');
+    Route::delete('/customers/{id}/force-delete', [AdminController::class, 'forceDeleteCustomer'])->middleware('password.confirm')->name('customers.force-delete');
     Route::post('/customers/{id}/suspend', [AdminController::class, 'customersSuspend'])->name('customers.suspend');
     Route::post('/customers/{id}/activate', [AdminController::class, 'customersActivate'])->name('customers.activate');
     Route::get('/customers/{id}', [AdminController::class, 'customersShow'])->name('customers.show');
@@ -879,12 +894,15 @@ Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware([
     // Lead Management
     Route::get('/leads/affiliate', [\App\Http\Controllers\Panel\SalesManagerController::class, 'affiliateLeads'])->name('leads.affiliate');
     Route::get('/leads/create', [\App\Http\Controllers\Panel\SalesManagerController::class, 'createLead'])->name('leads.create');
+    Route::get('/leads/{lead}', [\App\Http\Controllers\Panel\SalesManagerController::class, 'showLead'])->name('leads.show');
 
     // Sales Tracking
     Route::get('/sales-comments', [\App\Http\Controllers\Panel\SalesManagerController::class, 'salesComments'])->name('sales-comments');
 
     // Subscription Management
     Route::get('/subscriptions/bills', [\App\Http\Controllers\Panel\SalesManagerController::class, 'subscriptionBills'])->name('subscriptions.bills');
+    Route::get('/subscriptions/bills/{bill}', [\App\Http\Controllers\Panel\SalesManagerController::class, 'showBill'])->name('subscriptions.bills.show');
+    Route::post('/subscriptions/bills/{bill}/pay', [\App\Http\Controllers\Panel\SalesManagerController::class, 'payBill'])->name('subscriptions.bills.pay');
     Route::get('/subscriptions/payment/create', [\App\Http\Controllers\Panel\SalesManagerController::class, 'createSubscriptionPayment'])->name('subscriptions.payment.create');
     Route::get('/subscriptions/pending-payments', [\App\Http\Controllers\Panel\SalesManagerController::class, 'pendingSubscriptionPayments'])->name('subscriptions.pending-payments');
 
@@ -902,6 +920,8 @@ Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'ten
     // DEPRECATED: Network users now managed via Customer model
     // Route::get('/network-users', [ManagerController::class, 'networkUsers'])->name('network-users');
     Route::get('/sessions', [ManagerController::class, 'sessions'])->name('sessions');
+    Route::get('/sessions/{session}', [ManagerController::class, 'showSession'])->name('sessions.show');
+    Route::post('/sessions/{session}/disconnect', [ManagerController::class, 'disconnectSession'])->name('sessions.disconnect');
     Route::get('/reports', [ManagerController::class, 'reports'])->name('reports');
     Route::get('/customers', [ManagerController::class, 'customers'])->name('customers.index');
     Route::get('/payments', [ManagerController::class, 'payments'])->name('payments.index');
@@ -913,11 +933,14 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 't
     Route::get('/dashboard', [\App\Http\Controllers\Panel\OperatorController::class, 'dashboard'])->name('dashboard');
     Route::get('/sub-operators', [\App\Http\Controllers\Panel\OperatorController::class, 'subOperators'])->name('sub-operators.index');
     Route::get('/customers', [\App\Http\Controllers\Panel\OperatorController::class, 'customers'])->name('customers.index');
+    Route::get('/customers/{customer}', [\App\Http\Controllers\Panel\OperatorController::class, 'showCustomer'])->name('customers.show');
     Route::get('/bills', [\App\Http\Controllers\Panel\OperatorController::class, 'bills'])->name('bills.index');
+    Route::get('/bills/{bill}', [\App\Http\Controllers\Panel\OperatorController::class, 'showBill'])->name('bills.show');
     Route::get('/payments/create', [\App\Http\Controllers\Panel\OperatorController::class, 'createPayment'])->name('payments.create');
     Route::post('/payments', [\App\Http\Controllers\Panel\OperatorController::class, 'storePayment'])->name('payments.store');
     Route::get('/cards', [\App\Http\Controllers\Panel\OperatorController::class, 'cards'])->name('cards.index');
     Route::get('/complaints', [\App\Http\Controllers\Panel\OperatorController::class, 'complaints'])->name('complaints.index');
+    Route::get('/complaints/{complaint}', [\App\Http\Controllers\Panel\OperatorController::class, 'showComplaint'])->name('complaints.show');
     Route::get('/reports', [\App\Http\Controllers\Panel\OperatorController::class, 'reports'])->name('reports.index');
     Route::get('/sms', [\App\Http\Controllers\Panel\OperatorController::class, 'sms'])->name('sms.index');
     Route::post('/sms/send', [\App\Http\Controllers\Panel\OperatorController::class, 'sendSms'])->name('sms.send');
@@ -945,7 +968,9 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 't
 Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['auth', 'tenant', 'role:sub-operator'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\SubOperatorController::class, 'dashboard'])->name('dashboard');
     Route::get('/customers', [\App\Http\Controllers\Panel\SubOperatorController::class, 'customers'])->name('customers.index');
+    Route::get('/customers/{customer}', [\App\Http\Controllers\Panel\SubOperatorController::class, 'showCustomer'])->name('customers.show');
     Route::get('/bills', [\App\Http\Controllers\Panel\SubOperatorController::class, 'bills'])->name('bills.index');
+    Route::get('/bills/{bill}', [\App\Http\Controllers\Panel\SubOperatorController::class, 'showBill'])->name('bills.show');
     Route::get('/payments/create', [\App\Http\Controllers\Panel\SubOperatorController::class, 'createPayment'])->name('payments.create');
     Route::post('/payments', [\App\Http\Controllers\Panel\SubOperatorController::class, 'storePayment'])->name('payments.store');
     Route::get('/reports', [\App\Http\Controllers\Panel\SubOperatorController::class, 'reports'])->name('reports.index');
@@ -987,9 +1012,15 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'tenant'
 Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'tenant', 'role:card-distributor'])->group(function () {
     Route::get('/dashboard', [CardDistributorController::class, 'dashboard'])->name('dashboard');
     Route::get('/cards', [CardDistributorController::class, 'cards'])->name('cards');
+    Route::get('/cards/{card}', [CardDistributorController::class, 'showCard'])->name('cards.show');
+    Route::get('/cards/{card}/sell', [CardDistributorController::class, 'sellCard'])->name('cards.sell');
+    Route::post('/cards/{card}/process-sale', [CardDistributorController::class, 'processSale'])->name('cards.process-sale');
     Route::get('/sales', [CardDistributorController::class, 'sales'])->name('sales');
+    Route::get('/sales/create', [CardDistributorController::class, 'createSale'])->name('sales.create');
+    Route::get('/sales/export', [CardDistributorController::class, 'exportSales'])->name('sales.export');
     Route::get('/commissions', [CardDistributorController::class, 'commissions'])->name('commissions');
     Route::get('/balance', [CardDistributorController::class, 'balance'])->name('balance');
+    Route::get('/transactions', [CardDistributorController::class, 'transactions'])->name('transactions');
 });
 
 // Customer Panel
