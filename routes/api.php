@@ -223,8 +223,8 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
 
         // SNMP Traps
         Route::get('/snmp-traps', [OltController::class, 'snmpTraps'])->name('api.olt.snmp-traps');
-        Route::post('/snmp-traps/{trapId}/acknowledge', [OltController::class, 'acknowledgeTrap'])->name('api.olt.snmp-traps.acknowledge');
         Route::post('/snmp-traps/acknowledge-all', [OltController::class, 'acknowledgeAllTraps'])->name('api.olt.snmp-traps.acknowledge-all');
+        Route::post('/snmp-traps/{trapId}/acknowledge', [OltController::class, 'acknowledgeTrap'])->name('api.olt.snmp-traps.acknowledge');
 
         // ONU Operations
         Route::get('/onu/{onuId}', [OltController::class, 'onuDetails'])->name('api.olt.onu.details');
