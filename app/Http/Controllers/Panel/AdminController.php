@@ -15,6 +15,7 @@ use App\Models\MikrotikRouter;
 use App\Models\Nas;
 use App\Models\NetworkUser;
 use App\Models\Olt;
+use App\Models\OperatorCost;
 use App\Models\OperatorPackageRate;
 use App\Models\OperatorSmsRate;
 use App\Models\OperatorWalletTransaction;
@@ -4404,6 +4405,121 @@ class AdminController extends Controller
             ->paginate(50);
 
         return view('panels.admin.operators.wallet-history', compact('operator', 'transactions'));
+    }
+
+    /**
+     * Show form to add NTTN cost to operator.
+     */
+    public function addOperatorNttnCost(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        return view('panels.admin.operators.add-nttn-cost', compact('operator'));
+    }
+
+    /**
+     * Process adding NTTN cost to operator.
+     */
+    public function storeOperatorNttnCost(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'cost_date' => 'required|date',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Record NTTN cost
+            OperatorCost::create([
+                'operator_id' => $operator->id,
+                'cost_type' => 'nttn',
+                'amount' => $validated['amount'],
+                'cost_date' => $validated['cost_date'],
+                'description' => $validated['description'] ?? 'NTTN cost added by admin',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.operators.cost-history', $operator->id)
+                ->with('success', 'NTTN cost added successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Failed to add NTTN cost: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show form to add Bandwidth cost to operator.
+     */
+    public function addOperatorBandwidthCost(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        return view('panels.admin.operators.add-bandwidth-cost', compact('operator'));
+    }
+
+    /**
+     * Process adding Bandwidth cost to operator.
+     */
+    public function storeOperatorBandwidthCost(Request $request, User $operator)
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'cost_date' => 'required|date',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Record Bandwidth cost
+            OperatorCost::create([
+                'operator_id' => $operator->id,
+                'cost_type' => 'bandwidth',
+                'amount' => $validated['amount'],
+                'cost_date' => $validated['cost_date'],
+                'description' => $validated['description'] ?? 'Bandwidth cost added by admin',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('panel.admin.operators.cost-history', $operator->id)
+                ->with('success', 'Bandwidth cost added successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Failed to add Bandwidth cost: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display operator cost history.
+     */
+    public function operatorCostHistory(User $operator): View
+    {
+        abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
+
+        $costs = OperatorCost::where('operator_id', $operator->id)
+            ->with('creator')
+            ->latest('cost_date')
+            ->paginate(50);
+
+        $totalNttnCost = OperatorCost::where('operator_id', $operator->id)
+            ->where('cost_type', 'nttn')
+            ->sum('amount');
+
+        $totalBandwidthCost = OperatorCost::where('operator_id', $operator->id)
+            ->where('cost_type', 'bandwidth')
+            ->sum('amount');
+
+        return view('panels.admin.operators.cost-history', compact('operator', 'costs', 'totalNttnCost', 'totalBandwidthCost'));
     }
 
     /**
