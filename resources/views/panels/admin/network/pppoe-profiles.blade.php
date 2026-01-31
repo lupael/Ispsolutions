@@ -366,9 +366,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.itemId);
             
             if (selectedIds.length === 0) {
+                // Clear any existing error messages first
+                const existingError = bulkActionsBar.querySelector('.inline-error-msg');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
                 // Show error in bulk actions bar instead of alert
                 const errorMsg = document.createElement('span');
-                errorMsg.className = 'text-sm text-red-600 ml-3';
+                errorMsg.className = 'text-sm text-red-600 ml-3 inline-error-msg';
                 errorMsg.textContent = 'Please select at least one PPPoE profile';
                 bulkActionsBar.querySelector('.flex.items-center.gap-3').appendChild(errorMsg);
                 setTimeout(() => errorMsg.remove(), 3000);

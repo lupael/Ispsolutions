@@ -3105,7 +3105,7 @@ class AdminController extends Controller
             return redirect()->route('panel.admin.network.ipv4-pools')
                 ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
         } catch (\Exception $e) {
-            \Log::error("Failed to bulk delete IP pools: " . $e->getMessage());
+            Log::error("Failed to bulk delete IP pools: " . $e->getMessage());
             
             return redirect()->route('panel.admin.network.ipv4-pools')
                 ->with('error', 'Failed to delete IP pools. Please try again.');
@@ -3368,7 +3368,7 @@ class AdminController extends Controller
             return redirect()->route('panel.admin.network.pppoe-profiles')
                 ->with('success', "{$deletedCount} PPPoE profile(s) deleted successfully.");
         } catch (\Exception $e) {
-            \Log::error("Failed to bulk delete PPPoE profiles: " . $e->getMessage());
+            Log::error("Failed to bulk delete PPPoE profiles: " . $e->getMessage());
             
             return redirect()->route('panel.admin.network.pppoe-profiles')
                 ->with('error', 'Failed to delete PPPoE profiles. Please try again.');

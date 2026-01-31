@@ -12,21 +12,15 @@ class BulkDeletePppoeProfilesTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        
-        // Create a user with admin role for authentication
-        $this->user = User::factory()->create([
-            'email' => 'admin@example.com',
-            'is_admin' => true,
-        ]);
-    }
-
     /** @test */
     public function it_can_bulk_delete_pppoe_profiles()
     {
-        $this->actingAs($this->user);
+        $user = User::factory()->create([
+            'email' => 'admin@example.com',
+            'is_admin' => true,
+        ]);
+        
+        $this->actingAs($user);
 
         // Create a router first
         $router = MikrotikRouter::factory()->create();
@@ -65,7 +59,12 @@ class BulkDeletePppoeProfilesTest extends TestCase
     /** @test */
     public function it_validates_bulk_delete_request()
     {
-        $this->actingAs($this->user);
+        $user = User::factory()->create([
+            'email' => 'admin@example.com',
+            'is_admin' => true,
+        ]);
+        
+        $this->actingAs($user);
 
         // Test with empty ids array
         $response = $this->post(route('panel.admin.network.pppoe-profiles.bulk-delete'), [
@@ -78,7 +77,12 @@ class BulkDeletePppoeProfilesTest extends TestCase
     /** @test */
     public function it_validates_ids_exist_in_database()
     {
-        $this->actingAs($this->user);
+        $user = User::factory()->create([
+            'email' => 'admin@example.com',
+            'is_admin' => true,
+        ]);
+        
+        $this->actingAs($user);
 
         // Test with non-existent id
         $response = $this->post(route('panel.admin.network.pppoe-profiles.bulk-delete'), [

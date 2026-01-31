@@ -11,21 +11,15 @@ class BulkDeleteIpPoolsTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        
-        // Create a user with admin role for authentication
-        $this->user = User::factory()->create([
-            'email' => 'admin@example.com',
-            'is_admin' => true,
-        ]);
-    }
-
     /** @test */
     public function it_can_bulk_delete_ip_pools()
     {
-        $this->actingAs($this->user);
+        $user = User::factory()->create([
+            'email' => 'admin@example.com',
+            'is_admin' => true,
+        ]);
+        
+        $this->actingAs($user);
 
         // Create test IP pools
         $pool1 = IpPool::factory()->create(['name' => 'Test Pool 1']);
@@ -52,7 +46,12 @@ class BulkDeleteIpPoolsTest extends TestCase
     /** @test */
     public function it_validates_bulk_delete_request()
     {
-        $this->actingAs($this->user);
+        $user = User::factory()->create([
+            'email' => 'admin@example.com',
+            'is_admin' => true,
+        ]);
+        
+        $this->actingAs($user);
 
         // Test with empty ids array
         $response = $this->post(route('panel.admin.network.ipv4-pools.bulk-delete'), [
@@ -65,7 +64,12 @@ class BulkDeleteIpPoolsTest extends TestCase
     /** @test */
     public function it_validates_ids_exist_in_database()
     {
-        $this->actingAs($this->user);
+        $user = User::factory()->create([
+            'email' => 'admin@example.com',
+            'is_admin' => true,
+        ]);
+        
+        $this->actingAs($user);
 
         // Test with non-existent id
         $response = $this->post(route('panel.admin.network.ipv4-pools.bulk-delete'), [
