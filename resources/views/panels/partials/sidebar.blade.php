@@ -409,32 +409,32 @@
     }
 @endphp
 
-<aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 overflow-y-auto">
+<aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 overflow-y-auto">
     <div class="flex flex-col h-full">
         <!-- Logo -->
-        <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
-            <a href="/" class="text-xl font-bold text-gray-800 dark:text-white">
+        <div class="flex items-center justify-between h-16 px-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <a href="/" class="text-xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 ISP Solution
             </a>
-            <button id="closeSidebar" class="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="closeSidebar" class="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 hover:scale-110 transform">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
         <!-- Global Search -->
-        <div class="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="px-4 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <form method="GET" action="{{ route('panel.search') }}" class="relative">
-                <div class="relative">
+                <div class="relative group">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="bi bi-search text-gray-400"></i>
+                        <i class="bi bi-search text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
                     </div>
                     <input 
                         type="text" 
                         name="query" 
                         placeholder="Search customers, invoices..." 
-                        class="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                        class="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
                     >
                 </div>
             </form>
@@ -461,23 +461,30 @@
                         }
                     @endphp
                     <div x-data="{ open: {{ $isOpen ? 'true' : 'false' }} }" class="mb-1">
-                        <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-gray-700 dark:hover:to-gray-750 transition-all duration-200 hover:shadow-sm group">
                             <div class="flex items-center">
-                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     {!! getIcon($menu['icon']) !!}
                                 </svg>
                                 <span>{{ $menu['label'] }}</span>
                             </div>
-                            <svg class="w-4 h-4 transition-transform" :class="open ? 'transform rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 transition-transform duration-300" :class="open ? 'transform rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div x-show="open" x-transition class="mt-1 ml-4 space-y-1">
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             class="mt-1 ml-4 space-y-1">
                             @foreach($menu['children'] as $submenu)
                                 @if(Route::has($submenu['route']))
                                     <a href="{{ route($submenu['route']) }}" 
-                                       class="flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors {{ $currentRoute === $submenu['route'] ? 'bg-indigo-50 dark:bg-gray-700 text-indigo-600 dark:text-indigo-400' : '' }}">
-                                        <span class="w-2 h-2 mr-3 rounded-full bg-gray-400 dark:bg-gray-600"></span>
+                                       class="flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group {{ $currentRoute === $submenu['route'] ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:translate-x-1' }}">
+                                        <span class="w-2 h-2 mr-3 rounded-full {{ $currentRoute === $submenu['route'] ? 'bg-indigo-500' : 'bg-gray-400 dark:bg-gray-600 group-hover:bg-indigo-400' }} transition-colors duration-200"></span>
                                         {{ $submenu['label'] }}
                                     </a>
                                 @endif
@@ -488,8 +495,8 @@
                     <!-- Single menu item -->
                     @if(Route::has($menu['route']))
                         <a href="{{ route($menu['route']) }}" 
-                           class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors {{ $currentRoute === $menu['route'] ? 'bg-indigo-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 group {{ $currentRoute === $menu['route'] ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-gray-700 dark:hover:to-gray-750 hover:shadow-sm' }}">
+                            <svg class="w-5 h-5 mr-3 {{ $currentRoute === $menu['route'] ? '' : 'group-hover:scale-110' }} transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 {!! getIcon($menu['icon']) !!}
                             </svg>
                             <span>{{ $menu['label'] }}</span>
