@@ -91,6 +91,11 @@ class MikrotikImportServiceTest extends TestCase
      * Test that filter_disabled option is correctly converted to boolean
      * This validates the fix for the type error where string values were passed
      * instead of boolean values to fetchPppSecretsFromRouter
+     *
+     * Note: We test the filter_var() conversion directly because testing importPppSecrets()
+     * would require extensive mocking of database, authentication, MikroTik API connections,
+     * and router configuration. This focused test verifies the type conversion logic that
+     * resolves the production error: "Argument #2 ($filterDisabled) must be of type bool, string given"
      */
     public function test_filter_disabled_option_converts_string_to_boolean(): void
     {
