@@ -28,9 +28,32 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     @auth
-                        <a href="{{ route('panel.admin.dashboard') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                            Dashboard
-                        </a>
+                        @php
+                            $user = auth()->user();
+                            $roleRoutes = [
+                                'super-admin' => 'panel.super-admin.dashboard',
+                                'admin' => 'panel.admin.dashboard',
+                                'developer' => 'panel.developer.dashboard',
+                                'manager' => 'panel.manager.dashboard',
+                                'operator' => 'panel.operator.dashboard',
+                                'sub-operator' => 'panel.sub-operator.dashboard',
+                                'card-distributor' => 'panel.card-distributor.dashboard',
+                                'staff' => 'panel.staff.dashboard',
+                                'customer' => 'panel.customer.dashboard',
+                            ];
+                            $dashboardRoute = null;
+                            foreach ($roleRoutes as $role => $route) {
+                                if ($user->hasRole($role)) {
+                                    $dashboardRoute = route($route);
+                                    break;
+                                }
+                            }
+                        @endphp
+                        @if($dashboardRoute)
+                            <a href="{{ $dashboardRoute }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                                Dashboard
+                            </a>
+                        @endif
                     @else
                         <a href="{{ route('login') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                             Login

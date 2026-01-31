@@ -4,11 +4,9 @@
             &copy; {{ date('Y') }} ISP Solution. All rights reserved.
         </div>
         <div class="flex space-x-4 mt-2 md:mt-0">
-            {{-- TODO: Create Privacy Policy page and route --}}
-            <span role="link" aria-disabled="true" class="text-gray-400 cursor-not-allowed" title="Coming soon">Privacy Policy</span>
-            {{-- TODO: Create Terms of Service page and route --}}
-            <span role="link" aria-disabled="true" class="text-gray-400 cursor-not-allowed" title="Coming soon">Terms of Service</span>
-            <a href="{{ route('panel.tickets.create') }}" class="hover:text-blue-600">Support</a>
+            <a href="{{ route('privacy-policy') }}" class="hover:text-blue-600">Privacy Policy</a>
+            <a href="{{ route('terms-of-service') }}" class="hover:text-blue-600">Terms of Service</a>
+            <a href="{{ route('support') }}" class="hover:text-blue-600">Support</a>
         </div>
     </div>
 </footer>

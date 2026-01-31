@@ -104,7 +104,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('panel.customer.tickets') }}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                        <a href="{{ route('panel.tickets.create') }}" class="text-blue-600 dark:text-blue-400 hover:underline">
                             <i class="bi bi-ticket-perforated mr-2"></i>Submit a Support Ticket
                         </a>
                     </li>
