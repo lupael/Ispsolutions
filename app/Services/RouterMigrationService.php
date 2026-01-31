@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\MikrotikRouter;
-use App\Models\Radius\Radcheck;
+use App\Models\RadCheck;
 use App\Services\MikrotikService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
