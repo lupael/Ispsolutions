@@ -559,6 +559,15 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::get('/{routerId}/radius-status', [RouterConfigurationController::class, 'radiusStatus'])->name('radius-status');
     });
     
+    // Router Import/Sync Routes (MikroTik DB Sync)
+    Route::prefix('routers/import')->name('routers.import.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Panel\MikrotikDbSyncController::class, 'index'])->name('index');
+        Route::post('/{routerId}/ip-pools', [\App\Http\Controllers\Panel\MikrotikDbSyncController::class, 'importIpPools'])->name('ip-pools');
+        Route::post('/{routerId}/ppp-profiles', [\App\Http\Controllers\Panel\MikrotikDbSyncController::class, 'importPppProfiles'])->name('ppp-profiles');
+        Route::post('/{routerId}/ppp-secrets', [\App\Http\Controllers\Panel\MikrotikDbSyncController::class, 'importPppSecrets'])->name('ppp-secrets');
+        Route::post('/{routerId}/all', [\App\Http\Controllers\Panel\MikrotikDbSyncController::class, 'importAll'])->name('all');
+    });
+    
     // Router Backup Routes
     Route::prefix('routers/backup')->name('routers.backup.')->group(function () {
         Route::get('/', [RouterBackupController::class, 'index'])->name('index');
