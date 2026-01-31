@@ -67,6 +67,17 @@ class RouterCommentHelper
     }
     
     /**
+     * Alias for getComment() for backward compatibility
+     * 
+     * @param Model $entity Customer or NetworkUser model
+     * @return string Formatted comment string
+     */
+    public static function buildComment(Model $entity): string
+    {
+        return self::getComment($entity);
+    }
+    
+    /**
      * Generate comment for NetworkUser (PPPoE user) - IspBills pattern
      * Format: uid--123,nid--456,name--John Doe,mobile--01712345678,zone--5,pkg--10,exp--2026-12-31,status--active
      * 

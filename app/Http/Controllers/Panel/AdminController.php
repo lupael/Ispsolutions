@@ -2480,7 +2480,56 @@ class AdminController extends Controller
             'public_ip' => 'nullable|ip',
             'primary_auth' => 'nullable|in:radius,router,hybrid',
             'status' => 'required|in:active,inactive,maintenance',
+        ], [
+            'router_name.required' => 'Router name is required.',
+            'ip_address.required' => 'IP address is required.',
+            'ip_address.ip' => 'Please enter a valid IP address.',
+            'ip_address.unique' => 'A router with this IP address already exists.',
+            'username.required' => 'API username is required.',
+            'password.required' => 'API password is required.',
+            'port.integer' => 'Port must be a number.',
+            'port.min' => 'Port must be at least 1.',
+            'port.max' => 'Port must not exceed 65535.',
+            'radius_secret.required' => 'RADIUS shared secret is required.',
+            'nas_shortname.required' => 'NAS short name is required.',
+            'nas_shortname.unique' => 'A NAS with this short name already exists.',
         ]);
+
+        // Default port to 8728 if not provided, allowing custom ports
+        $apiPort = $validated['port'] ?? 8728;
+        
+        // Validate port is within acceptable range (already done by validation rules, but double-check)
+        if ($apiPort < 1 || $apiPort > 65535) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Invalid API port. Must be between 1 and 65535. Common ports: 8728 (non-SSL), 8729 (SSL).');
+        }
+
+        // Test router connectivity using RouterosAPI (IspBills pattern)
+        try {
+            $api = new \App\Services\RouterosAPI([
+                'host' => $validated['ip_address'],
+                'user' => $validated['username'],
+                'pass' => $validated['password'],
+                'port' => $apiPort,
+                'ssl' => $apiPort === 8729, // Auto-detect SSL for standard SSL port
+                'attempts' => 1,
+                'debug' => false,
+            ]);
+
+            if (!$api->connect()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Cannot connect to the router! Please check: API port ('.$apiPort.'), username, password, and network connectivity. Ensure API service is enabled on the router.');
+            }
+
+            // Disconnect after successful test
+            $api->disconnect();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Router connection error: ' . $e->getMessage() . '. Please verify router settings and network connectivity.');
+        }
 
         // Use database transaction to ensure both router and NAS are created together
         DB::beginTransaction();
@@ -2506,7 +2555,7 @@ class AdminController extends Controller
                 'ip_address' => $validated['ip_address'],
                 'username' => $validated['username'],
                 'password' => $validated['password'],
-                'api_port' => $validated['port'] ?? 8728,
+                'api_port' => $apiPort,
                 'radius_secret' => $validated['radius_secret'],
                 'public_ip' => $validated['public_ip'] ?? null,
                 'primary_auth' => $validated['primary_auth'] ?? 'hybrid',
