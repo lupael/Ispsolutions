@@ -287,7 +287,7 @@ The ISP Solution uses FreeRADIUS for authenticating PPPoE and Hotspot users. The
 The system uses a two-tier RADIUS architecture:
 
 1. **FreeRADIUS Server** - Handles RADIUS protocol communication (UDP ports 1812/1813)
-2. **RADIUS Database** - Stores user credentials and accounting data (MySQL on port 3306 for native/container-internal, or 3307 when connecting from host to Docker container)
+2. **RADIUS Database** - Stores user credentials and accounting data (MySQL port 3306, or 3307 for host-to-Docker connections)
 
 ```
 ┌──────────────┐    RADIUS Protocol     ┌──────────────┐
@@ -321,7 +321,7 @@ The RADIUS database is automatically created during installation. Verify the con
 ```env
 RADIUS_DB_CONNECTION=mysql
 RADIUS_DB_HOST=127.0.0.1
-RADIUS_DB_PORT=3306  # Use 3306 for native installation or within Docker, or 3307 when connecting from host to Docker
+RADIUS_DB_PORT=3306  # Use 3306 for native/container-internal, 3307 for host-to-Docker
 RADIUS_DB_DATABASE=radius
 RADIUS_DB_USERNAME=radius
 RADIUS_DB_PASSWORD=your_password  # Check /root/ispsolution-credentials.txt
