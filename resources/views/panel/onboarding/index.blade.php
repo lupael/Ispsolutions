@@ -1,7 +1,9 @@
-<x-default-layout>
-    @section('title', 'Onboarding Checklist')
+@extends('panels.layouts.app')
 
-    <div class="card card-flush">
+@section('title', 'Onboarding Checklist')
+
+@section('content')
+<div class="card card-flush">
         <div class="card-header align-items-center py-5 gap-2 gap-md-5">
             <div class="card-title">
                 <h2>Complete Your Onboarding</h2>
@@ -100,4 +102,4 @@
             @endif
         </div>
     </div>
-</x-default-layout>
+@endsection
