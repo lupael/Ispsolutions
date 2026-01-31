@@ -65,7 +65,7 @@
   }
 
   .skeleton {
-    @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+    @apply bg-gray-200 dark:bg-gray-700 rounded;
     background-image: linear-gradient(to right, transparent 0%, rgba(255,255,255,.1) 20%, transparent 40%, transparent 100%);
     background-repeat: no-repeat;
     background-size: 468px 104px;

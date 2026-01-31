@@ -78,7 +78,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-6">
                     <!-- New Customers Today -->
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-2 border-blue-200 dark:border-blue-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-2 border-blue-200 dark:border-blue-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
                         <div class="flex items-center justify-between mb-3">
                             <p class="text-sm font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide">New Customers</p>
                             <svg class="h-10 w-10 text-blue-500 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -90,7 +90,7 @@
                     </div>
 
                     <!-- Payments Today -->
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 border-2 border-green-200 dark:border-green-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 border-2 border-green-200 dark:border-green-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
                         <div class="flex items-center justify-between mb-3">
                             <p class="text-sm font-bold text-green-700 dark:text-green-300 uppercase tracking-wide">Payments Received</p>
                             <svg class="h-10 w-10 text-green-500 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -102,7 +102,7 @@
                     </div>
 
                     <!-- Tickets Created Today -->
-                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 border-2 border-orange-200 dark:border-orange-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 border-2 border-orange-200 dark:border-orange-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
                         <div class="flex items-center justify-between mb-3">
                             <p class="text-sm font-bold text-orange-700 dark:text-orange-300 uppercase tracking-wide">New Tickets</p>
                             <svg class="h-10 w-10 text-orange-500 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -114,7 +114,7 @@
                     </div>
 
                     <!-- Expiring Today -->
-                    <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border-2 border-red-200 dark:border-red-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border-2 border-red-200 dark:border-red-700 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
                         <div class="flex items-center justify-between mb-3">
                             <p class="text-sm font-bold text-red-700 dark:text-red-300 uppercase tracking-wide">Expiring Today</p>
                             <svg class="h-10 w-10 text-red-500 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
