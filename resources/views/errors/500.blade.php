@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Server Error</title>
+    <title>{{ __('errors.500_title') }}</title>
     
     <style nonce="{{ csp_nonce() }}">
         * {
@@ -79,12 +79,11 @@
 <body>
     <div class="error-container">
         <h1>500</h1>
-        <h2>Server Error</h2>
+        <h2>{{ __('errors.500_heading') }}</h2>
         <p>
-            Oops! Something went wrong on our end. We're working to fix it.
-            Please try again later or contact support if the problem persists.
+            {{ __('errors.500_message') }}
         </p>
-        <a href="/" class="btn">Go to Homepage</a>
+        <a href="/" class="btn">{{ __('errors.go_home') }}</a>
         
         @if(config('app.debug') && isset($exception))
             <div class="error-code">
