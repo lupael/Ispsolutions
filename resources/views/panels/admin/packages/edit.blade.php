@@ -10,7 +10,11 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Edit Package</h1>
+                    @if($package->operator)
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">Operator: <span class="font-semibold">{{ $package->operator->name }}</span></p>
+                    @else
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Update package details</p>
+                    @endif
                 </div>
                 <div>
                     <a href="{{ route('panel.admin.packages.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -30,100 +34,64 @@
             @csrf
             @method('PUT')
             
+            <p class="text-sm text-red-600 mb-4">* required field</p>
+            
             <div class="space-y-6">
                 <!-- Basic Information -->
                 <div>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Basic Information</h3>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Package Name *</label>
+                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">*Name</label>
                             <input type="text" name="name" id="name" value="{{ old('name', $package->name) }}" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('name')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <div class="sm:col-span-2">
-                            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                            <textarea name="description" id="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('description', $package->description) }}</textarea>
-                            @error('description')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bandwidth -->
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Bandwidth</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                            <label for="bandwidth_up" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Upload (Kbps)</label>
-                            <input type="number" name="bandwidth_up" id="bandwidth_up" value="{{ old('bandwidth_up', $package->bandwidth_up) }}" min="0" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            @error('bandwidth_up')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="bandwidth_down" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Download (Kbps)</label>
-                            <input type="number" name="bandwidth_down" id="bandwidth_down" value="{{ old('bandwidth_down', $package->bandwidth_down) }}" min="0" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            @error('bandwidth_down')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pricing & Billing -->
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Pricing & Billing</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                        <div>
-                            <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Price *</label>
-                            <input type="number" name="price" id="price" value="{{ old('price', $package->price) }}" step="0.01" min="0" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">*Customer's Price</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input type="number" name="price" id="price" value="{{ old('price', $package->price) }}" step="0.01" min="0" required class="block w-full pr-16 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">BDT</span>
+                                </div>
+                            </div>
                             @error('price')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <div>
-                            <label for="billing_cycle" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Billing Cycle *</label>
-                            <select name="billing_cycle" id="billing_cycle" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">Select Cycle</option>
-                                <option value="monthly" {{ old('billing_cycle', $package->billing_cycle) == 'monthly' ? 'selected' : '' }}>Monthly</option>
-                                <option value="quarterly" {{ old('billing_cycle', $package->billing_cycle) == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
-                                <option value="half_yearly" {{ old('billing_cycle', $package->billing_cycle) == 'half_yearly' ? 'selected' : '' }}>Half Yearly</option>
-                                <option value="yearly" {{ old('billing_cycle', $package->billing_cycle) == 'yearly' ? 'selected' : '' }}>Yearly</option>
-                            </select>
-                            @error('billing_cycle')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="validity_days" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Validity (Days)</label>
-                            <input type="number" name="validity_days" id="validity_days" value="{{ old('validity_days', $package->validity_days) }}" min="1" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            @error('validity_days')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
                     </div>
                 </div>
 
-                <!-- Status -->
+                <!-- Operator's Price -->
                 <div>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Status</h3>
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Package Status *</label>
-                        <select name="status" id="status" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="active" {{ old('status', $package->status) == 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="inactive" {{ old('status', $package->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                        @error('status')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                    <label for="operator_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Operator's Price</label>
+                    @if($package->operatorPackageRate)
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="number" name="operator_price" id="operator_price" value="{{ old('operator_price', $package->operatorPackageRate->operator_price) }}" step="0.01" min="0" readonly class="block w-full pr-16 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 bg-gray-50 shadow-sm">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">BDT</span>
+                        </div>
                     </div>
+                    <p class="mt-1 text-xs text-gray-500">This is the price operator pays for this package (from operator package rate)</p>
+                    @else
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="text" value="N/A - Not linked to operator rate" readonly class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 bg-gray-50 shadow-sm">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">This package is not linked to an operator package rate</p>
+                    @endif
+                </div>
+
+                <!-- Visibility -->
+                <div>
+                    <label for="visibility" class="block text-sm font-medium text-gray-700 dark:text-gray-300">*Visibility</label>
+                    <select name="visibility" id="visibility" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="public" {{ old('visibility', $package->visibility ?? 'public') == 'public' ? 'selected' : '' }}>public</option>
+                        <option value="private" {{ old('visibility', $package->visibility ?? 'public') == 'private' ? 'selected' : '' }}>private</option>
+                    </select>
+                    @error('visibility')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Form Actions -->
@@ -132,10 +100,7 @@
                         Cancel
                     </a>
                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Update Package
+                        Submit
                     </button>
                 </div>
             </div>

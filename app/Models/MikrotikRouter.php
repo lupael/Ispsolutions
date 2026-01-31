@@ -27,6 +27,7 @@ class MikrotikRouter extends Model
         'api_type',
         'username',
         'password',
+        'overwrite_ppp_secrets_comment',
         'radius_secret',
         'primary_auth',
         'status',
