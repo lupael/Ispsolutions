@@ -31,15 +31,18 @@ The system implements 8 distinct roles with clear hierarchy levels:
 | **Manager** | 50 | View-only with task-specific permissions |
 | **Accountant** | 70 | Financial view-only access |
 | **Staff** | 80 | Support staff with limited permissions |
-| **Customer** | 100 | End users (identified by `is_subscriber` flag) |
+| **Customer** | ~~100~~ | End users (identified by `is_subscriber` flag, not operator_level) |
+
+> **Note**: The Customer role with `operator_level = 100` is **deprecated** since version 1.0. Customers are now identified by the `is_subscriber` flag instead of operator_level.
 
 ### Database Schema
 
 ```php
 // users table - relevant operator/hierarchy fields
 'parent_id' => 'bigint unsigned nullable',     // Reference to parent operator
-'operator_level' => 'integer default 100',      // Role hierarchy level (see above)
+'operator_level' => 'integer default 100',      // Role hierarchy level (see above) - DEPRECATED for customers
 'operator_type' => 'string nullable',           // Role type identifier
+'is_subscriber' => 'boolean',                   // TRUE for customers (replaces operator_level = 100)
 'manager_id' => 'foreignId nullable',           // Assigned manager
 'disabled_menus' => 'json nullable',            // Custom menu restrictions
 'tenant_id' => 'bigint unsigned nullable',      // Tenant isolation
@@ -142,8 +145,8 @@ $customer = User::create([
     'name' => 'Customer Name',
     'email' => 'customer@example.com',
     'password' => Hash::make('password'),
-    'is_subscriber' => true,  // Mark as customer
-    'operator_level' => 100,  // Customer level (deprecated, use is_subscriber)
+    'is_subscriber' => true,  // Mark as customer (preferred method)
+    // Note: operator_level = 100 is DEPRECATED. Use is_subscriber flag instead.
     'parent_id' => auth()->id(),  // Link to operator/sub-operator
     'tenant_id' => auth()->user()->tenant_id,
     'created_by' => auth()->id(),
@@ -616,7 +619,7 @@ php artisan db:seed --class=RoleSeeder
 # - Manager (level 50)
 # - Accountant (level 70)
 # - Staff (level 80)
-# - Customer (level 100)
+# - Customer (level 100 - DEPRECATED, use is_subscriber flag instead)
 ```
 
 ## Key Files Reference
