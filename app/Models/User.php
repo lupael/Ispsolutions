@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Attributes\Deprecated;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -81,6 +82,13 @@ class User extends Authenticatable
      *             Customers are no longer identified by operator_level.
      *             Will be removed in version 2.0.
      */
+    #[Deprecated(
+        guid: 'DEP-2026-001',
+        message: 'Customers are no longer identified by operator_level',
+        since: 'v1.0.0 (2026-01-30)',
+        alternative: 'is_subscriber flag',
+        removeIn: 'v2.0.0'
+    )]
     public const OPERATOR_LEVEL_CUSTOMER = 100;
 
     /**
@@ -255,6 +263,12 @@ class User extends Authenticatable
      *             This relationship maintained for backward compatibility only.
      *             Use User model fields directly (username, service_type, etc.)
      */
+    #[Deprecated(
+        guid: 'DEP-2026-002',
+        message: 'Network credentials now stored directly on User model',
+        since: 'v1.0.0',
+        alternative: 'User model fields (username, service_type, etc.)'
+    )]
     public function networkUser(): HasOne
     {
         return $this->hasOne(NetworkUser::class, 'user_id');
