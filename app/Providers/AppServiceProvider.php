@@ -60,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(\App\Models\Ticket::class, \App\Policies\TicketPolicy::class);
         Gate::policy(\App\Models\Lead::class, \App\Policies\LeadPolicy::class);
         Gate::policy(\App\Models\Invoice::class, \App\Policies\InvoicePolicy::class);
+        Gate::policy(\App\Models\NetworkUserSession::class, \App\Policies\NetworkUserSessionPolicy::class);
 
         // Define authorization gates for new features
         Gate::define('view-audit-logs', function ($user) {

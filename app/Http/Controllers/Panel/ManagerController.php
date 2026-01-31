@@ -120,4 +120,37 @@ class ManagerController extends Controller
 
         return view('panels.manager.complaints.index', compact('complaints'));
     }
+
+    /**
+     * Display session details.
+     */
+    public function showSession(NetworkUserSession $session): View
+    {
+        $this->authorize('view', $session);
+
+        $session->load('user');
+
+        return view('panels.manager.sessions.show', compact('session'));
+    }
+
+    /**
+     * Disconnect a user session.
+     */
+    public function disconnectSession(NetworkUserSession $session)
+    {
+        $this->authorize('disconnect', $session);
+
+        // TODO: Implement actual RADIUS/MikroTik API call to disconnect the session
+        // This should use the MikrotikService or RADIUS client to send a disconnect request
+        // Example: app(MikrotikService::class)->disconnectSession($session->session_id);
+        // For now, just mark the session as ended in the database
+        
+        $session->update([
+            'end_time' => now(),
+            'status' => 'terminated',
+        ]);
+
+        return redirect()->route('panel.manager.sessions')
+            ->with('success', 'Session disconnected successfully.');
+    }
 }
