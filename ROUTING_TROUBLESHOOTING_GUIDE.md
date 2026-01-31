@@ -308,20 +308,27 @@ php artisan view:clear
 
 From highest to lowest privilege:
 
-1. **developer** - System-wide access, all ISP tenants
-2. **super-admin** - Super admin of a specific ISP
-3. **admin** - Administrator of ISP
-4. **accountant** - Financial access
-5. **manager** - Management access
-6. **operator** - Operations access
-7. **sub-operator** - Limited operations access
-8. **reseller** - Reseller panel access
-9. **sub-reseller** - Sub-reseller access
-10. **card-distributor** - Card distribution
-11. **staff** - Staff member access
-12. **customer** - Customer portal access
+1. **developer** - System-wide access, all ISP tenants (Level 0)
+2. **super-admin** - Tenancy owner, manages Admins (Level 10)
+3. **admin** - ISP owner, manages operations (Level 20)
+4. **operator** - Manages Sub-Operators and Customers (Level 30)
+5. **sub-operator** - Manages own customers only (Level 40)
+6. **manager** - View/Edit if permitted by Admin (Level 50)
+7. **accountant** - View-only financial access (Level 70)
+8. **staff** - View/Edit if permitted by Admin (Level 80)
+9. **customer** - End user/subscriber (identified by `is_subscriber = true`)
 
 Each role can only access routes with matching middleware.
+
+### ⚠️ Deprecated Roles (DO NOT USE)
+The following roles are **deprecated** and should NOT be used:
+- ❌ **reseller** - Replaced by **operator** (Level 30)
+- ❌ **sub-reseller** - Replaced by **sub-operator** (Level 40)
+- ❌ **card-distributor** - Functionality removed
+- ❌ **group-admin** - Replaced by **admin** (Level 20)
+- ❌ **network-user** - Customers are now identified by `is_subscriber = true`
+
+For current role system documentation, see [ROLE_SYSTEM.md](docs/technical/ROLE_SYSTEM.md).
 
 ## Related Files
 - Routes definition: `routes/web.php`
