@@ -110,15 +110,25 @@ class TicketController extends Controller
         
         // Validate that the customer exists and user has permission to create ticket for them
         $customer = null;
+        $customers = collect();
+        $user = auth()->user();
+        
         if ($customerId) {
-            $user = auth()->user();
             // Only allow non-customer users (operator level < 100) to create tickets for other users
             if ($user->operator_level < 100) {
                 $customer = User::find($customerId);
             }
+        } else {
+            // If no customer_id provided and user is admin/operator, get list of customers for selection
+            if ($user->operator_level < User::OPERATOR_LEVEL_CUSTOMER) {
+                $customers = User::where('tenant_id', $user->tenant_id)
+                    ->where('operator_level', '>=', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'email']);
+            }
         }
 
-        return view('panels.shared.tickets.create', compact('priorities', 'categories', 'customer'));
+        return view('panels.shared.tickets.create', compact('priorities', 'categories', 'customer', 'customers'));
     }
 
     /**

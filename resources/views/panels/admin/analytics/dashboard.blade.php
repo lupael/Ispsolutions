@@ -433,6 +433,11 @@
         
         window.location.href = `{{ route('panel.admin.analytics.export') }}?${params.toString()}`;
     });
+
+    // Auto-refresh dashboard every 40 seconds
+    setInterval(function() {
+        location.reload();
+    }, 40000); // 40 seconds in milliseconds
 </script>
 @endpush
 @endsection

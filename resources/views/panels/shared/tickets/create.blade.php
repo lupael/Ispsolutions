@@ -45,6 +45,28 @@
                             </span>
                         </div>
                     </div>
+                @elseif(isset($customers) && $customers->isNotEmpty())
+                    <!-- Customer selection field for admin/operator users -->
+                    <div>
+                        <label for="customer_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Customer <span class="text-red-500">*</span>
+                        </label>
+                        <select name="customer_id" id="customer_id" required
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('customer_id') border-red-500 @enderror">
+                            <option value="">Select a customer</option>
+                            @foreach($customers as $cust)
+                                <option value="{{ $cust->id }}" {{ old('customer_id') == $cust->id ? 'selected' : '' }}>
+                                    {{ $cust->name }} ({{ $cust->email }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('customer_id')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Select the customer for whom you are creating this ticket
+                        </p>
+                    </div>
                 @endif
 
                 <div>
