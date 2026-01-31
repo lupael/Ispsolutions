@@ -15,7 +15,7 @@ class PdfService
     public function generateInvoicePdf(Invoice $invoice): \Barryvdh\DomPDF\PDF
     {
         $data = [
-            'invoice' => $invoice->load(['user', 'items']),
+            'invoice' => $invoice->load(['user', 'package']),
             'tenant' => $invoice->tenant,
         ];
 
@@ -65,7 +65,7 @@ class PdfService
 
         $invoices = Invoice::where('user_id', $userId)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->with(['items'])
+            ->with(['package'])
             ->orderBy('created_at', 'desc')
             ->get();
 
