@@ -24,6 +24,29 @@
 
     <!-- Router Form -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <!-- Help Tips Section -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 m-6 mb-0">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Router Setup Tips</h3>
+                    <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li><strong>API Port:</strong> Use 8728 for non-SSL or 8729 for SSL connections. Custom ports are fully supported.</li>
+                            <li><strong>API Access:</strong> Ensure API service is enabled on the router and user has full permissions.</li>
+                            <li><strong>Firewall:</strong> Allow incoming connections to the API port from this server's IP address.</li>
+                            <li><strong>Test Connection:</strong> Use the "Test Connection" button to verify settings before saving.</li>
+                            <li><strong>RADIUS Secret:</strong> Use the generate button for a secure random secret, or enter your own.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <form action="{{ route('panel.admin.network.routers.store') }}" method="POST" class="p-6 space-y-6">
             @csrf
             <!-- Basic Information -->
@@ -31,8 +54,22 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Basic Information</h3>
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                        <label for="router_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Router Name</label>
-                        <input type="text" id="router_name" name="router_name" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        <label for="router_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Router Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="router_name" name="router_name" 
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                               required
+                               value="{{ old('router_name') }}">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            Descriptive name for easy identification
+                        </p>
+                        @error('router_name')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -64,23 +101,86 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Network Configuration</h3>
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                        <label for="ip_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">IP Address</label>
-                        <input type="text" id="ip_address" name="ip_address" placeholder="192.168.1.1" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        <label for="ip_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            IP Address <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="ip_address" name="ip_address" placeholder="192.168.1.1" 
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                               required
+                               value="{{ old('ip_address') }}">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            Local or public IP address of the router
+                        </p>
+                        @error('ip_address')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
-                        <label for="api_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Management Port</label>
-                        <input type="number" id="api_port" name="port" placeholder="8728" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="api_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            API Port
+                        </label>
+                        <input type="number" id="api_port" name="port" placeholder="8728" 
+                               min="1" max="65535"
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                               value="{{ old('port', 8728) }}">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            Default: 8728 (non-SSL) or 8729 (SSL). Custom ports supported.
+                        </p>
+                        @error('port')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
-                        <input type="text" id="username" name="username" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            API Username <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="username" name="username" 
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                               required
+                               value="{{ old('username', 'admin') }}">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            User with API access and full permissions
+                        </p>
+                        @error('username')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                        <input type="password" id="password" name="password" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            API Password <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1 relative">
+                            <input type="password" id="password" name="password" 
+                                   class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-10" 
+                                   required>
+                            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <svg id="eye-icon" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            Password will be encrypted before storage
+                        </p>
+                        @error('password')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -135,9 +235,22 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">RADIUS/NAS Configuration</h3>
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                        <label for="nas_shortname" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NAS Short Name <span class="text-red-500">*</span></label>
-                        <input type="text" id="nas_shortname" name="nas_shortname" placeholder="router1" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Unique identifier for RADIUS NAS</p>
+                        <label for="nas_shortname" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            NAS Short Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="nas_shortname" name="nas_shortname" placeholder="router1" 
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                               required
+                               value="{{ old('nas_shortname') }}">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            Unique identifier for RADIUS NAS (must be unique)
+                        </p>
+                        @error('nas_shortname')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -151,16 +264,29 @@
                     </div>
 
                     <div>
-                        <label for="radius_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300">RADIUS Shared Secret <span class="text-red-500">*</span></label>
+                        <label for="radius_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            RADIUS Shared Secret <span class="text-red-500">*</span>
+                        </label>
                         <div class="mt-1 flex rounded-md shadow-sm">
-                            <input type="text" id="radius_secret" name="radius_secret" class="flex-1 rounded-none rounded-l-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <input type="text" id="radius_secret" name="radius_secret" 
+                                   class="flex-1 rounded-none rounded-l-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500" 
+                                   required
+                                   value="{{ old('radius_secret') }}">
                             <button type="button" onclick="generateSecret()" class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 dark:border-gray-700 rounded-r-md bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                             </button>
                         </div>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Shared secret for RADIUS authentication</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            Shared secret for RADIUS authentication (click icon to generate)
+                        </p>
+                        @error('radius_secret')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -237,6 +363,19 @@
 
 @push('scripts')
 <script nonce="{{ csp_nonce() }}">
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eye-icon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+    }
+}
+
 function generateSecret() {
     const length = 32;
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
@@ -271,8 +410,31 @@ async function testConnection() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
+    // Validate required fields
     if (!ipAddress) {
-        alert('Please enter an IP address first.');
+        alert('⚠️ Missing Required Field\n\nPlease enter the router IP address first.');
+        document.getElementById('ip_address').focus();
+        return;
+    }
+    
+    if (!username) {
+        alert('⚠️ Missing Required Field\n\nPlease enter the API username first.');
+        document.getElementById('username').focus();
+        return;
+    }
+    
+    if (!password) {
+        alert('⚠️ Missing Required Field\n\nPlease enter the API password first.');
+        document.getElementById('password').focus();
+        return;
+    }
+    
+    const port = apiPort || 8728;
+    
+    // Validate port range
+    if (port < 1 || port > 65535) {
+        alert('⚠️ Invalid Port Number\n\nPort must be between 1 and 65535.\nCommon ports:\n- 8728 (API non-SSL)\n- 8729 (API SSL)\n- Custom ports are supported.');
+        document.getElementById('api_port').focus();
         return;
     }
     
@@ -292,7 +454,7 @@ async function testConnection() {
             },
             body: JSON.stringify({
                 ip_address: ipAddress,
-                api_port: apiPort || 8728,
+                api_port: port,
                 username: username,
                 password: password
             })
@@ -301,12 +463,32 @@ async function testConnection() {
         const data = await response.json();
         
         if (data.success) {
-            alert('✓ Connection Successful!\n\n' + (data.message || 'Router is accessible.'));
+            let message = '✓ Connection Successful!\n\n';
+            message += (data.message || 'Router is accessible.');
+            message += '\n\nConnection Details:';
+            message += '\n- Host: ' + ipAddress;
+            message += '\n- Port: ' + port;
+            message += '\n- User: ' + username;
+            alert(message);
         } else {
-            alert('✗ Connection Failed\n\n' + (data.message || 'Could not connect to the router.'));
+            let errorMsg = '✗ Connection Failed\n\n';
+            errorMsg += (data.message || 'Could not connect to the router.');
+            errorMsg += '\n\nTroubleshooting Tips:';
+            errorMsg += '\n• Verify IP address is correct';
+            errorMsg += '\n• Check if API service is enabled on router';
+            errorMsg += '\n• Ensure port ' + port + ' is accessible';
+            errorMsg += '\n• Verify username and password';
+            errorMsg += '\n• Check firewall rules';
+            alert(errorMsg);
         }
     } catch (error) {
-        alert('✗ Error testing connection\n\n' + error.message);
+        let errorMsg = '✗ Error Testing Connection\n\n';
+        errorMsg += error.message;
+        errorMsg += '\n\nPossible Causes:';
+        errorMsg += '\n• Network connectivity issues';
+        errorMsg += '\n• Router is unreachable';
+        errorMsg += '\n• CORS or security restrictions';
+        alert(errorMsg);
     } finally {
         button.disabled = false;
         button.innerHTML = originalHTML;
