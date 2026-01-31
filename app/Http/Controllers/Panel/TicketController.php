@@ -110,7 +110,6 @@ class TicketController extends Controller
         
         // Validate that the customer exists and user has permission to create ticket for them
         $customer = null;
-        $customers = collect();
         $user = auth()->user();
         
         if ($customerId) {
@@ -118,9 +117,19 @@ class TicketController extends Controller
             if ($user->operator_level < 100) {
                 $customer = User::find($customerId);
             }
-        } else {
-            // If no customer_id provided and user is admin/operator, get list of customers for selection
-            if ($user->operator_level < User::OPERATOR_LEVEL_CUSTOMER) {
+        }
+        
+        // Only pass $customers for non-customer users
+        if ($user->operator_level < User::OPERATOR_LEVEL_CUSTOMER && !$customerId) {
+            // For Operators and Sub-Operators: only show their subordinates (customers they manage)
+            if ($user->isOperatorRole() || $user->isSubOperator()) {
+                $customers = $user->subordinates()
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->orderBy('name')
+                    ->limit(1000)
+                    ->get(['id', 'name', 'email']);
+            } else {
+                // For Admin, Super Admin, Developer: show all customers in tenant
                 // Limit to 1000 customers to avoid performance issues
                 // For larger lists, consider implementing search/autocomplete
                 $customers = User::where('tenant_id', $user->tenant_id)
@@ -129,9 +138,11 @@ class TicketController extends Controller
                     ->limit(1000)
                     ->get(['id', 'name', 'email']);
             }
+            
+            return view('panels.shared.tickets.create', compact('priorities', 'categories', 'customer', 'customers'));
         }
 
-        return view('panels.shared.tickets.create', compact('priorities', 'categories', 'customer', 'customers'));
+        return view('panels.shared.tickets.create', compact('priorities', 'categories', 'customer'));
     }
 
     /**
@@ -167,6 +178,20 @@ class TicketController extends Controller
         // If customer_id is provided and user is not a customer, use it
         if (isset($validated['customer_id']) && $user->operator_level < User::OPERATOR_LEVEL_CUSTOMER) {
             $customerId = $validated['customer_id'];
+            
+            // Additional validation: Operators and Sub-Operators can only create tickets for their subordinates
+            if ($user->isOperatorRole() || $user->isSubOperator()) {
+                $customerExists = $user->subordinates()
+                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->where('id', $customerId)
+                    ->exists();
+                
+                if (!$customerExists) {
+                    return redirect()->back()
+                        ->withErrors(['customer_id' => 'You can only create tickets for customers you manage.'])
+                        ->withInput();
+                }
+            }
         }
 
         // Auto-populate customer data - use find instead of eager loading with non-relationship

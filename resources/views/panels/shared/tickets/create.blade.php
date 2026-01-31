@@ -45,28 +45,47 @@
                             </span>
                         </div>
                     </div>
-                @elseif(isset($customers) && $customers->isNotEmpty())
-                    <!-- Customer selection field for admin/operator users -->
-                    <div>
-                        <label for="customer_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Customer <span class="text-red-500">*</span>
-                        </label>
-                        <select name="customer_id" id="customer_id" required
-                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('customer_id') border-red-500 @enderror">
-                            <option value="">Select a customer</option>
-                            @foreach($customers as $cust)
-                                <option value="{{ $cust->id }}" {{ old('customer_id') == $cust->id ? 'selected' : '' }}>
-                                    {{ $cust->name }} ({{ $cust->email }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('customer_id')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Select the customer for whom you are creating this ticket. Tip: Create tickets directly from the customer details page for faster selection.
-                        </p>
-                    </div>
+                @elseif(isset($customers))
+                    @if($customers->isNotEmpty())
+                        <!-- Customer selection field for admin/operator users -->
+                        <div>
+                            <label for="customer_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Customer <span class="text-red-500">*</span>
+                            </label>
+                            <select name="customer_id" id="customer_id" required
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('customer_id') border-red-500 @enderror">
+                                <option value="">Select a customer</option>
+                                @foreach($customers as $cust)
+                                    <option value="{{ $cust->id }}" {{ old('customer_id') == $cust->id ? 'selected' : '' }}>
+                                        {{ $cust->name }} ({{ $cust->email }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('customer_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Select the customer for whom you are creating this ticket. Tip: Create tickets directly from the customer details page for faster selection.
+                            </p>
+                        </div>
+                    @else
+                        <!-- No customers available -->
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                                        No customers available
+                                    </p>
+                                    <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                                        You don't have any customers assigned to you. Please contact your administrator to assign customers to your account before creating tickets.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 @endif
 
                 <div>
@@ -162,12 +181,22 @@
                     <a href="{{ route('panel.tickets.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-400 dark:hover:bg-gray-600 focus:bg-gray-400 dark:focus:bg-gray-600 active:bg-gray-500 dark:active:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         Cancel
                     </a>
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                        Submit Ticket
-                    </button>
+                    @if(!isset($customers) || isset($customer) || $customers->isNotEmpty())
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                            Submit Ticket
+                        </button>
+                    @else
+                        {{-- Disable submit when customer selection is required but list is empty --}}
+                        <button type="button" disabled class="inline-flex items-center px-4 py-2 bg-gray-400 dark:bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest cursor-not-allowed opacity-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                            Submit Ticket
+                        </button>
+                    @endif
                 </div>
             </form>
         </div>
