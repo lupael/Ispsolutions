@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Confirm Password - {{ config('app.name', 'ISP Solution') }}</title>
+    <title>{{ __('auth.confirm_password') }} - {{ config('app.name', __('auth.app_name')) }}</title>
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -23,10 +23,10 @@
                     </div>
                 </div>
                 <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">
-                    Confirm Your Password
+                    {{ __('auth.confirm_password') }}
                 </h2>
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    This is a secure area of the application. Please confirm your password before continuing.
+                    {{ __('auth.confirm_password_message') }}
                 </p>
             </div>
 
@@ -38,7 +38,7 @@
                     <!-- Password Field -->
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Password
+                            {{ __('auth.password') }}
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -53,7 +53,7 @@
                                 autocomplete="current-password"
                                 required
                                 class="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-150 ease-in-out sm:text-sm @error('password') border-red-500 @enderror"
-                                placeholder="Enter your password"
+                                placeholder="{{ __('auth.enter_password') }}"
                             >
                         </div>
                         @error('password')
@@ -69,7 +69,7 @@
                             type="submit"
                             class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
                         >
-                            Confirm Password
+                            {{ __('auth.confirm_password_button') }}
                         </button>
                     </div>
 
@@ -77,7 +77,7 @@
                     <div class="text-center">
                         @if (Route::has('password.request'))
                             <a href="{{ route('password.request') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
-                                Forgot your password?
+                                {{ __('auth.forgot_password') }}
                             </a>
                         @endif
                     </div>
@@ -94,7 +94,7 @@
                     </div>
                     <div class="ml-3">
                         <p class="text-sm text-yellow-700 dark:text-yellow-200">
-                            <strong>Security Notice:</strong> You are about to perform a sensitive operation. For your security, we need to verify your identity.
+                            <strong>{{ __('auth.security_notice') }}</strong> {{ __('auth.security_verification_message') }}
                         </p>
                     </div>
                 </div>

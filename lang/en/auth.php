@@ -35,6 +35,14 @@ return [
     'customer' => 'Customer',
     'developer' => 'Developer',
     
+    // Password Confirmation
+    'confirm_password' => 'Confirm Your Password',
+    'confirm_password_message' => 'This is a secure area of the application. Please confirm your password before continuing.',
+    'confirm_password_button' => 'Confirm Password',
+    'forgot_password' => 'Forgot your password?',
+    'security_notice' => 'Security Notice:',
+    'security_verification_message' => 'You are about to perform a sensitive operation. For your security, we need to verify your identity.',
+    
     // Errors
     'failed' => 'These credentials do not match our records.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
