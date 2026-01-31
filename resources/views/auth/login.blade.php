@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Login - {{ config('app.name', 'ISP Solution') }}</title>
+    <title>{{ __('auth.login_title') }} - {{ config('app.name', __('auth.app_name')) }}</title>
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -23,10 +23,10 @@
                     </div>
                 </div>
                 <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">
-                    ISP Solution
+                    {{ __('auth.app_name') }}
                 </h2>
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    Sign in to access your panel
+                    {{ __('auth.sign_in_to_panel') }}
                 </p>
             </div>
 
@@ -38,7 +38,7 @@
                     <!-- Email Field -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Email address
+                            {{ __('auth.email') }}
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -54,7 +54,7 @@
                                 required 
                                 value="{{ old('email') }}"
                                 class="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 @error('email') border-red-500 @enderror" 
-                                placeholder="Enter your email"
+                                placeholder="{{ __('auth.enter_email') }}"
                             />
                         </div>
                         @error('email')
@@ -65,7 +65,7 @@
                     <!-- Password Field -->
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Password
+                            {{ __('auth.password') }}
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -80,7 +80,7 @@
                                 autocomplete="current-password" 
                                 required 
                                 class="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 @error('password') border-red-500 @enderror" 
-                                placeholder="Enter your password"
+                                placeholder="{{ __('auth.enter_password') }}"
                             />
                         </div>
                         @error('password')
@@ -98,7 +98,7 @@
                                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded cursor-pointer"
                             />
                             <label for="remember" class="ml-2 block text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                                Remember me
+                                {{ __('auth.remember_me') }}
                             </label>
                         </div>
                     </div>
@@ -114,7 +114,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                 </svg>
                             </span>
-                            Sign in to your account
+                            {{ __('auth.sign_in') }}
                         </button>
                     </div>
                 </form>
@@ -127,68 +127,68 @@
                         </div>
                         <div class="relative flex justify-center text-sm">
                             <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                                Access your role-based panel
+                                {{ __('auth.access_role_based_panel') }}
                             </span>
                         </div>
                     </div>
 
                     <!-- Role Information -->
                     <div class="mt-6 bg-blue-50 dark:bg-gray-700 rounded-lg p-4">
-                        <h3 class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">Available Roles:</h3>
+                        <h3 class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">{{ __('auth.available_roles') }}</h3>
                         <div class="grid grid-cols-2 gap-2 text-xs text-blue-700 dark:text-blue-400">
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Super Admin
+                                {{ __('auth.super_admin') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Admin
+                                {{ __('auth.admin') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Manager
+                                {{ __('auth.manager') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Staff
+                                {{ __('auth.staff') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Operator
+                                {{ __('auth.operator') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Sub-Operator
+                                {{ __('auth.sub_operator') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Card Distributor
+                                {{ __('auth.card_distributor') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Customer
+                                {{ __('auth.customer') }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                Developer
+                                {{ __('auth.developer') }}
                             </div>
                         </div>
                     </div>
@@ -197,7 +197,7 @@
 
             <!-- Footer -->
             <div class="text-center text-sm text-gray-600 dark:text-gray-400">
-                <p>© {{ date('Y') }} ISP Solution. All rights reserved.</p>
+                <p>{{ __('auth.copyright', ['year' => date('Y')]) }}</p>
             </div>
         </div>
     </div>
