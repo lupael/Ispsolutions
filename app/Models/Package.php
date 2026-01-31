@@ -132,11 +132,6 @@ class Package extends Model
         return $this->childPackages()->exists();
     }
 
-    public function operatorPackageRate(): BelongsTo
-    {
-        return $this->belongsTo(OperatorPackageRate::class, 'operator_package_rate_id');
-    }
-
     public function profileMappings(): HasMany
     {
         return $this->hasMany(PackageProfileMapping::class, 'package_id');
