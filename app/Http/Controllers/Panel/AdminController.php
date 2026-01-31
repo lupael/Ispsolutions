@@ -205,8 +205,9 @@ class AdminController extends Controller
             $operatorIds = $operators->pluck('id');
 
             // Bulk fetch all customers for all operators using created_by relationship
+            // FIXED: Use is_subscriber instead of deprecated operator_level
             $allCustomers = User::whereIn('created_by', $operatorIds)
-                ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->where('is_subscriber', true)
                 ->select('id', 'created_by', 'status', 'created_at')
                 ->get()
                 ->groupBy('created_by');
@@ -287,16 +288,17 @@ class AdminController extends Controller
         }
 
         // ISP Information (Admin level 20)
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $ispInfo = [
             'status' => 'active',
-            'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->count(),
-            'active_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'total_clients' => User::where('is_subscriber', true)->count(),
+            'active_clients' => User::where('is_subscriber', true)
                 ->where('status', 'active')
                 ->count(),
-            'inactive_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'inactive_clients' => User::where('is_subscriber', true)
                 ->where('status', 'inactive')
                 ->count(),
-            'expired_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'expired_clients' => User::where('is_subscriber', true)
                 ->where('status', 'expired')
                 ->count(),
         ];
@@ -317,15 +319,16 @@ class AdminController extends Controller
         // Using subquery instead of pluck for better performance with large datasets
         // Note: Only counts customers with non-null created_by field (i.e., created by operators/sub-operators)
         // Customers created directly by admin or with null created_by are not included in these statistics
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $operatorClients = [
-            'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'total_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
                         ->whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR]);
                 })
                 ->count(),
-            'active_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'active_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
@@ -333,7 +336,7 @@ class AdminController extends Controller
                 })
                 ->where('status', 'active')
                 ->count(),
-            'inactive_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'inactive_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
@@ -341,7 +344,7 @@ class AdminController extends Controller
                 })
                 ->where('status', 'inactive')
                 ->count(),
-            'expired_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'expired_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
@@ -352,8 +355,9 @@ class AdminController extends Controller
         ];
 
         // Helper function to calculate current MRC for a set of customers
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $calculateCurrentMRC = function ($whereInCallback = null) {
-            $query = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            $query = User::where('is_subscriber', true)
                 ->whereNotNull('service_package_id');
 
             if ($whereInCallback) {
@@ -366,11 +370,12 @@ class AdminController extends Controller
         };
 
         // Helper function to calculate monthly average MRC from invoices
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $calculateMonthlyAvgMRC = function ($year, $month, $whereInCallback = null) {
             $query = Invoice::whereIn('user_id', function ($subQuery) use ($whereInCallback) {
                 $subQuery->select('id')
                     ->from('users')
-                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
+                    ->where('is_subscriber', true);
 
                 if ($whereInCallback) {
                     $subQuery->whereIn('created_by', $whereInCallback);
