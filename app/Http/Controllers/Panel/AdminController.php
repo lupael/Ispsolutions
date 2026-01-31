@@ -4580,9 +4580,13 @@ class AdminController extends Controller
      */
     public function operatorPackageRates(): View
     {
-        $operators = User::whereHas('roles', function ($query) {
-            $query->where('slug', 'operator');
-        })->with('packageRates.package')->latest()->paginate(20);
+        $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
+        
+        $operators = User::where('tenant_id', $tenantId)
+            ->whereHas('roles', function ($query) {
+                $query->where('slug', 'operator');
+            })->with('packageRates.package')->latest()->paginate(20);
 
         return view('panels.admin.operators.package-rates', compact('operators'));
     }
@@ -4592,13 +4596,20 @@ class AdminController extends Controller
      */
     public function assignOperatorPackageRate(User $operator): View
     {
+        $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
+        
+        // Ensure operator belongs to current tenant
+        abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
 
-        $packages = Package::where(function ($query) use ($operator) {
-            $query->where('is_global', true)
-                ->orWhere('operator_id', $operator->id);
-        })->get();
-        $existingRates = OperatorPackageRate::where('operator_id', $operator->id)
+        $packages = Package::where('tenant_id', $tenantId)
+            ->where(function ($query) use ($operator) {
+                $query->where('is_global', true)
+                    ->orWhere('operator_id', $operator->id);
+            })->get();
+        $existingRates = OperatorPackageRate::where('tenant_id', $tenantId)
+            ->where('operator_id', $operator->id)
             ->pluck('package_id')
             ->toArray();
 
@@ -4610,6 +4621,11 @@ class AdminController extends Controller
      */
     public function storeOperatorPackageRate(Request $request, User $operator)
     {
+        $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
+        
+        // Ensure operator belongs to current tenant
+        abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
 
         $validated = $request->validate([
@@ -4620,7 +4636,13 @@ class AdminController extends Controller
             'custom_price.min' => 'Custom price must be at least $1.',
         ]);
 
+        // Verify package belongs to current tenant - abort if not found
+        Package::where('id', $validated['package_id'])
+            ->where('tenant_id', $tenantId)
+            ->firstOrFail();
+
         $validated['operator_id'] = $operator->id;
+        $validated['tenant_id'] = $tenantId;
 
         // Ensure commission_percentage has a default value of 0 if not provided
         if ($validated['commission_percentage'] === null) {
@@ -4644,10 +4666,16 @@ class AdminController extends Controller
      */
     public function deleteOperatorPackageRate(User $operator, $package)
     {
+        $tenantId = getCurrentTenantId();
+        abort_unless($tenantId, 500, 'Tenant context not initialized.');
+        
+        // Ensure operator belongs to current tenant
+        abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
 
         OperatorPackageRate::where('operator_id', $operator->id)
             ->where('package_id', $package)
+            ->where('tenant_id', $tenantId)
             ->delete();
 
         return redirect()->route('panel.admin.operators.package-rates')
