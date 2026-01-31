@@ -151,10 +151,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-31
 
-### 🐛 Bug Fixes
-
-- Remove non-existent CustomerSession reference and correct operator level ([da25114](../../commit/da2511452d089f5ac50d378646f5c1063c92bbff))
-
 ---
 
 ## [Unreleased] - 2026-01-31
