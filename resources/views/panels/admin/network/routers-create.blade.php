@@ -102,7 +102,7 @@
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
                         <label for="ip_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            IP Address <span class="text-red-500">*</span>
+                            *IP Address
                         </label>
                         <input type="text" id="ip_address" name="ip_address" placeholder="192.168.1.1" 
                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
@@ -112,7 +112,7 @@
                             <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
-                            Local or public IP address of the router
+                            এখানে রাউটারের এর আইপি পার্ণালি / সিম্বল আইপীন দিন।
                         </p>
                         @error('ip_address')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -121,7 +121,7 @@
 
                     <div>
                         <label for="api_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            API Port
+                            *API Port
                         </label>
                         <input type="number" id="api_port" name="port" placeholder="8728" 
                                min="1" max="65535"
@@ -131,7 +131,7 @@
                             <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
-                            Default: 8728 (non-SSL) or 8729 (SSL). Custom ports supported.
+                            এখানে রাউটারের এর API Port নাম্বার দিন।
                         </p>
                         @error('port')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -140,7 +140,7 @@
 
                     <div>
                         <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            API Username <span class="text-red-500">*</span>
+                            *API User
                         </label>
                         <input type="text" id="username" name="username" 
                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
@@ -150,7 +150,7 @@
                             <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
-                            User with API access and full permissions
+                            API User হিসেবে আপনার বাক্তিগটিয রাউটারের এর বিজুয়াল ইউজারের।
                         </p>
                         @error('username')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -159,10 +159,11 @@
 
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            API Password <span class="text-red-500">*</span>
+                            API User's Password <span class="text-red-500">*</span>
                         </label>
                         <div class="mt-1 relative">
                             <input type="password" id="password" name="password" 
+                                   placeholder="api password"
                                    class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-10" 
                                    required>
                             <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -176,9 +177,22 @@
                             <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
-                            Password will be encrypted before storage
+                            এখানে API User এর Password দিন।
                         </p>
                         @error('password')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="overwrite_ppp_secrets_comment" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            *Overwrite PPP Secrets Comment
+                        </label>
+                        <select id="overwrite_ppp_secrets_comment" name="overwrite_ppp_secrets_comment" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <option value="yes" {{ old('overwrite_ppp_secrets_comment', 'yes') == 'yes' ? 'selected' : '' }}>yes</option>
+                            <option value="no" {{ old('overwrite_ppp_secrets_comment') == 'no' ? 'selected' : '' }}>no</option>
+                        </select>
+                        @error('overwrite_ppp_secrets_comment')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
@@ -200,8 +214,14 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Location & Details</h3>
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                        <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                        <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">*Location</label>
                         <input type="text" id="location" name="location" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            এখানে রাউটারের এর লোকেশান লিখুন, যাতে পর্বত্তীতে রাউটারটি সংক্রান্ত তিত্যবিতে করতে পারেন।
+                        </p>
                     </div>
 
                     <div>
