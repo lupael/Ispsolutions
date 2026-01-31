@@ -118,7 +118,9 @@ class NasNetwatchController extends Controller
     public function status(int $routerId): JsonResponse
     {
         try {
-            $router = MikrotikRouter::with('nas')->findOrFail($routerId);
+            $router = MikrotikRouter::with('nas')
+                ->where('tenant_id', getCurrentTenantId())
+                ->findOrFail($routerId);
             $status = $this->getNetwatchStatus($router);
 
             return response()->json([
@@ -145,7 +147,9 @@ class NasNetwatchController extends Controller
     public function test(int $routerId): JsonResponse
     {
         try {
-            $router = MikrotikRouter::with('nas')->findOrFail($routerId);
+            $router = MikrotikRouter::with('nas')
+                ->where('tenant_id', getCurrentTenantId())
+                ->findOrFail($routerId);
 
             if (! $router->nas) {
                 return response()->json([
@@ -154,13 +158,31 @@ class NasNetwatchController extends Controller
                 ], 400);
             }
 
+            $api = new RouterosAPI([
+                'host' => $router->ip_address,
+                'user' => $router->username,
+                'pass' => $router->password,
+                'port' => $router->api_port,
+                'debug' => false,
+            ]);
+
+            if (!$api->connect()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot connect to router',
+                ], 500);
+            }
+
             // Get netwatch entries
-            $netwatchEntries = $this->mikrotikApiService->getMktRows($router, '/tool/netwatch');
+            $netwatchEntries = $api->getMktRows('tool_netwatch');
+            $radiusServer = config('radius.server_ip', '127.0.0.1');
 
             // Find the RADIUS netwatch entry
-            $radiusNetwatch = collect($netwatchEntries)->first(function ($entry) use ($router) {
-                return isset($entry['host']) && $entry['host'] === $router->nas->server;
+            $radiusNetwatch = collect($netwatchEntries)->first(function ($entry) use ($radiusServer) {
+                return isset($entry['host']) && $entry['host'] === $radiusServer;
             });
+
+            $api->disconnect();
 
             if (! $radiusNetwatch) {
                 return response()->json([
@@ -205,8 +227,8 @@ class NasNetwatchController extends Controller
      */
     private function configureNetwatchForRadius(MikrotikRouter $router, array $config): array
     {
-        // Use RADIUS server IP from NAS or config
-        $radiusServer = $router->nas->server ?? config('radius.server_ip', '127.0.0.1');
+        // Use RADIUS server IP from config; do not rely on NAS server (router IP)
+        $radiusServer = config('radius.server_ip', '127.0.0.1');
         $interval = $config['interval'] ?? '1m';
         $timeout = $config['timeout'] ?? '1s';
 
@@ -293,17 +315,35 @@ class NasNetwatchController extends Controller
                 ], 400);
             }
 
-            $radiusServer = $router->nas->server;
-            $existingRows = $this->mikrotikApiService->getMktRows($router, '/tool/netwatch', ['host' => $radiusServer]);
+            $radiusServer = config('radius.server_ip', '127.0.0.1');
+
+            $api = new RouterosAPI([
+                'host' => $router->ip_address,
+                'user' => $router->username,
+                'pass' => $router->password,
+                'port' => $router->api_port,
+                'debug' => config('app.debug'),
+            ]);
+
+            if (!$api->connect()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot connect to router',
+                ], 500);
+            }
+
+            $existingRows = $api->getMktRows('tool_netwatch', ['host' => $radiusServer]);
 
             if (empty($existingRows)) {
+                $api->disconnect();
                 return response()->json([
                     'success' => true,
                     'message' => 'No netwatch configuration found',
                 ]);
             }
 
-            $removed = $this->mikrotikApiService->removeMktRows($router, '/tool/netwatch', $existingRows);
+            $removed = $api->removeMktRows('tool_netwatch', $existingRows);
+            $api->disconnect();
 
             if ($removed) {
                 Log::info('Netwatch removed successfully', [
@@ -348,9 +388,26 @@ class NasNetwatchController extends Controller
                 ];
             }
 
-            // Use RADIUS server IP, not router/NAS IP
+            // Use RADIUS server IP from config
             $radiusServer = config('radius.server_ip', '127.0.0.1');
-            $netwatchEntries = $this->mikrotikApiService->getMktRows($router, '/tool/netwatch');
+
+            $api = new RouterosAPI([
+                'host' => $router->ip_address,
+                'user' => $router->username,
+                'pass' => $router->password,
+                'port' => $router->api_port,
+                'debug' => false,
+            ]);
+
+            if (!$api->connect()) {
+                return [
+                    'configured' => false,
+                    'message' => 'Cannot connect to router',
+                ];
+            }
+
+            $netwatchEntries = $api->getMktRows('tool_netwatch');
+            $api->disconnect();
 
             // Find the RADIUS netwatch entry
             $radiusNetwatch = collect($netwatchEntries)->first(function ($entry) use ($radiusServer) {

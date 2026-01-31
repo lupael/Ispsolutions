@@ -67,10 +67,8 @@ class MikrotikDbSyncController extends Controller
         }
 
         try {
-            // Delete old imported pools for this router and tenant
-            MikrotikIpPool::where('router_id', $router->id)
-                ->where('tenant_id', getCurrentTenantId())
-                ->delete();
+            // Delete old imported pools for this router
+            MikrotikIpPool::where('router_id', $router->id)->delete();
 
             // Fetch IP pools from router
             $ip4pools = $api->getMktRows('ip_pool');
@@ -79,16 +77,14 @@ class MikrotikDbSyncController extends Controller
             foreach ($ip4pools as $ip4pool) {
                 $ranges = $this->parseIpPool($ip4pool['ranges'] ?? '');
                 
-                if ($ranges == 0) {
+                if (empty($ranges)) {
                     continue;
                 }
 
                 MikrotikIpPool::create([
-                    'tenant_id' => getCurrentTenantId(),
                     'router_id' => $router->id,
                     'name' => $ip4pool['name'] ?? 'unnamed',
                     'ranges' => $ranges,
-                    'next_pool' => $ip4pool['next-pool'] ?? null,
                 ]);
                 
                 $importedCount++;
@@ -165,7 +161,6 @@ class MikrotikDbSyncController extends Controller
                     'rate_limit' => $pppProfile['rate-limit'] ?? null,
                     'session_timeout' => $pppProfile['session-timeout'] ?? null,
                     'idle_timeout' => $pppProfile['idle-timeout'] ?? null,
-                    'keepalive_timeout' => $pppProfile['keepalive-timeout'] ?? null,
                 ]);
                 
                 $importedCount++;
@@ -234,7 +229,12 @@ class MikrotikDbSyncController extends Controller
         try {
             // Step 1: Create router-side export backup before importing (IspBills pattern)
             $file = 'ppp-secret-backup-by-billing-' . now()->timestamp;
-            $api->ttyWrite('/ppp/secret/export', ['file' => $file]);
+            $backupResult = $api->ttyWrite('/ppp/secret/export', ['file' => $file]);
+            
+            // Check if backup succeeded
+            if ($backupResult === null) {
+                throw new \RuntimeException('Failed to create router-side backup before import');
+            }
             
             // Step 2: Create import request record
             $customerImport = CustomerImport::create([
@@ -356,24 +356,37 @@ class MikrotikDbSyncController extends Controller
     }
 
     /**
-     * Parse IP pool ranges from MikroTik format
+     * Parse IP pool ranges from MikroTik format and normalize as an array.
      * 
      * Supports:
      * - CIDR: 192.168.1.0/24
      * - Hyphen range: 192.168.1.1-192.168.1.254
      * - Comma-separated: 192.168.1.1,192.168.1.2
      * 
-     * @param string $ranges
-     * @return int Number of IPs in the range
+     * @param string $ranges Raw ranges string from MikroTik
+     * @return array<int,string> Normalized array of range strings
      */
-    private function parseIpPool(string $ranges): int
+    private function parseIpPool(string $ranges): array
     {
-        if (empty($ranges)) {
-            return 0;
+        // Treat empty or whitespace-only input as no ranges
+        if (trim($ranges) === '') {
+            return [];
         }
 
-        // For now, return 1 if ranges exist (proper calculation can be added later)
-        // IspBills has logic to calculate actual IP count, but it's complex
-        return 1;
+        // Split on commas and trim each part to normalize the ranges
+        $parts = explode(',', $ranges);
+        $parts = array_map('trim', $parts);
+
+        // Filter out any empty segments and reindex the array
+        $normalized = array_values(
+            array_filter(
+                $parts,
+                static function (string $part): bool {
+                    return $part !== '';
+                }
+            )
+        );
+
+        return $normalized;
     }
 }

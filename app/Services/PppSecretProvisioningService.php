@@ -62,7 +62,7 @@ class PppSecretProvisioningService
             // Step 3: Prepare PPP secret data
             $pppSecret = [
                 'name' => $customer->username,
-                'password' => $customer->password,
+                'password' => $customer->radius_password ?? $customer->username,
                 'disabled' => $customer->status === 'active' ? 'no' : 'yes',
             ];
             
@@ -71,14 +71,9 @@ class PppSecretProvisioningService
                 $pppSecret['profile'] = $profile->name;
             }
             
-            // Add static IP if provided (IspBills pattern for static allocation)
+            // Add static IP if provided
             if ($staticIp) {
                 $pppSecret['remote-address'] = $staticIp;
-            } elseif ($profile && $profile->ip_allocation_mode === 'static') {
-                // If profile requires static IP but none provided, use customer's login_ip
-                if (!empty($customer->login_ip)) {
-                    $pppSecret['remote-address'] = $customer->login_ip;
-                }
             }
             
             // Add customer metadata comment (IspBills pattern)

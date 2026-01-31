@@ -30,7 +30,7 @@ class RouterosAPI
     /**
      * Constructor
      * 
-     * @param array $config Configuration array with keys: host, user, pass, port, attempts, debug
+     * @param array $config Configuration array with keys: host, user, pass, port, attempts, debug, ssl
      */
     public function __construct(array $config)
     {
@@ -39,6 +39,7 @@ class RouterosAPI
             'user' => $config['user'] ?? 'admin',
             'pass' => $config['pass'] ?? '',
             'port' => $config['port'] ?? 8728,
+            'ssl' => $config['ssl'] ?? false,  // Enable SSL/TLS support
             'attempts' => $config['attempts'] ?? 3,
             'timeout' => $config['timeout'] ?? 5,
             'debug' => $config['debug'] ?? false,
@@ -61,6 +62,7 @@ class RouterosAPI
                 'user' => $user ?? $this->config['user'],
                 'pass' => $pass ?? $this->config['pass'],
                 'port' => (int) $this->config['port'],
+                'ssl' => (bool) $this->config['ssl'],  // Pass SSL configuration
                 'timeout' => (int) $this->config['timeout'],
                 'attempts' => (int) $this->config['attempts'],
             ]);

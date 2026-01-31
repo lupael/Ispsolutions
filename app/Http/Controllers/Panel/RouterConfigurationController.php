@@ -80,12 +80,15 @@ class RouterConfigurationController extends Controller
 
         try {
             // Step 1: Configure RADIUS client on router
-            $radiusServer = $router->nas->server ?? config('radius.server_ip', '127.0.0.1');
+            $radiusServer = config('radius.server_ip', '127.0.0.1');
             
             // Remove existing RADIUS configuration for this server
             $existingRows = $api->getMktRows('radius', ['address' => $radiusServer]);
             if (!empty($existingRows)) {
-                $api->removeMktRows('radius', $existingRows);
+                $removeResult = $api->removeMktRows('radius', $existingRows);
+                if (!$removeResult) {
+                    throw new \RuntimeException('Failed to remove existing RADIUS configuration');
+                }
             }
             
             // Add new RADIUS client configuration
@@ -99,19 +102,30 @@ class RouterConfigurationController extends Controller
                 'require-message-auth' => 'no',
             ]];
             
-            $api->addMktRows('radius', $radiusConfig);
+            $addResult = $api->addMktRows('radius', $radiusConfig);
+            if (!$addResult) {
+                throw new \RuntimeException('Failed to add RADIUS client configuration');
+            }
             
             // Step 2: Enable PPP AAA to use RADIUS + accounting
-            $api->ttyWrite('/ppp/aaa/set', [
+            $pppResult = $api->ttyWrite('/ppp/aaa/set', [
                 'interim-update' => config('radius.interim_update', '5m'),
                 'use-radius' => 'yes',
                 'accounting' => 'yes',
             ]);
             
+            if ($pppResult === null) {
+                throw new \RuntimeException('Failed to configure PPP AAA on router');
+            }
+            
             // Step 3: Enable RADIUS incoming
-            $api->ttyWrite('/radius/incoming/set', [
+            $radiusIncomingResult = $api->ttyWrite('/radius/incoming/set', [
                 'accept' => 'yes',
             ]);
+            
+            if ($radiusIncomingResult === null) {
+                throw new \RuntimeException('Failed to configure RADIUS incoming on router');
+            }
             
             $api->disconnect();
             
@@ -168,7 +182,7 @@ class RouterConfigurationController extends Controller
             // Get local address from config or use default
             $localAddress = config('mikrotik.ppp_local_address', '10.0.0.1');
             
-            // Get all non-default PPP profiles
+            // Get all default PPP profiles
             $pppProfiles = $api->getMktRows('ppp_profile', ['default' => 'yes']);
             
             $updatedCount = 0;
