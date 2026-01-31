@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Service Unavailable</title>
+    <title>{{ __('errors.503_title') }}</title>
     
     <style nonce="{{ csp_nonce() }}">
         * {
@@ -58,10 +58,9 @@
     <div class="error-container">
         <div class="maintenance-icon">🛠️</div>
         <h1>503</h1>
-        <h2>Service Unavailable</h2>
+        <h2>{{ __('errors.503_heading') }}</h2>
         <p>
-            We're currently performing scheduled maintenance.
-            We'll be back online shortly. Thank you for your patience!
+            {{ __('errors.503_message') }}
         </p>
     </div>
 </body>

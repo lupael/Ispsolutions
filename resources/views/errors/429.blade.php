@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Too Many Requests</title>
+    <title>{{ __('errors.429_title') }}</title>
     <style nonce="{{ csp_nonce() }}">
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -52,13 +52,13 @@
 <body>
     <div class="container">
         <h1>429</h1>
-        <h2>Too Many Requests</h2>
-        <p>You have exceeded the rate limit. Please slow down and try again later.</p>
+        <h2>{{ __('errors.429_heading') }}</h2>
+        <p>{{ __('errors.429_message') }}</p>
         <div class="retry-info">
-            <strong>Please try again in {{ $retry_after ?? 60 }} seconds.</strong>
+            <strong>{{ __('errors.429_retry', ['seconds' => $retry_after ?? 60]) }}</strong>
         </div>
         <p style="margin-top: 30px;">
-            <a href="{{ url('/') }}">Return to Home</a>
+            <a href="{{ url('/') }}">{{ __('errors.return_home') }}</a>
         </p>
     </div>
 </body>
