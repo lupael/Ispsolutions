@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class SubOperatorController extends Controller
@@ -167,5 +170,29 @@ class SubOperatorController extends Controller
         ];
 
         return view('panels.sub-operator.commission.index', compact('transactions', 'summary'));
+    }
+
+    /**
+     * Display customer details.
+     */
+    public function showCustomer(User $customer): View|RedirectResponse
+    {
+        $this->authorize('view', $customer);
+
+        $customer->load(['package', 'routerProfile']);
+
+        return view('panels.sub-operator.customers.show', compact('customer'));
+    }
+
+    /**
+     * Display bill details.
+     */
+    public function showBill(Invoice $bill): View|RedirectResponse
+    {
+        $this->authorize('view', $bill);
+
+        $bill->load(['user', 'package']);
+
+        return view('panels.sub-operator.bills.show', compact('bill'));
     }
 }

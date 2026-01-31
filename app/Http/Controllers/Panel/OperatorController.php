@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\SmsBalanceService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class OperatorController extends Controller
@@ -215,5 +216,41 @@ class OperatorController extends Controller
         ];
 
         return view('panels.operator.commission.index', compact('transactions', 'summary'));
+    }
+
+    /**
+     * Display bill details.
+     */
+    public function showBill(Invoice $bill): View|RedirectResponse
+    {
+        $this->authorize('view', $bill);
+
+        $bill->load(['user', 'package']);
+
+        return view('panels.operator.bills.show', compact('bill'));
+    }
+
+    /**
+     * Display customer details.
+     */
+    public function showCustomer(User $customer): View|RedirectResponse
+    {
+        $this->authorize('view', $customer);
+
+        $customer->load(['package', 'routerProfile']);
+
+        return view('panels.operator.customers.show', compact('customer'));
+    }
+
+    /**
+     * Display complaint details.
+     */
+    public function showComplaint(Ticket $complaint): View|RedirectResponse
+    {
+        $this->authorize('view', $complaint);
+
+        $complaint->load(['customer', 'assignedTo', 'creator']);
+
+        return view('panels.operator.complaints.show', compact('complaint'));
     }
 }

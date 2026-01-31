@@ -35,6 +35,14 @@ class InvoicePolicy
             return true;
         }
 
+        // Operators and sub-operators can view invoices for their customers
+        if ($user->isOperatorRole() || $user->isSubOperator()) {
+            return $user->subordinates()
+                ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->where('id', $invoice->user_id)
+                ->exists();
+        }
+
         return false;
     }
 
