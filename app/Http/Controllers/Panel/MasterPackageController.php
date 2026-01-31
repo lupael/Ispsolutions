@@ -97,7 +97,10 @@ class MasterPackageController extends Controller
      */
     public function create(): View
     {
-        $pppoeProfiles = \App\Models\MikrotikProfile::with('router')->get();
+        $tenantId = auth()->user()->tenant_id;
+        $pppoeProfiles = \App\Models\MikrotikProfile::where('tenant_id', $tenantId)
+            ->with('router')
+            ->get();
         return view($this->getViewPrefix() . '.create', compact('pppoeProfiles'));
     }
 
@@ -161,7 +164,10 @@ class MasterPackageController extends Controller
      */
     public function edit(MasterPackage $masterPackage): View
     {
-        $pppoeProfiles = \App\Models\MikrotikProfile::with('router')->get();
+        $tenantId = auth()->user()->tenant_id;
+        $pppoeProfiles = \App\Models\MikrotikProfile::where('tenant_id', $tenantId)
+            ->with('router')
+            ->get();
         return view($this->getViewPrefix() . '.edit', compact('masterPackage', 'pppoeProfiles'));
     }
 

@@ -205,8 +205,9 @@ class AdminController extends Controller
             $operatorIds = $operators->pluck('id');
 
             // Bulk fetch all customers for all operators using created_by relationship
+            // FIXED: Use is_subscriber instead of deprecated operator_level
             $allCustomers = User::whereIn('created_by', $operatorIds)
-                ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                ->where('is_subscriber', true)
                 ->select('id', 'created_by', 'status', 'created_at')
                 ->get()
                 ->groupBy('created_by');
@@ -287,16 +288,17 @@ class AdminController extends Controller
         }
 
         // ISP Information (Admin level 20)
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $ispInfo = [
             'status' => 'active',
-            'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)->count(),
-            'active_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'total_clients' => User::where('is_subscriber', true)->count(),
+            'active_clients' => User::where('is_subscriber', true)
                 ->where('status', 'active')
                 ->count(),
-            'inactive_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'inactive_clients' => User::where('is_subscriber', true)
                 ->where('status', 'inactive')
                 ->count(),
-            'expired_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'expired_clients' => User::where('is_subscriber', true)
                 ->where('status', 'expired')
                 ->count(),
         ];
@@ -317,15 +319,16 @@ class AdminController extends Controller
         // Using subquery instead of pluck for better performance with large datasets
         // Note: Only counts customers with non-null created_by field (i.e., created by operators/sub-operators)
         // Customers created directly by admin or with null created_by are not included in these statistics
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $operatorClients = [
-            'total_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'total_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
                         ->whereIn('operator_level', [User::OPERATOR_LEVEL_OPERATOR, User::OPERATOR_LEVEL_SUB_OPERATOR]);
                 })
                 ->count(),
-            'active_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'active_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
@@ -333,7 +336,7 @@ class AdminController extends Controller
                 })
                 ->where('status', 'active')
                 ->count(),
-            'inactive_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'inactive_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
@@ -341,7 +344,7 @@ class AdminController extends Controller
                 })
                 ->where('status', 'inactive')
                 ->count(),
-            'expired_clients' => User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            'expired_clients' => User::where('is_subscriber', true)
                 ->whereIn('created_by', function ($query) {
                     $query->select('id')
                         ->from('users')
@@ -352,8 +355,9 @@ class AdminController extends Controller
         ];
 
         // Helper function to calculate current MRC for a set of customers
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $calculateCurrentMRC = function ($whereInCallback = null) {
-            $query = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+            $query = User::where('is_subscriber', true)
                 ->whereNotNull('service_package_id');
 
             if ($whereInCallback) {
@@ -366,11 +370,12 @@ class AdminController extends Controller
         };
 
         // Helper function to calculate monthly average MRC from invoices
+        // FIXED: Use is_subscriber instead of deprecated operator_level
         $calculateMonthlyAvgMRC = function ($year, $month, $whereInCallback = null) {
             $query = Invoice::whereIn('user_id', function ($subQuery) use ($whereInCallback) {
                 $subQuery->select('id')
                     ->from('users')
-                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER);
+                    ->where('is_subscriber', true);
 
                 if ($whereInCallback) {
                     $subQuery->whereIn('created_by', $whereInCallback);
@@ -1179,7 +1184,7 @@ class AdminController extends Controller
                 'radius_password' => $validated['password'], // Plain text for RADIUS
                 'phone' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
-                'operator_level' => 100, // Customer level
+                'operator_level' => null, // Customers must have null operator_level
                 'is_active' => true,
                 'is_subscriber' => true, // Mark as subscriber for customer list filtering
                 'activated_at' => now(),
@@ -2979,12 +2984,17 @@ class AdminController extends Controller
      */
     public function ipv4Pools(): View
     {
-        $pools = IpPool::with('subnets')->latest()->paginate(20);
+        // CRITICAL: Filter by tenant_id to prevent data leakage
+        $tenantId = auth()->user()->tenant_id;
+        $pools = IpPool::where('tenant_id', $tenantId)
+            ->with('subnets')
+            ->latest()
+            ->paginate(20);
 
         $stats = [
-            'total' => IpPool::count(),
+            'total' => IpPool::where('tenant_id', $tenantId)->count(),
             'available' => 0, // Placeholder for calculating available IPs based on pool capacity minus allocations
-            'allocated' => IpAllocation::count(),
+            'allocated' => IpAllocation::where('tenant_id', $tenantId)->count(),
             'pools' => $pools->total(),
         ];
 
@@ -3020,7 +3030,9 @@ class AdminController extends Controller
             $validated['dns_secondary'] ?? null,
         ]);
 
+        // CRITICAL: Set tenant_id to ensure pool is properly scoped
         IpPool::create([
+            'tenant_id' => auth()->user()->tenant_id,
             'name' => $validated['name'],
             'start_ip' => $validated['start_ip'],
             'end_ip' => $validated['end_ip'],
@@ -3040,7 +3052,9 @@ class AdminController extends Controller
      */
     public function ipv4PoolsEdit($id): View
     {
-        $pool = IpPool::findOrFail($id);
+        // CRITICAL: Verify pool belongs to current tenant
+        $tenantId = auth()->user()->tenant_id;
+        $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
 
         return view('panels.admin.network.ipv4-pools-edit', compact('pool'));
     }
@@ -3050,7 +3064,9 @@ class AdminController extends Controller
      */
     public function ipv4PoolsUpdate(Request $request, $id)
     {
-        $pool = IpPool::findOrFail($id);
+        // CRITICAL: Verify pool belongs to current tenant
+        $tenantId = auth()->user()->tenant_id;
+        $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -3086,7 +3102,9 @@ class AdminController extends Controller
      */
     public function ipv4PoolsDestroy($id)
     {
-        $pool = IpPool::findOrFail($id);
+        // CRITICAL: Verify pool belongs to current tenant
+        $tenantId = auth()->user()->tenant_id;
+        $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
         $pool->delete();
 
         return redirect()->route('panel.admin.network.ipv4-pools')
@@ -3104,8 +3122,11 @@ class AdminController extends Controller
         ]);
 
         try {
-            // Use bulk delete for efficiency
-            $deletedCount = IpPool::whereIn('id', $validated['ids'])->delete();
+            // CRITICAL: Filter by tenant_id to prevent cross-tenant deletion
+            $tenantId = auth()->user()->tenant_id;
+            $deletedCount = IpPool::where('tenant_id', $tenantId)
+                ->whereIn('id', $validated['ids'])
+                ->delete();
 
             return redirect()->route('panel.admin.network.ipv4-pools')
                 ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
@@ -3241,17 +3262,22 @@ class AdminController extends Controller
      */
     public function pppoeProfiles(): View
     {
-        $profiles = MikrotikProfile::with(['router', 'ipv4Pool', 'ipv6Pool'])->latest()->paginate(20);
+        // CRITICAL: Filter by tenant_id to prevent data leakage
+        $tenantId = auth()->user()->tenant_id;
+        $profiles = MikrotikProfile::where('tenant_id', $tenantId)
+            ->with(['router', 'ipv4Pool', 'ipv6Pool'])
+            ->latest()
+            ->paginate(20);
 
         $stats = [
-            'total' => MikrotikProfile::count(),
-            'active' => MikrotikProfile::count(), // Currently counts all profiles; adjust if a status field is introduced
-            'users' => NetworkUser::count(),
+            'total' => MikrotikProfile::where('tenant_id', $tenantId)->count(),
+            'active' => MikrotikProfile::where('tenant_id', $tenantId)->count(), // Currently counts all profiles; adjust if a status field is introduced
+            'users' => NetworkUser::where('tenant_id', $tenantId)->count(),
         ];
 
-        $routers = MikrotikRouter::where('status', 'active')->get();
-        $ipv4Pools = IpPool::where('pool_type', 'ipv4')->where('status', 'active')->get();
-        $ipv6Pools = IpPool::where('pool_type', 'ipv6')->where('status', 'active')->get();
+        $routers = MikrotikRouter::where('tenant_id', $tenantId)->where('status', 'active')->get();
+        $ipv4Pools = IpPool::where('tenant_id', $tenantId)->where('pool_type', 'ipv4')->where('status', 'active')->get();
+        $ipv6Pools = IpPool::where('tenant_id', $tenantId)->where('pool_type', 'ipv6')->where('status', 'active')->get();
 
         return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers', 'ipv4Pools', 'ipv6Pools'));
     }

@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * MikrotikProfile Model
+ *
+ * Represents PPPoE profiles configured on MikroTik routers.
+ * CRITICAL: Uses BelongsToTenant trait to ensure tenant isolation and prevent data leaks.
+ */
 class MikrotikProfile extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
         'router_id',
