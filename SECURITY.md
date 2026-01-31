@@ -16,7 +16,7 @@ We take the security of ISP Solution seriously. If you discover a security vulne
 ### How to Report
 
 1. **Do NOT** create a public GitHub issue for security vulnerabilities
-2. Email security concerns to: **[security contact needed]**
+2. Email security concerns to: **security@[your-domain].com** or create a private security advisory on GitHub
 3. Include the following information:
    - Description of the vulnerability
    - Steps to reproduce the issue
