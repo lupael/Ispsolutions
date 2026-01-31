@@ -2,8 +2,55 @@
 
 This file lists documentation that has been consolidated, superseded, or is no longer maintained.
 
-**Last Updated**: 2026-01-27  
-**Status**: Phases 1, 2, and 3 completed. Code cleanup for deprecated methods completed.
+**Last Updated**: 2026-01-31  
+**Status**: Phases 1, 2, and 3 completed. Code cleanup for deprecated methods completed. New Deprecated attribute available.
+
+---
+
+## 🆕 New in v3.3: Deprecated Attribute
+
+### PHP Attribute for Marking Deprecated Code
+
+A new `#[Deprecated]` attribute is now available for marking deprecated code elements with structured metadata:
+
+**Location**: `App\Attributes\Deprecated`
+
+**Features**:
+- **GUID Tracking**: Unique identifier for each deprecated element (e.g., `DEP-2024-001`)
+- **Documentation**: Clear message explaining why something is deprecated
+- **Version Info**: Track when deprecation occurred (`since`)
+- **Migration Path**: Suggest alternatives (`alternative`)
+- **Removal Planning**: Indicate when removal is planned (`removeIn`)
+
+**Usage Example**:
+```php
+use App\Attributes\Deprecated;
+
+#[Deprecated(
+    guid: 'DEP-2024-001',
+    message: 'Use the new implementation instead',
+    since: 'v1.0.0',
+    alternative: 'NewClass::newMethod()',
+    removeIn: 'v2.0.0'
+)]
+public function oldMethod(): void
+{
+    // deprecated implementation
+}
+```
+
+**Supported Targets**:
+- Classes
+- Methods
+- Properties
+- Class Constants
+
+**Benefits over `@deprecated` DocBlock**:
+- Structured data that can be programmatically analyzed
+- GUID-based tracking across codebase
+- Type-safe with PHP 8 attributes
+- Consistent deprecation metadata format
+- Can be queried via reflection API
 
 ---
 
@@ -165,6 +212,43 @@ Update code comments referencing old documentation:
 // New
 // See ROLE_SYSTEM.md for role hierarchy
 ```
+
+### Migrating from @deprecated to #[Deprecated] Attribute
+
+**Old Style** (DocBlock annotation):
+```php
+/**
+ * @deprecated since version 1.0 (2026-01-30). Use is_subscriber flag instead.
+ *             Will be removed in version 2.0.
+ */
+public const OPERATOR_LEVEL_CUSTOMER = 100;
+```
+
+**New Style** (PHP 8 Attribute):
+```php
+use App\Attributes\Deprecated;
+
+#[Deprecated(
+    guid: 'DEP-2026-001',
+    message: 'Use is_subscriber flag instead',
+    since: 'v1.0.0 (2026-01-30)',
+    removeIn: 'v2.0.0'
+)]
+public const OPERATOR_LEVEL_CUSTOMER = 100;
+```
+
+**Benefits of Migration**:
+- Searchable by GUID for tracking
+- Programmatic access via Reflection API
+- Type-safe and validated at parse time
+- Consistent structure across codebase
+- Can generate deprecation reports
+
+**Migration Strategy**:
+1. New deprecations should use `#[Deprecated]` attribute
+2. Existing `@deprecated` can be migrated gradually
+3. Both styles are acceptable during transition period
+4. Update `@deprecated` to attribute when touching that code
 
 ---
 
