@@ -126,9 +126,8 @@ class AdminController extends Controller
             'overdue_invoices' => Invoice::where('status', 'overdue')->count(),
             // Today's Update statistics
             'new_customers_today' => User::whereDate('created_at', today())
-                ->whereHas('roles', function ($query) {
-                    $query->where('slug', 'customer');
-                })->count(),
+                ->where('is_subscriber', true)
+                ->count(),
             'payments_today' => Payment::whereDate('payment_date', today())
                 ->where('status', 'success')
                 ->sum('amount'),
@@ -1182,6 +1181,7 @@ class AdminController extends Controller
                 'address' => $validated['address'] ?? null,
                 'operator_level' => 100, // Customer level
                 'is_active' => true,
+                'is_subscriber' => true, // Mark as subscriber for customer list filtering
                 'activated_at' => now(),
                 'created_by' => auth()->id(),
                 'service_package_id' => $validated['package_id'],
