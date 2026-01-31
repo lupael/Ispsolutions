@@ -2482,6 +2482,25 @@ class AdminController extends Controller
             'status' => 'required|in:active,inactive,maintenance',
         ]);
 
+        // Test router connectivity using RouterosAPI (IspBills pattern)
+        $api = new \App\Services\RouterosAPI([
+            'host' => $validated['ip_address'],
+            'user' => $validated['username'],
+            'pass' => $validated['password'],
+            'port' => $validated['port'] ?? 8728,
+            'attempts' => 1,
+            'debug' => false,
+        ]);
+
+        if (!$api->connect()) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Cannot connect to the router! Check API port, username, password or network connectivity.');
+        }
+
+        // Disconnect after successful test
+        $api->disconnect();
+
         // Use database transaction to ensure both router and NAS are created together
         DB::beginTransaction();
         try {
