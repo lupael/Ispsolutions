@@ -1181,6 +1181,7 @@ class AdminController extends Controller
                 'address' => $validated['address'] ?? null,
                 'operator_level' => 100, // Customer level
                 'is_active' => true,
+                'is_subscriber' => true, // Mark as subscriber for customer list filtering
                 'activated_at' => now(),
                 'created_by' => auth()->id(),
                 'service_package_id' => $validated['package_id'],
