@@ -222,10 +222,10 @@ class FinancialReportService
         $tenantId = auth()->user()->tenant_id;
 
         $revenue = DB::table('invoices')
-            ->join('network_users', 'invoices.user_id', '=', 'network_users.id')
-            ->join('packages', 'network_users.package_id', '=', 'packages.id')
+            ->join('customers', 'invoices.user_id', '=', 'customers.id')
+            ->join('packages', 'customers.package_id', '=', 'packages.id')
             ->where('invoices.tenant_id', $tenantId)
-            ->where('network_users.tenant_id', $tenantId)
+            ->where('customers.tenant_id', $tenantId)
             ->where('packages.tenant_id', $tenantId)
             ->whereBetween('invoices.invoice_date', [$startDate, $endDate])
             ->where('invoices.status', 'paid')
