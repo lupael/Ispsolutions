@@ -50,9 +50,9 @@
     $label = $statusKey ? ($labels[$statusKey] ?? ucfirst(str_replace('_', ' ', $statusKey))) : 'Unknown';
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {$colorClass}"]) }}
+<span {{ $attributes->merge(['class' => "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 hover:shadow-md {$colorClass}"]) }}
       title="{{ $label }}">
-    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $iconPath }}" />
     </svg>
     {{ $label }}

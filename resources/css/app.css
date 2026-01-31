@@ -1,1 +1,88 @@
 @import "tailwindcss";
+
+/* Custom UI Polish Styles */
+@layer base {
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better focus outlines */
+  *:focus {
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Enhanced Card Hover Effects */
+  .card-hover {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .card-hover:hover {
+    @apply shadow-lg -translate-y-0.5;
+  }
+
+  /* Smooth Button Transitions */
+  .btn-transition {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .btn-transition:hover {
+    @apply transform scale-105;
+  }
+
+  .btn-transition:active {
+    @apply transform scale-95;
+  }
+
+  /* Enhanced Input Focus States */
+  .input-enhanced {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .input-enhanced:focus {
+    @apply ring-2 ring-offset-2 shadow-md;
+  }
+
+  /* Smooth Badge Transitions */
+  .badge-animated {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .badge-animated:hover {
+    @apply shadow-sm transform scale-105;
+  }
+
+  /* Loading Skeleton Animation */
+  @keyframes shimmer {
+    0% {
+      background-position: -468px 0;
+    }
+    100% {
+      background-position: 468px 0;
+    }
+  }
+
+  .skeleton {
+    @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+    background-image: linear-gradient(to right, transparent 0%, rgba(255,255,255,.1) 20%, transparent 40%, transparent 100%);
+    background-repeat: no-repeat;
+    background-size: 468px 104px;
+    animation: shimmer 1.2s ease-in-out infinite;
+  }
+
+  /* Smooth Page Transitions */
+  .page-transition {
+    @apply transition-opacity duration-300 ease-in-out;
+  }
+
+  /* Enhanced Shadow Depths */
+  .shadow-elevated {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .shadow-elevated-hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
