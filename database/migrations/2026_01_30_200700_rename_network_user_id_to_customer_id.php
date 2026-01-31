@@ -39,8 +39,18 @@ return new class extends Migration
                     Schema::table('onus', function (Blueprint $table) {
                         $table->renameColumn('network_user_id', 'customer_id');
                     });
-                } catch (\Exception $e) {
-                    // If renameColumn fails (e.g., doctrine/dbal not installed), skip silently for tests
+                } catch (\Doctrine\DBAL\Exception $e) {
+                    // doctrine/dbal not installed - skip silently for SQLite tests
+                    \Log::debug('Skipping column rename in SQLite (doctrine/dbal not available)', [
+                        'table' => 'onus',
+                        'error' => $e->getMessage(),
+                    ]);
+                } catch (\BadMethodCallException $e) {
+                    // renameColumn method not available - skip silently
+                    \Log::debug('Skipping column rename in SQLite (method not available)', [
+                        'table' => 'onus',
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             } else {
                 // MySQL/PostgreSQL
@@ -71,8 +81,18 @@ return new class extends Migration
                     Schema::table('hotspot_login_logs', function (Blueprint $table) {
                         $table->renameColumn('network_user_id', 'customer_id');
                     });
-                } catch (\Exception $e) {
-                    // If renameColumn fails, skip silently for tests
+                } catch (\Doctrine\DBAL\Exception $e) {
+                    // doctrine/dbal not installed - skip silently for SQLite tests
+                    \Log::debug('Skipping column rename in SQLite (doctrine/dbal not available)', [
+                        'table' => 'hotspot_login_logs',
+                        'error' => $e->getMessage(),
+                    ]);
+                } catch (\BadMethodCallException $e) {
+                    // renameColumn method not available - skip silently
+                    \Log::debug('Skipping column rename in SQLite (method not available)', [
+                        'table' => 'hotspot_login_logs',
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             } else {
                 \DB::statement('ALTER TABLE hotspot_login_logs CHANGE network_user_id customer_id BIGINT UNSIGNED NULL');
@@ -116,8 +136,18 @@ return new class extends Migration
                     Schema::table('onus', function (Blueprint $table) {
                         $table->renameColumn('customer_id', 'network_user_id');
                     });
-                } catch (\Exception $e) {
-                    // If renameColumn fails, skip silently for tests
+                } catch (\Doctrine\DBAL\Exception $e) {
+                    // doctrine/dbal not installed - skip silently for SQLite tests
+                    \Log::debug('Skipping column rename rollback in SQLite (doctrine/dbal not available)', [
+                        'table' => 'onus',
+                        'error' => $e->getMessage(),
+                    ]);
+                } catch (\BadMethodCallException $e) {
+                    // renameColumn method not available - skip silently
+                    \Log::debug('Skipping column rename rollback in SQLite (method not available)', [
+                        'table' => 'onus',
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             } else {
                 \DB::statement('ALTER TABLE onus CHANGE customer_id network_user_id BIGINT UNSIGNED NULL');
@@ -147,8 +177,18 @@ return new class extends Migration
                     Schema::table('hotspot_login_logs', function (Blueprint $table) {
                         $table->renameColumn('customer_id', 'network_user_id');
                     });
-                } catch (\Exception $e) {
-                    // If renameColumn fails, skip silently for tests
+                } catch (\Doctrine\DBAL\Exception $e) {
+                    // doctrine/dbal not installed - skip silently for SQLite tests
+                    \Log::debug('Skipping column rename rollback in SQLite (doctrine/dbal not available)', [
+                        'table' => 'hotspot_login_logs',
+                        'error' => $e->getMessage(),
+                    ]);
+                } catch (\BadMethodCallException $e) {
+                    // renameColumn method not available - skip silently
+                    \Log::debug('Skipping column rename rollback in SQLite (method not available)', [
+                        'table' => 'hotspot_login_logs',
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             } else {
                 \DB::statement('ALTER TABLE hotspot_login_logs CHANGE customer_id network_user_id BIGINT UNSIGNED NULL');
