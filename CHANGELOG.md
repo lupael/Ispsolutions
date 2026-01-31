@@ -1,6 +1,25 @@
 #  (2026-01-31)
 
 
+### Bug Fixes
+
+* Address code review feedback - 17 critical issues resolved ([d13c640](https://github.com/i4edubd/ispsolution/commit/d13c640192ceb2ac84ba01cb80eac163a5c6e3de))
+
+
+### Features
+
+* Add MikrotikDbSyncController for import operations ([43f6b8f](https://github.com/i4edubd/ispsolution/commit/43f6b8f63d0e12ee1223bdd6feecac4cfc9e0593))
+* Add PppSecretProvisioningService with RouterosAPI ([9d8ea4d](https://github.com/i4edubd/ispsolution/commit/9d8ea4d892729cd735f0fae159c731185008b524))
+* Add RouterosAPI wrapper and MikrotikPppSecret model ([6d5d4ba](https://github.com/i4edubd/ispsolution/commit/6d5d4ba3c9ef464e13193ca4080064a5fc6cdf67))
+* Enhance router form with helpful tips and validation ([0492623](https://github.com/i4edubd/ispsolution/commit/0492623693a13541c13d23a56a777ce2754d7241))
+* Implement RouterConfigurationController with RouterosAPI ([1eae221](https://github.com/i4edubd/ispsolution/commit/1eae221f00554a13324f2be43dbb2e57620ee88b))
+* Update NasNetwatchController to use RouterosAPI ([267f08e](https://github.com/i4edubd/ispsolution/commit/267f08edb811d872e6b5d91b4e2853f66cb5bf5e))
+
+
+
+#  (2026-01-31)
+
+
 
 #  (2026-01-30)
 
