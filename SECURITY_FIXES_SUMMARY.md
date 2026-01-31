@@ -207,20 +207,34 @@ All fixes are application-level only:
 3. **Verify Ownership**: Check tenant_id before any update/delete operation
 4. **Use Relationships**: Prefer `$model->relationship()` over direct queries
 5. **Test Multi-Tenancy**: Always test with at least 2 tenants
+6. **Null-Safe Operators**: Use `?->` when accessing properties on potentially null objects
+
+### Important Security Notes
+
+**RADIUS Password Storage**: The `radius_password` field stores passwords in plaintext by design. This is required for RADIUS authentication protocols (PAP, CHAP, MS-CHAP) which need access to the original password. This is industry standard for RADIUS systems. To mitigate risks:
+- Restrict database access with strong access controls
+- Use encrypted database connections
+- Enable database-level encryption at rest
+- Implement audit logging for database access
+- Consider using certificate-based authentication where possible
+- Regularly rotate RADIUS shared secrets
 
 ---
 
 ## Code Review Summary
 
-**Files Changed**: 8  
-**Lines Added**: 95  
-**Lines Removed**: 27  
-**Net Change**: +68 lines
+**Files Changed**: 11  
+**Lines Added**: 115  
+**Lines Removed**: 36  
+**Net Change**: +79 lines
 
 **Code Review Feedback Addressed**:
 1. Fixed comment style (null vs NULL)
 2. Improved ONU query scoping using OLT relationship
-3. All feedback incorporated
+3. Fixed RADIUS provisioning to use is_subscriber flag (CRITICAL)
+4. Added tenant_id to IP pool creation
+5. Fixed null-safe operators in OltController (4 locations)
+6. Updated security documentation for RADIUS password storage
 
 **CodeQL Security Scan**: PASSED (No vulnerabilities found)
 
