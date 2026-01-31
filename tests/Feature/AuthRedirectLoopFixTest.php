@@ -3,13 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AuthRedirectLoopFixTest extends TestCase
 {
-    use RefreshDatabase;
-
     /**
      * Test that the root route redirects guests to login.
      */
@@ -37,19 +34,9 @@ class AuthRedirectLoopFixTest extends TestCase
      */
     public function test_authenticated_user_with_role_redirects_to_dashboard(): void
     {
-        // Create a user with the customer role
-        $user = User::factory()->create([
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        // Mock the hasRole method to return true for 'customer'
+        // Create a mock user with the customer role
         $user = $this->getMockBuilder(User::class)
             ->onlyMethods(['hasRole'])
-            ->setConstructorArgs([
-                'email' => 'test@example.com',
-                'password' => bcrypt('password'),
-            ])
             ->getMock();
 
         $user->method('hasRole')
@@ -75,19 +62,9 @@ class AuthRedirectLoopFixTest extends TestCase
      */
     public function test_authenticated_user_without_role_gets_logged_out(): void
     {
-        // Create a user
-        $user = User::factory()->create([
-            'email' => 'norole@example.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        // Mock the hasRole method to return false for all roles
+        // Create a mock user without any valid role
         $user = $this->getMockBuilder(User::class)
             ->onlyMethods(['hasRole'])
-            ->setConstructorArgs([
-                'email' => 'norole@example.com',
-                'password' => bcrypt('password'),
-            ])
             ->getMock();
 
         $user->method('hasRole')
@@ -111,19 +88,9 @@ class AuthRedirectLoopFixTest extends TestCase
      */
     public function test_login_page_redirects_authenticated_users(): void
     {
-        // Create a user
-        $user = User::factory()->create([
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        // Mock the hasRole method to return true for 'customer'
+        // Create a mock user with customer role
         $user = $this->getMockBuilder(User::class)
             ->onlyMethods(['hasRole'])
-            ->setConstructorArgs([
-                'email' => 'test@example.com',
-                'password' => bcrypt('password'),
-            ])
             ->getMock();
 
         $user->method('hasRole')
