@@ -3089,6 +3089,33 @@ class AdminController extends Controller
     }
 
     /**
+     * Bulk delete IPv4 pools.
+     */
+    public function ipv4PoolsBulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:ip_pools,id',
+        ]);
+
+        $deletedCount = 0;
+        
+        foreach ($validated['ids'] as $id) {
+            try {
+                $pool = IpPool::findOrFail($id);
+                $pool->delete();
+                $deletedCount++;
+            } catch (\Exception $e) {
+                // Log error but continue with other deletes
+                \Log::error("Failed to delete IP pool {$id}: " . $e->getMessage());
+            }
+        }
+
+        return redirect()->route('panel.admin.network.ipv4-pools')
+            ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
+    }
+
+    /**
      * Display IPv6 pools management.
      */
     public function ipv6Pools(): View
@@ -3323,6 +3350,35 @@ class AdminController extends Controller
 
         return redirect()->route('panel.admin.network.pppoe-profiles')
             ->with('success', 'PPPoE profile deleted successfully.');
+    }
+
+    /**
+     * Bulk delete PPPoE profiles.
+     */
+    public function pppoeProfilesBulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:mikrotik_profiles,id',
+        ]);
+
+        $deletedCount = 0;
+        
+        foreach ($validated['ids'] as $id) {
+            try {
+                $profile = MikrotikProfile::where('id', $id)
+                    ->whereHas('router')
+                    ->firstOrFail();
+                $profile->delete();
+                $deletedCount++;
+            } catch (\Exception $e) {
+                // Log error but continue with other deletes
+                \Log::error("Failed to delete PPPoE profile {$id}: " . $e->getMessage());
+            }
+        }
+
+        return redirect()->route('panel.admin.network.pppoe-profiles')
+            ->with('success', "{$deletedCount} PPPoE profile(s) deleted successfully.");
     }
 
     /**

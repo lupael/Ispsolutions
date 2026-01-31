@@ -723,6 +723,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     Route::get('/network/ipv4-pools/{id}/edit', [AdminController::class, 'ipv4PoolsEdit'])->name('network.ipv4-pools.edit');
     Route::put('/network/ipv4-pools/{id}', [AdminController::class, 'ipv4PoolsUpdate'])->name('network.ipv4-pools.update');
     Route::delete('/network/ipv4-pools/{id}', [AdminController::class, 'ipv4PoolsDestroy'])->middleware('password.confirm')->name('network.ipv4-pools.destroy');
+    Route::post('/network/ipv4-pools/bulk-delete', [AdminController::class, 'ipv4PoolsBulkDelete'])->middleware('password.confirm')->name('network.ipv4-pools.bulk-delete');
     Route::get('/network/ipv6-pools', [AdminController::class, 'ipv6Pools'])->name('network.ipv6-pools');
     Route::get('/network/ipv6-pools/create', [AdminController::class, 'ipv6PoolsCreate'])->name('network.ipv6-pools.create');
     Route::post('/network/ipv6-pools', [AdminController::class, 'ipv6PoolsStore'])->name('network.ipv6-pools.store');
@@ -739,6 +740,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     Route::get('/network/pppoe-profiles/{id}/edit', [AdminController::class, 'pppoeProfilesEdit'])->name('network.pppoe-profiles.edit');
     Route::put('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesUpdate'])->name('network.pppoe-profiles.update');
     Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->middleware('password.confirm')->name('network.pppoe-profiles.destroy');
+    Route::post('/network/pppoe-profiles/bulk-delete', [AdminController::class, 'pppoeProfilesBulkDelete'])->middleware('password.confirm')->name('network.pppoe-profiles.bulk-delete');
     Route::get('/network/package-fup-edit/{id}', [AdminController::class, 'packageFupEdit'])->name('network.package-fup-edit');
     Route::get('/network/ping-test', [AdminController::class, 'pingTest'])->name('network.ping-test');
 
