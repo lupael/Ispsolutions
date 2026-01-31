@@ -10,26 +10,35 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * ResellerBillingService
+ * ResellerBillingService (Operator Billing Service)
  *
- * Task 7.4: Add reseller billing roll-up
+ * @deprecated Class name kept for backward compatibility. Use OperatorBillingService in new code.
  *
- * Service to calculate total revenue from child accounts
- * and generate reseller commission reports
+ * Service to calculate total revenue from child accounts (customers managed by operators)
+ * and generate operator commission reports.
+ * 
+ * Terminology Update (Issue #320):
+ * - "Reseller" → "Operator" (Level 30)
+ * - "Sub-Reseller" → "Sub-Operator" (Level 40)
+ * 
+ * This service calculates commission earnings for Operators and Sub-Operators based on
+ * payments made by their managed customers.
  */
 class ResellerBillingService
 {
     /**
-     * Calculate total revenue from child accounts for a reseller
+     * Calculate total revenue from child accounts for an operator
      *
-     * @param User $reseller The reseller (parent customer)
+     * @param User $reseller The operator (Operator/Sub-Operator managing customers)
      * @param string|null $startDate Start date for revenue calculation (optional)
      * @param string|null $endDate End date for revenue calculation (optional)
      * @return array Revenue breakdown
+     * 
+     * Note: Parameter name 'reseller' kept for backward compatibility, refers to operator
      */
     public function calculateChildAccountsRevenue(User $reseller, ?string $startDate = null, ?string $endDate = null): array
     {
-        // Get all child accounts for this reseller
+        // Get all child accounts for this operator (customers managed by this operator)
         $childAccounts = $reseller->childAccounts()->pluck('id');
 
         if ($childAccounts->isEmpty()) {
@@ -58,7 +67,7 @@ class ResellerBillingService
         $totalRevenue = $query->sum('amount');
         $totalPayments = $query->count();
 
-        // Calculate commission (default 10% if not set on reseller)
+        // Calculate commission (default 10% if not set on operator)
         $commissionRate = $reseller->commission_rate ?? 0.10;
         $commission = $totalRevenue * $commissionRate;
 
@@ -91,19 +100,21 @@ class ResellerBillingService
     }
 
     /**
-     * Generate reseller commission report
+     * Generate operator commission report
      *
-     * @param User $reseller The reseller
+     * @param User $reseller The operator (Operator/Sub-Operator)
      * @param string|null $startDate Start date (optional)
      * @param string|null $endDate End date (optional)
      * @return array Commission report
+     * 
+     * Note: Parameter name 'reseller' kept for backward compatibility, refers to operator
      */
     public function generateCommissionReport(User $reseller, ?string $startDate = null, ?string $endDate = null): array
     {
         $revenueData = $this->calculateChildAccountsRevenue($reseller, $startDate, $endDate);
 
         return [
-            'reseller_id' => $reseller->id,
+            'reseller_id' => $reseller->id, // Key name kept for backward compatibility, refers to operator_id
             'reseller_name' => $reseller->name,
             'reseller_email' => $reseller->email,
             'report_period' => [
@@ -122,22 +133,24 @@ class ResellerBillingService
     }
 
     /**
-     * Get all resellers with their commission data
+     * Get all operators with their commission data
      *
      * @param string|null $startDate Start date (optional)
      * @param string|null $endDate End date (optional)
-     * @return Collection Collection of reseller commission data
+     * @return Collection Collection of operator commission data
+     * 
+     * Note: Method name kept for backward compatibility, returns operator data
      */
     public function getAllResellersCommission(?string $startDate = null, ?string $endDate = null): Collection
     {
-        // Get all users who have child accounts (resellers)
+        // Get all users who have child accounts (operators managing customers)
         $resellers = User::has('childAccounts')->get();
 
         return $resellers->map(function ($reseller) use ($startDate, $endDate) {
             $revenueData = $this->calculateChildAccountsRevenue($reseller, $startDate, $endDate);
 
             return [
-                'reseller_id' => $reseller->id,
+                'reseller_id' => $reseller->id, // Key name kept for backward compatibility, refers to operator_id
                 'reseller_name' => $reseller->name,
                 'reseller_email' => $reseller->email,
                 'child_count' => $revenueData['child_count'],
@@ -149,14 +162,16 @@ class ResellerBillingService
     }
 
     /**
-     * Pay commission to reseller
+     * Pay commission to operator
      *
-     * @param User $reseller The reseller to pay
+     * @param User $reseller The operator to pay (Operator/Sub-Operator)
      * @param float $amount Commission amount
      * @param string $description Payment description
      * @return Payment The created payment record
+     * 
+     * Note: Parameter name 'reseller' kept for backward compatibility, refers to operator
      */
-    public function payCommission(User $reseller, float $amount, string $description = 'Reseller commission payment'): Payment
+    public function payCommission(User $reseller, float $amount, string $description = 'Operator commission payment'): Payment
     {
         return Payment::create([
             'user_id' => $reseller->id,

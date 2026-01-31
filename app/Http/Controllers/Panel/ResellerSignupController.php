@@ -14,11 +14,18 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * ResellerSignupController
+ * ResellerSignupController (Operator Signup Controller)
  *
- * Task 7.6: Add reseller signup workflow
+ * @deprecated Class name kept for backward compatibility. Consider using OperatorSignupController.
  *
- * Handles reseller registration, approval, and onboarding
+ * Handles operator registration, approval, and onboarding workflow.
+ * 
+ * Terminology Update (Issue #320):
+ * - "Reseller" → "Operator" (Level 30)
+ * - "Sub-Reseller" → "Sub-Operator" (Level 40)
+ * 
+ * This controller manages the signup process for new Operators who want to
+ * manage customers and earn commissions from their customer payments.
  */
 class ResellerSignupController extends Controller
 {
@@ -28,7 +35,9 @@ class ResellerSignupController extends Controller
     }
 
     /**
-     * Show reseller signup form
+     * Show operator signup form
+     * 
+     * @return View
      */
     public function showSignupForm(): View
     {
@@ -36,7 +45,10 @@ class ResellerSignupController extends Controller
     }
 
     /**
-     * Handle reseller signup submission
+     * Handle operator signup submission
+     * 
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function signup(Request $request): RedirectResponse
     {
@@ -59,23 +71,23 @@ class ResellerSignupController extends Controller
         }
 
         try {
-            // Create reseller account in pending state
+            // Create operator account in pending state
             $reseller = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password),
-                'is_reseller' => true,
-                'reseller_status' => 'pending', // pending, approved, rejected
-                'reseller_application_data' => json_encode([
+                'is_reseller' => true, // Field name kept for backward compatibility, refers to operator
+                'reseller_status' => 'pending', // pending, approved, rejected (field name kept for backward compatibility)
+                'reseller_application_data' => json_encode([ // Field name kept for backward compatibility
                     'business_name' => $request->business_name,
                     'business_address' => $request->business_address,
                     'business_type' => $request->business_type,
                     'expected_customers' => $request->expected_customers,
                     'applied_at' => now()->toDateTimeString(),
                 ]),
-                'commission_rate' => 0.10, // Default 10% commission
-                'operator_level' => 50, // Reseller level
+                'commission_rate' => 0.10, // Default 10% commission for operators
+                'operator_level' => User::OPERATOR_LEVEL_OPERATOR, // Level 30: Operator (set upon approval)
                 'status' => 'inactive', // Inactive until approved
             ]);
 

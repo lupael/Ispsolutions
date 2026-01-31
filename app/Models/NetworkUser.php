@@ -11,6 +11,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * NetworkUser Model
+ * 
+ * @deprecated This model is maintained for backward compatibility only.
+ *             The 'network_users' table has been renamed to 'customers'.
+ *             Use the Customer model for new code.
+ * 
+ * Migration History:
+ * - network_users table → customers table (2026-01-30)
+ * - network_user_id columns → customer_id columns (2026-01-30)
+ * - Customers identified by is_subscriber flag, not operator_level (2026-01-30)
+ * 
+ * This model provides transparent backward compatibility by pointing to the
+ * 'customers' table. All existing code using NetworkUser will continue to work.
+ */
 class NetworkUser extends Model
 {
     use HasFactory;
@@ -18,6 +33,9 @@ class NetworkUser extends Model
 
     /**
      * The table associated with the model.
+     * 
+     * NOTE: Points to 'customers' table for backward compatibility.
+     * Original 'network_users' table was renamed to 'customers'.
      *
      * @var string
      */
