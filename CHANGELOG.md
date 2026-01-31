@@ -108,9 +108,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-01-31
 
----
+### ✨ Features
 
-## [Unreleased] - 2026-01-31
+- Enhance router form with helpful tips and validation ([0492623](../../commit/0492623693a13541c13d23a56a777ce2754d7241))
+- Update NasNetwatchController to use RouterosAPI ([267f08e](../../commit/267f08edb811d872e6b5d91b4e2853f66cb5bf5e))
+- Add PppSecretProvisioningService with RouterosAPI ([9d8ea4d](../../commit/9d8ea4d892729cd735f0fae159c731185008b524))
+- Add MikrotikDbSyncController for import operations ([43f6b8f](../../commit/43f6b8f63d0e12ee1223bdd6feecac4cfc9e0593))
+- Implement RouterConfigurationController with RouterosAPI ([1eae221](../../commit/1eae221f00554a13324f2be43dbb2e57620ee88b))
+- Add RouterosAPI wrapper and MikrotikPppSecret model ([6d5d4ba](../../commit/6d5d4ba3c9ef464e13193ca4080064a5fc6cdf67))
+
+### 🐛 Bug Fixes
+
+- Address code review feedback - 17 critical issues resolved ([d13c640](../../commit/d13c640192ceb2ac84ba01cb80eac163a5c6e3de))
+
+### 📚 Documentation
+
+- Add comprehensive implementation summary ([5d43033](../../commit/5d4303352d5df158fa1ee0fe2bfd081a3caa5ee5))
 
 ---
 
