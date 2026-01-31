@@ -65,8 +65,20 @@
                                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                         @foreach($operator->packageRates as $rate)
                                             <tr>
-                                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $rate->package->name }}</td>
-                                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">৳{{ number_format($rate->package->price, 2) }}</td>
+                                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                                    @if($rate->package)
+                                                        {{ $rate->package->name }}
+                                                    @else
+                                                        <span class="text-gray-400 italic">Package not found</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                                    @if($rate->package)
+                                                        ৳{{ number_format($rate->package->price, 2) }}
+                                                    @else
+                                                        <span class="text-gray-400">—</span>
+                                                    @endif
+                                                </td>
                                                 <td class="px-4 py-3 text-sm font-semibold text-indigo-600 dark:text-indigo-400">৳{{ number_format($rate->custom_price, 2) }}</td>
                                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ number_format($rate->commission_percentage, 2) }}%</td>
                                                 <td class="px-4 py-3 text-sm">
