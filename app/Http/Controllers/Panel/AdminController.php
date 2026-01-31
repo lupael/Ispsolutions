@@ -4606,7 +4606,8 @@ class AdminController extends Controller
                 $query->where('is_global', true)
                     ->orWhere('operator_id', $operator->id);
             })->get();
-        $existingRates = OperatorPackageRate::where('operator_id', $operator->id)
+        $existingRates = OperatorPackageRate::where('tenant_id', $tenantId)
+            ->where('operator_id', $operator->id)
             ->pluck('package_id')
             ->toArray();
 
