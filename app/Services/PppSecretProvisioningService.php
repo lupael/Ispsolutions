@@ -39,6 +39,7 @@ class PppSecretProvisioningService
             'user' => $router->username,
             'pass' => $router->password,
             'port' => $router->api_port,
+            'timeout' => (int) config('services.mikrotik.timeout', 30),
             'debug' => config('app.debug'),
         ]);
 
@@ -143,6 +144,7 @@ class PppSecretProvisioningService
             'user' => $router->username,
             'pass' => $router->password,
             'port' => $router->api_port,
+            'timeout' => (int) config('services.mikrotik.timeout', 30),
             'debug' => config('app.debug'),
         ]);
 
