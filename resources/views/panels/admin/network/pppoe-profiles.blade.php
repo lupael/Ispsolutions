@@ -93,12 +93,18 @@
         </div>
     </div>
 
+    <!-- Bulk Actions Bar -->
+    <x-bulk-actions-bar :actions="['delete']" />
+
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-900">
                         <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" aria-label="Select all PPPoE profiles">
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profile Name</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Router</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">IPv4 Pool</th>
@@ -111,6 +117,9 @@
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($profiles as $profile)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" data-bulk-select-item data-item-id="{{ $profile->id }}" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" aria-label="Select {{ $profile->name }}">
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $profile->name }}</div>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">{{ $profile->description ?? 'N/A' }}</div>
@@ -157,7 +166,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center">
+                                <td colspan="8" class="px-6 py-12 text-center">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -340,4 +349,87 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+@vite('resources/js/bulk-selection.js')
+<script nonce="{{ csp_nonce() }}">
+document.addEventListener('DOMContentLoaded', function() {
+    const actionButton = document.querySelector('[data-bulk-action-button]');
+    const actionSelect = document.querySelector('[data-bulk-action-select]');
+    const selectedCountEl = document.querySelector('[data-selected-count]');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    
+    if (actionButton && actionSelect) {
+        actionButton.addEventListener('click', function() {
+            const action = actionSelect.value;
+            const selectedCheckboxes = document.querySelectorAll('[data-bulk-select-item]:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.itemId);
+            
+            if (selectedIds.length === 0) {
+                // Clear any existing error messages first
+                const existingError = bulkActionsBar.querySelector('.inline-error-msg');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                // Show error in bulk actions bar instead of alert
+                const errorMsg = document.createElement('span');
+                errorMsg.className = 'text-sm text-red-600 ml-3 inline-error-msg';
+                errorMsg.textContent = 'Please select at least one PPPoE profile';
+                bulkActionsBar.querySelector('.flex.items-center.gap-3').appendChild(errorMsg);
+                setTimeout(() => errorMsg.remove(), 3000);
+                return;
+            }
+            
+            if (action === 'delete') {
+                if (confirm(`Are you sure you want to delete ${selectedIds.length} PPPoE profile(s)? This action cannot be undone.`)) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ route("panel.admin.network.pppoe-profiles.bulk-delete") }}';
+                    
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
+                    
+                    selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            }
+        });
+        
+        // Update selected count
+        const updateSelectedCount = function() {
+            const selectedCheckboxes = document.querySelectorAll('[data-bulk-select-item]:checked');
+            if (selectedCountEl) {
+                selectedCountEl.textContent = selectedCheckboxes.length;
+            }
+            if (bulkActionsBar) {
+                bulkActionsBar.style.display = selectedCheckboxes.length > 0 ? 'block' : 'none';
+            }
+        };
+        
+        document.querySelectorAll('[data-bulk-select-item]').forEach(cb => {
+            cb.addEventListener('change', updateSelectedCount);
+        });
+        
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                setTimeout(updateSelectedCount, 0);
+            });
+        }
+    }
+});
+</script>
+@endpush
 @endsection

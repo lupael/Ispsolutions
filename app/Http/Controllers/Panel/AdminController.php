@@ -3093,6 +3093,30 @@ class AdminController extends Controller
     }
 
     /**
+     * Bulk delete IPv4 pools.
+     */
+    public function ipv4PoolsBulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:ip_pools,id',
+        ]);
+
+        try {
+            // Use bulk delete for efficiency
+            $deletedCount = IpPool::whereIn('id', $validated['ids'])->delete();
+
+            return redirect()->route('panel.admin.network.ipv4-pools')
+                ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
+        } catch (\Exception $e) {
+            Log::error("Failed to bulk delete IP pools: " . $e->getMessage());
+            
+            return redirect()->route('panel.admin.network.ipv4-pools')
+                ->with('error', 'Failed to delete IP pools. Please try again.');
+        }
+    }
+
+    /**
      * Display IPv6 pools management.
      */
     public function ipv6Pools(): View
@@ -3327,6 +3351,32 @@ class AdminController extends Controller
 
         return redirect()->route('panel.admin.network.pppoe-profiles')
             ->with('success', 'PPPoE profile deleted successfully.');
+    }
+
+    /**
+     * Bulk delete PPPoE profiles.
+     */
+    public function pppoeProfilesBulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:mikrotik_profiles,id',
+        ]);
+
+        try {
+            // Filter profiles that belong to routers in the current tenant
+            $deletedCount = MikrotikProfile::whereIn('id', $validated['ids'])
+                ->whereHas('router')
+                ->delete();
+
+            return redirect()->route('panel.admin.network.pppoe-profiles')
+                ->with('success', "{$deletedCount} PPPoE profile(s) deleted successfully.");
+        } catch (\Exception $e) {
+            Log::error("Failed to bulk delete PPPoE profiles: " . $e->getMessage());
+            
+            return redirect()->route('panel.admin.network.pppoe-profiles')
+                ->with('error', 'Failed to delete PPPoE profiles. Please try again.');
+        }
     }
 
     /**
