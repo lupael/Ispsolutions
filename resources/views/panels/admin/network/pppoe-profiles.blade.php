@@ -3,7 +3,23 @@
 @section('title', 'PPPoE Profiles')
 
 @section('content')
-<div class="space-y-6" x-data="{ showCreateModal: {{ $errors->any() ? 'true' : 'false' }} }">
+<div class="space-y-6" x-data="{ 
+    showCreateModal: {{ $errors->any() ? 'true' : 'false' }},
+    showEditModal: false,
+    editProfile: null,
+    editData: {},
+    async loadEditProfile(id) {
+        try {
+            const response = await fetch(`/panel/admin/network/pppoe-profiles/${id}/edit`);
+            const data = await response.json();
+            this.editData = data.profile;
+            this.showEditModal = true;
+        } catch (error) {
+            console.error('Failed to load profile:', error);
+            alert('Failed to load profile data');
+        }
+    }
+}">
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
             <div class="flex justify-between items-center">
@@ -84,9 +100,9 @@
                     <thead class="bg-gray-50 dark:bg-gray-900">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profile Name</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Local Address</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Remote Address Pool</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rate Limit</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Router</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">IPv4 Pool</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">IPv6 Pool</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Users</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
@@ -99,22 +115,21 @@
                                     <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $profile->name }}</div>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">{{ $profile->description ?? 'N/A' }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $profile->local_address }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $profile->remote_address_pool }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-gray-100">
-                                        <span class="text-green-600">↓</span> {{ $profile->rate_limit_rx ?? 'N/A' }}
-                                    </div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="text-blue-600">↑</span> {{ $profile->rate_limit_tx ?? 'N/A' }}
-                                    </div>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    {{ $profile->router->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    {{ $profile->ipv4Pool->name ?? 'Not Set' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    {{ $profile->ipv6Pool->name ?? 'Not Set' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $profile->users_count ?? 0 }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">Active</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <span class="text-gray-400 dark:text-gray-500 mr-3">View / Edit</span>
+                                    <button @click="loadEditProfile({{ $profile->id }})" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">View / Edit</button>
                                     <form action="{{ route('panel.admin.network.pppoe-profiles.destroy', $profile->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this PPPoE profile?');">
                                         @csrf
                                         @method('DELETE')
@@ -185,48 +200,35 @@
                             </div>
 
                             <div>
-                                <label for="local_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Local Address <span class="text-red-500">*</span></label>
-                                <input type="text" name="local_address" id="local_address" value="{{ old('local_address') }}" placeholder="10.0.0.1" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                @error('local_address')
+                                <label for="ipv4_pool_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">IPv4 Pool</label>
+                                <select name="ipv4_pool_id" id="ipv4_pool_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="">Select IPv4 Pool (Optional)</option>
+                                    @foreach($ipv4Pools as $pool)
+                                        <option value="{{ $pool->id }}" {{ old('ipv4_pool_id') == $pool->id ? 'selected' : '' }}>
+                                            {{ $pool->name }} ({{ $pool->start_ip }} - {{ $pool->end_ip }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('ipv4_pool_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+                                <p class="mt-1 text-xs text-gray-500">Select an existing IPv4 pool from network configuration</p>
                             </div>
 
                             <div>
-                                <label for="remote_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Remote Address Pool <span class="text-red-500">*</span></label>
-                                <input type="text" name="remote_address" id="remote_address" value="{{ old('remote_address') }}" placeholder="pool-name or IP range" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                @error('remote_address')
+                                <label for="ipv6_pool_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">IPv6 Pool</label>
+                                <select name="ipv6_pool_id" id="ipv6_pool_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="">Select IPv6 Pool (Optional)</option>
+                                    @foreach($ipv6Pools as $pool)
+                                        <option value="{{ $pool->id }}" {{ old('ipv6_pool_id') == $pool->id ? 'selected' : '' }}>
+                                            {{ $pool->name }} ({{ $pool->start_ip }} - {{ $pool->end_ip }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('ipv6_pool_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
-                            </div>
-
-                            <div>
-                                <label for="rate_limit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rate Limit</label>
-                                <input type="text" name="rate_limit" id="rate_limit" value="{{ old('rate_limit') }}" placeholder="10M/10M" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <p class="mt-1 text-xs text-gray-500">Format: upload/download (e.g., 10M/10M)</p>
-                                @error('rate_limit')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="session_timeout" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Session Timeout</label>
-                                    <input type="number" name="session_timeout" id="session_timeout" value="{{ old('session_timeout') }}" min="0" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <p class="mt-1 text-xs text-gray-500">In seconds</p>
-                                    @error('session_timeout')
-                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <div>
-                                    <label for="idle_timeout" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Idle Timeout</label>
-                                    <input type="number" name="idle_timeout" id="idle_timeout" value="{{ old('idle_timeout') }}" min="0" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <p class="mt-1 text-xs text-gray-500">In seconds</p>
-                                    @error('idle_timeout')
-                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Select an existing IPv6 pool from network configuration (if required)</p>
                             </div>
                         </div>
                     </div>
@@ -235,6 +237,83 @@
                             Create Profile
                         </button>
                         <button type="button" @click="showCreateModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div x-show="showEditModal" @click.self="showEditModal = false" class="fixed z-50 inset-0 overflow-y-auto" style="display: none;">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="showEditModal" @click.self="showEditModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full z-50">
+                <form :action="`/panel/admin/network/pppoe-profiles/${editData.id}`" method="POST" x-show="editData.id">
+                    @csrf
+                    @method('PUT')
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+                                Edit PPPoE Profile
+                            </h3>
+                            <button type="button" @click="showEditModal = false" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="edit_router_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Router <span class="text-red-500">*</span></label>
+                                <select name="router_id" id="edit_router_id" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-model="editData.router_id">
+                                    <option value="">Select Router</option>
+                                    @foreach($routers as $router)
+                                        <option value="{{ $router->id }}">{{ $router->name }} ({{ $router->ip_address }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="edit_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Profile Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="name" id="edit_name" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-model="editData.name">
+                            </div>
+
+                            <div>
+                                <label for="edit_ipv4_pool_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">IPv4 Pool</label>
+                                <select name="ipv4_pool_id" id="edit_ipv4_pool_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-model="editData.ipv4_pool_id">
+                                    <option value="">Select IPv4 Pool (Optional)</option>
+                                    @foreach($ipv4Pools as $pool)
+                                        <option value="{{ $pool->id }}">{{ $pool->name }} ({{ $pool->start_ip }} - {{ $pool->end_ip }})</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Select an existing IPv4 pool from network configuration</p>
+                            </div>
+
+                            <div>
+                                <label for="edit_ipv6_pool_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">IPv6 Pool</label>
+                                <select name="ipv6_pool_id" id="edit_ipv6_pool_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-model="editData.ipv6_pool_id">
+                                    <option value="">Select IPv6 Pool (Optional)</option>
+                                    @foreach($ipv6Pools as $pool)
+                                        <option value="{{ $pool->id }}">{{ $pool->name }} ({{ $pool->start_ip }} - {{ $pool->end_ip }})</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Select an existing IPv6 pool from network configuration (if required)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                            Update Profile
+                        </button>
+                        <button type="button" @click="showEditModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Cancel
                         </button>
                     </div>

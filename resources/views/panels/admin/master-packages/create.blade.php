@@ -105,6 +105,22 @@
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Package Settings</h3>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
+                            <label for="pppoe_profile_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">PPPoE Profile</label>
+                            <select name="pppoe_profile_id" id="pppoe_profile_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Select PPPoE Profile (Optional)</option>
+                                @foreach($pppoeProfiles ?? [] as $profile)
+                                    <option value="{{ $profile->id }}" {{ old('pppoe_profile_id') == $profile->id ? 'selected' : '' }}>
+                                        {{ $profile->name }} - {{ $profile->router->name ?? 'Unknown Router' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('pppoe_profile_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-xs text-gray-500">Associate a PPPoE profile with this package</p>
+                        </div>
+
+                        <div>
                             <label for="visibility" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Visibility *</label>
                             <select name="visibility" id="visibility" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="public" {{ old('visibility', 'public') === 'public' ? 'selected' : '' }}>Public</option>

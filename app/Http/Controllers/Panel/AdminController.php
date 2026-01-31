@@ -3132,7 +3132,7 @@ class AdminController extends Controller
      */
     public function pppoeProfiles(): View
     {
-        $profiles = MikrotikProfile::with('router')->latest()->paginate(20);
+        $profiles = MikrotikProfile::with(['router', 'ipv4Pool', 'ipv6Pool'])->latest()->paginate(20);
 
         $stats = [
             'total' => MikrotikProfile::count(),
@@ -3141,8 +3141,10 @@ class AdminController extends Controller
         ];
 
         $routers = MikrotikRouter::where('status', 'active')->get();
+        $ipv4Pools = IpPool::where('pool_type', 'ipv4')->where('status', 'active')->get();
+        $ipv6Pools = IpPool::where('pool_type', 'ipv6')->where('status', 'active')->get();
 
-        return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers'));
+        return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers', 'ipv4Pools', 'ipv6Pools'));
     }
 
     /**
@@ -3161,8 +3163,10 @@ class AdminController extends Controller
                     return $query->where('router_id', $request->router_id);
                 }),
             ],
-            'local_address' => 'required|ip',
-            'remote_address' => 'required|string|max:255',
+            'ipv4_pool_id' => 'nullable|exists:ip_pools,id',
+            'ipv6_pool_id' => 'nullable|exists:ip_pools,id',
+            'local_address' => 'nullable|ip',
+            'remote_address' => 'nullable|string|max:255',
             'rate_limit' => 'nullable|string|max:255',
             'session_timeout' => 'nullable|integer|min:0',
             'idle_timeout' => 'nullable|integer|min:0',
@@ -3172,6 +3176,57 @@ class AdminController extends Controller
 
         return redirect()->route('panel.admin.network.pppoe-profiles')
             ->with('success', 'PPPoE profile created successfully.');
+    }
+
+    /**
+     * Show edit form for a PPPoE profile.
+     */
+    public function pppoeProfilesEdit($id)
+    {
+        $profile = MikrotikProfile::with(['router', 'ipv4Pool', 'ipv6Pool'])->findOrFail($id);
+        $routers = MikrotikRouter::where('status', 'active')->get();
+        $ipv4Pools = IpPool::where('pool_type', 'ipv4')->where('status', 'active')->get();
+        $ipv6Pools = IpPool::where('pool_type', 'ipv6')->where('status', 'active')->get();
+
+        return response()->json([
+            'profile' => $profile,
+            'routers' => $routers,
+            'ipv4Pools' => $ipv4Pools,
+            'ipv6Pools' => $ipv6Pools,
+        ]);
+    }
+
+    /**
+     * Update a PPPoE profile.
+     */
+    public function pppoeProfilesUpdate(Request $request, $id)
+    {
+        $profile = MikrotikProfile::findOrFail($id);
+
+        $validated = $request->validate([
+            'router_id' => 'required|exists:mikrotik_routers,id',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                // Ensure name is unique for the selected router, except for current profile
+                \Illuminate\Validation\Rule::unique('mikrotik_profiles')->where(function ($query) use ($request) {
+                    return $query->where('router_id', $request->router_id);
+                })->ignore($id),
+            ],
+            'ipv4_pool_id' => 'nullable|exists:ip_pools,id',
+            'ipv6_pool_id' => 'nullable|exists:ip_pools,id',
+            'local_address' => 'nullable|ip',
+            'remote_address' => 'nullable|string|max:255',
+            'rate_limit' => 'nullable|string|max:255',
+            'session_timeout' => 'nullable|integer|min:0',
+            'idle_timeout' => 'nullable|integer|min:0',
+        ]);
+
+        $profile->update($validated);
+
+        return redirect()->route('panel.admin.network.pppoe-profiles')
+            ->with('success', 'PPPoE profile updated successfully.');
     }
 
     /**

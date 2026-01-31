@@ -53,6 +53,7 @@ class MasterPackage extends Model
         'visibility',
         'is_trial_package',
         'status',
+        'pppoe_profile_id',
     ];
 
     protected $casts = [
@@ -64,6 +65,7 @@ class MasterPackage extends Model
         'validity_days' => 'integer',
         'base_price' => 'decimal:2',
         'is_trial_package' => 'boolean',
+        'pppoe_profile_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -90,6 +92,14 @@ class MasterPackage extends Model
     public function packages(): HasMany
     {
         return $this->hasMany(Package::class, 'master_package_id');
+    }
+
+    /**
+     * Get the PPPoE profile associated with this master package
+     */
+    public function pppoeProfile(): BelongsTo
+    {
+        return $this->belongsTo(MikrotikProfile::class, 'pppoe_profile_id');
     }
 
     /**
