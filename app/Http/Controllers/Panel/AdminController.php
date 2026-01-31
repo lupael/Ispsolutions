@@ -4372,6 +4372,11 @@ class AdminController extends Controller
         ]);
 
         $validated['operator_id'] = $operator->id;
+        
+        // Ensure commission_percentage has a default value of 0 if not provided
+        if ($validated['commission_percentage'] === null) {
+            $validated['commission_percentage'] = 0;
+        }
 
         OperatorPackageRate::updateOrCreate(
             [
