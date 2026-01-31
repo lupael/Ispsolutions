@@ -2547,6 +2547,7 @@ class AdminController extends Controller
                 'port' => $apiPort,
                 'ssl' => $apiPort === 8729, // Auto-detect SSL for standard SSL port
                 'attempts' => 1,
+                'timeout' => (int) config('services.mikrotik.timeout', 30), // Use configured timeout to avoid execution time limits
                 'debug' => false,
             ]);
 
