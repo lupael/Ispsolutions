@@ -180,11 +180,12 @@ class TicketController extends Controller
             
             // Additional validation: Operators and Sub-Operators can only create tickets for their subordinates
             if ($user->isOperatorRole() || $user->isSubOperator()) {
-                $allowedCustomerIds = $user->subordinates()
+                $customerExists = $user->subordinates()
                     ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
-                    ->pluck('id');
+                    ->where('id', $customerId)
+                    ->exists();
                 
-                if (!$allowedCustomerIds->contains($customerId)) {
+                if (!$customerExists) {
                     return redirect()->back()
                         ->withErrors(['customer_id' => 'You can only create tickets for customers you manage.'])
                         ->withInput();
