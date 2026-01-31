@@ -12,13 +12,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * 
  * @deprecated This model is maintained for backward compatibility only.
  *             The 'network_user_sessions' table has been renamed to 'customer_sessions'.
- *             Consider using CustomerSession model for new code.
  * 
  * Migration History:
  * - network_user_sessions table → customer_sessions table (2026-01-30)
  * 
  * This model provides transparent backward compatibility by pointing to the
  * 'customer_sessions' table. All existing code will continue to work.
+ * 
+ * Note: This model continues to be the standard way to access customer session data.
+ * The table name was updated but the model name is preserved for consistency.
  */
 class NetworkUserSession extends Model
 {

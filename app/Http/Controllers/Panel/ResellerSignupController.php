@@ -87,7 +87,7 @@ class ResellerSignupController extends Controller
                     'applied_at' => now()->toDateTimeString(),
                 ]),
                 'commission_rate' => 0.10, // Default 10% commission for operators
-                'operator_level' => 50, // Operator level (will be adjusted upon approval)
+                'operator_level' => User::OPERATOR_LEVEL_OPERATOR, // Level 30: Operator (set upon approval)
                 'status' => 'inactive', // Inactive until approved
             ]);
 
