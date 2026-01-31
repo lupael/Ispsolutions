@@ -35,6 +35,7 @@ use App\Services\NotificationService;
 use App\Services\PdfExportService;
 use App\Services\PdfService;
 use App\Services\RadiusService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1871,7 +1872,7 @@ class AdminController extends Controller
     {
         $customers = User::onlyTrashed()
             ->where('is_subscriber', true)
-            ->with(['networkUser', 'zone'])
+            ->with(['zone'])
             ->latest('deleted_at')
             ->paginate(20);
 
@@ -1881,7 +1882,7 @@ class AdminController extends Controller
     /**
      * Restore a soft-deleted customer.
      */
-    public function restoreCustomer(int $id)
+    public function restoreCustomer(int $id): RedirectResponse
     {
         $customer = User::onlyTrashed()
             ->where('is_subscriber', true)
@@ -1898,7 +1899,7 @@ class AdminController extends Controller
     /**
      * Permanently delete a customer.
      */
-    public function forceDeleteCustomer(int $id)
+    public function forceDeleteCustomer(int $id): RedirectResponse
     {
         $customer = User::onlyTrashed()
             ->where('is_subscriber', true)

@@ -167,7 +167,12 @@ class SalesManagerController extends Controller
      * Display bill details.
      * Note: "bill" refers to subscription or invoice based on route binding
      */
-    public function showBill($bill): View
+    /**
+     * Display the specified bill.
+     * 
+     * @param  int|string  $bill  The bill ID (can be Subscription ID or Invoice ID)
+     */
+    public function showBill(int|string $bill): View
     {
         $user = auth()->user();
 
@@ -187,8 +192,10 @@ class SalesManagerController extends Controller
 
     /**
      * Process bill payment.
+     * 
+     * @param  int|string  $bill  The bill ID (can be Subscription ID or Invoice ID)
      */
-    public function payBill(Request $request, $bill): RedirectResponse
+    public function payBill(Request $request, int|string $bill): RedirectResponse
     {
         $user = auth()->user();
 
@@ -223,14 +230,14 @@ class SalesManagerController extends Controller
      * Find a bill (Subscription or Invoice) by ID within the tenant.
      *
      * Note: Subscriptions are authorized via tenant_id check since no SubscriptionPolicy exists.
-     * Invoices use InvoicePolicy for proper authorization.
+     * Invoices use InvoicePolicy for proper authorization which includes tenant isolation.
      *
      * @param  int|string  $billId  The bill identifier
      * @param  int  $tenantId  The tenant ID
      * @param  bool  $authorizePayment  Whether to authorize payment action for invoices
      * @return array  [$billRecord, $billType]
      */
-    private function findBill($billId, int $tenantId, bool $authorizePayment = false): array
+    private function findBill(int|string $billId, int $tenantId, bool $authorizePayment = false): array
     {
         if (! is_numeric($billId)) {
             abort(404, 'Invalid bill ID format.');
@@ -239,29 +246,24 @@ class SalesManagerController extends Controller
         // Check if it's a Subscription first
         $subscription = Subscription::find($billId);
         if ($subscription) {
-            if ($subscription->tenant_id === $tenantId) {
-                $subscription->load(['user', 'plan']);
-
-                return [$subscription, 'subscription'];
+            // For subscriptions, manually check tenant_id since no SubscriptionPolicy exists
+            if ($subscription->tenant_id !== $tenantId) {
+                abort(404, 'Bill not found or you do not have permission to access it.');
             }
-            // Subscription exists but belongs to different tenant - don't expose this
-            abort(404, 'Bill not found or you do not have permission to access it.');
+            $subscription->load(['user', 'plan']);
+            return [$subscription, 'subscription'];
         }
 
         // Try as Invoice
         $invoice = Invoice::find($billId);
         if ($invoice) {
-            if ($invoice->tenant_id === $tenantId) {
-                $this->authorize('view', $invoice);
-                if ($authorizePayment) {
-                    $this->authorize('pay', $invoice);
-                }
-                $invoice->load(['user', 'package', 'payments']);
-
-                return [$invoice, 'invoice'];
+            // InvoicePolicy handles both tenant isolation and user authorization
+            $this->authorize('view', $invoice);
+            if ($authorizePayment) {
+                $this->authorize('pay', $invoice);
             }
-            // Invoice exists but belongs to different tenant - don't expose this
-            abort(404, 'Bill not found or you do not have permission to access it.');
+            $invoice->load(['user', 'package', 'payments']);
+            return [$invoice, 'invoice'];
         }
 
         // Neither Subscription nor Invoice found

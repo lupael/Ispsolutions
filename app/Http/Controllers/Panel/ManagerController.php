@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\NetworkUserSession;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ManagerController extends Controller
@@ -136,7 +137,7 @@ class ManagerController extends Controller
     /**
      * Disconnect a user session.
      */
-    public function disconnectSession(NetworkUserSession $session)
+    public function disconnectSession(NetworkUserSession $session): RedirectResponse
     {
         $this->authorize('disconnect', $session);
 
