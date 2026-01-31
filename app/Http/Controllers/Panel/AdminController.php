@@ -940,7 +940,8 @@ class AdminController extends Controller
      */
     public function packagesCreate(): View
     {
-        return view('panels.admin.packages.create');
+        $profiles = MikrotikProfile::all();
+        return view('panels.admin.packages.create', compact('profiles'));
     }
 
     /**

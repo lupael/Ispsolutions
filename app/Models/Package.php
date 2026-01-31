@@ -51,6 +51,7 @@ class Package extends Model
         'master_package_id' => 'integer',
         'operator_package_rate_id' => 'integer',
         'pppoe_profile_id' => 'integer',
+        'visibility' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

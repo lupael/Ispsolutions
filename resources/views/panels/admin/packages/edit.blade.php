@@ -64,9 +64,9 @@
                 </div>
 
                 <!-- Operator's Price -->
-                @if($package->operatorPackageRate)
                 <div>
-                    <label for="operator_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">*Operator's Price</label>
+                    <label for="operator_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Operator's Price</label>
+                    @if($package->operatorPackageRate)
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <input type="number" name="operator_price" id="operator_price" value="{{ old('operator_price', $package->operatorPackageRate->operator_price) }}" step="0.01" min="0" readonly class="block w-full pr-16 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 bg-gray-50 shadow-sm">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -74,8 +74,13 @@
                         </div>
                     </div>
                     <p class="mt-1 text-xs text-gray-500">This is the price operator pays for this package (from operator package rate)</p>
+                    @else
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="text" value="N/A - Not linked to operator rate" readonly class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 bg-gray-50 shadow-sm">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">This package is not linked to an operator package rate</p>
+                    @endif
                 </div>
-                @endif
 
                 <!-- Visibility -->
                 <div>

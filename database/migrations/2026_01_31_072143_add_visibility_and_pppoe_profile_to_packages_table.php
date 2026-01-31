@@ -19,7 +19,11 @@ return new class extends Migration
             
             // Add PPPoE profile association for direct profile mapping
             if (! Schema::hasColumn('packages', 'pppoe_profile_id')) {
-                $table->foreignId('pppoe_profile_id')->nullable()->after('visibility')->constrained('mikrotik_profiles')->onDelete('set null');
+                $table->foreignId('pppoe_profile_id')
+                    ->nullable()
+                    ->after('visibility')
+                    ->constrained('mikrotik_profiles', 'id', 'packages_pppoe_profile_fk')
+                    ->onDelete('set null');
                 $table->index('pppoe_profile_id');
             }
         });
@@ -34,6 +38,9 @@ return new class extends Migration
             if (Schema::hasColumn('packages', 'pppoe_profile_id')) {
                 $table->dropForeign(['pppoe_profile_id']);
                 $table->dropIndex(['pppoe_profile_id']);
+            }
+            
+            if (Schema::hasColumn('packages', 'pppoe_profile_id')) {
                 $table->dropColumn('pppoe_profile_id');
             }
             

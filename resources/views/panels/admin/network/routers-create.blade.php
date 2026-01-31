@@ -159,11 +159,10 @@
 
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            API User's Password <span class="text-red-500">*</span>
+                            *API User's Password
                         </label>
                         <div class="mt-1 relative">
                             <input type="password" id="password" name="password" 
-                                   placeholder="api password"
                                    class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-10" 
                                    required>
                             <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -214,7 +213,7 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Location & Details</h3>
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                        <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">*Location</label>
+                        <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
                         <input type="text" id="location" name="location" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">

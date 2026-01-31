@@ -19,11 +19,11 @@
                         </svg>
                         Back to Packages
                     </a>
-                    <a href="{{ route('panel.admin.network.mikrotik-profiles.create') }}" class="ml-2 inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <a href="{{ route('panel.admin.network.pppoe-profiles') }}" class="ml-2 inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        New PPP Profile
+                        Manage PPP Profiles
                     </a>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                     <label for="pppoe_profile_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">*Select PPP Profile</label>
                     <select name="pppoe_profile_id" id="pppoe_profile_id" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">Select PPP Profile</option>
-                        @foreach(\App\Models\MikrotikProfile::all() as $profile)
+                        @foreach($profiles as $profile)
                             <option value="{{ $profile->id }}" {{ old('pppoe_profile_id') == $profile->id ? 'selected' : '' }}>{{ $profile->name }}</option>
                         @endforeach
                     </select>
@@ -129,7 +129,7 @@
 
                         <div>
                             <label for="validity_days" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Validity (Days)</label>
-                            <input type="number" name="validity_days" id="validity_days" value="{{ old('validity_days', 30) }}" min="1" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="number" name="validity_days" id="validity_days" value="{{ old('validity_days') }}" min="1" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('validity_days')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -166,7 +166,7 @@
                         Cancel
                     </a>
                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        NEXT
+                        Create Package
                     </button>
                 </div>
             </div>
