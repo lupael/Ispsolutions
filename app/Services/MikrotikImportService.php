@@ -278,6 +278,10 @@ class MikrotikImportService
         $filterDisabled = $options['filter_disabled'] ?? true;
         $generateBills = $options['generate_bills'] ?? false;
 
+        $imported = 0;
+        $failed = 0;
+        $errors = [];
+
         try {
             // Connect to router
             if (! $this->mikrotikService->connectRouter($routerId)) {
@@ -289,10 +293,6 @@ class MikrotikImportService
 
             // Fetch secrets from router
             $secrets = $this->fetchPppSecretsFromRouter($routerId, $filterDisabled);
-
-            $imported = 0;
-            $failed = 0;
-            $errors = [];
 
             // Process in chunks to avoid timeout and memory issues
             $chunkSize = 50; // Process 50 records at a time
