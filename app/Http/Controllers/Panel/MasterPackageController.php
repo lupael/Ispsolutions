@@ -97,7 +97,8 @@ class MasterPackageController extends Controller
      */
     public function create(): View
     {
-        return view($this->getViewPrefix() . '.create');
+        $pppoeProfiles = \App\Models\MikrotikProfile::with('router')->get();
+        return view($this->getViewPrefix() . '.create', compact('pppoeProfiles'));
     }
 
     /**
@@ -116,6 +117,7 @@ class MasterPackageController extends Controller
             'visibility' => 'required|in:public,private',
             'is_trial_package' => 'boolean',
             'status' => 'required|in:active,inactive',
+            'pppoe_profile_id' => 'nullable|exists:mikrotik_profiles,id',
         ], [
             'base_price.min' => 'Package price must be at least 1 to prevent free packages.',
         ]);
@@ -159,7 +161,8 @@ class MasterPackageController extends Controller
      */
     public function edit(MasterPackage $masterPackage): View
     {
-        return view($this->getViewPrefix() . '.edit', compact('masterPackage'));
+        $pppoeProfiles = \App\Models\MikrotikProfile::with('router')->get();
+        return view($this->getViewPrefix() . '.edit', compact('masterPackage', 'pppoeProfiles'));
     }
 
     /**
@@ -184,6 +187,7 @@ class MasterPackageController extends Controller
             'base_price' => 'required|numeric|min:1',
             'visibility' => 'required|in:public,private',
             'status' => 'required|in:active,inactive',
+            'pppoe_profile_id' => 'nullable|exists:mikrotik_profiles,id',
         ], [
             'base_price.min' => 'Package price must be at least 1 to prevent free packages.',
         ]);

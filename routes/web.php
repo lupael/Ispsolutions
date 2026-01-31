@@ -678,6 +678,8 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
     
     Route::get('/network/pppoe-profiles', [AdminController::class, 'pppoeProfiles'])->name('network.pppoe-profiles');
     Route::post('/network/pppoe-profiles', [AdminController::class, 'pppoeProfilesStore'])->name('network.pppoe-profiles.store');
+    Route::get('/network/pppoe-profiles/{id}/edit', [AdminController::class, 'pppoeProfilesEdit'])->name('network.pppoe-profiles.edit');
+    Route::put('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesUpdate'])->name('network.pppoe-profiles.update');
     Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->middleware('password.confirm')->name('network.pppoe-profiles.destroy');
     Route::get('/network/package-fup-edit/{id}', [AdminController::class, 'packageFupEdit'])->name('network.package-fup-edit');
     Route::get('/network/ping-test', [AdminController::class, 'pingTest'])->name('network.ping-test');
