@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\MikrotikRouter;
 use App\Models\Nas;
-use App\Services\MikrotikApiService;
+use App\Services\RouterosAPI;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,23 +17,21 @@ use Illuminate\Support\Facades\Log;
  * NAS Netwatch Controller
  *
  * Implements RADIUS health monitoring and fallback automation
- * as described in issue #180 - Mikrotik and OLT modules re-engineering.
+ * following IspBills pattern for netwatch management.
  *
  * This controller manages the netwatch configuration on Mikrotik routers
  * to ensure continuous operation even when the RADIUS server is down.
  */
 class NasNetwatchController extends Controller
 {
-    public function __construct(
-        private MikrotikApiService $mikrotikApiService
-    ) {}
-
     /**
      * Display netwatch configuration for a router.
      */
     public function index(int $routerId): JsonResponse
     {
-        $router = MikrotikRouter::with('nas')->findOrFail($routerId);
+        $router = MikrotikRouter::with('nas')
+            ->where('tenant_id', getCurrentTenantId())
+            ->findOrFail($routerId);
 
         // Get current netwatch configuration
         $netwatchConfig = $this->getNetwatchStatus($router);
@@ -46,9 +44,9 @@ class NasNetwatchController extends Controller
     }
 
     /**
-     * Configure netwatch for RADIUS health monitoring.
+     * Configure netwatch for RADIUS health monitoring (IspBills pattern).
      *
-     * Implements the logic described in issue #180:
+     * Implements the logic:
      * - RADIUS UP: Disable local secrets, drop non-radius sessions
      * - RADIUS DOWN: Enable local secrets for fallback
      */
@@ -61,7 +59,9 @@ class NasNetwatchController extends Controller
         ]);
 
         try {
-            $router = MikrotikRouter::with('nas')->findOrFail($routerId);
+            $router = MikrotikRouter::with('nas')
+                ->where('tenant_id', getCurrentTenantId())
+                ->findOrFail($routerId);
 
             if (! $router->nas) {
                 return response()->json([
@@ -195,9 +195,9 @@ class NasNetwatchController extends Controller
     }
 
     /**
-     * Configure netwatch for RADIUS health monitoring.
+     * Configure netwatch for RADIUS health monitoring (IspBills pattern).
      *
-     * Implements the logic described in issue #180:
+     * Implements the logic:
      * - RADIUS UP: Force RADIUS authentication (disable local secrets, drop non-radius sessions)
      * - RADIUS DOWN: Enable local secrets as fallback
      *
@@ -205,12 +205,12 @@ class NasNetwatchController extends Controller
      */
     private function configureNetwatchForRadius(MikrotikRouter $router, array $config): array
     {
-        // Use RADIUS server IP, not the router/NAS IP
-        $radiusServer = $config['radius_server'] ?? config('radius.server_ip', '127.0.0.1');
+        // Use RADIUS server IP from NAS or config
+        $radiusServer = $router->nas->server ?? config('radius.server_ip', '127.0.0.1');
         $interval = $config['interval'] ?? '1m';
         $timeout = $config['timeout'] ?? '1s';
 
-        // Scripts as defined in issue #180
+        // Scripts as defined in IspBills pattern
         // UP script: RADIUS is working, force all auth through RADIUS
         // - Disable local secrets (they should not be used when RADIUS works)
         // - Remove any active non-RADIUS sessions (force re-auth through RADIUS)
@@ -229,12 +229,27 @@ class NasNetwatchController extends Controller
             'comment' => 'radius',
         ];
 
+        $api = new RouterosAPI([
+            'host' => $router->ip_address,
+            'user' => $router->username,
+            'pass' => $router->password,
+            'port' => $router->api_port,
+            'debug' => config('app.debug'),
+        ]);
+
+        if (!$api->connect()) {
+            return [
+                'success' => false,
+                'message' => 'Cannot connect to router',
+            ];
+        }
+
         try {
-            // Remove any existing netwatch for this host
-            $existingRows = $this->mikrotikApiService->getMktRows($router, '/tool/netwatch', ['host' => $radiusServer]);
+            // Remove any existing netwatch for this host (IspBills pattern)
+            $existingRows = $api->getMktRows('tool_netwatch', ['host' => $radiusServer]);
 
             if (! empty($existingRows)) {
-                $this->mikrotikApiService->removeMktRows($router, '/tool/netwatch', $existingRows);
+                $api->removeMktRows('tool_netwatch', $existingRows);
                 Log::info('Removed existing netwatch entries', [
                     'router_id' => $router->id,
                     'count' => count($existingRows),
@@ -242,12 +257,13 @@ class NasNetwatchController extends Controller
             }
 
             // Add new netwatch configuration
-            $result = $this->mikrotikApiService->addMktRows($router, '/tool/netwatch', [$netwatchRow]);
+            $result = $api->addMktRows('tool_netwatch', [$netwatchRow]);
+
+            $api->disconnect();
 
             return [
-                'success' => $result['success'] ?? false,
-                'message' => $result['success'] ? 'Netwatch configured' : 'Failed to configure netwatch',
-                'details' => $result,
+                'success' => $result,
+                'message' => $result ? 'Netwatch configured' : 'Failed to configure netwatch',
             ];
         } catch (\Exception $e) {
             Log::error('Error configuring netwatch for RADIUS', [
