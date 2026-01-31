@@ -267,6 +267,217 @@ The script opens these ports:
 - **1813/udp** - RADIUS accounting
 - **1194/udp** - OpenVPN (if installed)
 
+### Additional Ports (for reference)
+
+These ports are used by the application but may not require firewall rules depending on your setup:
+
+- **3306** - MySQL (application database) - Usually internal only
+- **3307** - MySQL (RADIUS database, Docker only) - Host port mapping to access Docker container (container internally uses 3306)
+- **6379** - Redis (cache and queue server) - Usually internal only
+- **8728** - MikroTik API - Required if managing MikroTik routers remotely
+- **8000** - Application HTTP (Docker development) - Use 80/443 in production
+- **1025** - Mailpit SMTP (development only) - Not needed in production
+
+## RADIUS Server Configuration
+
+The ISP Solution uses FreeRADIUS for authenticating PPPoE and Hotspot users. The installation script automatically installs FreeRADIUS, but you may need to configure it for your specific setup.
+
+### RADIUS Architecture
+
+The system uses a two-tier RADIUS architecture:
+
+1. **FreeRADIUS Server** - Handles RADIUS protocol communication (UDP ports 1812/1813)
+2. **RADIUS Database** - Stores user credentials and accounting data (MySQL port 3306, or 3307 for host-to-Docker connections)
+
+```
+┌──────────────┐    RADIUS Protocol     ┌──────────────┐
+│ MikroTik     │  ◄──(UDP 1812/1813)──► │ FreeRADIUS   │
+│ Router/AP    │                         │ Server       │
+└──────────────┘                         └──────────────┘
+                                               │
+                                               │ SQL
+                                               ▼
+                                         ┌──────────────┐
+                                         │ MySQL RADIUS │
+                                         │ Database     │
+                                         └──────────────┘
+                                               │
+                                               │ HTTP API
+                                               ▼
+                                         ┌──────────────┐
+                                         │ ISP Solution │
+                                         │ Laravel App  │
+                                         └──────────────┘
+```
+
+### Post-Installation RADIUS Setup
+
+After running the installation script, FreeRADIUS is installed and configured. Here are the key configuration steps:
+
+#### 1. Configure RADIUS Database Connection
+
+The RADIUS database is automatically created during installation. Verify the connection in `.env`:
+
+```env
+RADIUS_DB_CONNECTION=mysql
+RADIUS_DB_HOST=127.0.0.1
+RADIUS_DB_PORT=3306  # Use 3306 for native/container-internal, 3307 for host-to-Docker
+RADIUS_DB_DATABASE=radius
+RADIUS_DB_USERNAME=radius
+RADIUS_DB_PASSWORD=your_password  # Check /root/ispsolution-credentials.txt
+
+RADIUS_SERVER_IP=127.0.0.1
+RADIUS_AUTH_PORT=1812
+RADIUS_ACCT_PORT=1813
+```
+
+**Note**: In Docker environments, the RADIUS database container internally uses port 3306 but is mapped to host port 3307 (3307:3306). Use port 3307 only when connecting from the host machine to the Docker container. For native installations or container-to-container communication, use port 3306.
+
+#### 2. Configure FreeRADIUS SQL Module
+
+Edit FreeRADIUS SQL configuration (`/etc/freeradius/3.0/mods-available/sql`):
+
+```conf
+sql {
+    driver = "rlm_sql_mysql"
+    dialect = "mysql"
+    
+    server = "localhost"
+    port = 3306
+    login = "radius"
+    password = "your_radius_password"
+    
+    radius_db = "radius"
+    
+    read_clients = yes
+}
+```
+
+Enable the SQL module:
+```bash
+sudo ln -s /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/sql
+```
+
+#### 3. Configure RADIUS Clients (NAS Devices)
+
+Add your MikroTik routers or access points to `/etc/freeradius/3.0/clients.conf`:
+
+```conf
+client mikrotik_router {
+    ipaddr = 192.168.1.1  # Your router IP
+    secret = your_shared_secret_here
+    nastype = mikrotik
+    shortname = mikrotik-main
+}
+```
+
+**Important**: The `secret` must match the RADIUS secret configured on your MikroTik device.
+
+#### 4. Restart FreeRADIUS
+
+```bash
+sudo systemctl restart freeradius
+sudo systemctl enable freeradius
+
+# Check status
+sudo systemctl status freeradius
+
+# Test in debug mode (optional)
+sudo freeradius -X
+```
+
+#### 5. Install RADIUS Tables in Application
+
+Run the RADIUS installation command:
+
+```bash
+cd /var/www/ispsolution
+php artisan radius:install
+
+# Verify installation
+php artisan radius:install --check
+```
+
+### Testing RADIUS
+
+#### Test Authentication with radtest
+
+```bash
+# Install radtest utility if not present
+sudo apt-get install freeradius-utils
+
+# Test authentication
+radtest testuser testpassword localhost 0 testing123
+
+# Expected output:
+# Received Access-Accept
+```
+
+#### Test from MikroTik
+
+Configure RADIUS on your MikroTik router:
+
+```bash
+# Via RouterOS CLI
+/radius add address=YOUR_SERVER_IP secret=your_shared_secret service=ppp,hotspot
+
+# Test connectivity
+/radius monitor 0
+```
+
+### Troubleshooting RADIUS
+
+#### Check FreeRADIUS Status
+
+```bash
+sudo systemctl status freeradius
+
+# View logs
+sudo tail -f /var/log/freeradius/radius.log
+
+# Debug mode (shows all requests)
+sudo freeradius -X
+```
+
+#### Check RADIUS Database
+
+```bash
+# Login to MySQL
+mysql -u radius -p radius
+
+# Check for users
+SELECT * FROM radcheck;
+
+# Check accounting records
+SELECT * FROM radacct LIMIT 10;
+```
+
+#### Common Issues
+
+1. **Port 1812/1813 Already in Use**
+   ```bash
+   netstat -ulpn | grep 1812
+   # If another service is using it, stop that service
+   ```
+
+2. **FreeRADIUS Can't Connect to Database**
+   - Verify credentials in `/etc/freeradius/3.0/mods-available/sql`
+   - Check MySQL is running: `sudo systemctl status mysql`
+   - Verify user has permissions: `SHOW GRANTS FOR 'radius'@'localhost';`
+
+3. **MikroTik Not Receiving Response**
+   - Verify firewall allows UDP 1812/1813
+   - Check RADIUS client configuration in `/etc/freeradius/3.0/clients.conf`
+   - Ensure shared secret matches on both sides
+   - Test with `radtest` first before testing from MikroTik
+
+### Related Documentation
+
+For more detailed RADIUS configuration:
+- **[RADIUS_SETUP_GUIDE.md](RADIUS_SETUP_GUIDE.md)** - Complete RADIUS database setup
+- **[RADIUS_INTEGRATION_GUIDE.md](RADIUS_INTEGRATION_GUIDE.md)** - FreeRADIUS integration details
+- **[MIKROTIK_QUICKSTART.md](MIKROTIK_QUICKSTART.md)** - MikroTik router configuration
+
 ## Troubleshooting
 
 ### Installation Fails
