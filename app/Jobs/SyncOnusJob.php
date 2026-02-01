@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Contracts\OltServiceInterface;
-use App\Models\Olt;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class SyncOnusJob implements ShouldQueue
+class SyncOnusJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -32,11 +32,26 @@ class SyncOnusJob implements ShouldQueue
     public $timeout = 600; // 10 minutes
 
     /**
+     * The number of seconds after which the job's unique lock will be released.
+     *
+     * @var int
+     */
+    public $uniqueFor = 600; // 10 minutes - same as timeout
+
+    /**
      * Create a new job instance.
      */
     public function __construct(
         public int $oltId
     ) {
+    }
+
+    /**
+     * Get the unique ID for the job.
+     */
+    public function uniqueId(): string
+    {
+        return "sync-onus-{$this->oltId}";
     }
 
     /**

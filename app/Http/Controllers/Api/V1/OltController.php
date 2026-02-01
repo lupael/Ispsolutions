@@ -121,8 +121,12 @@ class OltController extends Controller
     public function syncOnus(int $id): JsonResponse
     {
         try {
-            // Verify OLT exists before queuing
-            Olt::findOrFail($id);
+            // CRITICAL: Verify OLT belongs to current tenant before queuing
+            $tenantId = auth()->user()?->tenant_id ?? getCurrentTenantId();
+            $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+            
+            // Authorize the action
+            $this->authorize('update', $olt);
             
             // Dispatch job to queue for async processing to avoid timeout
             SyncOnusJob::dispatch($id);
