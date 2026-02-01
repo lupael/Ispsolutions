@@ -159,9 +159,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-02-01
 
+### ✨ Features
+
+- Add SNMP trap receiver endpoint for OLT monitoring ([f583161](../../commit/f5831611eb73ce9a2debeb26b838b7768051ce00))
+
 ### 🐛 Bug Fixes
 
 - add explicit boolean casting to prevent type error in fetchPppSecretsFromRouter ([8b19391](../../commit/8b19391375c1f6636dc64d80beb18a75546f67e3))
+- Improve ONU discovery and sync with vendor-specific parsing ([28985a5](../../commit/28985a55815acf28f0b5a7ebbe6b18d6b5c2ada8))
+
+### 📚 Documentation
+
+- Update completion summary with security fixes and test coverage ([a997a56](../../commit/a997a56a7e0ff7e7dfc5f448e54c80d7c644e1b9))
+- Add completion summary with all fixes and verification details ([0d731a5](../../commit/0d731a5b5a46c1ab510234ab9533f2ea8fd3f168))
+- Add comprehensive OLT/ONU system fixes and usage guide ([e15a3e1](../../commit/e15a3e1a3158139aab6a70b98e80321c38badf73))
+
+### ✅ Tests
+
+- Add comprehensive tests for ONU parsing and SNMP trap receiver ([b19c128](../../commit/b19c12899252ae7bdd53afdf700ded3ae0582414))
 
 ---
 
