@@ -1,3 +1,18 @@
+#  (2026-02-01)
+
+
+### Bug Fixes
+
+* add explicit boolean casting to prevent type error in fetchPppSecretsFromRouter ([8b19391](https://github.com/i4edubd/ispsolution/commit/8b19391375c1f6636dc64d80beb18a75546f67e3))
+* Improve ONU discovery and sync with vendor-specific parsing ([28985a5](https://github.com/i4edubd/ispsolution/commit/28985a55815acf28f0b5a7ebbe6b18d6b5c2ada8))
+
+
+### Features
+
+* Add SNMP trap receiver endpoint for OLT monitoring ([f583161](https://github.com/i4edubd/ispsolution/commit/f5831611eb73ce9a2debeb26b838b7768051ce00))
+
+
+
 #  (2026-01-31)
 
 
