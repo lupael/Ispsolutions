@@ -275,8 +275,8 @@ class MikrotikImportService
         // Use provided tenant_id or fall back to auth user (for web requests)
         $tenantId = $tenantId ?? auth()->user()->tenant_id;
         $userId = $userId ?? auth()->id();
-        $filterDisabled = filter_var($options['filter_disabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
-        $generateBills = filter_var($options['generate_bills'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $filterDisabled = (bool) filter_var($options['filter_disabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $generateBills = (bool) filter_var($options['generate_bills'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         $imported = 0;
         $failed = 0;
