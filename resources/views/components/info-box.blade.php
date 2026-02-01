@@ -40,8 +40,8 @@ $bgClass = $colorClasses[$color] ?? $colorClasses['indigo'];
 $iconSvg = $iconMap[$icon] ?? $iconMap['chart'];
 
 $wrapperClass = $link 
-    ? 'group bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg hover:shadow-lg transition-shadow duration-200 cursor-pointer' 
-    : 'bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg';
+    ? 'group bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer border border-gray-100 dark:border-gray-700' 
+    : 'bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg border border-gray-100 dark:border-gray-700';
 @endphp
 
 @if($link)
@@ -51,23 +51,23 @@ $wrapperClass = $link
 @endif
     <div class="p-6">
         <div class="flex items-center">
-            <div class="flex-shrink-0 {{ $bgClass }} rounded-md p-3 {{ $link ? 'group-hover:scale-110 transition-transform duration-200' : '' }}">
-                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex-shrink-0 {{ $bgClass }} rounded-lg p-3 shadow-md {{ $link ? 'group-hover:scale-110 group-hover:shadow-lg transition-all duration-300' : '' }}">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     {!! $iconSvg !!}
                 </svg>
             </div>
             <div class="ml-5 w-0 flex-1">
                 <dl>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                    <dt class="text-sm font-semibold text-gray-600 dark:text-gray-400 truncate">
                         {{ $title }}
                         @if($link)
-                        <svg class="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                         @endif
                     </dt>
                     <dd class="mt-1">
-                        <div class="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+                        <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">
                             {{ $value }}
                         </div>
                         @if($subtitle)
