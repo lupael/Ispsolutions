@@ -158,7 +158,7 @@ class OltService implements OltServiceInterface
             if ($olt->snmp_community && $olt->snmp_version) {
                 Log::info('Attempting SNMP-based ONU discovery', [
                     'olt_id' => $oltId,
-                    'vendor' => $olt->brand,
+                    'vendor' => $olt->brand ?? $olt->model,
                 ]);
                 
                 $onus = $oltSnmpService->discoverOnusViaSNMP($olt);
@@ -173,6 +173,10 @@ class OltService implements OltServiceInterface
                 }
                 
                 Log::warning('SNMP discovery returned no results, falling back to SSH', [
+                    'olt_id' => $oltId,
+                ]);
+            } else {
+                Log::info('SNMP not configured, using SSH-based discovery', [
                     'olt_id' => $oltId,
                 ]);
             }
@@ -190,36 +194,25 @@ class OltService implements OltServiceInterface
             $commands = $this->getVendorCommands($olt);
             $onus = [];
 
-            // Different OLT vendors (Huawei, ZTE, Fiberhome, VSOL) have different commands and output formats
+            // Execute ONU state command (vendor-specific)
             $output = $connection->exec($commands['onu_state']);
 
             if ($output === false) {
                 throw new RuntimeException('Failed to execute discovery command');
             }
 
-            // Parse output (this is simplified - real implementation would vary by vendor)
-            $lines = explode("\n", $output);
+            Log::debug("ONU discovery output", ['output' => substr($output, 0, 500)]);
 
-            foreach ($lines as $line) {
-                // Parse based on vendor-specific format
-                if (preg_match('/(\d+\/\d+\/\d+)\s+(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
-                    $onus[] = [
-                        'pon_port' => $matches[1],
-                        'onu_id' => (int) $matches[2],
-                        'serial_number' => $matches[3],
-                        'status' => strtolower($matches[4]),
-                        'signal_rx' => null,
-                        'signal_tx' => null,
-                        'distance' => null,
-                    ];
-                }
-            }
+            // Parse output based on vendor
+            $onus = $this->parseOnuListOutput($output, $olt);
 
-            Log::info('Discovered ' . count($onus) . " ONUs on OLT {$oltId}");
+            Log::info('Discovered ' . count($onus) . " ONUs on OLT {$oltId} via SSH");
 
             return $onus;
         } catch (\Exception $e) {
-            Log::error("Error discovering ONUs on OLT {$oltId}: " . $e->getMessage());
+            Log::error("Error discovering ONUs on OLT {$oltId}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             
             // Only clean up connection if we created it in this method call
             if ($sshConnectionCreated && isset($this->connections[$oltId])) {
@@ -249,43 +242,93 @@ class OltService implements OltServiceInterface
         try {
             $olt = Olt::findOrFail($oltId);
             
+            Log::info("Starting ONU sync for OLT {$oltId}", [
+                'olt_name' => $olt->name,
+            ]);
+            
             $discoveredOnus = $this->discoverOnus($oltId);
+            
+            if (empty($discoveredOnus)) {
+                Log::warning("No ONUs discovered on OLT {$oltId}");
+                return 0;
+            }
+            
             $syncedCount = 0;
+            $updatedCount = 0;
+            $createdCount = 0;
+            $errorCount = 0;
 
             // Process in batches to avoid memory issues with large OLT configurations
             $batchSize = 100;
             $batches = array_chunk($discoveredOnus, $batchSize);
             
-            foreach ($batches as $batch) {
-                DB::transaction(function () use ($olt, $batch, &$syncedCount): void {
-                    foreach ($batch as $onuData) {
-                        Onu::updateOrCreate(
-                            [
-                                'olt_id' => $olt->id,
-                                'serial_number' => $onuData['serial_number'],
-                            ],
-                            [
-                                'pon_port' => $onuData['pon_port'],
-                                'onu_id' => $onuData['onu_id'],
-                                'status' => $onuData['status'],
-                                'signal_rx' => $onuData['signal_rx'] ?? null,
-                                'signal_tx' => $onuData['signal_tx'] ?? null,
-                                'last_seen_at' => now(),
-                                'last_sync_at' => now(),
-                                'tenant_id' => $olt->tenant_id,
-                            ]
-                        );
+            foreach ($batches as $batchIndex => $batch) {
+                Log::debug("Processing batch " . ($batchIndex + 1) . " of " . count($batches));
+                
+                try {
+                    DB::transaction(function () use ($olt, $batch, &$syncedCount, &$updatedCount, &$createdCount): void {
+                        foreach ($batch as $onuData) {
+                            try {
+                                // Validate serial number
+                                if (empty($onuData['serial_number']) || strlen($onuData['serial_number']) < 8) {
+                                    Log::warning("Skipping ONU with invalid serial number", $onuData);
+                                    continue;
+                                }
+                                
+                                $onu = Onu::updateOrCreate(
+                                    [
+                                        'olt_id' => $olt->id,
+                                        'serial_number' => $onuData['serial_number'],
+                                    ],
+                                    [
+                                        'pon_port' => $onuData['pon_port'],
+                                        'onu_id' => $onuData['onu_id'],
+                                        'status' => $onuData['status'],
+                                        'signal_rx' => $onuData['signal_rx'] ?? null,
+                                        'signal_tx' => $onuData['signal_tx'] ?? null,
+                                        'distance' => $onuData['distance'] ?? null,
+                                        'last_seen_at' => now(),
+                                        'last_sync_at' => now(),
+                                        'tenant_id' => $olt->tenant_id,
+                                    ]
+                                );
 
-                        $syncedCount++;
-                    }
-                });
+                                if ($onu->wasRecentlyCreated) {
+                                    $createdCount++;
+                                } else {
+                                    $updatedCount++;
+                                }
+                                
+                                $syncedCount++;
+                            } catch (\Exception $e) {
+                                Log::error("Error syncing individual ONU", [
+                                    'onu_data' => $onuData,
+                                    'error' => $e->getMessage(),
+                                ]);
+                                // Continue with next ONU instead of failing entire batch
+                            }
+                        }
+                    });
+                } catch (\Exception $e) {
+                    Log::error("Error processing batch " . ($batchIndex + 1), [
+                        'error' => $e->getMessage(),
+                    ]);
+                    $errorCount++;
+                }
             }
 
-            Log::info("Synced {$syncedCount} ONUs from OLT {$oltId}");
+            Log::info("ONU sync completed for OLT {$oltId}", [
+                'synced' => $syncedCount,
+                'created' => $createdCount,
+                'updated' => $updatedCount,
+                'errors' => $errorCount,
+            ]);
 
             return $syncedCount;
         } catch (\Exception $e) {
-            Log::error("Error syncing ONUs from OLT {$oltId}: " . $e->getMessage());
+            Log::error("Error syncing ONUs from OLT {$oltId}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return 0;
         }
@@ -913,5 +956,161 @@ class OltService implements OltServiceInterface
         foreach (array_keys($this->connections) as $oltId) {
             $this->disconnect($oltId);
         }
+    }
+
+    /**
+     * Parse ONU list output based on vendor format.
+     */
+    private function parseOnuListOutput(string $output, Olt $olt): array
+    {
+        $vendor = $this->detectVendor($olt);
+        $onus = [];
+        $lines = explode("\n", $output);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            $onuData = match ($vendor) {
+                'vsol' => $this->parseVsolOnuLine($line),
+                'huawei' => $this->parseHuaweiOnuLine($line),
+                'zte' => $this->parseZteOnuLine($line),
+                'fiberhome' => $this->parseFiberhomeOnuLine($line),
+                default => $this->parseGenericOnuLine($line),
+            };
+
+            if ($onuData) {
+                $onus[] = $onuData;
+            }
+        }
+
+        return $onus;
+    }
+
+    /**
+     * Detect vendor from OLT model and name.
+     */
+    private function detectVendor(Olt $olt): string
+    {
+        $searchText = strtolower(($olt->brand ?? '') . ' ' . ($olt->model ?? '') . ' ' . ($olt->name ?? ''));
+
+        if (str_contains($searchText, 'vsol') || str_contains($searchText, 'v-sol')) {
+            return 'vsol';
+        } elseif (str_contains($searchText, 'huawei')) {
+            return 'huawei';
+        } elseif (str_contains($searchText, 'zte')) {
+            return 'zte';
+        } elseif (str_contains($searchText, 'fiberhome') || str_contains($searchText, 'fiber home')) {
+            return 'fiberhome';
+        }
+
+        return 'generic';
+    }
+
+    /**
+     * Parse VSOL ONU output line.
+     */
+    private function parseVsolOnuLine(string $line): ?array
+    {
+        // VSOL format: gpon-onu_1/1:1    HWTC12345678    online    0/1/1    1
+        if (preg_match('/gpon-onu[_-](\d+\/\d+):(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
+            return [
+                'pon_port' => $matches[1],
+                'onu_id' => (int) $matches[2],
+                'serial_number' => $matches[3],
+                'status' => strtolower($matches[4]),
+                'signal_rx' => null,
+                'signal_tx' => null,
+                'distance' => null,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse Huawei ONU output line.
+     */
+    private function parseHuaweiOnuLine(string $line): ?array
+    {
+        // Huawei format: 0/1/1    1    HWTC12345678    online    ...
+        if (preg_match('/(\d+\/\d+\/\d+)\s+(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
+            return [
+                'pon_port' => $matches[1],
+                'onu_id' => (int) $matches[2],
+                'serial_number' => $matches[3],
+                'status' => strtolower($matches[4]) === 'online' ? 'online' : 'offline',
+                'signal_rx' => null,
+                'signal_tx' => null,
+                'distance' => null,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse ZTE ONU output line.
+     */
+    private function parseZteOnuLine(string $line): ?array
+    {
+        // ZTE format: gpon-onu_1/1:1    ZTEG12345678    Working    ...
+        if (preg_match('/gpon-onu[_-](\d+\/\d+):(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
+            return [
+                'pon_port' => $matches[1],
+                'onu_id' => (int) $matches[2],
+                'serial_number' => $matches[3],
+                'status' => strtolower($matches[4]) === 'working' ? 'online' : 'offline',
+                'signal_rx' => null,
+                'signal_tx' => null,
+                'distance' => null,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse Fiberhome ONU output line.
+     */
+    private function parseFiberhomeOnuLine(string $line): ?array
+    {
+        // Fiberhome format: 1/1    1    FHTT12345678    online    ...
+        if (preg_match('/(\d+\/\d+)\s+(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
+            return [
+                'pon_port' => $matches[1],
+                'onu_id' => (int) $matches[2],
+                'serial_number' => $matches[3],
+                'status' => strtolower($matches[4]),
+                'signal_rx' => null,
+                'signal_tx' => null,
+                'distance' => null,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse generic ONU output line (fallback).
+     */
+    private function parseGenericOnuLine(string $line): ?array
+    {
+        // Generic format: port/path    id    serial    status
+        if (preg_match('/(\d+[\/\-]\d+(?:[\/\-]\d+)?)[:\s]+(\d+)\s+([A-Z0-9]{8,})\s+(\w+)/', $line, $matches)) {
+            return [
+                'pon_port' => str_replace('-', '/', $matches[1]),
+                'onu_id' => (int) $matches[2],
+                'serial_number' => $matches[3],
+                'status' => strtolower($matches[4]),
+                'signal_rx' => null,
+                'signal_tx' => null,
+                'distance' => null,
+            ];
+        }
+
+        return null;
     }
 }
