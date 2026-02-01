@@ -149,6 +149,11 @@ class OperatorPackageController extends Controller
         }
 
         $masterPackage = $operatorRate->masterPackage;
+        
+        // Check if master package exists
+        if (!$masterPackage) {
+            abort(404, 'Master package not found for this operator rate.');
+        }
 
         return view('panels.admin.operator-packages.edit', compact('operatorRate', 'masterPackage'));
     }

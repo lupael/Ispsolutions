@@ -315,7 +315,7 @@ class CustomerWizardController extends Controller
                 'state' => $allData['state'] ?? null,
                 'postal_code' => $allData['postal_code'] ?? null,
                 'country' => $allData['country'] ?? null,
-                'operator_level' => 100, // Customer level
+                'operator_level' => User::OPERATOR_LEVEL_CUSTOMER, // Customer level
                 'is_active' => true,
                 'is_subscriber' => true, // Mark as subscriber for customer list filtering
                 'activated_at' => now(),
