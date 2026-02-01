@@ -21,25 +21,29 @@ class SnmpTrapReceiverController extends Controller
      * called directly for testing purposes.
      * 
      * Expected request format:
-     * - source_ip: IP address of the device sending the trap
      * - trap_type: Type of trap (e.g., linkDown, linkUp, coldStart)
      * - oid: Object Identifier of the trap
      * - severity: Severity level (critical, warning, info)
      * - message: Human-readable trap message
      * - trap_data: Additional trap data (JSON)
+     * 
+     * Note: source_ip is derived from the actual request IP for security.
+     * The client cannot spoof this value.
      */
     public function receive(Request $request): JsonResponse
     {
+        // Use actual request IP, not user-supplied value for security
+        $sourceIp = $request->ip();
+        
         // Log the incoming trap request for debugging (limited fields for security)
         Log::info('Received SNMP trap', [
-            'source_ip' => $request->input('source_ip'),
+            'source_ip' => $sourceIp,
             'trap_type' => $request->input('trap_type'),
             'severity' => $request->input('severity'),
         ]);
 
         try {
             // Extract trap data from request
-            $sourceIp = $request->input('source_ip', $request->ip());
             $trapType = $request->input('trap_type', 'unknown');
             $oid = $request->input('oid', '');
             $severity = $request->input('severity', 'info');
@@ -51,7 +55,7 @@ class SnmpTrapReceiverController extends Controller
                 $trapData = json_decode($trapData, true) ?? [];
             }
 
-            // Find the OLT by IP address
+            // Find the OLT by IP address (using actual request IP)
             $olt = Olt::where('ip_address', $sourceIp)->first();
 
             if (!$olt) {

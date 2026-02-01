@@ -239,8 +239,8 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
     });
 });
 
-// SNMP Trap Receiver Routes (no auth required - called by snmptrapd or OLT devices)
-Route::prefix('v1/snmp-trap')->middleware('rate_limit:public_api')->group(function () {
+// SNMP Trap Receiver Routes (IP-restricted for security)
+Route::prefix('v1/snmp-trap')->middleware(['rate_limit:public_api', 'trust.snmp'])->group(function () {
     // Main trap receiver endpoint
     Route::post('/receive', [SnmpTrapReceiverController::class, 'receive'])->name('api.snmp-trap.receive');
     

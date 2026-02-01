@@ -853,22 +853,18 @@ class OltService implements OltServiceInterface
      */
     private function getVendorCommands(Olt $olt): array
     {
-        // Check both model and name fields for vendor identification
-        $searchText = strtolower(($olt->model ?? '') . ' ' . ($olt->name ?? ''));
+        // Use centralized vendor detection
+        $vendor = \App\Helpers\OltVendorDetector::detect($olt);
 
-        // Detect vendor from model or name string
-        if (str_contains($searchText, 'vsol') || str_contains($searchText, 'v-sol')) {
-            return $this->getVsolCommands();
-        } elseif (str_contains($searchText, 'huawei')) {
-            return $this->getHuaweiCommands();
-        } elseif (str_contains($searchText, 'zte')) {
-            return $this->getZteCommands();
-        } elseif (str_contains($searchText, 'fiberhome') || str_contains($searchText, 'fiber home')) {
-            return $this->getFiberhomeCommands();
-        }
-
-        // Default to Huawei-style commands (most common)
-        return $this->getHuaweiCommands();
+        // Get commands based on detected vendor
+        return match ($vendor) {
+            'vsol' => $this->getVsolCommands(),
+            'huawei' => $this->getHuaweiCommands(),
+            'zte' => $this->getZteCommands(),
+            'fiberhome' => $this->getFiberhomeCommands(),
+            'bdcom' => $this->getBdcomCommands(),
+            default => $this->getHuaweiCommands(), // Default to Huawei-style commands (most common)
+        };
     }
 
     /**
@@ -954,6 +950,23 @@ class OltService implements OltServiceInterface
     }
 
     /**
+     * Get BDCOM-specific commands.
+     */
+    private function getBdcomCommands(): array
+    {
+        return [
+            'version' => 'show version',
+            'onu_list' => 'show epon onu-list',
+            'onu_state' => 'show epon onu-info',
+            'onu_detail' => 'show epon onu-detail epon-onu_{port}:{id}',
+            'authorize' => 'epon onu authorize epon-onu_{port}:{id}',
+            'unauthorize' => 'no epon onu authorize epon-onu_{port}:{id}',
+            'reboot' => 'epon onu reboot epon-onu_{port}:{id}',
+            'backup' => 'show running-config',
+        ];
+    }
+
+    /**
      * Destructor to clean up connections.
      */
     public function __destruct()
@@ -968,7 +981,7 @@ class OltService implements OltServiceInterface
      */
     private function parseOnuListOutput(string $output, Olt $olt): array
     {
-        $vendor = $this->detectVendor($olt);
+        $vendor = \App\Helpers\OltVendorDetector::detect($olt);
         $onus = [];
         $lines = explode("\n", $output);
 
@@ -992,26 +1005,6 @@ class OltService implements OltServiceInterface
         }
 
         return $onus;
-    }
-
-    /**
-     * Detect vendor from OLT model and name.
-     */
-    private function detectVendor(Olt $olt): string
-    {
-        $searchText = strtolower(($olt->brand ?? '') . ' ' . ($olt->model ?? '') . ' ' . ($olt->name ?? ''));
-
-        if (str_contains($searchText, 'vsol') || str_contains($searchText, 'v-sol')) {
-            return 'vsol';
-        } elseif (str_contains($searchText, 'huawei')) {
-            return 'huawei';
-        } elseif (str_contains($searchText, 'zte')) {
-            return 'zte';
-        } elseif (str_contains($searchText, 'fiberhome') || str_contains($searchText, 'fiber home')) {
-            return 'fiberhome';
-        }
-
-        return 'generic';
     }
 
     /**

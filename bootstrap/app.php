@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'hotspot.auth' => \App\Http\Middleware\EnsureHotspotAuth::class,
             'distributor.api' => \App\Http\Middleware\ValidateDistributorApiKey::class,
             'onboarding.complete' => \App\Http\Middleware\EnsureOnboardingComplete::class,
+            'trust.snmp' => \App\Http\Middleware\TrustSnmpTrapSource::class,
         ]);
 
         // Add global middleware

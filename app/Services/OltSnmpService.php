@@ -65,7 +65,7 @@ class OltSnmpService
                 throw new \RuntimeException('SNMP is not configured for this OLT');
             }
 
-            $vendor = $this->detectVendor($olt);
+            $vendor = \App\Helpers\OltVendorDetector::detect($olt);
             $oids = self::VENDOR_OIDS[$vendor] ?? null;
 
             if (! $oids) {
@@ -190,7 +190,7 @@ class OltSnmpService
                 throw new \RuntimeException('SNMP is not configured for this OLT');
             }
 
-            $vendor = $this->detectVendor($olt);
+            $vendor = \App\Helpers\OltVendorDetector::detect($olt);
             $oids = self::VENDOR_OIDS[$vendor] ?? null;
 
             if (! $oids) {
@@ -263,29 +263,6 @@ class OltSnmpService
         return ! empty($olt->snmp_community)
             && ! empty($olt->snmp_version)
             && in_array(strtolower($olt->management_protocol ?? ''), ['snmp', 'both']);
-    }
-
-    /**
-     * Detect OLT vendor from brand or model.
-     *
-     * @return string Vendor identifier (vsol, huawei, zte, bdcom)
-     */
-    private function detectVendor(Olt $olt): string
-    {
-        $searchText = strtolower(($olt->brand ?? '') . ' ' . ($olt->model ?? '') . ' ' . ($olt->name ?? ''));
-
-        if (str_contains($searchText, 'vsol') || str_contains($searchText, 'v-sol')) {
-            return 'vsol';
-        } elseif (str_contains($searchText, 'huawei')) {
-            return 'huawei';
-        } elseif (str_contains($searchText, 'zte')) {
-            return 'zte';
-        } elseif (str_contains($searchText, 'bdcom')) {
-            return 'bdcom';
-        }
-
-        // Default to Huawei (most common)
-        return 'huawei';
     }
 
     /**
