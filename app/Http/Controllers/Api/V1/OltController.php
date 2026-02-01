@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\OltServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Jobs\SyncOnusJob;
 use App\Models\Olt;
 use App\Models\OltSnmpTrap;
 use App\Models\Onu;
@@ -119,14 +120,13 @@ class OltController extends Controller
     public function syncOnus(int $id): JsonResponse
     {
         try {
-            $olt = Olt::findOrFail($id);
+            // Verify OLT exists before queuing
+            Olt::findOrFail($id);
             
             // Dispatch job to queue for async processing to avoid timeout
-            \App\Jobs\SyncOnusJob::dispatch($id);
+            SyncOnusJob::dispatch($id);
             
-            Log::info("ONU sync job dispatched for OLT {$id}", [
-                'olt_name' => $olt->name,
-            ]);
+            Log::info("ONU sync job dispatched for OLT {$id}");
             
             return response()->json([
                 'success' => true,
