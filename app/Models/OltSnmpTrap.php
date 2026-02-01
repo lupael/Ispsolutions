@@ -11,6 +11,7 @@ class OltSnmpTrap extends Model
 {
     protected $fillable = [
         'olt_id',
+        'tenant_id',
         'source_ip',
         'trap_type',
         'oid',

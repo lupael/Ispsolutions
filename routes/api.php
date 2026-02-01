@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\MonitoringController;
 use App\Http\Controllers\Api\V1\NetworkUserController;
 use App\Http\Controllers\Api\V1\OltController;
 use App\Http\Controllers\Api\V1\RadiusController;
+use App\Http\Controllers\Api\V1\SnmpTrapReceiverController;
 use App\Http\Controllers\Api\V1\WidgetController;
 use Illuminate\Support\Facades\Route;
 
@@ -236,6 +237,18 @@ Route::prefix('v1')->middleware('rate_limit:public_api')->group(function () {
         // Bulk Operations
         Route::post('/onu/bulk-operations', [OltController::class, 'bulkOnuOperations'])->name('api.olt.onu.bulk-operations');
     });
+});
+
+// SNMP Trap Receiver Routes (IP-restricted for security)
+Route::prefix('v1/snmp-trap')->middleware(['rate_limit:public_api', 'trust.snmp'])->group(function () {
+    // Main trap receiver endpoint
+    Route::post('/receive', [SnmpTrapReceiverController::class, 'receive'])->name('api.snmp-trap.receive');
+    
+    // Legacy trap receiver for snmptrapd format
+    Route::post('/receive-legacy', [SnmpTrapReceiverController::class, 'receiveLegacy'])->name('api.snmp-trap.receive-legacy');
+    
+    // Test endpoint (only in non-production)
+    Route::post('/test', [SnmpTrapReceiverController::class, 'test'])->name('api.snmp-trap.test');
 });
 
 // IP Pool Migration API Routes
