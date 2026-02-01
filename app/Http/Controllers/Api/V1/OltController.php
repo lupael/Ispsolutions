@@ -10,6 +10,7 @@ use App\Jobs\SyncOnusJob;
 use App\Models\Olt;
 use App\Models\OltSnmpTrap;
 use App\Models\Onu;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -133,7 +134,7 @@ class OltController extends Controller
                 'message' => 'ONU sync started in background. This may take several minutes for large OLTs.',
                 'queued' => true,
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             Log::warning("ONU sync requested for non-existent OLT {$id}");
             
             return response()->json([

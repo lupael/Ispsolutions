@@ -53,6 +53,8 @@ class SyncOnusJob implements ShouldQueue
                 'synced_count' => $count,
             ]);
         } catch (\Exception $e) {
+            // Catch all exceptions for retry logic - OLT service can throw various exceptions
+            // (network errors, SSH errors, parsing errors, etc.) and we want to retry them all
             Log::error("Queued ONU sync failed for OLT {$this->oltId}", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
