@@ -177,7 +177,7 @@ class OperatorPackageController extends Controller
         ]);
 
         $masterPackage = $operatorRate->masterPackage;
-        
+
         // Check if master package exists
         if (!$masterPackage) {
             return redirect()

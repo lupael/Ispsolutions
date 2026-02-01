@@ -82,7 +82,7 @@ class OltSyncOnusTest extends TestCase
         $this->postJson("/api/v1/olt/{$this->olt->id}/sync-onus")->assertStatus(200);
 
         // Should only queue once due to ShouldBeUnique
-        Queue::assertPushed(SyncOnusJob::class, 2);
+        Queue::assertPushed(SyncOnusJob::class, 1);
     }
 
     public function test_sync_onus_endpoint_returns_404_for_nonexistent_olt()
