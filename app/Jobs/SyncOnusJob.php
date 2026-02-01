@@ -45,16 +45,11 @@ class SyncOnusJob implements ShouldQueue
     public function handle(OltServiceInterface $oltService): void
     {
         try {
-            $olt = Olt::findOrFail($this->oltId);
-            
-            Log::info("Starting queued ONU sync for OLT {$this->oltId}", [
-                'olt_name' => $olt->name,
-            ]);
+            Log::info("Starting queued ONU sync for OLT {$this->oltId}");
             
             $count = $oltService->syncOnus($this->oltId);
             
             Log::info("Completed queued ONU sync for OLT {$this->oltId}", [
-                'olt_name' => $olt->name,
                 'synced_count' => $count,
             ]);
         } catch (\Exception $e) {
