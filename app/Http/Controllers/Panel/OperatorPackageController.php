@@ -149,6 +149,11 @@ class OperatorPackageController extends Controller
         }
 
         $masterPackage = $operatorRate->masterPackage;
+        
+        // Check if master package exists
+        if (!$masterPackage) {
+            abort(404, 'Master package not found for this operator rate.');
+        }
 
         return view('panels.admin.operator-packages.edit', compact('operatorRate', 'masterPackage'));
     }
@@ -172,6 +177,13 @@ class OperatorPackageController extends Controller
         ]);
 
         $masterPackage = $operatorRate->masterPackage;
+
+        // Check if master package exists
+        if (!$masterPackage) {
+            return redirect()
+                ->route('panel.admin.operator-packages.index')
+                ->withErrors(['error' => 'Master package not found for this operator rate.']);
+        }
 
         // Validate operator price doesn't exceed base price
         if ($validated['operator_price'] > $masterPackage->base_price) {
