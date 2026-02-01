@@ -159,9 +159,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-02-01
 
----
+### 🐛 Bug Fixes
 
-## [Unreleased] - 2026-02-01
+- add explicit boolean casting to prevent type error in fetchPppSecretsFromRouter ([8b19391](../../commit/8b19391375c1f6636dc64d80beb18a75546f67e3))
 
 ---
 
