@@ -646,14 +646,6 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/{routerId}/test-connection', [RouterFailoverController::class, 'testConnection'])->name('test-connection');
     });
 
-    // Router Netwatch Routes (RADIUS Health Monitoring)
-    Route::prefix('routers/netwatch')->name('routers.netwatch.')->group(function () {
-        Route::get('/{routerId}', [NasNetwatchController::class, 'index'])->name('index');
-        Route::post('/{routerId}/configure', [NasNetwatchController::class, 'configure'])->name('configure');
-        Route::get('/{routerId}/status', [NasNetwatchController::class, 'status'])->name('status');
-        Route::post('/{routerId}/test', [NasNetwatchController::class, 'test'])->name('test');
-    });
-
     // Router Auto-Provisioning Routes
     Route::prefix('routers/auto-provision')->name('routers.auto-provision.')->group(function () {
         Route::post('/{routerId}/execute', [\App\Http\Controllers\Panel\RouterAutoProvisionController::class, 'provision'])->name('execute');
@@ -691,11 +683,13 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::post('/validate', [\App\Http\Controllers\Panel\MikrotikImportController::class, 'validate'])->name('validate');
     });
 
-    // NAS NetWatch Routes - RADIUS Health Monitoring
+    // NAS NetWatch Routes - RADIUS Health Monitoring (Consolidated)
     Route::prefix('nas/netwatch')->name('nas.netwatch.')->group(function () {
-        Route::post('/routers/{router}/configure', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'configure'])->name('configure');
-        Route::delete('/routers/{router}', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'remove'])->name('remove');
-        Route::get('/routers/{router}/status', [\App\Http\Controllers\Panel\NasNetWatchController::class, 'status'])->name('status');
+        Route::get('/{routerId}', [NasNetwatchController::class, 'index'])->name('index');
+        Route::post('/{routerId}/configure', [NasNetwatchController::class, 'configure'])->name('configure');
+        Route::get('/{routerId}/status', [NasNetwatchController::class, 'status'])->name('status');
+        Route::post('/{routerId}/test', [NasNetwatchController::class, 'test'])->name('test');
+        Route::delete('/{routerId}', [NasNetwatchController::class, 'remove'])->name('remove');
     });
 
     // Customer Backup Routes - Mirror to Router PPP Secrets
