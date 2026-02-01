@@ -133,6 +133,14 @@ class OltController extends Controller
                 'message' => 'ONU sync started in background. This may take several minutes for large OLTs.',
                 'queued' => true,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning("ONU sync requested for non-existent OLT {$id}");
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'OLT not found.',
+                'queued' => false,
+            ], 404);
         } catch (\Exception $e) {
             Log::error("Failed to dispatch ONU sync job for OLT {$id}: " . $e->getMessage());
             

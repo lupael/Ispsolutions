@@ -64,6 +64,9 @@ class SyncOnusJob implements ShouldQueue
 
     /**
      * Handle a job failure.
+     * 
+     * Called when all retry attempts are exhausted.
+     * Logs the final failure for debugging and monitoring purposes.
      */
     public function failed(\Throwable $exception): void
     {
