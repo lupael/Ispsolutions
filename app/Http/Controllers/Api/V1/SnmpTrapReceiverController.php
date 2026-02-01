@@ -30,8 +30,12 @@ class SnmpTrapReceiverController extends Controller
      */
     public function receive(Request $request): JsonResponse
     {
-        // Log the incoming trap request for debugging
-        Log::info('Received SNMP trap', $request->all());
+        // Log the incoming trap request for debugging (limited fields for security)
+        Log::info('Received SNMP trap', [
+            'source_ip' => $request->input('source_ip'),
+            'trap_type' => $request->input('trap_type'),
+            'severity' => $request->input('severity'),
+        ]);
 
         try {
             // Extract trap data from request

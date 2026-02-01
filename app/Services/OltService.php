@@ -271,7 +271,10 @@ class OltService implements OltServiceInterface
                             try {
                                 // Validate serial number
                                 if (empty($onuData['serial_number']) || strlen($onuData['serial_number']) < 8) {
-                                    Log::warning("Skipping ONU with invalid serial number", $onuData);
+                                    Log::warning("Skipping ONU with invalid serial number", [
+                                        'serial_number' => $onuData['serial_number'] ?? 'empty',
+                                        'pon_port' => $onuData['pon_port'] ?? 'unknown',
+                                    ]);
                                     continue;
                                 }
                                 
@@ -302,7 +305,9 @@ class OltService implements OltServiceInterface
                                 $syncedCount++;
                             } catch (\Exception $e) {
                                 Log::error("Error syncing individual ONU", [
-                                    'onu_data' => $onuData,
+                                    'serial_number' => $onuData['serial_number'] ?? 'unknown',
+                                    'pon_port' => $onuData['pon_port'] ?? 'unknown',
+                                    'olt_id' => $olt->id,
                                     'error' => $e->getMessage(),
                                 ]);
                                 // Continue with next ONU instead of failing entire batch
