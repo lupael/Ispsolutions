@@ -78,9 +78,9 @@ class MasterPackageController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        // If user is super-admin, filter by their tenant
+        // Filter by tenant for super-admin and admin
         $user = Auth::user();
-        if ($user->operator_level === User::OPERATOR_LEVEL_SUPER_ADMIN) {
+        if ($user->operator_level === User::OPERATOR_LEVEL_SUPER_ADMIN || $user->operator_level === User::OPERATOR_LEVEL_ADMIN) {
             $query->where(function ($q) use ($user) {
                 $q->where('tenant_id', $user->tenant_id)
                   ->orWhereNull('tenant_id'); // Include global packages

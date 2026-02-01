@@ -114,28 +114,32 @@ class OltController extends Controller
     }
 
     /**
-     * Sync ONUs from OLT
+     * Sync ONUs from OLT (queued for async processing)
      */
     public function syncOnus(int $id): JsonResponse
     {
-        // Increase time limit for this operation as it can take a while for large OLTs
-        set_time_limit(300); // 5 minutes
-
         try {
-            $count = $this->oltService->syncOnus($id);
-
+            $olt = Olt::findOrFail($id);
+            
+            // Dispatch job to queue for async processing to avoid timeout
+            \App\Jobs\SyncOnusJob::dispatch($id);
+            
+            Log::info("ONU sync job dispatched for OLT {$id}", [
+                'olt_name' => $olt->name,
+            ]);
+            
             return response()->json([
                 'success' => true,
-                'message' => $count > 0 ? "Synced {$count} ONUs" : 'No ONUs found to sync',
-                'count' => $count,
+                'message' => 'ONU sync started in background. This may take several minutes for large OLTs.',
+                'queued' => true,
             ]);
         } catch (\Exception $e) {
-            Log::error("ONU sync failed for OLT {$id}: " . $e->getMessage());
+            Log::error("Failed to dispatch ONU sync job for OLT {$id}: " . $e->getMessage());
             
             return response()->json([
                 'success' => false,
-                'message' => 'Sync operation failed. Please try again later.',
-                'count' => 0,
+                'message' => 'Failed to start sync operation. Please try again later.',
+                'queued' => false,
             ], 500);
         }
     }
