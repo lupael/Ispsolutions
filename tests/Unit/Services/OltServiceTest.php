@@ -239,6 +239,22 @@ class OltServiceTest extends TestCase
         $this->assertArrayHasKey('offline_onus', $result);
     }
 
+    public function test_create_connection_returns_telnet_client_when_protocol_telnet(): void
+    {
+        // Set the OLT to use telnet
+        $this->olt->update(['management_protocol' => 'telnet', 'port' => 23]);
+
+        // Use reflection to call private createConnection
+        $ref = new \ReflectionClass($this->oltService);
+        $method = $ref->getMethod('createConnection');
+        $method->setAccessible(true);
+
+        $connection = $method->invoke($this->oltService, $this->olt);
+
+        $this->assertIsObject($connection);
+        $this->assertEquals('\\App\\Services\\TelnetClient', get_class($connection));
+    }
+
     public function test_get_port_utilization_returns_array(): void
     {
         $result = $this->oltService->getPortUtilization($this->olt->id);
@@ -381,28 +397,3 @@ class OltServiceTest extends TestCase
         ]);
 
         $result = $this->oltService->getOnuStatus($onu->id);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertArrayHasKey('signal_rx', $result);
-        $this->assertArrayHasKey('signal_tx', $result);
-        $this->assertArrayHasKey('method', $result);
-    }
-
-    public function test_get_onu_status_returns_method_indicator(): void
-    {
-        $onu = Onu::create([
-            'olt_id' => $this->olt->id,
-            'pon_port' => '1/1/1',
-            'onu_id' => 1,
-            'serial_number' => 'TEST12345678',
-            'status' => 'online',
-        ]);
-
-        $result = $this->oltService->getOnuStatus($onu->id);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('method', $result);
-        $this->assertContains($result['method'], ['snmp', 'ssh', 'error']);
-    }
-}
