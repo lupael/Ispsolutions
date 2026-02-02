@@ -126,6 +126,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Signal (Rx/Tx)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Vendor Info</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -179,6 +180,23 @@
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                         Offline
                                     </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                @if($onu->model || $onu->hw_version || $onu->sw_version)
+                                    <div class="text-xs">
+                                        @if($onu->model)
+                                            <div><strong>Model:</strong> {{ $onu->model }}</div>
+                                        @endif
+                                        @if($onu->hw_version)
+                                            <div><strong>HW:</strong> {{ $onu->hw_version }}</div>
+                                        @endif
+                                        @if($onu->sw_version)
+                                            <div><strong>SW:</strong> {{ $onu->sw_version }}</div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">N/A</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">

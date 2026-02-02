@@ -48,6 +48,16 @@ class OltService implements OltServiceInterface
                 return false;
             }
 
+            // Run vendor-specific 'enable' CLI step if present (some firmwares require privilege escalation)
+            try {
+                $commands = $this->getVendorCommands($olt);
+                if (!empty($commands['enable'])) {
+                    $connection->exec($commands['enable']);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Failed to run vendor enable command for OLT {$oltId}: " . $e->getMessage());
+            }
+
             $this->connections[$oltId] = $connection;
 
             Log::info("Successfully connected to OLT {$oltId}");
@@ -290,6 +300,9 @@ class OltService implements OltServiceInterface
                                         'signal_rx' => $onuData['signal_rx'] ?? null,
                                         'signal_tx' => $onuData['signal_tx'] ?? null,
                                         'distance' => $onuData['distance'] ?? null,
+                                        'model' => $onuData['model'] ?? null,
+                                        'hw_version' => $onuData['hw_version'] ?? null,
+                                        'sw_version' => $onuData['sw_version'] ?? null,
                                         'last_seen_at' => now(),
                                         'last_sync_at' => now(),
                                         'tenant_id' => $olt->tenant_id,
@@ -828,8 +841,15 @@ class OltService implements OltServiceInterface
     /**
      * Create SSH connection to OLT.
      */
-    private function createConnection(Olt $olt): SSH2
+    private function createConnection(Olt $olt)
     {
+        // Prefer Telnet if the OLT is configured to use it
+        $protocol = strtolower($olt->management_protocol ?? 'ssh');
+
+        if ($protocol === 'telnet') {
+            return new \App\Services\TelnetClient($olt->ip_address, (int) ($olt->port ?? 23));
+        }
+
         $connection = new SSH2($olt->ip_address, $olt->port);
         $connection->setTimeout(30);
 
@@ -895,6 +915,8 @@ class OltService implements OltServiceInterface
             'unauthorize' => 'no gpon onu authorize gpon-onu_{port}:{id}',
             'reboot' => 'gpon onu reboot gpon-onu_{port}:{id}',
             'backup' => 'show running-config',
+            // Some V-SOL firmware requires entering privileged mode
+            'enable' => 'enable',
         ];
     }
 

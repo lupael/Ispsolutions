@@ -12,7 +12,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind SNMP client interface to the PHP implementation
+        // Uses PHP SNMP extension when available; tests can mock SnmpClientInterface.
+        $this->app->singleton(\App\Contracts\SnmpClientInterface::class, function ($app) {
+            return new \App\Services\PhpSnmpClient();
+        });
     }
 
     /**
@@ -83,6 +87,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-network-devices', function ($user) {
             return $this->canManageResource($user, 'network.manage');
         });
+
+        // Register CLI commands for SNMP diagnostics
+        if (class_exists(\App\Console\Commands\OltSnmpTest::class)) {
+            $this->commands([
+                \App\Console\Commands\OltSnmpTest::class,
+            ]);
+        }
 
         Gate::define('manage-packages', function ($user) {
             return $this->canManageResource($user, 'packages.manage');

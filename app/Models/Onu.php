@@ -56,6 +56,10 @@ class Onu extends Model
         'signal_tx',
         'distance',
         'ipaddress',
+        // Vendor information
+        'model',
+        'hw_version',
+        'sw_version',
     ];
 
     /**
@@ -70,6 +74,10 @@ class Onu extends Model
         'signal_rx' => 'decimal:2',
         'signal_tx' => 'decimal:2',
         'distance' => 'integer',
+        // Vendor fields
+        'model' => 'string',
+        'hw_version' => 'string',
+        'sw_version' => 'string',
         'last_seen_at' => 'datetime',
         'last_sync_at' => 'datetime',
         'created_at' => 'datetime',
