@@ -42,16 +42,16 @@ class SecurityFeaturesTest extends TestCase
 
         // Verify connect-src includes required domains for external resources (e.g., source maps)
         $this->assertStringContainsString('connect-src', $cspHeader);
-        
+
         // Verify nonce is present in script-src (for inline scripts)
         $this->assertStringContainsString("'nonce-", $cspHeader);
-        
+
         // Verify unsafe-hashes is present in script-src for inline event handlers
         $this->assertStringContainsString("'unsafe-hashes'", $cspHeader);
-        
+
         // Verify style-src has unsafe-inline (without nonce) to allow all inline styles
         $this->assertMatchesRegularExpression("/style-src[^;]*'unsafe-inline'/", $cspHeader);
-        
+
         // Verify style-src does NOT have nonce (nonce would cause unsafe-inline to be ignored)
         $this->assertDoesNotMatchRegularExpression("/style-src[^;]*'nonce-/", $cspHeader);
     }
@@ -165,12 +165,12 @@ class SecurityFeaturesTest extends TestCase
 
         // List of critical routes that should be protected - check for exact matches
         $protectedRoutes = [
-            "Route::delete('/users/{id}', [SuperAdminController::class, 'usersDestroy'])->middleware('password.confirm')",
-            "Route::delete('/users/{id}', [AdminController::class, 'usersDestroy'])->middleware('password.confirm')",
-            "Route::delete('/customers/{id}', [AdminController::class, 'customersDestroy'])->middleware('password.confirm')",
-            "Route::delete('/operators/{id}', [AdminController::class, 'operatorsDestroy'])->middleware('password.confirm')",
-            "Route::delete('/network/routers/{id}', [AdminController::class, 'routersDestroy'])->middleware('password.confirm')",
-            "Route::delete('/network/pppoe-profiles/{id}', [AdminController::class, 'pppoeProfilesDestroy'])->middleware('password.confirm')",
+            "Route::delete('/users/{id}', [SuperISPController::class, 'usersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/users/{id}', [ISPController::class, 'usersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/customers/{id}', [ISPController::class, 'customersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/operators/{id}', [ISPController::class, 'operatorsDestroy'])->middleware('password.confirm')",
+            "Route::delete('/network/routers/{id}', [ISPController::class, 'routersDestroy'])->middleware('password.confirm')",
+            "Route::delete('/network/pppoe-profiles/{id}', [ISPController::class, 'pppoeProfilesDestroy'])->middleware('password.confirm')",
             "Route::delete('/disable', [TwoFactorAuthController::class, 'disable'])->middleware('password.confirm')",
         ];
 

@@ -150,17 +150,17 @@ class PolicyEnforcementTest extends TestCase
 
         // Admin can access
         $response = $this->actingAs($this->admin)
-            ->get(route('panel.admin.packages.mappings.index', $package));
+            ->get(route('panel.isp.packages.mappings.index', $package));
         $response->assertOk();
 
         // Operator can access (they can view packages)
         $response = $this->actingAs($this->operator)
-            ->get(route('panel.admin.packages.mappings.index', $package));
+            ->get(route('panel.isp.packages.mappings.index', $package));
         $response->assertOk();
 
         // Staff without permission cannot access
         $response = $this->actingAs($this->staff)
-            ->get(route('panel.admin.packages.mappings.index', $package));
+            ->get(route('panel.isp.packages.mappings.index', $package));
         $response->assertForbidden();
     }
 
@@ -173,17 +173,17 @@ class PolicyEnforcementTest extends TestCase
 
         // Admin can access
         $response = $this->actingAs($this->admin)
-            ->get(route('panel.admin.packages.mappings.create', $package));
+            ->get(route('panel.isp.packages.mappings.create', $package));
         $response->assertOk();
 
         // Operator cannot access
         $response = $this->actingAs($this->operator)
-            ->get(route('panel.admin.packages.mappings.create', $package));
+            ->get(route('panel.isp.packages.mappings.create', $package));
         $response->assertForbidden();
 
         // Staff without permission cannot access
         $response = $this->actingAs($this->staff)
-            ->get(route('panel.admin.packages.mappings.create', $package));
+            ->get(route('panel.isp.packages.mappings.create', $package));
         $response->assertForbidden();
     }
 
@@ -206,12 +206,12 @@ class PolicyEnforcementTest extends TestCase
 
         // Admin can create
         $response = $this->actingAs($this->admin)
-            ->post(route('panel.admin.packages.mappings.store', $package), $mappingData);
+            ->post(route('panel.isp.packages.mappings.store', $package), $mappingData);
         $response->assertRedirect();
 
         // Operator cannot create
         $response = $this->actingAs($this->operator)
-            ->post(route('panel.admin.packages.mappings.store', $package), $mappingData);
+            ->post(route('panel.isp.packages.mappings.store', $package), $mappingData);
         $response->assertForbidden();
     }
 

@@ -186,13 +186,11 @@ class NasNetwatchController extends Controller
                 ], 400);
             }
 
-            $radiusServer = config('radius.server_ip', '127.0.0.1');
+            $radiusServer = $router->nas?->server ?? config('radius.server_ip', '127.0.0.1');
             $menu = 'tool/netwatch';
 
-            // Get netwatch entries
             $netwatchEntries = $this->apiService->getMktRows($router, $menu);
 
-            // Find the RADIUS netwatch entry
             $radiusNetwatch = collect($netwatchEntries)->first(function ($entry) use ($radiusServer) {
                 return isset($entry['host']) && $entry['host'] === $radiusServer;
             });
@@ -241,8 +239,8 @@ class NasNetwatchController extends Controller
     private function configureNetwatchForRadius(MikrotikRouter $router, array $config): array
     {
         try {
-            // Use RADIUS server IP from config; do not rely on NAS server (router IP)
-            $radiusServer = config('radius.server_ip', '127.0.0.1');
+            // NAS-centric: use the RADIUS server this router authenticates against (NAS server or app config)
+            $radiusServer = $router->nas?->server ?? config('radius.server_ip', '127.0.0.1');
             $interval = $config['interval'] ?? '1m';
             $timeout = $config['timeout'] ?? '1s';
 
@@ -312,7 +310,7 @@ class NasNetwatchController extends Controller
                 ], 400);
             }
 
-            $radiusServer = config('radius.server_ip', '127.0.0.1');
+            $radiusServer = $router->nas?->server ?? config('radius.server_ip', '127.0.0.1');
             $menu = 'tool/netwatch';
 
             $existingRows = $this->apiService->getMktRows($router, $menu, ['host' => $radiusServer]);
@@ -362,13 +360,11 @@ class NasNetwatchController extends Controller
                 ];
             }
 
-            // Use RADIUS server IP from config
-            $radiusServer = config('radius.server_ip', '127.0.0.1');
+            $radiusServer = $router->nas?->server ?? config('radius.server_ip', '127.0.0.1');
             $menu = 'tool/netwatch';
 
             $netwatchEntries = $this->apiService->getMktRows($router, $menu);
 
-            // Find the RADIUS netwatch entry
             $radiusNetwatch = collect($netwatchEntries)->first(function ($entry) use ($radiusServer) {
                 return isset($entry['host']) && $entry['host'] === $radiusServer;
             });

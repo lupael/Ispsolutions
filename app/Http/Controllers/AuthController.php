@@ -62,7 +62,7 @@ class AuthController extends Controller
         // Role to route mapping
         $roleRoutes = [
             'super-admin' => 'panel.super-admin.dashboard',
-            'admin' => 'panel.admin.dashboard',
+            'isp' => 'panel.isp.dashboard',
             'developer' => 'panel.developer.dashboard',
             'manager' => 'panel.manager.dashboard',
             'operator' => 'panel.operator.dashboard',

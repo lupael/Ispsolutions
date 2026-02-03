@@ -73,7 +73,7 @@ class RouterConfigurationControllerTest extends TestCase
 
         $this->app->instance(RouterConfigurationService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-radius', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-radius', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -100,7 +100,7 @@ class RouterConfigurationControllerTest extends TestCase
 
         $this->app->instance(RouterConfigurationService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-ppp', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-ppp', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -127,7 +127,7 @@ class RouterConfigurationControllerTest extends TestCase
 
         $this->app->instance(RouterConfigurationService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-firewall', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-firewall', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -150,15 +150,15 @@ class RouterConfigurationControllerTest extends TestCase
         ]);
 
         // Try to configure RADIUS on router from another tenant
-        $response = $this->post(route('panel.admin.routers.configuration.configure-radius', $otherRouter->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-radius', $otherRouter->id));
         $response->assertNotFound();
 
         // Try to configure PPP on router from another tenant
-        $response = $this->post(route('panel.admin.routers.configuration.configure-ppp', $otherRouter->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-ppp', $otherRouter->id));
         $response->assertNotFound();
 
         // Try to configure firewall on router from another tenant
-        $response = $this->post(route('panel.admin.routers.configuration.configure-firewall', $otherRouter->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-firewall', $otherRouter->id));
         $response->assertNotFound();
     }
 
@@ -183,7 +183,7 @@ class RouterConfigurationControllerTest extends TestCase
 
         $this->app->instance(RouterConfigurationService::class, $mockService);
 
-        $response = $this->get(route('panel.admin.routers.configuration.radius-status', $this->router->id));
+        $response = $this->get(route('panel.isp.routers.configuration.radius-status', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -209,7 +209,7 @@ class RouterConfigurationControllerTest extends TestCase
 
         $this->app->instance(RouterConfigurationService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-radius', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-radius', $this->router->id));
 
         // Manager may or may not have access depending on permissions
         // Check for either success or forbidden/redirect
@@ -238,7 +238,7 @@ class RouterConfigurationControllerTest extends TestCase
 
         $this->app->instance(RouterConfigurationService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-radius', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-radius', $this->router->id));
 
         $response->assertStatus(500);
         $response->assertJson([
@@ -256,13 +256,13 @@ class RouterConfigurationControllerTest extends TestCase
 
         $nonExistentRouterId = 99999;
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-radius', $nonExistentRouterId));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-radius', $nonExistentRouterId));
         $response->assertNotFound();
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-ppp', $nonExistentRouterId));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-ppp', $nonExistentRouterId));
         $response->assertNotFound();
 
-        $response = $this->post(route('panel.admin.routers.configuration.configure-firewall', $nonExistentRouterId));
+        $response = $this->post(route('panel.isp.routers.configuration.configure-firewall', $nonExistentRouterId));
         $response->assertNotFound();
     }
 
@@ -280,7 +280,7 @@ class RouterConfigurationControllerTest extends TestCase
         ]);
 
         // Try to get RADIUS status for router from another tenant
-        $response = $this->get(route('panel.admin.routers.configuration.radius-status', $otherRouter->id));
+        $response = $this->get(route('panel.isp.routers.configuration.radius-status', $otherRouter->id));
         $response->assertNotFound();
     }
 

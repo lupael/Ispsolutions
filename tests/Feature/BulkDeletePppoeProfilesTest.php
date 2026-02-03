@@ -19,7 +19,7 @@ class BulkDeletePppoeProfilesTest extends TestCase
             'email' => 'admin@example.com',
             'is_admin' => true,
         ]);
-        
+
         $this->actingAs($user);
 
         // Create a router first
@@ -40,18 +40,18 @@ class BulkDeletePppoeProfilesTest extends TestCase
         ]);
 
         // Perform bulk delete on profile1 and profile2
-        $response = $this->post(route('panel.admin.network.pppoe-profiles.bulk-delete'), [
+        $response = $this->post(route('panel.isp.network.pppoe-profiles.bulk-delete'), [
             'ids' => [$profile1->id, $profile2->id],
         ]);
 
         // Assert redirect with success message
-        $response->assertRedirect(route('panel.admin.network.pppoe-profiles'));
+        $response->assertRedirect(route('panel.isp.network.pppoe-profiles'));
         $response->assertSessionHas('success');
 
         // Assert profiles are deleted
         $this->assertDatabaseMissing('mikrotik_profiles', ['id' => $profile1->id]);
         $this->assertDatabaseMissing('mikrotik_profiles', ['id' => $profile2->id]);
-        
+
         // Assert profile3 still exists
         $this->assertDatabaseHas('mikrotik_profiles', ['id' => $profile3->id]);
     }
@@ -63,11 +63,11 @@ class BulkDeletePppoeProfilesTest extends TestCase
             'email' => 'admin@example.com',
             'is_admin' => true,
         ]);
-        
+
         $this->actingAs($user);
 
         // Test with empty ids array
-        $response = $this->post(route('panel.admin.network.pppoe-profiles.bulk-delete'), [
+        $response = $this->post(route('panel.isp.network.pppoe-profiles.bulk-delete'), [
             'ids' => [],
         ]);
 
@@ -81,11 +81,11 @@ class BulkDeletePppoeProfilesTest extends TestCase
             'email' => 'admin@example.com',
             'is_admin' => true,
         ]);
-        
+
         $this->actingAs($user);
 
         // Test with non-existent id
-        $response = $this->post(route('panel.admin.network.pppoe-profiles.bulk-delete'), [
+        $response = $this->post(route('panel.isp.network.pppoe-profiles.bulk-delete'), [
             'ids' => [99999],
         ]);
 

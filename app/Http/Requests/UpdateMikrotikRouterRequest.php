@@ -26,7 +26,7 @@ class UpdateMikrotikRouterRequest extends FormRequest
             'host' => 'required|string|max:255',
             'port' => 'required|integer|min:1|max:65535',
             'username' => 'required|string|max:255',
-            'password' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:4|max:255',
             'api_port' => 'nullable|integer|min:1|max:65535',
             'is_active' => 'boolean',
             'location' => 'nullable|string|max:255',
@@ -46,6 +46,7 @@ class UpdateMikrotikRouterRequest extends FormRequest
             'port.min' => 'Port must be between 1 and 65535.',
             'port.max' => 'Port must be between 1 and 65535.',
             'username.required' => 'Username is required.',
+            'password.min' => 'Password must be at least 4 characters (RouterOS requirement).',
         ];
     }
 }

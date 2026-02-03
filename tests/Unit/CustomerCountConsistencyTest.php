@@ -21,9 +21,9 @@ class CustomerCountConsistencyTest extends TestCase
      */
     public function test_dashboard_uses_is_subscriber_filter_for_new_customers_today(): void
     {
-        // Read the AdminController file
-        $controllerPath = base_path('app/Http/Controllers/Panel/AdminController.php');
-        $this->assertFileExists($controllerPath, 'AdminController.php should exist');
+        // Read the ISPController file
+        $controllerPath = base_path('app/Http/Controllers/Panel/ISPController.php');
+        $this->assertFileExists($controllerPath, 'ISPController.php should exist');
         
         $controllerContent = file_get_contents($controllerPath);
         
@@ -66,8 +66,8 @@ class CustomerCountConsistencyTest extends TestCase
      */
     public function test_all_dashboard_customer_stats_use_is_subscriber_filter(): void
     {
-        // Read the AdminController file
-        $controllerPath = base_path('app/Http/Controllers/Panel/AdminController.php');
+        // Read the ISPController file
+        $controllerPath = base_path('app/Http/Controllers/Panel/ISPController.php');
         $controllerContent = file_get_contents($controllerPath);
         
         // Check that various customer statistics use is_subscriber

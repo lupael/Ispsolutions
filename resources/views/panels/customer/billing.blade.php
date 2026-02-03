@@ -1,6 +1,6 @@
 @extends('panels.layouts.app')
 
-@section('title', 'Billing')
+@section('title', __('billing.title'))
 
 @section('content')
 <div class="space-y-6">

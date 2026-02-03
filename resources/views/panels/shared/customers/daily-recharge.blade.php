@@ -8,7 +8,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Daily Recharge for {{ $customer->name }}</h3>
-                <a href="{{ route('panel.admin.customers.show', $customer) }}" class="inline-flex items-center px-4 py-2 bg-gray-300 dark:bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-gray-700 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                <a href="{{ route('panel.isp.customers.show', $customer) }}" class="inline-flex items-center px-4 py-2 bg-gray-300 dark:bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-gray-700 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                     <i class="fas fa-arrow-left mr-2"></i> Back to Customer
                 </a>
             </div>
@@ -60,9 +60,9 @@
                 </div>
 
                 <!-- Recharge Form -->
-                <form action="{{ route('panel.admin.customers.daily-recharge.process', $customer) }}" method="POST" id="rechargeForm">
+                <form action="{{ route('panel.isp.customers.daily-recharge.process', $customer) }}" method="POST" id="rechargeForm">
                     @csrf
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="package_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -71,7 +71,7 @@
                             <select name="package_id" id="package_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('package_id') border-red-500 @enderror" required>
                                 <option value="">-- Select Package --</option>
                                 @foreach($dailyPackages as $package)
-                                    <option value="{{ $package->id }}" 
+                                    <option value="{{ $package->id }}"
                                             data-price="{{ $package->daily_rate ?? $package->price }}"
                                             {{ old('package_id') == $package->id ? 'selected' : '' }}>
                                         {{ $package->name }} - {{ number_format($package->daily_rate ?? $package->price, 2) }} BDT/day
@@ -87,9 +87,9 @@
                             <label for="days" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Number of Days <span class="text-red-500">*</span>
                             </label>
-                            <input type="number" name="days" id="days" 
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('days') border-red-500 @enderror" 
-                                   value="{{ old('days', 1) }}" 
+                            <input type="number" name="days" id="days"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('days') border-red-500 @enderror"
+                                   value="{{ old('days', 1) }}"
                                    min="1" max="30" required>
                             @error('days')
                                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
@@ -191,13 +191,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const pricePerDay = parseFloat(selectedOption.dataset.price) || 0;
         const days = parseInt(daysInput.value) || 0;
         const total = pricePerDay * days;
-        
+
         totalAmountInput.value = total.toFixed(2);
     }
 
     packageSelect.addEventListener('change', calculateTotal);
     daysInput.addEventListener('input', calculateTotal);
-    
+
     // Calculate on page load if values are present
     calculateTotal();
 });

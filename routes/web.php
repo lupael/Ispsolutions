@@ -3,7 +3,7 @@
 use App\Http\Controllers\Auth\ConfirmPasswordController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LanguageController;
-use App\Http\Controllers\Panel\AdminController;
+use App\Http\Controllers\Panel\ISPController;
 use App\Http\Controllers\Panel\AnalyticsController;
 use App\Http\Controllers\Panel\CableTvController;
 use App\Http\Controllers\Panel\CardDistributorController;
@@ -699,15 +699,17 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant'
         Route::delete('/{customer}', [\App\Http\Controllers\Panel\CustomerBackupController::class, 'removeCustomer'])->name('remove');
     });
 
-    // Mikrotik Monitoring Routes
+    // Mikrotik Monitoring & Detail Routes (drill-down)
     Route::prefix('mikrotik')->name('mikrotik.')->group(function () {
         Route::get('/monitoring', [AdminController::class, 'mikrotikMonitoring'])->name('monitoring');
+        Route::get('/{id}/details', [AdminController::class, 'mikrotikDetails'])->name('details');
         Route::get('/{id}/monitor', [AdminController::class, 'mikrotikMonitor'])->name('monitor');
         Route::post('/{id}/configure', [AdminController::class, 'mikrotikConfigure'])->name('configure');
         Route::get('/{id}/configure', [AdminController::class, 'mikrotikConfigureShow'])->name('configure.show');
     });
 
-    // Existing OLT routes (kept for backward compatibility)
+    // OLT routes (drill-down details + existing)
+    Route::get('/olt/{id}/details', [AdminController::class, 'oltDetails'])->name('olt.details');
     Route::get('/olt/dashboard', [AdminController::class, 'oltDashboard'])->name('olt.dashboard');
     Route::get('/olt/{id}/monitor', [AdminController::class, 'oltMonitor'])->name('olt.monitor');
     Route::get('/olt/{id}/performance', [AdminController::class, 'oltPerformance'])->name('olt.performance');

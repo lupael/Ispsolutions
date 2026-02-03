@@ -26,26 +26,26 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="bi bi-search text-gray-400"></i>
                         </div>
-                        <input 
-                            type="text" 
-                            name="query" 
+                        <input
+                            type="text"
+                            name="query"
                             value="{{ $query }}"
-                            placeholder="Search by name, email, mobile, username, or invoice number..." 
+                            placeholder="Search by name, email, mobile, username, or invoice number..."
                             class="pl-10 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             autofocus
                         >
                     </div>
                 </div>
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="inline-flex items-center px-6 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                 >
                     <i class="bi bi-search mr-2"></i>
                     Search
                 </button>
                 @if($query)
-                    <a 
-                        href="{{ route('panel.search') }}" 
+                    <a
+                        href="{{ route('panel.search') }}"
                         class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <i class="bi bi-x-lg mr-2"></i>
@@ -64,7 +64,7 @@
                     <i class="bi bi-people-fill mr-2"></i>
                     Customers ({{ $customers->count() }})
                 </h2>
-                
+
                 @if($customers->count() > 0)
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -117,18 +117,18 @@
                                                 $userRole = auth()->user()->roles->first()?->slug ?? '';
                                                 $operatorLevel = auth()->user()->operator_level;
                                                 $viewRoute = null;
-                                                
+
                                                 // Determine appropriate route based on role
                                                 if ($operatorLevel === 0 && Route::has('panel.developer.customers.show')) {
                                                     // Developer
                                                     $viewRoute = route('panel.developer.customers.show', $customer->id);
-                                                } elseif (in_array($operatorLevel, [10, 20, 50, 70]) && Route::has('panel.admin.customers.show')) {
+                                                } elseif (in_array($operatorLevel, [10, 20, 50, 70]) && Route::has('panel.isp.customers.show')) {
                                                     // Super Admin, Admin, Manager, Accountant
-                                                    $viewRoute = route('panel.admin.customers.show', $customer->id);
+                                                    $viewRoute = route('panel.isp.customers.show', $customer->id);
                                                 }
                                                 // Note: Operators, Sub-Operators, and Staff typically don't have customer detail views
                                             @endphp
-                                            
+
                                             @if($viewRoute)
                                                 <a href="{{ $viewRoute }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
                                                     <i class="bi bi-eye"></i> View
@@ -158,7 +158,7 @@
                     <i class="bi bi-receipt mr-2"></i>
                     Invoices ({{ $invoices->count() }})
                 </h2>
-                
+
                 @if($invoices->count() > 0)
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -215,20 +215,20 @@
                                                 $userRole = auth()->user()->roles->first()?->slug ?? '';
                                                 $operatorLevel = auth()->user()->operator_level;
                                                 $viewRoute = null;
-                                                
+
                                                 // Determine appropriate route based on role
                                                 if ($operatorLevel === 100) {
                                                     // Customer - view their own invoice
                                                     if ($invoice->user_id === auth()->user()->id && Route::has('panel.customer.invoice.view')) {
                                                         $viewRoute = route('panel.customer.invoice.view', $invoice->id);
                                                     }
-                                                } elseif (in_array($operatorLevel, [0, 10, 20, 50, 70]) && Route::has('panel.admin.export.invoice.view')) {
+                                                } elseif (in_array($operatorLevel, [0, 10, 20, 50, 70]) && Route::has('panel.isp.export.invoice.view')) {
                                                     // Developer, Super Admin, Admin, Manager, Accountant
-                                                    $viewRoute = route('panel.admin.export.invoice.view', $invoice->id);
+                                                    $viewRoute = route('panel.isp.export.invoice.view', $invoice->id);
                                                 }
                                                 // Note: Operators, Sub-Operators, and Staff don't have invoice view routes
                                             @endphp
-                                            
+
                                             @if($viewRoute)
                                                 <a href="{{ $viewRoute }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
                                                     <i class="bi bi-eye"></i> View

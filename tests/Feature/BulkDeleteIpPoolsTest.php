@@ -18,7 +18,7 @@ class BulkDeleteIpPoolsTest extends TestCase
             'email' => 'admin@example.com',
             'is_admin' => true,
         ]);
-        
+
         $this->actingAs($user);
 
         // Create test IP pools
@@ -27,18 +27,18 @@ class BulkDeleteIpPoolsTest extends TestCase
         $pool3 = IpPool::factory()->create(['name' => 'Test Pool 3']);
 
         // Perform bulk delete on pool1 and pool2
-        $response = $this->post(route('panel.admin.network.ipv4-pools.bulk-delete'), [
+        $response = $this->post(route('panel.isp.network.ipv4-pools.bulk-delete'), [
             'ids' => [$pool1->id, $pool2->id],
         ]);
 
         // Assert redirect with success message
-        $response->assertRedirect(route('panel.admin.network.ipv4-pools'));
+        $response->assertRedirect(route('panel.isp.network.ipv4-pools'));
         $response->assertSessionHas('success');
 
         // Assert pools are deleted
         $this->assertDatabaseMissing('ip_pools', ['id' => $pool1->id]);
         $this->assertDatabaseMissing('ip_pools', ['id' => $pool2->id]);
-        
+
         // Assert pool3 still exists
         $this->assertDatabaseHas('ip_pools', ['id' => $pool3->id]);
     }
@@ -50,11 +50,11 @@ class BulkDeleteIpPoolsTest extends TestCase
             'email' => 'admin@example.com',
             'is_admin' => true,
         ]);
-        
+
         $this->actingAs($user);
 
         // Test with empty ids array
-        $response = $this->post(route('panel.admin.network.ipv4-pools.bulk-delete'), [
+        $response = $this->post(route('panel.isp.network.ipv4-pools.bulk-delete'), [
             'ids' => [],
         ]);
 
@@ -68,11 +68,11 @@ class BulkDeleteIpPoolsTest extends TestCase
             'email' => 'admin@example.com',
             'is_admin' => true,
         ]);
-        
+
         $this->actingAs($user);
 
         // Test with non-existent id
-        $response = $this->post(route('panel.admin.network.ipv4-pools.bulk-delete'), [
+        $response = $this->post(route('panel.isp.network.ipv4-pools.bulk-delete'), [
             'ids' => [99999],
         ]);
 

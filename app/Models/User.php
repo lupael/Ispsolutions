@@ -37,7 +37,7 @@ use Illuminate\Notifications\Notifiable;
  * 4. Role Hierarchy:
  *    - Developer (level 0): Supreme authority across all tenants
  *    - Super Admin (level 10): Manages Admins within their own tenants only
- *    - Admin (level 20): ISP Owner, manages Operators, Sub-Operators, Managers, Staff
+ *    - ISP (level 20): ISP Owner, manages Operators, Sub-Operators, Managers, Staff
  *    - Operator (level 30): Manages Sub-Operators and customers
  *    - Sub-Operator (level 40): Manages only their own customers
  *    - Manager (level 50): View-only scoped access
@@ -64,7 +64,7 @@ class User extends Authenticatable
 
     public const OPERATOR_LEVEL_SUPER_ADMIN = 10;
 
-    public const OPERATOR_LEVEL_ADMIN = 20;
+    public const OPERATOR_LEVEL_ISP = 20;
 
     public const OPERATOR_LEVEL_OPERATOR = 30;
 
@@ -441,7 +441,7 @@ class User extends Authenticatable
     {
         return match ($this->operator_type) {
             'super_admin' => 'Super Admin',
-            'admin', 'group_admin' => 'Admin', // group_admin for backward compatibility
+            'isp', 'group_admin' => 'ISP', // group_admin for backward compatibility
             'operator' => 'Operator',
             'sub_operator' => 'Sub-Operator',
             'manager' => 'Manager',
@@ -503,10 +503,10 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is an Admin/Group Admin (level 20).
+     * Check if user is an ISP/Group Admin (level 20).
      * Uses operator_level as the primary source of truth.
      */
-    public function isAdmin(): bool
+    public function isIsp(): bool
     {
         return $this->operator_level === 20;
     }
@@ -621,7 +621,7 @@ class User extends Authenticatable
         }
 
         // Admin can create Operators (30), Sub-Operators (40), Managers (50), Accountants (70), Staff (80), and Customers (100)
-        if ($this->isAdmin()) {
+        if ($this->isIsp()) {
             return in_array($targetLevel, [30, 40, 50, 70, 80, 100]);
         }
 
@@ -682,10 +682,10 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if this user can create an Admin.
-     * Only Developers and Super Admins can create Admins.
+     * Check if this user can create an ISP.
+     * Only Developers and Super Admins can create ISPs.
      */
-    public function canCreateAdmin(): bool
+    public function canCreateIsp(): bool
     {
         return $this->isDeveloper() || $this->isSuperAdmin();
     }
@@ -696,7 +696,7 @@ class User extends Authenticatable
      */
     public function canCreateOperator(): bool
     {
-        return $this->isDeveloper() || $this->isAdmin();
+        return $this->isDeveloper() || $this->isIsp();
     }
 
     /**
@@ -705,7 +705,7 @@ class User extends Authenticatable
      */
     public function canCreateSubOperator(): bool
     {
-        return $this->isDeveloper() || $this->isAdmin() || $this->isOperatorRole();
+        return $this->isDeveloper() || $this->isIsp() || $this->isOperatorRole();
     }
 
     /**
@@ -714,7 +714,7 @@ class User extends Authenticatable
      */
     public function canCreateCustomer(): bool
     {
-        return $this->isDeveloper() || $this->isAdmin() || $this->isOperatorRole() || $this->isSubOperator();
+        return $this->isDeveloper() || $this->isIsp() || $this->isOperatorRole() || $this->isSubOperator();
     }
 
     /**

@@ -18,14 +18,14 @@ class PaginationFixesTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test that AdminController packages route returns paginator.
+     * Test that ISPController packages route returns paginator.
      */
     public function test_admin_packages_returns_paginator(): void
     {
         $user = User::factory()->create();
         $user->assignRole('admin');
 
-        $response = $this->actingAs($user)->get(route('panel.admin.packages.index'));
+        $response = $this->actingAs($user)->get(route('panel.isp.packages.index'));
 
         $response->assertStatus(200);
         $response->assertViewHas('packages', function ($packages) {
@@ -34,14 +34,14 @@ class PaginationFixesTest extends TestCase
     }
 
     /**
-     * Test that AdminController deleted customers route returns paginator.
+     * Test that ISPController deleted customers route returns paginator.
      */
     public function test_admin_deleted_customers_returns_paginator(): void
     {
         $user = User::factory()->create();
         $user->assignRole('admin');
 
-        $response = $this->actingAs($user)->get(route('panel.admin.customers.deleted'));
+        $response = $this->actingAs($user)->get(route('panel.isp.customers.deleted'));
 
         $response->assertStatus(200);
         $response->assertViewHas('customers', function ($customers) {
@@ -50,14 +50,14 @@ class PaginationFixesTest extends TestCase
     }
 
     /**
-     * Test that AdminController import requests route returns paginator.
+     * Test that ISPController import requests route returns paginator.
      */
     public function test_admin_import_requests_returns_paginator(): void
     {
         $user = User::factory()->create();
         $user->assignRole('admin');
 
-        $response = $this->actingAs($user)->get(route('panel.admin.customers.import-requests'));
+        $response = $this->actingAs($user)->get(route('panel.isp.customers.import-requests'));
 
         $response->assertStatus(200);
         $response->assertViewHas('importRequests', function ($importRequests) {

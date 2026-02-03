@@ -138,7 +138,7 @@ class BelongsToTenantTraitTest extends TestCase
         ]);
 
         // This query should NOT throw an ambiguous column error
-        // It mimics the query from AdminController that was failing
+        // It mimics the query from ISPController that was failing
         $result = User::where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
             ->whereNotNull('service_package_id')
             ->join('packages', 'users.service_package_id', '=', 'packages.id')
