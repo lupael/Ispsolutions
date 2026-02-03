@@ -150,7 +150,7 @@
                     dataLabels: {
                         enabled: true,
                         formatter: function(val) {
-                            return val > 0 ? val.toFixed(0) : '';
+                            return val > 0 ? val.toFixed(2) : '';
                         },
                         offsetY: -20,
                         style: {

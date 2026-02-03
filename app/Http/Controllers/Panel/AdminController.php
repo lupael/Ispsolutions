@@ -118,7 +118,9 @@ class AdminController extends Controller
             'total_cisco' => CiscoDevice::count(),
             'total_olt' => Olt::count(),
             // Billing statistics
-            'billed_customers' => Invoice::distinct('user_id')->count('user_id'),
+            'billed_customers' => Invoice::whereHas('user', function ($query) {
+                $query->where('is_subscriber', true);
+            })->distinct('user_id')->count('user_id'),
             'total_invoices' => Invoice::count(),
             'total_billed_amount' => Invoice::sum('total_amount'),
             'paid_invoices' => Invoice::where('status', 'paid')->count(),
@@ -183,17 +185,17 @@ class AdminController extends Controller
             ->get();
 
         // Task 18.4: Payment collection statistics
+        $totalBilled = $stats['total_billed_amount'] ?? 0;
+        $totalCollected = Payment::where('status', 'success')->sum('amount');
         $paymentStats = [
-            'total_billed' => $stats['total_billed_amount'] ?? 0,
-            'total_collected' => Payment::where('status', 'success')->sum('amount'),
-            'total_due' => Invoice::where('status', 'unpaid')->sum('total_amount') +
-                           Invoice::where('status', 'overdue')->sum('total_amount'),
+            'total_billed' => $totalBilled,
+            'total_collected' => $totalCollected,
+            'total_due' => $totalBilled - $totalCollected,
             'customers_paid' => Payment::whereDate('payment_date', '>=', now()->startOfMonth())
                 ->where('status', 'success')
                 ->distinct('user_id')
                 ->count('user_id'),
-            'customers_unpaid' => Invoice::where('status', 'unpaid')
-                ->orWhere('status', 'overdue')
+            'customers_unpaid' => Invoice::whereIn('status', ['unpaid', 'overdue'])
                 ->distinct('user_id')
                 ->count('user_id'),
         ];
