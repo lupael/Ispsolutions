@@ -77,7 +77,7 @@ class RouterBackupControllerTest extends TestCase
 
         $this->app->instance(RouterBackupService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.backup.create', $this->router->id), [
+        $response = $this->post(route('panel.isp.routers.backup.create', $this->router->id), [
             'name' => 'Test Backup',
             'reason' => 'Manual backup for testing',
         ]);
@@ -126,7 +126,7 @@ class RouterBackupControllerTest extends TestCase
 
         $this->app->instance(RouterBackupService::class, $mockService);
 
-        $response = $this->get(route('panel.admin.routers.backup.list', $this->router->id));
+        $response = $this->get(route('panel.isp.routers.backup.list', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -163,7 +163,7 @@ class RouterBackupControllerTest extends TestCase
 
         $this->app->instance(RouterBackupService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.backup.restore', $this->router->id), [
+        $response = $this->post(route('panel.isp.routers.backup.restore', $this->router->id), [
             'backup_id' => $backup->id,
         ]);
 
@@ -190,7 +190,7 @@ class RouterBackupControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->delete(route('panel.admin.routers.backup.destroy', [
+        $response = $this->delete(route('panel.isp.routers.backup.destroy', [
             'router' => $this->router->id,
             'backup' => $backup->id,
         ]));
@@ -227,17 +227,17 @@ class RouterBackupControllerTest extends TestCase
         ]);
 
         // Try to list backups for router from another tenant
-        $response = $this->get(route('panel.admin.routers.backup.list', $otherRouter->id));
+        $response = $this->get(route('panel.isp.routers.backup.list', $otherRouter->id));
         $response->assertNotFound();
 
         // Try to restore backup for router from another tenant
-        $response = $this->post(route('panel.admin.routers.backup.restore', $otherRouter->id), [
+        $response = $this->post(route('panel.isp.routers.backup.restore', $otherRouter->id), [
             'backup_id' => $otherBackup->id,
         ]);
         $response->assertNotFound();
 
         // Try to delete backup for router from another tenant
-        $response = $this->delete(route('panel.admin.routers.backup.destroy', [
+        $response = $this->delete(route('panel.isp.routers.backup.destroy', [
             'router' => $otherRouter->id,
             'backup' => $otherBackup->id,
         ]));
@@ -257,7 +257,7 @@ class RouterBackupControllerTest extends TestCase
         $this->actingAs($this->admin);
 
         // Try to restore with non-existent backup ID
-        $response = $this->post(route('panel.admin.routers.backup.restore', $this->router->id), [
+        $response = $this->post(route('panel.isp.routers.backup.restore', $this->router->id), [
             'backup_id' => 99999,
         ]);
 
@@ -276,7 +276,7 @@ class RouterBackupControllerTest extends TestCase
         ]);
 
         // Try to restore backup that belongs to another router
-        $response = $this->post(route('panel.admin.routers.backup.restore', $this->router->id), [
+        $response = $this->post(route('panel.isp.routers.backup.restore', $this->router->id), [
             'backup_id' => $backupForAnotherRouter->id,
         ]);
 
@@ -306,7 +306,7 @@ class RouterBackupControllerTest extends TestCase
 
         $this->app->instance(RouterBackupService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.backup.cleanup', $this->router->id), [
+        $response = $this->post(route('panel.isp.routers.backup.cleanup', $this->router->id), [
             'retention_days' => 30,
         ]);
 
@@ -337,7 +337,7 @@ class RouterBackupControllerTest extends TestCase
 
         $this->app->instance(RouterBackupService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.backup.cleanup', $this->router->id), []);
+        $response = $this->post(route('panel.isp.routers.backup.cleanup', $this->router->id), []);
 
         $response->assertOk();
         $response->assertJson([
@@ -354,14 +354,14 @@ class RouterBackupControllerTest extends TestCase
         $this->actingAs($this->admin);
 
         // Missing required 'name' field
-        $response = $this->post(route('panel.admin.routers.backup.create', $this->router->id), [
+        $response = $this->post(route('panel.isp.routers.backup.create', $this->router->id), [
             'reason' => 'Test reason',
         ]);
 
         $response->assertSessionHasErrors(['name']);
 
         // Name too long
-        $response = $this->post(route('panel.admin.routers.backup.create', $this->router->id), [
+        $response = $this->post(route('panel.isp.routers.backup.create', $this->router->id), [
             'name' => str_repeat('a', 300),
             'reason' => 'Test reason',
         ]);

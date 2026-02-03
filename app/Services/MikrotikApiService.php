@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\MikrotikRouter;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Log;
 class MikrotikApiService
 {
     protected RouterOSBinaryApiService $binaryApiService;
-    
+
     /**
      * Cache for detected API types to avoid repeated connection tests.
      * Format: ['router_id' => 'binary|rest']
@@ -49,11 +50,11 @@ class MikrotikApiService
     public function getMktRows(MikrotikRouter $router, string $menu, array $query = []): array
     {
         $apiType = $this->determineApiType($router);
-        
+
         if ($apiType === 'binary') {
             return $this->binaryApiService->getMktRows($router, $menu, $query);
         }
-        
+
         // Use REST API
         return $this->getMktRowsRest($router, $menu, $query);
     }
@@ -70,18 +71,18 @@ class MikrotikApiService
     public function addMktRows(MikrotikRouter $router, string $menu, array $rows): array
     {
         $apiType = $this->determineApiType($router);
-        
+
         if ($apiType === 'binary') {
             return $this->binaryApiService->addMktRows($router, $menu, $rows);
         }
-        
+
         // Use REST API
         return $this->addMktRowsRest($router, $menu, $rows);
     }
 
     /**
      * Add rows to a MikroTik menu (backward compatible boolean return).
-     * 
+     *
      * @deprecated Use addMktRows() which returns detailed array results
      *
      * @param MikrotikRouter $router The router to modify
@@ -93,16 +94,16 @@ class MikrotikApiService
     public function addMktRowsBool(MikrotikRouter $router, string $menu, array $rows): bool
     {
         $result = $this->addMktRows($router, $menu, $rows);
-        
+
         // Handle both array and bool responses for backward compatibility
         if (is_bool($result)) {
             return $result;
         }
-        
+
         if (is_array($result) && array_key_exists('success', $result)) {
             return (bool) $result['success'];
         }
-        
+
         // Unexpected result: treat as failure
         return false;
     }
@@ -120,11 +121,11 @@ class MikrotikApiService
     public function editMktRow(MikrotikRouter $router, string $menu, array $row, array $data): bool
     {
         $apiType = $this->determineApiType($router);
-        
+
         if ($apiType === 'binary') {
             return $this->binaryApiService->editMktRow($router, $menu, $row, $data);
         }
-        
+
         // Use REST API
         return $this->editMktRowRest($router, $menu, $row, $data);
     }
@@ -141,11 +142,11 @@ class MikrotikApiService
     public function removeMktRows(MikrotikRouter $router, string $menu, array $rows): bool
     {
         $apiType = $this->determineApiType($router);
-        
+
         if ($apiType === 'binary') {
             return $this->binaryApiService->removeMktRows($router, $menu, $rows);
         }
-        
+
         // Use REST API
         return $this->removeMktRowsRest($router, $menu, $rows);
     }
@@ -162,41 +163,38 @@ class MikrotikApiService
     public function ttyWrite(MikrotikRouter $router, string $command, array $params = []): mixed
     {
         $apiType = $this->determineApiType($router);
-        
-        // Binary API doesn't have a direct equivalent, use REST if available
+
         if ($apiType === 'binary') {
-            Log::warning('ttyWrite not supported via binary API, attempting REST API fallback', [
-                'router_id' => $router->id,
-            ]);
+            return $this->binaryApiService->ttyWrite($router, $command, $params);
         }
-        
+
         return $this->ttyWriteRest($router, $command, $params);
     }
 
     /**
      * Determine which API type to use for the router.
      * Uses in-memory cache to avoid repeated connection tests.
-     * 
+     *
      * @param MikrotikRouter $router Router instance
      * @return string 'binary' or 'rest'
      */
     private function determineApiType(MikrotikRouter $router): string
     {
         $apiType = $router->api_type ?? 'auto';
-        
+
         if ($apiType === 'binary') {
             return 'binary';
         }
-        
+
         if ($apiType === 'rest') {
             return 'rest';
         }
-        
+
         // Check cache first to avoid repeated connection tests
         if (isset($this->apiTypeCache[$router->id])) {
             return $this->apiTypeCache[$router->id];
         }
-        
+
         // Auto-detect: prefer binary API (more reliable and compatible)
         // Try binary API first, fall back to REST if it fails
         if ($this->binaryApiService->testConnection($router)) {
@@ -204,7 +202,7 @@ class MikrotikApiService
             $this->apiTypeCache[$router->id] = 'binary';
             return 'binary';
         }
-        
+
         Log::info('Binary API failed, using REST API for router', ['router_id' => $router->id]);
         $this->apiTypeCache[$router->id] = 'rest';
         return 'rest';
@@ -226,7 +224,8 @@ class MikrotikApiService
 
                 // Use Laravel HTTP client with reduced timeout to prevent gateway timeouts
                 // Connection timeout of 5s to fail fast, total timeout of 30s to complete within gateway limits
-                $response = Http::withBasicAuth($router->username, $router->password)
+                /** @var Response $response */
+                $response = Http::withBasicAuth($router->username, (string) $router->password)
                     ->timeout((int) config('services.mikrotik.timeout', 30))
                     ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
                     ->throw()
@@ -234,7 +233,7 @@ class MikrotikApiService
 
                 if ($response->successful()) {
                     $data = $response->json();
-                    
+
                     // Validate response structure
                     if (!is_array($data)) {
                         Log::warning('Invalid response structure from MikroTik', [
@@ -277,7 +276,7 @@ class MikrotikApiService
                     // Re-throw the exception on final attempt so it can be caught by controller
                     throw $e;
                 }
-                
+
                 usleep($retryDelay * 1000);
             }
         }
@@ -311,7 +310,8 @@ class MikrotikApiService
 
             foreach ($rows as $index => $row) {
                 try {
-                    $response = Http::withBasicAuth($router->username, $router->password)
+                    /** @var Response $response */
+                    $response = Http::withBasicAuth($router->username, (string) $router->password)
                         ->timeout((int) config('services.mikrotik.timeout', 30))
                         ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
                         ->throw()
@@ -328,16 +328,16 @@ class MikrotikApiService
                     } else {
                         $results['failed']++;
                         $errorMsg = "HTTP {$response->status()}: " . ($response->body() ?: 'Unknown error');
-                        
+
                         // Sanitize row data before including in errors to prevent credential exposure
                         $sanitizedRow = $this->sanitizeRowData($row);
-                        
+
                         $results['errors'][] = [
                             'row_index' => $index,
                             'row_data' => $sanitizedRow,
                             'error' => $errorMsg,
                         ];
-                        
+
                         Log::warning('Failed to add row to MikroTik', [
                             'router_id' => $router->id,
                             'menu' => $menu,
@@ -349,16 +349,16 @@ class MikrotikApiService
                     }
                 } catch (\Exception $rowException) {
                     $results['failed']++;
-                    
+
                     // Sanitize row data before logging to prevent credential exposure
                     $sanitizedRow = $this->sanitizeRowData($row);
-                    
+
                     $results['errors'][] = [
                         'row_index' => $index,
                         'row_data' => $sanitizedRow,
                         'error' => $rowException->getMessage(),
                     ];
-                    
+
                     Log::error('Exception while adding row to MikroTik', [
                         'router_id' => $router->id,
                         'menu' => $menu,
@@ -416,7 +416,8 @@ class MikrotikApiService
             // Merge row identifier with new data
             $payload = array_merge($row, $data);
 
-            $response = Http::withBasicAuth($router->username, $router->password)
+            /** @var Response $response */
+            $response = Http::withBasicAuth($router->username, (string) $router->password)
                 ->timeout((int) config('services.mikrotik.timeout', 30))
                 ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
                 ->throw()
@@ -476,7 +477,8 @@ class MikrotikApiService
                 $queryParams = http_build_query($row);
                 $url = $baseUrl.'?'.$queryParams;
 
-                $response = Http::withBasicAuth($router->username, $router->password)
+                /** @var Response $response */
+                $response = Http::withBasicAuth($router->username, (string) $router->password)
                     ->timeout((int) config('services.mikrotik.timeout', 30))
                     ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
                     ->throw()
@@ -529,7 +531,8 @@ class MikrotikApiService
             $scheme = config('services.mikrotik.scheme', app()->environment('production') ? 'https' : 'http');
             $url = "{$scheme}://{$router->ip_address}:{$router->api_port}/api/terminal";
 
-            $response = Http::withBasicAuth($router->username, $router->password)
+            /** @var Response $response */
+            $response = Http::withBasicAuth($router->username, (string) $router->password)
                 ->timeout((int) config('services.mikrotik.timeout', 30))
                 ->connectTimeout((int) config('services.mikrotik.connect_timeout', 5))
                 ->throw()
@@ -593,17 +596,17 @@ class MikrotikApiService
     {
         $sensitiveFields = ['password', 'secret', 'snmp-community', 'community', 'private-key'];
         $sanitized = $row;
-        
+
         foreach ($sanitized as $key => &$value) {
             // Normalize key by converting underscores to hyphens for comparison
             $normalizedKey = str_replace('_', '-', (string) $key);
-            
+
             if (in_array($normalizedKey, $sensitiveFields, true)) {
                 $value = '***REDACTED***';
             }
         }
         unset($value);
-        
+
         return $sanitized;
     }
 }

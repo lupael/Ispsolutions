@@ -180,9 +180,9 @@
                                             </div>
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            <a href="{{ route('panel.admin.olt.details', $device->id) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
                                                 {{ $device->name }}
-                                            </div>
+                                            </a>
                                             <div class="text-sm text-gray-500 dark:text-gray-400">
                                                 {{ $device->model ?? 'N/A' }}
                                             </div>

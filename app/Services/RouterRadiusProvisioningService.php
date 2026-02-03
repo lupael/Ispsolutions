@@ -46,28 +46,34 @@ class RouterRadiusProvisioningService
             $results = [
                 'radius_client' => false,
                 'ppp_aaa' => false,
+                'radius_incoming' => false,
+                'netwatch' => false,
                 'backup' => false,
                 'nas_table' => false,
             ];
 
-            // Step 1: Configure RADIUS client
+            // Step 1: Configure RADIUS client (service=ppp,hotspot address=[Server_IP])
             $results['radius_client'] = $this->configureRadiusClient($router, $nas);
 
-            // Step 2: Configure PPP AAA
+            // Step 2: Configure PPP AAA (use-radius=yes, accounting=yes, interim-update=5m)
             $results['ppp_aaa'] = $this->configurePppAaa($router);
 
-            // Step 3: Configure RADIUS incoming
+            // Step 3: Configure RADIUS incoming (accept=yes)
             $results['radius_incoming'] = $this->configureRadiusIncoming($router);
 
-            // Step 4: Create initial backup
+            // Step 4: Add netwatch for RADIUS up/down fallback (local secrets when RADIUS down)
+            $results['netwatch'] = $this->configureNetwatchForRadius($router);
+
+            // Step 5: Create initial backup (/system backup save)
             $results['backup'] = $this->createInitialBackup($router);
 
-            // Step 5: Ensure router is in RADIUS nas table
+            // Step 6: Ensure router is in RADIUS nas table (auto-insert NAS)
             $results['nas_table'] = $this->ensureNasTableEntry($router, $nas);
 
             $allSuccess = $results['radius_client']
                 && $results['ppp_aaa']
                 && $results['radius_incoming']
+                && $results['netwatch']
                 && $results['nas_table'];
 
             if ($allSuccess) {
@@ -132,19 +138,21 @@ class RouterRadiusProvisioningService
                     'secret' => $secret,
                     'service' => 'hotspot,ppp',
                     'timeout' => config('radius.timeout', '3s'),
+                    'require-message-auth' => config('radius.require_message_auth', false) ? 'yes' : 'no',
                 ];
 
                 return $this->apiService->editMktRow($router, $menu, $existRow, $radiusConfig);
             }
 
-            // Add new RADIUS client
+            // Add new RADIUS client (NAS-centric). Ports: standard 1812/1813 or custom e.g. 3612/3613 (FreeRADIUS/daloradius).
             $rows = [[
-                'accounting-port' => config('radius.accounting_port', 1813),
+                'accounting-port' => (string) config('radius.accounting_port', 1813),
                 'address' => $radiusServer,
-                'authentication-port' => config('radius.authentication_port', 1812),
+                'authentication-port' => (string) config('radius.authentication_port', 1812),
                 'secret' => $secret,
                 'service' => 'hotspot,ppp',
                 'timeout' => config('radius.timeout', '3s'),
+                'require-message-auth' => config('radius.require_message_auth', false) ? 'yes' : 'no',
                 'comment' => 'Auto-configured by ISP Solution',
             ]];
 
@@ -180,6 +188,47 @@ class RouterRadiusProvisioningService
 
         } catch (\Exception $e) {
             Log::error('Error configuring PPP AAA', [
+                'router_id' => $router->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Configure netwatch for RADIUS health monitoring (fail-safe fallback).
+     * RADIUS UP: disable local secrets, drop non-radius sessions.
+     * RADIUS DOWN: enable local secrets.
+     */
+    private function configureNetwatchForRadius(MikrotikRouter $router): bool
+    {
+        try {
+            $radiusServer = $router->nas?->server ?? config('radius.server_ip', '127.0.0.1');
+            $menu = 'tool/netwatch';
+            $interval = config('radius.netwatch.interval', '1m');
+            $timeout = config('radius.netwatch.timeout', '1s');
+            $upScript = '/ppp secret disable [find disabled=no];/ppp active remove [find radius=no];';
+            $downScript = '/ppp secret enable [find disabled=yes];';
+
+            $rows = [[
+                'host' => $radiusServer,
+                'interval' => $interval,
+                'timeout' => $timeout,
+                'up-script' => $upScript,
+                'down-script' => $downScript,
+                'comment' => 'radius',
+            ]];
+
+            $existingRows = $this->apiService->getMktRows($router, $menu, ['host' => $radiusServer]);
+            if (! empty($existingRows)) {
+                $this->apiService->removeMktRows($router, $menu, $existingRows);
+            }
+            $result = $this->apiService->addMktRows($router, $menu, $rows);
+
+            return $result['success'] ?? false;
+        } catch (\Exception $e) {
+            Log::error('Error configuring netwatch for RADIUS', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
             ]);

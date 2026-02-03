@@ -23,13 +23,13 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Super Admin',
                 'slug' => 'super-admin',
-                'description' => 'Tenancy owner. Manages Admins within their own tenancy only. Cannot access other tenancies.',
+                'description' => 'Tenancy owner. Manages ISPs within their own tenancy only. Cannot access other tenancies.',
                 'level' => 10,
                 'permissions' => ['*'], // Wildcard = all permissions
             ],
             [
-                'name' => 'Admin',
-                'slug' => 'admin',
+                'name' => 'ISP',
+                'slug' => 'isp',
                 'description' => 'ISP Owner. Manages Operators, Sub-Operators, Staff, and Managers within their ISP. Full control over own ISP data including customers, packages, and network devices.',
                 'level' => 20,
                 'permissions' => [
@@ -105,7 +105,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Manager',
                 'slug' => 'manager',
-                'description' => 'View/Edit access if explicitly permitted by Admin. Permission-based features with task-specific oversight. Cannot create or manage users.',
+                'description' => 'View/Edit access if explicitly permitted by ISP. Permission-based features with task-specific oversight. Cannot create or manage users.',
                 'level' => 50,
                 'permissions' => [
                     'customers.view',
@@ -133,7 +133,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Staff',
                 'slug' => 'staff',
-                'description' => 'View/Edit access if explicitly permitted by Admin. Support staff with limited operational permissions. Cannot create or manage users.',
+                'description' => 'View/Edit access if explicitly permitted by ISP. Support staff with limited operational permissions. Cannot create or manage users.',
                 'level' => 80,
                 'permissions' => [
                     'customers.view',

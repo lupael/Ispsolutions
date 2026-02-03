@@ -52,7 +52,7 @@ class MikrotikConfigureEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $this->router->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $this->router->id), [
                 'config_type' => 'pppoe',
                 'settings' => [
                     'interface' => 'ether1',
@@ -83,7 +83,7 @@ class MikrotikConfigureEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $this->router->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $this->router->id), [
                 'config_type' => 'ippool',
                 'settings' => [
                     'pool_name' => 'default-pool',
@@ -100,7 +100,7 @@ class MikrotikConfigureEndpointTest extends TestCase
     public function test_configure_endpoint_validates_required_fields(): void
     {
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $this->router->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $this->router->id), [
                 'settings' => [
                     'interface' => 'ether1',
                 ],
@@ -113,7 +113,7 @@ class MikrotikConfigureEndpointTest extends TestCase
     public function test_configure_endpoint_validates_config_type(): void
     {
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $this->router->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $this->router->id), [
                 'config_type' => 'invalid_type',
                 'settings' => [
                     'interface' => 'ether1',
@@ -126,7 +126,7 @@ class MikrotikConfigureEndpointTest extends TestCase
 
     public function test_configure_endpoint_requires_authentication(): void
     {
-        $response = $this->postJson(route('panel.admin.mikrotik.configure', $this->router->id), [
+        $response = $this->postJson(route('panel.isp.mikrotik.configure', $this->router->id), [
             'config_type' => 'pppoe',
             'settings' => [
                 'interface' => 'ether1',
@@ -150,7 +150,7 @@ class MikrotikConfigureEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $otherRouter->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $otherRouter->id), [
                 'config_type' => 'pppoe',
                 'settings' => [
                     'interface' => 'ether1',
@@ -167,7 +167,7 @@ class MikrotikConfigureEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $this->router->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $this->router->id), [
                 'config_type' => 'firewall',
                 'settings' => [
                     'chain' => 'forward',
@@ -189,7 +189,7 @@ class MikrotikConfigureEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $this->router->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $this->router->id), [
                 'config_type' => 'queue',
                 'settings' => [
                     'queue_name' => 'default-queue',
@@ -218,7 +218,7 @@ class MikrotikConfigureEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $privateRouter->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $privateRouter->id), [
                 'config_type' => 'pppoe',
                 'settings' => [
                     'interface' => 'ether1',
@@ -246,7 +246,7 @@ class MikrotikConfigureEndpointTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('panel.admin.mikrotik.configure', $metadataRouter->id), [
+            ->postJson(route('panel.isp.mikrotik.configure', $metadataRouter->id), [
                 'config_type' => 'pppoe',
                 'settings' => [
                     'interface' => 'ether1',

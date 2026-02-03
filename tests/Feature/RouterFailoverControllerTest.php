@@ -60,7 +60,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.configure', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.configure', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -85,7 +85,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.switch-radius', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.switch-radius', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -110,7 +110,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.switch-router', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.switch-router', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -141,7 +141,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->get(route('panel.admin.routers.failover.status', $this->router->id));
+        $response = $this->get(route('panel.isp.routers.failover.status', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -165,19 +165,19 @@ class RouterFailoverControllerTest extends TestCase
         ]);
 
         // Try to configure failover on router from another tenant
-        $response = $this->post(route('panel.admin.routers.failover.configure', $otherRouter->id));
+        $response = $this->post(route('panel.isp.routers.failover.configure', $otherRouter->id));
         $response->assertNotFound();
 
         // Try to switch to RADIUS mode on router from another tenant
-        $response = $this->post(route('panel.admin.routers.failover.switch-radius', $otherRouter->id));
+        $response = $this->post(route('panel.isp.routers.failover.switch-radius', $otherRouter->id));
         $response->assertNotFound();
 
         // Try to switch to router mode on router from another tenant
-        $response = $this->post(route('panel.admin.routers.failover.switch-router', $otherRouter->id));
+        $response = $this->post(route('panel.isp.routers.failover.switch-router', $otherRouter->id));
         $response->assertNotFound();
 
         // Try to get status on router from another tenant
-        $response = $this->get(route('panel.admin.routers.failover.status', $otherRouter->id));
+        $response = $this->get(route('panel.isp.routers.failover.status', $otherRouter->id));
         $response->assertNotFound();
     }
 
@@ -196,7 +196,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.configure', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.configure', $this->router->id));
 
         $response->assertStatus(500);
         $response->assertJson([
@@ -220,7 +220,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.switch-radius', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.switch-radius', $this->router->id));
 
         $response->assertStatus(500);
         $response->assertJson([
@@ -244,7 +244,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.switch-router', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.switch-router', $this->router->id));
 
         $response->assertStatus(500);
         $response->assertJson([
@@ -269,7 +269,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.test-connection', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.test-connection', $this->router->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -293,7 +293,7 @@ class RouterFailoverControllerTest extends TestCase
 
         $this->app->instance(RouterRadiusFailoverService::class, $mockService);
 
-        $response = $this->post(route('panel.admin.routers.failover.test-connection', $this->router->id));
+        $response = $this->post(route('panel.isp.routers.failover.test-connection', $this->router->id));
 
         $response->assertStatus(500);
         $response->assertJson([
@@ -311,16 +311,16 @@ class RouterFailoverControllerTest extends TestCase
 
         $nonExistentRouterId = 99999;
 
-        $response = $this->post(route('panel.admin.routers.failover.configure', $nonExistentRouterId));
+        $response = $this->post(route('panel.isp.routers.failover.configure', $nonExistentRouterId));
         $response->assertNotFound();
 
-        $response = $this->post(route('panel.admin.routers.failover.switch-radius', $nonExistentRouterId));
+        $response = $this->post(route('panel.isp.routers.failover.switch-radius', $nonExistentRouterId));
         $response->assertNotFound();
 
-        $response = $this->post(route('panel.admin.routers.failover.switch-router', $nonExistentRouterId));
+        $response = $this->post(route('panel.isp.routers.failover.switch-router', $nonExistentRouterId));
         $response->assertNotFound();
 
-        $response = $this->get(route('panel.admin.routers.failover.status', $nonExistentRouterId));
+        $response = $this->get(route('panel.isp.routers.failover.status', $nonExistentRouterId));
         $response->assertNotFound();
     }
 

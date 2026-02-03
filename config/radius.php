@@ -20,8 +20,11 @@ return [
     |
     */
     'server_ip' => env('RADIUS_SERVER_IP', '127.0.0.1'),
-    'authentication_port' => env('RADIUS_AUTH_PORT', 1812),
-    'accounting_port' => env('RADIUS_ACCT_PORT', 1813),
+    // Standard RADIUS: 1812 (auth), 1813 (acct). FreeRADIUS/daloradius often use 3612, 3613.
+    'authentication_port' => (int) env('RADIUS_AUTH_PORT', 1812),
+    'accounting_port' => (int) env('RADIUS_ACCT_PORT', 1813),
+    'timeout' => env('RADIUS_TIMEOUT', '3s'),
+    'require_message_auth' => env('RADIUS_REQUIRE_MESSAGE_AUTH', false),
     'interim_update' => env('RADIUS_INTERIM_UPDATE', '5m'),
     'primary_authenticator' => env('RADIUS_PRIMARY_AUTH', 'hybrid'),
 

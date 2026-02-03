@@ -48,7 +48,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_analytics_dashboard_is_accessible_by_admin(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.dashboard'));
+            ->get(route('panel.isp.analytics.dashboard'));
 
         $response->assertStatus(200);
         $response->assertViewIs('panels.admin.analytics.dashboard');
@@ -80,7 +80,7 @@ class AnalyticsDashboardTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.dashboard'));
+            ->get(route('panel.isp.analytics.dashboard'));
 
         $response->assertStatus(200);
 
@@ -118,7 +118,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_revenue_report_is_accessible(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.revenue-report'));
+            ->get(route('panel.isp.analytics.revenue-report'));
 
         $response->assertStatus(200);
         $response->assertViewIs('panels.admin.analytics.revenue-report');
@@ -128,7 +128,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_customer_report_is_accessible(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.customer-report'));
+            ->get(route('panel.isp.analytics.customer-report'));
 
         $response->assertStatus(200);
         $response->assertViewIs('panels.admin.analytics.customer-report');
@@ -138,7 +138,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_service_report_is_accessible(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.service-report'));
+            ->get(route('panel.isp.analytics.service-report'));
 
         $response->assertStatus(200);
         $response->assertViewIs('panels.admin.analytics.service-report');
@@ -148,7 +148,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_analytics_export_returns_csv(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.export'));
+            ->get(route('panel.isp.analytics.export'));
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
@@ -157,7 +157,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_revenue_api_endpoint_returns_json(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.api.revenue'));
+            ->get(route('panel.isp.analytics.api.revenue'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -172,7 +172,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_customer_api_endpoint_returns_json(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.api.customers'));
+            ->get(route('panel.isp.analytics.api.customers'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -187,7 +187,7 @@ class AnalyticsDashboardTest extends TestCase
     public function test_service_api_endpoint_returns_json(): void
     {
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.api.services'));
+            ->get(route('panel.isp.analytics.api.services'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -202,7 +202,7 @@ class AnalyticsDashboardTest extends TestCase
         $endDate = now()->format('Y-m-d');
 
         $response = $this->actingAs($this->adminUser)
-            ->get(route('panel.admin.analytics.dashboard', [
+            ->get(route('panel.isp.analytics.dashboard', [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ]));
@@ -227,7 +227,7 @@ class AnalyticsDashboardTest extends TestCase
         $customer->roles()->attach($customerRole);
 
         $response = $this->actingAs($customer)
-            ->get(route('panel.admin.analytics.dashboard'));
+            ->get(route('panel.isp.analytics.dashboard'));
 
         $response->assertStatus(403);
     }

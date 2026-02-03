@@ -1,9 +1,9 @@
 @php
     $userRole = auth()->user()->roles->first()?->slug ?? '';
     $currentRoute = request()->route()->getName();
-    
+
     $menus = [];
-    
+
     // Define menu structure for each role
     if ($userRole === 'super-admin') {
         $menus = [
@@ -38,90 +38,90 @@
             ['label' => 'Logs', 'route' => 'panel.super-admin.logs', 'icon' => 'clipboard'],
             ['label' => 'Settings', 'route' => 'panel.super-admin.settings', 'icon' => 'cog'],
         ];
-    } elseif ($userRole === 'admin') {
+    } elseif ($userRole === 'isp') {
         $menus = [
-            ['label' => 'Dashboard', 'route' => 'panel.admin.dashboard', 'icon' => 'home'],
+            ['label' => 'Dashboard', 'route' => 'panel.isp.dashboard', 'icon' => 'home'],
             // Removed 'Users' menu - operators managed through Operators Management menu
             // Removed 'Network Users' - customers now managed through customer menu
             [
                 'label' => 'Packages',
                 'icon' => 'box',
                 'children' => [
-                    ['label' => 'All Packages', 'route' => 'panel.admin.packages'],
-                    ['label' => 'Master Packages', 'route' => 'panel.admin.master-packages.index'],
-                    ['label' => 'Operator Packages', 'route' => 'panel.admin.operator-packages.index'],
+                    ['label' => 'All Packages', 'route' => 'panel.isp.packages'],
+                    ['label' => 'Master Packages', 'route' => 'panel.isp.master-packages.index'],
+                    ['label' => 'Operator Packages', 'route' => 'panel.isp.operator-packages.index'],
                 ]
             ],
             [
                 'label' => 'Customers',
                 'icon' => 'user-group',
                 'children' => [
-                    ['label' => 'All Customers', 'route' => 'panel.admin.customers.index'],
-                    ['label' => 'Add Customer', 'route' => 'panel.admin.customers.create'],
-                    ['label' => 'Customer Wizard', 'route' => 'panel.admin.customers.wizard.start'],
-                    ['label' => 'Online Customers', 'route' => 'panel.admin.customers.online'],
-                    ['label' => 'Offline Customers', 'route' => 'panel.admin.customers.offline'],
-                    ['label' => 'Deleted Customers', 'route' => 'panel.admin.customers.deleted'],
-                    ['label' => 'Import Requests', 'route' => 'panel.admin.customers.import-requests'],
-                    ['label' => 'PPPoE Import', 'route' => 'panel.admin.customers.pppoe-import'],
-                    ['label' => 'Bulk Update', 'route' => 'panel.admin.customers.bulk-update'],
-                    ['label' => 'Custom Fields', 'route' => 'panel.admin.custom-fields.index'],
+                    ['label' => 'All Customers', 'route' => 'panel.isp.customers.index'],
+                    ['label' => 'Add Customer', 'route' => 'panel.isp.customers.create'],
+                    ['label' => 'Customer Wizard', 'route' => 'panel.isp.customers.wizard.start'],
+                    ['label' => 'Online Customers', 'route' => 'panel.isp.customers.online'],
+                    ['label' => 'Offline Customers', 'route' => 'panel.isp.customers.offline'],
+                    ['label' => 'Deleted Customers', 'route' => 'panel.isp.customers.deleted'],
+                    ['label' => 'Import Requests', 'route' => 'panel.isp.customers.import-requests'],
+                    ['label' => 'PPPoE Import', 'route' => 'panel.isp.customers.pppoe-import'],
+                    ['label' => 'Bulk Update', 'route' => 'panel.isp.customers.bulk-update'],
+                    ['label' => 'Custom Fields', 'route' => 'panel.isp.custom-fields.index'],
                 ]
             ],
             [
                 'label' => 'Network',
                 'icon' => 'network',
                 'children' => [
-                    ['label' => 'Routers', 'route' => 'panel.admin.network.routers'],
-                    ['label' => 'All Devices', 'route' => 'panel.admin.network.devices'],
-                    ['label' => 'Device Monitors', 'route' => 'panel.admin.network.device-monitors'],
-                    ['label' => 'Devices Map', 'route' => 'panel.admin.network.devices.map'],
-                    ['label' => 'IPv4 Pools', 'route' => 'panel.admin.network.ipv4-pools'],
-                    ['label' => 'IPv6 Pools', 'route' => 'panel.admin.network.ipv6-pools'],
-                    ['label' => 'IP Pool Migration', 'route' => 'panel.admin.ip-pools.migrate'],
-                    ['label' => 'PPPoE Profiles', 'route' => 'panel.admin.network.pppoe-profiles'],
-                    ['label' => 'Ping Test', 'route' => 'panel.admin.network.ping-test'],
-                    ['label' => 'OLT Devices', 'route' => 'panel.admin.network.olt'],
-                    ['label' => 'ONU Devices', 'route' => 'panel.admin.network.onu.index'],
-                    ['label' => 'OLT Dashboard', 'route' => 'panel.admin.olt.dashboard'],
+                    ['label' => 'Routers', 'route' => 'panel.isp.network.routers'],
+                    ['label' => 'All Devices', 'route' => 'panel.isp.network.devices'],
+                    ['label' => 'Device Monitors', 'route' => 'panel.isp.network.device-monitors'],
+                    ['label' => 'Devices Map', 'route' => 'panel.isp.network.devices.map'],
+                    ['label' => 'IPv4 Pools', 'route' => 'panel.isp.network.ipv4-pools'],
+                    ['label' => 'IPv6 Pools', 'route' => 'panel.isp.network.ipv6-pools'],
+                    ['label' => 'IP Pool Migration', 'route' => 'panel.isp.ip-pools.migrate'],
+                    ['label' => 'PPPoE Profiles', 'route' => 'panel.isp.network.pppoe-profiles'],
+                    ['label' => 'Ping Test', 'route' => 'panel.isp.network.ping-test'],
+                    ['label' => 'OLT Devices', 'route' => 'panel.isp.network.olt'],
+                    ['label' => 'ONU Devices', 'route' => 'panel.isp.network.onu.index'],
+                    ['label' => 'OLT Dashboard', 'route' => 'panel.isp.olt.dashboard'],
                 ]
             ],
             [
                 'label' => 'OLT Advanced',
                 'icon' => 'lightning',
                 'children' => [
-                    ['label' => 'Templates', 'route' => 'panel.admin.olt.templates'],
-                    ['label' => 'SNMP Traps', 'route' => 'panel.admin.olt.snmp-traps'],
-                    ['label' => 'Firmware', 'route' => 'panel.admin.olt.firmware'],
-                    ['label' => 'Backups', 'route' => 'panel.admin.olt.backups'],
+                    ['label' => 'Templates', 'route' => 'panel.isp.olt.templates'],
+                    ['label' => 'SNMP Traps', 'route' => 'panel.isp.olt.snmp-traps'],
+                    ['label' => 'Firmware', 'route' => 'panel.isp.olt.firmware'],
+                    ['label' => 'Backups', 'route' => 'panel.isp.olt.backups'],
                 ]
             ],
             [
                 'label' => 'Accounting',
                 'icon' => 'currency',
                 'children' => [
-                    ['label' => 'Transactions', 'route' => 'panel.admin.accounting.transactions'],
-                    ['label' => 'Gateway Transactions', 'route' => 'panel.admin.accounting.payment-gateway-transactions'],
-                    ['label' => 'Account Statement', 'route' => 'panel.admin.accounting.statement'],
-                    ['label' => 'Accounts Payable', 'route' => 'panel.admin.accounting.payable'],
-                    ['label' => 'Accounts Receivable', 'route' => 'panel.admin.accounting.receivable'],
-                    ['label' => 'Income/Expense Report', 'route' => 'panel.admin.accounting.income-expense-report'],
-                    ['label' => 'Expense Report', 'route' => 'panel.admin.accounting.expense-report'],
-                    ['label' => 'Expenses', 'route' => 'panel.admin.accounting.expenses'],
-                    ['label' => 'VAT Collections', 'route' => 'panel.admin.accounting.vat-collections'],
-                    ['label' => 'Customer Payments', 'route' => 'panel.admin.accounting.customer-payments'],
-                    ['label' => 'Gateway Payments', 'route' => 'panel.admin.accounting.gateway-customer-payments'],
+                    ['label' => 'Transactions', 'route' => 'panel.isp.accounting.transactions'],
+                    ['label' => 'Gateway Transactions', 'route' => 'panel.isp.accounting.payment-gateway-transactions'],
+                    ['label' => 'Account Statement', 'route' => 'panel.isp.accounting.statement'],
+                    ['label' => 'Accounts Payable', 'route' => 'panel.isp.accounting.payable'],
+                    ['label' => 'Accounts Receivable', 'route' => 'panel.isp.accounting.receivable'],
+                    ['label' => 'Income/Expense Report', 'route' => 'panel.isp.accounting.income-expense-report'],
+                    ['label' => 'Expense Report', 'route' => 'panel.isp.accounting.expense-report'],
+                    ['label' => 'Expenses', 'route' => 'panel.isp.accounting.expenses'],
+                    ['label' => 'VAT Collections', 'route' => 'panel.isp.accounting.vat-collections'],
+                    ['label' => 'Customer Payments', 'route' => 'panel.isp.accounting.customer-payments'],
+                    ['label' => 'Gateway Payments', 'route' => 'panel.isp.accounting.gateway-customer-payments'],
                 ]
             ],
             [
                 'label' => 'Operators',
                 'icon' => 'user-circle',
                 'children' => [
-                    ['label' => 'All Operators', 'route' => 'panel.admin.operators'],
-                    ['label' => 'Add Operator', 'route' => 'panel.admin.operators.create'],
-                    ['label' => 'Sub Operators', 'route' => 'panel.admin.operators.sub-operators'],
-                    ['label' => 'Staff', 'route' => 'panel.admin.operators.staff'],
-                    ['label' => 'Manage Operator Funds', 'route' => 'panel.admin.operators.wallets'],
+                    ['label' => 'All Operators', 'route' => 'panel.isp.operators'],
+                    ['label' => 'Add Operator', 'route' => 'panel.isp.operators.create'],
+                    ['label' => 'Sub Operators', 'route' => 'panel.isp.operators.sub-operators'],
+                    ['label' => 'Staff', 'route' => 'panel.isp.operators.staff'],
+                    ['label' => 'Manage Operator Funds', 'route' => 'panel.isp.operators.wallets'],
                 ]
             ],
             [
@@ -136,47 +136,47 @@
                 'label' => 'SMS Management',
                 'icon' => 'chat',
                 'children' => [
-                    ['label' => 'SMS Gateways', 'route' => 'panel.admin.sms.gateways.index'],
-                    ['label' => 'Send SMS', 'route' => 'panel.admin.sms.send'],
-                    ['label' => 'Broadcast SMS', 'route' => 'panel.admin.sms.broadcast'],
-                    ['label' => 'SMS History', 'route' => 'panel.admin.sms.histories'],
-                    ['label' => 'SMS Events', 'route' => 'panel.admin.sms.events'],
-                    ['label' => 'Due Date Notification', 'route' => 'panel.admin.sms.due-date-notification'],
-                    ['label' => 'Payment Link Broadcast', 'route' => 'panel.admin.sms.payment-link-broadcast'],
+                    ['label' => 'SMS Gateways', 'route' => 'panel.isp.sms.gateways.index'],
+                    ['label' => 'Send SMS', 'route' => 'panel.isp.sms.send'],
+                    ['label' => 'Broadcast SMS', 'route' => 'panel.isp.sms.broadcast'],
+                    ['label' => 'SMS History', 'route' => 'panel.isp.sms.histories'],
+                    ['label' => 'SMS Events', 'route' => 'panel.isp.sms.events'],
+                    ['label' => 'Due Date Notification', 'route' => 'panel.isp.sms.due-date-notification'],
+                    ['label' => 'Payment Link Broadcast', 'route' => 'panel.isp.sms.payment-link-broadcast'],
                 ]
             ],
             [
                 'label' => 'Prepaid Cards',
                 'icon' => 'card',
                 'children' => [
-                    ['label' => 'All Cards', 'route' => 'panel.admin.cards.index'],
-                    ['label' => 'Generate Cards', 'route' => 'panel.admin.cards.create'],
-                    ['label' => 'Used Cards', 'route' => 'panel.admin.cards.used-mapping'],
+                    ['label' => 'All Cards', 'route' => 'panel.isp.cards.index'],
+                    ['label' => 'Generate Cards', 'route' => 'panel.isp.cards.create'],
+                    ['label' => 'Used Cards', 'route' => 'panel.isp.cards.used-mapping'],
                 ]
             ],
             [
                 'label' => 'Logs',
                 'icon' => 'clipboard',
                 'children' => [
-                    ['label' => 'System Log', 'route' => 'panel.admin.logs.system'],
-                    ['label' => 'Router Log', 'route' => 'panel.admin.logs.router'],
-                    ['label' => 'PPP Log', 'route' => 'panel.admin.logs.ppp'],
-                    ['label' => 'Hotspot Log', 'route' => 'panel.admin.logs.hotspot'],
-                    ['label' => 'Activity Log', 'route' => 'panel.admin.logs.activity'],
+                    ['label' => 'System Log', 'route' => 'panel.isp.logs.system'],
+                    ['label' => 'Router Log', 'route' => 'panel.isp.logs.router'],
+                    ['label' => 'PPP Log', 'route' => 'panel.isp.logs.ppp'],
+                    ['label' => 'Hotspot Log', 'route' => 'panel.isp.logs.hotspot'],
+                    ['label' => 'Activity Log', 'route' => 'panel.isp.logs.activity'],
                 ]
             ],
             [
                 'label' => 'Analytics',
                 'icon' => 'chart',
                 'children' => [
-                    ['label' => 'Dashboard', 'route' => 'panel.admin.analytics.dashboard'],
-                    ['label' => 'Revenue Report', 'route' => 'panel.admin.analytics.revenue-report'],
-                    ['label' => 'Customer Report', 'route' => 'panel.admin.analytics.customer-report'],
-                    ['label' => 'Service Report', 'route' => 'panel.admin.analytics.service-report'],
+                    ['label' => 'Dashboard', 'route' => 'panel.isp.analytics.dashboard'],
+                    ['label' => 'Revenue Report', 'route' => 'panel.isp.analytics.revenue-report'],
+                    ['label' => 'Customer Report', 'route' => 'panel.isp.analytics.customer-report'],
+                    ['label' => 'Service Report', 'route' => 'panel.isp.analytics.service-report'],
                 ]
             ],
-            ['label' => 'Payment Gateways', 'route' => 'panel.admin.payment-gateways', 'icon' => 'credit-card'],
-            ['label' => 'Settings', 'route' => 'panel.admin.settings', 'icon' => 'cog'],
+            ['label' => 'Payment Gateways', 'route' => 'panel.isp.payment-gateways', 'icon' => 'credit-card'],
+            ['label' => 'Settings', 'route' => 'panel.isp.settings', 'icon' => 'cog'],
         ];
     } elseif ($userRole === 'manager') {
         $menus = [
@@ -312,8 +312,8 @@
                     ['label' => 'Application Logs', 'route' => 'panel.developer.logs'],
                     ['label' => 'Audit Logs', 'route' => 'panel.developer.audit-logs'],
                     ['label' => 'Error Logs', 'route' => 'panel.developer.error-logs'],
-                    ['label' => 'RADIUS Logs', 'route' => 'panel.admin.logs.radius'],
-                    ['label' => 'Laravel Logs', 'route' => 'panel.admin.logs.laravel'],
+                    ['label' => 'RADIUS Logs', 'route' => 'panel.isp.logs.radius'],
+                    ['label' => 'Laravel Logs', 'route' => 'panel.isp.logs.laravel'],
                 ]
             ],
             [
@@ -374,7 +374,7 @@
             ],
         ];
     }
-    
+
     function getIcon($iconName) {
         $icons = [
             'home' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />',
@@ -430,10 +430,10 @@
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="bi bi-search text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
                     </div>
-                    <input 
-                        type="text" 
-                        name="query" 
-                        placeholder="Search customers, invoices..." 
+                    <input
+                        type="text"
+                        name="query"
+                        placeholder="Search customers, invoices..."
                         class="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
                     >
                 </div>
@@ -472,7 +472,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div x-show="open" 
+                        <div x-show="open"
                              x-transition:enter="transition ease-out duration-200"
                              x-transition:enter-start="opacity-0 -translate-y-2"
                              x-transition:enter-end="opacity-100 translate-y-0"
@@ -482,7 +482,7 @@
                              class="mt-1 ml-4 space-y-1">
                             @foreach($menu['children'] as $submenu)
                                 @if(Route::has($submenu['route']))
-                                    <a href="{{ route($submenu['route']) }}" 
+                                    <a href="{{ route($submenu['route']) }}"
                                        class="flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group {{ $currentRoute === $submenu['route'] ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:translate-x-1' }}">
                                         <span class="w-2 h-2 mr-3 rounded-full {{ $currentRoute === $submenu['route'] ? 'bg-indigo-500' : 'bg-gray-400 dark:bg-gray-600 group-hover:bg-indigo-400' }} transition-colors duration-200"></span>
                                         {{ $submenu['label'] }}
@@ -494,7 +494,7 @@
                 @else
                     <!-- Single menu item -->
                     @if(Route::has($menu['route']))
-                        <a href="{{ route($menu['route']) }}" 
+                        <a href="{{ route($menu['route']) }}"
                            class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 group {{ $currentRoute === $menu['route'] ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-gray-700 dark:hover:to-gray-750 hover:shadow-sm' }}">
                             <svg class="w-5 h-5 mr-3 {{ $currentRoute === $menu['route'] ? '' : 'group-hover:scale-110' }} transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 {!! getIcon($menu['icon']) !!}

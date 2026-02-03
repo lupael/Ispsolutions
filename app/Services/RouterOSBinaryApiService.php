@@ -246,6 +246,48 @@ class RouterOSBinaryApiService
     }
 
     /**
+     * Execute a TTY-style command (e.g. /ppp/aaa/set, /system/backup/save) via binary API.
+     * Used for RouterOS v6/v7 provisioning when REST terminal is not available.
+     *
+     * @param MikrotikRouter $router The router to run the command on
+     * @param string $command Command path (e.g. '/ppp/aaa/set', '/radius/incoming/set')
+     * @param array $params Key-value parameters (e.g. ['use-radius' => 'yes', 'interim-update' => '5m'])
+     *
+     * @return mixed Response array from router or null on failure
+     */
+    public function ttyWrite(MikrotikRouter $router, string $command, array $params = []): mixed
+    {
+        try {
+            $client = $this->connect($router);
+
+            $command = trim($command, '/');
+            $query = new Query('/' . $command);
+
+            foreach ($params as $key => $value) {
+                $rosKey = str_replace('_', '-', (string) $key);
+                $query->equal($rosKey, (string) $value);
+            }
+
+            $response = $client->query($query)->read();
+
+            Log::info('Binary API ttyWrite executed', [
+                'router_id' => $router->id,
+                'command' => $command,
+            ]);
+
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Binary API ttyWrite failed', [
+                'router_id' => $router->id,
+                'command' => $command ?? '',
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
      * Test connection to router using binary API.
      *
      * @param MikrotikRouter $router The router to test

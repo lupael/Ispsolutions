@@ -10,7 +10,8 @@ use App\Models\MikrotikRouter;
 use App\Models\MikrotikIpPool;
 use App\Models\MikrotikProfile;
 use App\Models\MikrotikPppSecret;
-use App\Services\RouterosAPI;
+use App\Services\MikrotikApiService;
+use App\Services\RouterRadiusProvisioningService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,11 +20,17 @@ use Illuminate\View\View;
 
 /**
  * MikrotikDbSyncController - Import/sync data from MikroTik routers
- * 
- * Following IspBills pattern for mikrotik_db_sync operations
+ *
+ * Uses MikrotikApiService (EvilFreelancer/routeros-api-php) for v6/v7.
+ * PPP secret import triggers router-side backup via RouterRadiusProvisioningService.
  */
 class MikrotikDbSyncController extends Controller
 {
+    public function __construct(
+        private readonly MikrotikApiService $apiService,
+        private readonly RouterRadiusProvisioningService $provisioningService
+    ) {}
+
     /**
      * Display import interface
      */
@@ -51,32 +58,15 @@ class MikrotikDbSyncController extends Controller
             ->where('tenant_id', getCurrentTenantId())
             ->findOrFail($routerId);
 
-        $api = new RouterosAPI([
-            'host' => $router->ip_address,
-            'user' => $router->username,
-            'pass' => $router->password,
-            'port' => $router->api_port,
-            'timeout' => (int) config('services.mikrotik.timeout', 30),
-            'debug' => config('app.debug'),
-        ]);
-
-        if (!$api->connect()) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Cannot connect to router',
-            ], 500);
-        }
-
         try {
             // Delete old imported pools for this router
             MikrotikIpPool::where('router_id', $router->id)->delete();
 
-            // Fetch IP pools from router
-            $ip4pools = $api->getMktRows('ip_pool');
+            $ip4pools = $this->apiService->getMktRows($router, 'ip/pool', []);
             
             $importedCount = 0;
             foreach ($ip4pools as $ip4pool) {
-                $ranges = $this->parseIpPool($ip4pool['ranges'] ?? '');
+                $ranges = $this->parseIpPool($ip4pool['ranges'] ?? $ip4pool['range'] ?? '');
                 
                 if (empty($ranges)) {
                     continue;
@@ -91,8 +81,6 @@ class MikrotikDbSyncController extends Controller
                 $importedCount++;
             }
 
-            $api->disconnect();
-
             Log::info('IP pools imported from router', [
                 'router_id' => $router->id,
                 'imported_count' => $importedCount,
@@ -104,8 +92,6 @@ class MikrotikDbSyncController extends Controller
                 'imported_count' => $importedCount,
             ]);
         } catch (\Exception $e) {
-            $api->disconnect();
-            
             Log::error('Failed to import IP pools', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
@@ -127,30 +113,12 @@ class MikrotikDbSyncController extends Controller
             ->where('tenant_id', getCurrentTenantId())
             ->findOrFail($routerId);
 
-        $api = new RouterosAPI([
-            'host' => $router->ip_address,
-            'user' => $router->username,
-            'pass' => $router->password,
-            'port' => $router->api_port,
-            'timeout' => (int) config('services.mikrotik.timeout', 30),
-            'debug' => config('app.debug'),
-        ]);
-
-        if (!$api->connect()) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Cannot connect to router',
-            ], 500);
-        }
-
         try {
-            // Delete old imported profiles for this router and tenant
             MikrotikProfile::where('router_id', $router->id)
                 ->where('tenant_id', getCurrentTenantId())
                 ->delete();
 
-            // Fetch non-default PPP profiles from router
-            $pppProfiles = $api->getMktRows('ppp_profile', ['default' => 'no']);
+            $pppProfiles = $this->apiService->getMktRows($router, 'ppp/profile', ['default' => 'no']);
             
             $importedCount = 0;
             foreach ($pppProfiles as $pppProfile) {
@@ -168,8 +136,6 @@ class MikrotikDbSyncController extends Controller
                 $importedCount++;
             }
 
-            $api->disconnect();
-
             Log::info('PPP profiles imported from router', [
                 'router_id' => $router->id,
                 'imported_count' => $importedCount,
@@ -181,8 +147,6 @@ class MikrotikDbSyncController extends Controller
                 'imported_count' => $importedCount,
             ]);
         } catch (\Exception $e) {
-            $api->disconnect();
-            
             Log::error('Failed to import PPP profiles', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
@@ -212,34 +176,18 @@ class MikrotikDbSyncController extends Controller
 
         $importDisabledUser = $validated['import_disabled_user'] ?? 'no';
 
-        $api = new RouterosAPI([
-            'host' => $router->ip_address,
-            'user' => $router->username,
-            'pass' => $router->password,
-            'port' => $router->api_port,
-            'timeout' => (int) config('services.mikrotik.timeout', 30),
-            'debug' => config('app.debug'),
-        ]);
-
-        if (!$api->connect()) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Cannot connect to router',
-            ], 500);
-        }
-
         DB::beginTransaction();
         try {
-            // Step 1: Create router-side export backup before importing (IspBills pattern)
-            $file = 'ppp-secret-backup-by-billing-' . now()->timestamp;
-            $backupResult = $api->ttyWrite('/ppp/secret/export', ['file' => $file]);
-            
-            // Check if backup succeeded
-            if ($backupResult === null) {
-                throw new \RuntimeException('Failed to create router-side backup before import');
+            // Step 1: Router-side PPP secret export before importing (fail-safe backup)
+            $exportResult = $this->provisioningService->exportPppSecrets($router);
+            $file = $exportResult['filename'] ?? 'ppp-secret-backup-by-billing-' . now()->timestamp;
+            if (! ($exportResult['success'] ?? false)) {
+                Log::warning('PPP secret export before import failed; continuing import', [
+                    'router_id' => $router->id,
+                    'message' => $exportResult['message'] ?? 'Unknown',
+                ]);
             }
-            
-            // Step 2: Create import request record
+
             $customerImport = CustomerImport::create([
                 'tenant_id' => getCurrentTenantId(),
                 'operator_id' => auth()->id(),
@@ -251,15 +199,13 @@ class MikrotikDbSyncController extends Controller
                     'backup_file' => $file,
                 ],
             ]);
-            
-            // Step 3: Delete old imported secrets for this router and tenant
+
             MikrotikPppSecret::where('router_id', $router->id)
                 ->where('tenant_id', getCurrentTenantId())
                 ->delete();
 
-            // Step 4: Fetch PPP secrets from router
             $query = ($importDisabledUser === 'no') ? ['disabled' => 'no'] : [];
-            $secrets = $api->getMktRows('ppp_secret', $query);
+            $secrets = $this->apiService->getMktRows($router, 'ppp/secret', $query);
             
             $customerImport->update(['total_count' => count($secrets)]);
             
@@ -277,10 +223,10 @@ class MikrotikDbSyncController extends Controller
                         'router_id' => $router->id,
                         'name' => $secret['name'] ?? '',
                         'password' => $secret['password'] ?? '',
-                        'profile' => $secret['profile'] ?? '',
-                        'remote_address' => $secret['remote-address'] ?? null,
-                        'disabled' => $secret['disabled'] ?? 'no',
-                        'comment' => $secret['comment'] ?? null,
+                    'profile' => $secret['profile'] ?? '',
+                    'remote_address' => $secret['remote-address'] ?? $secret['remote_address'] ?? null,
+                    'disabled' => $secret['disabled'] ?? 'no',
+                    'comment' => $secret['comment'] ?? null,
                     ]);
                     
                     $importedCount++;
@@ -303,7 +249,6 @@ class MikrotikDbSyncController extends Controller
             ]);
 
             DB::commit();
-            $api->disconnect();
 
             Log::info('PPP secrets imported from router', [
                 'router_id' => $router->id,
@@ -322,8 +267,7 @@ class MikrotikDbSyncController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            $api->disconnect();
-            
+
             Log::error('Failed to import PPP secrets', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),

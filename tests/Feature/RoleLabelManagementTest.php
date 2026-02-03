@@ -58,7 +58,7 @@ class RoleLabelManagementTest extends TestCase
     public function admin_can_view_role_label_settings_page()
     {
         $response = $this->actingAs($this->admin)
-            ->get(route('panel.admin.settings.role-labels'));
+            ->get(route('panel.isp.settings.role-labels'));
 
         $response->assertOk();
         $response->assertViewIs('panels.admin.settings.role-labels');
@@ -70,7 +70,7 @@ class RoleLabelManagementTest extends TestCase
     public function admin_can_set_custom_operator_label()
     {
         $response = $this->actingAs($this->admin)
-            ->put(route('panel.admin.settings.role-labels.update'), [
+            ->put(route('panel.isp.settings.role-labels.update'), [
                 'role_slug' => 'operator',
                 'custom_label' => 'Partner',
             ]);
@@ -89,7 +89,7 @@ class RoleLabelManagementTest extends TestCase
     public function admin_can_set_custom_sub_operator_label()
     {
         $response = $this->actingAs($this->admin)
-            ->put(route('panel.admin.settings.role-labels.update'), [
+            ->put(route('panel.isp.settings.role-labels.update'), [
                 'role_slug' => 'sub-operator',
                 'custom_label' => 'Sub-Agent',
             ]);
@@ -111,7 +111,7 @@ class RoleLabelManagementTest extends TestCase
         RoleLabelSetting::setCustomLabel($this->tenant->id, 'operator', 'Partner');
 
         $response = $this->actingAs($this->admin)
-            ->put(route('panel.admin.settings.role-labels.update'), [
+            ->put(route('panel.isp.settings.role-labels.update'), [
                 'role_slug' => 'operator',
                 'custom_label' => 'Agent',
             ]);
@@ -133,10 +133,10 @@ class RoleLabelManagementTest extends TestCase
         RoleLabelSetting::setCustomLabel($this->tenant->id, 'operator', 'Partner');
 
         $response = $this->actingAs($this->admin)
-            ->from(route('panel.admin.settings.role-labels'))
-            ->delete(route('panel.admin.settings.role-labels.destroy', 'operator'));
+            ->from(route('panel.isp.settings.role-labels'))
+            ->delete(route('panel.isp.settings.role-labels.destroy', 'operator'));
 
-        $response->assertRedirect(route('panel.admin.settings.role-labels'));
+        $response->assertRedirect(route('panel.isp.settings.role-labels'));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseMissing('role_label_settings', [
@@ -153,7 +153,7 @@ class RoleLabelManagementTest extends TestCase
 
         // Submit empty custom_label to remove it
         $response = $this->actingAs($this->admin)
-            ->put(route('panel.admin.settings.role-labels.update'), [
+            ->put(route('panel.isp.settings.role-labels.update'), [
                 'role_slug' => 'operator',
                 'custom_label' => '',
             ]);
@@ -237,8 +237,8 @@ class RoleLabelManagementTest extends TestCase
     public function validation_fails_for_invalid_role_slug()
     {
         $response = $this->actingAs($this->admin)
-            ->from(route('panel.admin.settings.role-labels'))
-            ->put(route('panel.admin.settings.role-labels.update'), [
+            ->from(route('panel.isp.settings.role-labels'))
+            ->put(route('panel.isp.settings.role-labels.update'), [
                 'role_slug' => 'invalid-role',
                 'custom_label' => 'Test',
             ]);
@@ -250,8 +250,8 @@ class RoleLabelManagementTest extends TestCase
     public function validation_fails_for_too_long_custom_label()
     {
         $response = $this->actingAs($this->admin)
-            ->from(route('panel.admin.settings.role-labels'))
-            ->put(route('panel.admin.settings.role-labels.update'), [
+            ->from(route('panel.isp.settings.role-labels'))
+            ->put(route('panel.isp.settings.role-labels.update'), [
                 'role_slug' => 'operator',
                 'custom_label' => str_repeat('a', 51), // 51 characters
             ]);

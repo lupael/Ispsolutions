@@ -59,7 +59,7 @@ class NasControllerTest extends TestCase
             'tenant_id' => $this->tenant->id,
         ]);
 
-        $response = $this->get(route('panel.admin.network.nas'));
+        $response = $this->get(route('panel.isp.network.nas'));
 
         $response->assertOk();
         $response->assertViewIs('panels.admin.nas.index');
@@ -86,9 +86,9 @@ class NasControllerTest extends TestCase
             'status' => 'active',
         ];
 
-        $response = $this->post(route('panel.admin.network.nas.store'), $nasData);
+        $response = $this->post(route('panel.isp.network.nas.store'), $nasData);
 
-        $response->assertRedirect(route('panel.admin.network.nas'));
+        $response->assertRedirect(route('panel.isp.network.nas'));
         $response->assertSessionHas('success', 'NAS device created successfully.');
 
         $this->assertDatabaseHas('nas', [
@@ -106,12 +106,12 @@ class NasControllerTest extends TestCase
         $this->actingAs($this->admin);
 
         // Test missing required fields
-        $response = $this->post(route('panel.admin.network.nas.store'), []);
+        $response = $this->post(route('panel.isp.network.nas.store'), []);
 
         $response->assertSessionHasErrors(['name', 'nas_name', 'short_name', 'server', 'secret', 'type', 'status']);
 
         // Test invalid IP address
-        $response = $this->post(route('panel.admin.network.nas.store'), [
+        $response = $this->post(route('panel.isp.network.nas.store'), [
             'name' => 'Test NAS',
             'nas_name' => 'test-nas',
             'short_name' => 'TEST',
@@ -124,7 +124,7 @@ class NasControllerTest extends TestCase
         $response->assertSessionHasErrors(['server']);
 
         // Test invalid status
-        $response = $this->post(route('panel.admin.network.nas.store'), [
+        $response = $this->post(route('panel.isp.network.nas.store'), [
             'name' => 'Test NAS',
             'nas_name' => 'test-nas',
             'short_name' => 'TEST',
@@ -151,11 +151,11 @@ class NasControllerTest extends TestCase
         ]);
 
         // Try to view NAS from another tenant - should not be found
-        $response = $this->get(route('panel.admin.network.nas.show', $otherNas->id));
+        $response = $this->get(route('panel.isp.network.nas.show', $otherNas->id));
         $response->assertNotFound();
 
         // Try to update NAS from another tenant - should not be found
-        $response = $this->put(route('panel.admin.network.nas.update', $otherNas->id), [
+        $response = $this->put(route('panel.isp.network.nas.update', $otherNas->id), [
             'name' => 'Hacked NAS',
             'nas_name' => 'hacked',
             'short_name' => 'HACK',
@@ -173,7 +173,7 @@ class NasControllerTest extends TestCase
         ]);
 
         // Try to delete NAS from another tenant - should not be found
-        $response = $this->delete(route('panel.admin.network.nas.destroy', $otherNas->id));
+        $response = $this->delete(route('panel.isp.network.nas.destroy', $otherNas->id));
         $response->assertNotFound();
 
         // Verify the NAS was not deleted
@@ -207,9 +207,9 @@ class NasControllerTest extends TestCase
             'status' => 'maintenance',
         ];
 
-        $response = $this->put(route('panel.admin.network.nas.update', $nas->id), $updateData);
+        $response = $this->put(route('panel.isp.network.nas.update', $nas->id), $updateData);
 
-        $response->assertRedirect(route('panel.admin.network.nas'));
+        $response->assertRedirect(route('panel.isp.network.nas'));
         $response->assertSessionHas('success', 'NAS device updated successfully.');
 
         $this->assertDatabaseHas('nas', [
@@ -231,9 +231,9 @@ class NasControllerTest extends TestCase
             'tenant_id' => $this->tenant->id,
         ]);
 
-        $response = $this->delete(route('panel.admin.network.nas.destroy', $nas->id));
+        $response = $this->delete(route('panel.isp.network.nas.destroy', $nas->id));
 
-        $response->assertRedirect(route('panel.admin.network.nas'));
+        $response->assertRedirect(route('panel.isp.network.nas'));
         $response->assertSessionHas('success', 'NAS device deleted successfully.');
 
         $this->assertDatabaseMissing('nas', [
@@ -253,7 +253,7 @@ class NasControllerTest extends TestCase
             'server' => '127.0.0.1', // localhost should be reachable in test env
         ]);
 
-        $response = $this->post(route('panel.admin.network.nas.test-connection', $nas->id));
+        $response = $this->post(route('panel.isp.network.nas.test-connection', $nas->id));
 
         $response->assertOk();
         $response->assertJson([
@@ -266,7 +266,7 @@ class NasControllerTest extends TestCase
             'tenant_id' => $otherTenant->id,
         ]);
 
-        $response = $this->post(route('panel.admin.network.nas.test-connection', $otherNas->id));
+        $response = $this->post(route('panel.isp.network.nas.test-connection', $otherNas->id));
         $response->assertNotFound();
     }
 
@@ -284,7 +284,7 @@ class NasControllerTest extends TestCase
         ]);
 
         // The response may vary based on your actual permission implementation
-        $response = $this->get(route('panel.admin.network.nas'));
+        $response = $this->get(route('panel.isp.network.nas'));
 
         // If manager has access, should be OK, otherwise forbidden/redirect
         // Adjust based on your actual policy implementation
@@ -311,7 +311,7 @@ class NasControllerTest extends TestCase
             'status' => 'active',
         ];
 
-        $response = $this->post(route('panel.admin.network.nas.store'), $nasData);
+        $response = $this->post(route('panel.isp.network.nas.store'), $nasData);
 
         // Manager should not be able to create NAS (depends on your policy)
         // This assertion may need adjustment based on your permission system

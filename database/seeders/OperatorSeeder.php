@@ -34,10 +34,10 @@ class OperatorSeeder extends Seeder
             ]
         );
 
-        $adminRole = Role::firstOrCreate(
-            ['slug' => 'admin'],
+        $ispRole = Role::firstOrCreate(
+            ['slug' => 'isp'],
             [
-                'name' => 'Admin',
+                'name' => 'ISP',
                 'description' => 'ISP administrator',
                 'permissions' => config('operators_permissions'),
                 'level' => 20,
@@ -73,13 +73,13 @@ class OperatorSeeder extends Seeder
             ],
             [
                 'name' => 'ISP Admin',
-                'email' => 'admin@ispbills.com',
+                'email' => 'isp@ispbills.com',
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 20,
-                'operator_type' => 'admin',
+                'operator_type' => 'isp',
                 'is_active' => true,
-                'role' => $adminRole,
+                'role' => $ispRole,
             ],
             [
                 'name' => 'John Operator',
@@ -117,7 +117,7 @@ class OperatorSeeder extends Seeder
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->info('developer@ispbills.com       Developer       0');
         $this->command->info('superadmin@ispbills.com      Super Admin     10');
-        $this->command->info('admin@ispbills.com           Admin           20');
+        $this->command->info('isp@ispbills.com           ISP           20');
         $this->command->info('operator@ispbills.com        Operator        30');
         $this->command->info('suboperator@ispbills.com     Sub-Operator    40');
         $this->command->info('customer@ispbills.com        Customer        100');
