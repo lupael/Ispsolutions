@@ -10,7 +10,7 @@ trait HasAuditLog
     /**
      * Boot the trait.
      */
-    protected static function bootHasAuditLog(): void
+    protected static function booted(): void
     {
         static::created(function (Model $model) {
             app(AuditLogService::class)->logCreated($model, $model->getAttributes());
