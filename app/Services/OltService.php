@@ -843,14 +843,14 @@ class OltService implements OltServiceInterface
      */
     private function createConnection(Olt $olt)
     {
-        // Prefer Telnet if the OLT is configured to use it
         $protocol = strtolower($olt->management_protocol ?? 'ssh');
 
         if ($protocol === 'telnet') {
             return new \App\Services\TelnetClient($olt->ip_address, (int) ($olt->port ?? 23));
         }
 
-        $connection = new SSH2($olt->ip_address, $olt->port);
+        // Default to SSH
+        $connection = new SSH2($olt->ip_address, (int) ($olt->port ?? 22));
         $connection->setTimeout(30);
 
         return $connection;
@@ -908,14 +908,14 @@ class OltService implements OltServiceInterface
     {
         return [
             'version' => 'show version',
-            'onu_list' => 'show gpon onu-list',
+            'onu_list' => 'show onu list',
             'onu_state' => 'show gpon onu state',
-            'onu_detail' => 'show gpon onu detail gpon-onu_{port}:{id}',
-            'authorize' => 'gpon onu authorize gpon-onu_{port}:{id}',
-            'unauthorize' => 'no gpon onu authorize gpon-onu_{port}:{id}',
-            'reboot' => 'gpon onu reboot gpon-onu_{port}:{id}',
+            'onu_detail' => 'show onu detail-info {port}:{id}',
+            'authorize' => 'interface gpon {port} ; onu add {id}',
+            'unauthorize' => 'interface gpon {port} ; no onu {id}',
+            'reboot' => 'onu reboot {port} {id}',
             'backup' => 'show running-config',
-            // Some V-SOL firmware requires entering privileged mode
+            // Some VSOL firmware requires entering privileged mode
             'enable' => 'enable',
         ];
     }

@@ -24,11 +24,12 @@ class OltSnmpService
      */
     private const VENDOR_OIDS = [
         'vsol' => [
-            'onu_list' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.3', // ONU serial numbers
-            'onu_status' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.4', // ONU status
-            'onu_rx_power' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.5', // RX power
-            'onu_tx_power' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.6', // TX power
-            'onu_distance' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.7', // Distance
+            'onu_list' => '.1.3.6.1.4.1.13464.1.11.4.1.1.2',      // ontSN
+            'onu_status' => '.1.3.6.1.4.1.13464.1.11.4.1.1.3',      // ontStatus
+            'onu_online_status' => '.1.3.6.1.4.1.13464.1.11.4.1.1.3', // ontStatus
+            'onu_rx_power' => '.1.3.6.1.4.1.13464.1.11.4.1.1.22',     // ontReceivedOpticalPower
+            'onu_tx_power' => '.1.3.6.1.4.1.13464.1.11.4.1.1.23',     // ontMeanOpticalLaunchPower
+            'onu_distance' => '.1.3.6.1.4.1.13464.1.11.4.1.1.32',     // ontDistance
         ],
         'huawei' => [
             'onu_list' => '.1.3.6.1.4.1.2011.6.128.1.1.2.43.1.3', // ONU serial numbers
@@ -99,7 +100,7 @@ class OltSnmpService
 
                 // Try to get additional details
                 try {
-                    $status = $this->snmpGet($olt, $oids['onu_status'] . '.' . $index);
+                    $status = $this->snmpGet($olt, $oids['onu_online_status'] . '.' . $index);
                     $onu['status'] = $this->parseOnuStatus($status, $vendor);
                 } catch (\Exception $e) {
                     // Continue without status
@@ -289,8 +290,8 @@ class OltSnmpService
             $port = $olt->snmp_port ?? 161;
 
             $result = match ($version) {
-                'v1' => @snmprealwalk($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
-                'v2c', 'v2' => @snmp2_real_walk($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
+                'v1' => @snmprealwalk($olt->ip_address, $community, $oid, 1000000, 3),
+                'v2c', 'v2' => @snmp2_real_walk($olt->ip_address, $community, $oid, 1000000, 3),
                 'v3' => [], // SNMPv3 requires additional parameters - not implemented yet
                 default => [],
             };
@@ -341,8 +342,8 @@ class OltSnmpService
             $port = $olt->snmp_port ?? 161;
 
             $result = match ($version) {
-                'v1' => @snmpget($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
-                'v2c', 'v2' => @snmp2_get($olt->ip_address . ':' . $port, $community, $oid, 1000000, 3),
+                'v1' => @snmpget($olt->ip_address, $community, $oid, 1000000, 3),
+                'v2c', 'v2' => @snmp2_get($olt->ip_address, $community, $oid, 1000000, 3),
                 'v3' => null, // SNMPv3 requires additional parameters - not implemented yet
                 default => null,
             };
@@ -393,7 +394,7 @@ class OltSnmpService
         $parts = explode('.', $index);
 
         return match ($vendor) {
-            'vsol' => $parts[0] ?? '0/0',
+            'vsol' => ($parts[2] ?? '0') . '/' . ($parts[3] ?? '0'),
             'huawei' => ($parts[0] ?? '0') . '/' . ($parts[1] ?? '0'),
             'zte' => $parts[0] ?? '0/0',
             'bdcom' => $parts[0] ?? '0/0',
@@ -434,7 +435,7 @@ class OltSnmpService
         }
 
         return match ($vendor) {
-            'vsol' => "{$parts[0]}.{$parts[1]}.{$onuId}",
+            'vsol' => "{$parts[0]}/{$parts[1]}/{$onuId}",
             'huawei' => "{$parts[0]}.{$parts[1]}.{$onuId}",
             'zte' => "{$parts[0]}.{$parts[1]}.{$onuId}",
             'bdcom' => "{$parts[0]}.{$parts[1]}.{$onuId}",

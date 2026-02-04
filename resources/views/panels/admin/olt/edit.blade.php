@@ -50,6 +50,41 @@
                     </div>
 
                     <div>
+                        <label for="telnet_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telnet Port</label>
+                        <input type="number" id="telnet_port" name="telnet_port" placeholder="23" value="{{ old('telnet_port', $olt->telnet_port ?? '23') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="ssh_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">SSH Port</label>
+                        <input type="number" id="ssh_port" name="ssh_port" placeholder="22" value="{{ old('ssh_port', $olt->ssh_port ?? '22') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="management_protocol" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Management Protocol</label>
+                        <select id="management_protocol" name="management_protocol" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="telnet" {{ old('management_protocol', $olt->management_protocol) == 'telnet' ? 'selected' : '' }}>Telnet</option>
+                            <option value="ssh" {{ old('management_protocol', $olt->management_protocol) == 'ssh' ? 'selected' : '' }}>SSH</option>
+                            <option value="snmp" {{ old('management_protocol', $olt->management_protocol) == 'snmp' ? 'selected' : '' }}>SNMP</option>
+                            <option value="both" {{ old('management_protocol', $olt->management_protocol) == 'both' ? 'selected' : '' }}>Both</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telnet/SSH Port</label>
+                        <input type="number" id="port" name="port" placeholder="22" value="{{ old('port', $olt->port ?? '22') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="management_protocol" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Management Protocol</label>
+                        <select id="management_protocol" name="management_protocol" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="telnet" {{ old('management_protocol', $olt->management_protocol) == 'telnet' ? 'selected' : '' }}>Telnet</option>
+                            <option value="ssh" {{ old('management_protocol', $olt->management_protocol) == 'ssh' ? 'selected' : '' }}>SSH</option>
+                            <option value="snmp" {{ old('management_protocol', $olt->management_protocol) == 'snmp' ? 'selected' : '' }}>SNMP</option>
+                            <option value="both" {{ old('management_protocol', $olt->management_protocol) == 'both' ? 'selected' : '' }}>Both</option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             Model <span class="text-red-500">*</span>
                         </label>

@@ -69,8 +69,18 @@
                     </div>
 
                     <div>
-                        <label for="telnet_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telnet Port</label>
-                        <input type="number" id="telnet_port" name="telnet_port" placeholder="23" value="23" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telnet/SSH Port</label>
+                        <input type="number" id="port" name="port" placeholder="22" value="22" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="management_protocol" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Management Protocol</label>
+                        <select id="management_protocol" name="management_protocol" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="telnet">Telnet</option>
+                            <option value="ssh">SSH</option>
+                            <option value="snmp">SNMP</option>
+                            <option value="both">Both</option>
+                        </select>
                     </div>
 
                     <div>
@@ -171,6 +181,7 @@
 async function testOltConnection() {
     const ipAddress = document.getElementById('ip_address').value;
     const telnetPort = document.getElementById('telnet_port').value;
+    const sshPort = document.getElementById('ssh_port').value;
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
@@ -189,12 +200,14 @@ async function testOltConnection() {
     // NOTE: No live network test is performed from this form.
     // Connectivity will be verified by the backend when the OLT device is saved.
     const portToShow = telnetPort || 23;
+    const sshPortToShow = sshPort || 22;
     alert(
         'Connection Information\n\n' +
         'No live connection test is performed at this stage.\n' +
         'Connectivity will be verified when you save the OLT device.\n\n' +
         'IP Address: ' + ipAddress + '\n' +
-        'Port: ' + portToShow +
+        'Telnet Port: ' + portToShow + '\n' +
+        'SSH Port: ' + sshPortToShow +
         (username ? '\nUsername: ' + username : '') +
         (password ? '\n(Password provided)' : '')
     );

@@ -43,62 +43,67 @@ class OltSnmpTest extends Command
         }
 
         // Helper to test an OID: try walk() then get()
-        $testOid = function (string $oid) use ($snmp, $host, $community) {
+        $testOid = function (string $oid) use ($snmp, $host, $community, $port) {
             try {
-                $results = $snmp->walk(new class($host, $community) {
-                    public $ip_address;
-                    public $snmp_community;
-                    public function __construct($ip, $community)
+                $results = $snmp->walk(new class($host, $community, $port) {
+                    public string $ip_address;
+                    public string $snmp_community;
+                    public int $snmp_port;
+                    public function __construct($host, $community, $port)
                     {
-                        $this->ip_address = $ip;
+                        $this->ip_address = $host;
                         $this->snmp_community = $community;
+                        $this->snmp_port = $port;
                     }
                 }, $oid);
 
-                if (! empty($results)) {
-                    return ['found', $results];
+                if (!empty($results)) {
+                    $this->info("  [SUCCESS] OID walk successful. Found " . count($results) . " records.");
+                    return true;
                 }
-            } catch (\Throwable $e) {
-                // ignore and try get
-            }
 
-            try {
-                $value = $snmp->get(new class($host, $community) {
-                    public $ip_address;
-                    public $snmp_community;
-                    public function __construct($ip, $community)
+                $value = $snmp->get(new class($host, $community, $port) {
+                    public string $ip_address;
+                    public string $snmp_community;
+                    public int $snmp_port;
+                    public function __construct($host, $community, $port)
                     {
-                        $this->ip_address = $ip;
+                        $this->ip_address = $host;
                         $this->snmp_community = $community;
+                        $this->snmp_port = $port;
                     }
                 }, $oid);
 
                 if ($value !== null && $value !== false) {
-                    return ['found', [$value]];
+                    $this->info("  [SUCCESS] OID get successful. Value: " . $value);
+                    return true;
                 }
-            } catch (\Throwable $e) {
-                // ignore
+            } catch (\Exception $e) {
+                $this->error("  [ERROR] Exception: {$e->getMessage()}");
             }
 
-            return ['missing', []];
+            $this->warn("  [FAIL] No data returned for this OID.");
+            return false;
         };
 
         // OIDs to check (vendor -> [label => oid])
-        $checks = [
-            'V-SOL' => [
-                'EPON standard: onu_list' => '.1.3.6.1.2.1.155.1.4.1.5.1',
-                'FD-OLT: nmsEponOltPonTable' => '.1.3.6.1.4.1.11606.10.101.6.1',
-                'V1600D: onu_list_fallback' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.3',
+        $vendorOids = [
+            'vsol' => [
+                'onu_list' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.3',
+                'onu_status' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.4',
+                'onu_online_status' => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.19',
             ],
-            'BDCOM' => [
-                'BDCOM: onu_list (mac/serial)' => '.1.3.6.1.4.1.3320.101.11.1.1.2',
-                'BDCOM: onu_status' => '.1.3.6.1.4.1.3320.101.11.4.1.5',
+            'huawei' => [
+                'onu_list' => '.1.3.6.1.4.1.2011.6.128.1.1.2.43.1.3',
+                'onu_status' => '.1.3.6.1.4.1.2011.6.128.1.1.2.46.1.15',
             ],
-            'Huawei' => [
-                'Huawei GPON: onu_list_gpon' => '.1.3.6.1.4.1.2011.5.104.1.1.1',
+            'zte' => [
+                'onu_list' => '.1.3.6.1.4.1.3902.1012.3.28.1.1.5',
+                'onu_status' => '.1.3.6.1.4.1.3902.1012.3.28.2.1.5',
             ],
-            'MikroTik' => [
-                'MIKROTIK: mtxrOpticalRxPower' => 'MIKROTIK-MIB::mtxrOpticalRxPower',
+            'bdcom' => [
+                'onu_list' => '.1.3.6.1.4.1.3320.101.11.1.1.3',
+                'onu_status' => '.1.3.6.1.4.1.3320.101.11.1.1.7',
             ],
         ];
 
