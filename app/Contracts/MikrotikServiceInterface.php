@@ -1,56 +1,157 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Contracts;
 
-interface MikroTikServiceInterface
+interface MikrotikServiceInterface
 {
     /**
-     * Connect to MikroTik router
+     * Connect to a MikroTik router
      */
-    public function connect(): bool;
+    public function connectRouter(int $routerId): bool;
 
     /**
-     * Disconnect from MikroTik router
+     * Create a PPPoE user on MikroTik
+     *
+     * @param array<string, mixed> $userData
      */
-    public function disconnect(): void;
+    public function createPppoeUser(array $userData): bool;
 
     /**
-     * Add a new PPPoE user
+     * Update a PPPoE user on MikroTik
+     *
+     * @param array<string, mixed> $userData
      */
-    public function addPPPoEUser(
-        string $username,
-        string $password,
-        string $profile,
-        ?string $service = 'pppoe'
-    ): bool;
+    public function updatePppoeUser(string $username, array $userData): bool;
 
     /**
-     * Update an existing PPPoE user
+     * Delete a PPPoE user from MikroTik
      */
-    public function updatePPPoEUser(string $username, array $data): bool;
+    public function deletePppoeUser(string $username): bool;
 
     /**
-     * Remove a PPPoE user
+     * Get active sessions from MikroTik
+     *
+     * @return array<int, array<string, mixed>>
      */
-    public function removePPPoEUser(string $username): bool;
+    public function getActiveSessions(int $routerId): array;
 
     /**
-     * Get list of active PPPoE sessions
-     */
-    public function getActiveSessions(): array;
-
-    /**
-     * Disconnect a specific session
+     * Disconnect a session on MikroTik
      */
     public function disconnectSession(string $sessionId): bool;
 
     /**
-     * Get available PPPoE profiles
+     * Get PPPoE profiles from MikroTik
+     *
+     * @return array<int, array<string, mixed>>
      */
-    public function getProfiles(): array;
+    public function getProfiles(int $routerId): array;
 
     /**
-     * Check router connectivity and health
+     * Create a PPPoE profile on MikroTik
+     *
+     * @param array<string, mixed> $profileData
      */
-    public function healthCheck(): bool;
+    public function createPppProfile(int $routerId, array $profileData): bool;
+
+    /**
+     * Import profiles from MikroTik router
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function importProfiles(int $routerId): array;
+
+    /**
+     * Sync profiles from router to database
+     */
+    public function syncProfiles(int $routerId): int;
+
+    /**
+     * Create an IP pool on MikroTik
+     *
+     * @param array<string, mixed> $poolData
+     */
+    public function createIpPool(int $routerId, array $poolData): bool;
+
+    /**
+     * Import IP pools from MikroTik router
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function importIpPools(int $routerId): array;
+
+    /**
+     * Sync IP pools from router to database
+     */
+    public function syncIpPools(int $routerId): int;
+
+    /**
+     * Import PPPoE secrets from MikroTik router
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function importSecrets(int $routerId): array;
+
+    /**
+     * Sync secrets from router to database
+     */
+    public function syncSecrets(int $routerId): int;
+
+    /**
+     * Configure router with one-click settings
+     *
+     * @param array<string, mixed> $config
+     */
+    public function configureRouter(int $routerId, array $config): bool;
+
+    /**
+     * Create a VPN account on MikroTik
+     *
+     * @param array<string, mixed> $vpnData
+     */
+    public function createVpnAccount(int $routerId, array $vpnData): bool;
+
+    /**
+     * Get VPN status from MikroTik
+     *
+     * @return array<string, mixed>
+     */
+    public function getVpnStatus(int $routerId): array;
+
+    /**
+     * Create a queue on MikroTik
+     *
+     * @param array<string, mixed> $queueData
+     */
+    public function createQueue(int $routerId, array $queueData): bool;
+
+    /**
+     * Get queues from MikroTik
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getQueues(int $routerId): array;
+
+    /**
+     * Add a firewall rule on MikroTik
+     *
+     * @param array<string, mixed> $ruleData
+     */
+    public function addFirewallRule(int $routerId, array $ruleData): bool;
+
+    /**
+     * Get firewall rules from MikroTik
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getFirewallRules(int $routerId): array;
+
+    /**
+     * Get system resources (CPU, memory, uptime) from MikroTik router
+     *
+     * @return array<string, mixed>
+     */
+    public function getResources(int $routerId): array;
 }
