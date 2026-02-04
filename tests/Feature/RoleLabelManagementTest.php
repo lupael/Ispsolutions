@@ -61,7 +61,7 @@ class RoleLabelManagementTest extends TestCase
             ->get(route('panel.isp.settings.role-labels'));
 
         $response->assertOk();
-        $response->assertViewIs('panels.admin.settings.role-labels');
+        $response->assertViewIs('panels.isp.settings.role-labels');
         $response->assertViewHas('customizableRoles');
         $response->assertViewHas('settings');
     }

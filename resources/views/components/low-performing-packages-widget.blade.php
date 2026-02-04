@@ -54,7 +54,7 @@
                 <div class="border {{ $colorClasses[$statusColor] }} rounded-lg p-3">
                     <div class="flex items-start justify-between">
                         <div class="flex-1 min-w-0">
-                            <a href="{{ route('panel.admin.packages.edit', $package) }}" 
+                            <a href="{{ route('panel.isp.packages.edit', $package) }}" 
                                class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400">
                                 {{ $package->name }}
                             </a>
@@ -104,13 +104,13 @@
                     
                     <!-- Quick Actions -->
                     <div class="flex space-x-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <a href="{{ route('panel.admin.packages.edit', $package) }}" 
+                        <a href="{{ route('panel.isp.packages.edit', $package) }}" 
                            class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
                             Edit Package
                         </a>
                         @if($customerCount === 0)
                             <span class="text-gray-300 dark:text-gray-600">|</span>
-                            <form action="{{ route('panel.admin.packages.destroy', $package) }}" method="POST" class="inline"
+                            <form action="{{ route('panel.isp.packages.destroy', $package) }}" method="POST" class="inline"
                                   data-confirm-delete>
                                 @csrf
                                 @method('DELETE')
@@ -127,7 +127,7 @@
         
         @if($packages->count() > 5)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-                <a href="{{ route('panel.admin.packages.index', ['low_performing' => true]) }}" 
+                <a href="{{ route('panel.isp.packages.index', ['low_performing' => true]) }}" 
                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
                     View All {{ $packages->count() }} Low-Performing Packages →
                 </a>

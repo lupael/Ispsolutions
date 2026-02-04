@@ -40,7 +40,7 @@ class RouterProvisioningController extends Controller
             ? MikrotikRouter::find($selectedRouterId)
             : null;
 
-        return view('panels.admin.routers.provision', compact(
+        return view('panels.isp.routers.provision', compact(
             'routers',
             'templates',
             'selectedRouter'
@@ -62,7 +62,7 @@ class RouterProvisioningController extends Controller
         $provisioningLogs = $this->provisioningService->getProvisioningLogs($routerId, 10);
         $backups = $this->provisioningService->getConfigurationBackups($routerId, 10);
 
-        return view('panels.admin.routers.provision', compact(
+        return view('panels.isp.routers.provision', compact(
             'router',
             'templates',
             'provisioningLogs',
@@ -304,7 +304,7 @@ class RouterProvisioningController extends Controller
             ->orderBy('name')
             ->paginate(20);
 
-        return view('panels.admin.routers.templates', compact('templates'));
+        return view('panels.isp.routers.templates', compact('templates'));
     }
 
     /**
@@ -312,7 +312,7 @@ class RouterProvisioningController extends Controller
      */
     public function createTemplate(): View
     {
-        return view('panels.admin.routers.template-form');
+        return view('panels.isp.routers.template-form');
     }
 
     /**
@@ -374,7 +374,7 @@ class RouterProvisioningController extends Controller
 
     /**
      * Provision RADIUS on router (first connect setup).
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -393,7 +393,7 @@ class RouterProvisioningController extends Controller
 
         try {
             $router = MikrotikRouter::with('nas')->findOrFail($request->router_id);
-            
+
             $radiusProvisioningService = app(\App\Services\RouterRadiusProvisioningService::class);
             $result = $radiusProvisioningService->provisionOnFirstConnect($router);
 
@@ -409,7 +409,7 @@ class RouterProvisioningController extends Controller
 
     /**
      * Export PPP secrets from router.
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -428,7 +428,7 @@ class RouterProvisioningController extends Controller
 
         try {
             $router = MikrotikRouter::findOrFail($request->router_id);
-            
+
             $radiusProvisioningService = app(\App\Services\RouterRadiusProvisioningService::class);
             $result = $radiusProvisioningService->exportPppSecrets($router);
 

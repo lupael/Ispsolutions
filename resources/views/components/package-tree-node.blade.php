@@ -77,7 +77,7 @@
 
         <!-- Actions -->
         <div class="flex-shrink-0 ml-4">
-            <a href="{{ route('panel.admin.master-packages.show', $node['id']) }}" 
+            <a href="{{ route('panel.isp.master-packages.show', $node['id']) }}" 
                class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

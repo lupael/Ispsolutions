@@ -35,7 +35,7 @@ class CustomerHotspotRechargeController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('panels.admin.customers.hotspot.recharge', compact('customer', 'packages'));
+        return view('panels.isp.customers.hotspot.recharge', compact('customer', 'packages'));
     }
 
     /**
@@ -110,7 +110,7 @@ class CustomerHotspotRechargeController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('panel.admin.customers.show', $customer->id)
+                ->route('panel.isp.customers.show', $customer->id)
                 ->with('success', "Hotspot recharged successfully. Valid until: {$expiryDate->format('Y-m-d')}");
         } catch (\Exception $e) {
             DB::rollBack();

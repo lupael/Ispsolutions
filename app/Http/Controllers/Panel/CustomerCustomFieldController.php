@@ -18,8 +18,8 @@ class CustomerCustomFieldController extends Controller
         $fields = CustomerCustomField::where('tenant_id', auth()->user()->tenant_id)
             ->ordered()
             ->get();
-            
-        return view('panels.admin.custom-fields.index', compact('fields'));
+
+        return view('panels.isp.custom-fields.index', compact('fields'));
     }
 
     /**
@@ -27,7 +27,7 @@ class CustomerCustomFieldController extends Controller
      */
     public function create(): View
     {
-        return view('panels.admin.custom-fields.create');
+        return view('panels.isp.custom-fields.create');
     }
 
     /**
@@ -45,20 +45,20 @@ class CustomerCustomFieldController extends Controller
             'visibility' => 'nullable|array',
             'visibility.*' => 'string',
         ]);
-        
+
         // Convert options from JSON string to array if provided
         if (isset($validated['options']) && is_string($validated['options'])) {
             $validated['options'] = json_decode($validated['options'], true);
         }
-        
+
         $field = CustomerCustomField::create([
             ...$validated,
             'tenant_id' => auth()->user()->tenant_id,
             'order' => CustomerCustomField::where('tenant_id', auth()->user()->tenant_id)->max('order') + 1,
             'required' => $validated['required'] ?? false,
         ]);
-        
-        return redirect()->route('panel.admin.custom-fields.index')
+
+        return redirect()->route('panel.isp.custom-fields.index')
             ->with('success', 'Custom field created successfully');
     }
 
@@ -71,8 +71,8 @@ class CustomerCustomFieldController extends Controller
         if ($customField->tenant_id !== auth()->user()->tenant_id) {
             abort(403);
         }
-        
-        return view('panels.admin.custom-fields.edit', compact('customField'));
+
+        return view('panels.isp.custom-fields.edit', compact('customField'));
     }
 
     /**
@@ -84,7 +84,7 @@ class CustomerCustomFieldController extends Controller
         if ($customField->tenant_id !== auth()->user()->tenant_id) {
             abort(403);
         }
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'label' => 'required|string|max:255',
@@ -95,18 +95,18 @@ class CustomerCustomFieldController extends Controller
             'visibility' => 'nullable|array',
             'visibility.*' => 'string',
         ]);
-        
+
         // Convert options from JSON string to array if provided
         if (isset($validated['options']) && is_string($validated['options'])) {
             $validated['options'] = json_decode($validated['options'], true);
         }
-        
+
         $customField->update([
             ...$validated,
             'required' => $validated['required'] ?? false,
         ]);
-        
-        return redirect()->route('panel.admin.custom-fields.index')
+
+        return redirect()->route('panel.isp.custom-fields.index')
             ->with('success', 'Custom field updated successfully');
     }
 
@@ -119,10 +119,10 @@ class CustomerCustomFieldController extends Controller
         if ($customField->tenant_id !== auth()->user()->tenant_id) {
             abort(403);
         }
-        
+
         $customField->delete();
-        
-        return redirect()->route('panel.admin.custom-fields.index')
+
+        return redirect()->route('panel.isp.custom-fields.index')
             ->with('success', 'Custom field deleted successfully');
     }
 
@@ -135,13 +135,13 @@ class CustomerCustomFieldController extends Controller
             'order' => 'required|array',
             'order.*' => 'required|integer|exists:customer_custom_fields,id',
         ]);
-        
+
         foreach ($validated['order'] as $index => $fieldId) {
             CustomerCustomField::where('id', $fieldId)
                 ->where('tenant_id', auth()->user()->tenant_id)
                 ->update(['order' => $index]);
         }
-        
+
         return response()->json(['success' => true, 'message' => 'Order updated successfully']);
     }
 }

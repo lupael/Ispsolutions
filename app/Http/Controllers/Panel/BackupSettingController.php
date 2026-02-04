@@ -46,7 +46,7 @@ class BackupSettingController extends Controller
         $routers = Nas::where('tenant_id', $operator->tenant_id)->get();
 
         if ($routers->isEmpty()) {
-            return redirect()->route('panel.admin.network.routers.create')
+            return redirect()->route('panel.isp.network.routers.create')
                 ->with('warning', 'Please add at least one router before configuring backup settings.');
         }
 
@@ -61,7 +61,7 @@ class BackupSettingController extends Controller
     public function store(Request $request)
     {
         $operator = Auth::user();
-        
+
         $request->validate([
             'nas_id' => [
                 'required',
@@ -77,7 +77,7 @@ class BackupSettingController extends Controller
             ]
         );
 
-        return redirect()->route('panel.admin.backup-settings.index')
+        return redirect()->route('panel.isp.backup-settings.index')
             ->with('success', 'Backup settings configured successfully.');
     }
 
@@ -102,7 +102,7 @@ class BackupSettingController extends Controller
     public function update(Request $request)
     {
         $operator = Auth::user();
-        
+
         $request->validate([
             'nas_id' => [
                 'required',
@@ -116,7 +116,7 @@ class BackupSettingController extends Controller
             'nas_id' => $request->nas_id,
         ]);
 
-        return redirect()->route('panel.admin.backup-settings.index')
+        return redirect()->route('panel.isp.backup-settings.index')
             ->with('success', 'Backup settings updated successfully.');
     }
 }

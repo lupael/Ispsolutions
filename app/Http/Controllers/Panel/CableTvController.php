@@ -51,7 +51,7 @@ class CableTvController extends Controller
         $subscriptions = $query->latest()->paginate(20);
         $packages = CableTvPackage::active()->get();
 
-        return view('panels.admin.cable-tv.index', compact('subscriptions', 'packages'));
+        return view('panels.isp.cable-tv.index', compact('subscriptions', 'packages'));
     }
 
     /**
@@ -64,7 +64,7 @@ class CableTvController extends Controller
         $packages = CableTvPackage::where('tenant_id', $tenantId)->active()->with('channels')->get();
         $users = User::where('tenant_id', $tenantId)->where('is_active', true)->get();
 
-        return view('panels.admin.cable-tv.create', compact('packages', 'users'));
+        return view('panels.isp.cable-tv.create', compact('packages', 'users'));
     }
 
     /**
@@ -121,7 +121,7 @@ class CableTvController extends Controller
         $packages = CableTvPackage::active()->with('channels')->get();
         $users = User::where('is_active', true)->get();
 
-        return view('panels.admin.cable-tv.edit', compact('subscription', 'packages', 'users'));
+        return view('panels.isp.cable-tv.edit', compact('subscription', 'packages', 'users'));
     }
 
     /**
@@ -238,7 +238,7 @@ class CableTvController extends Controller
     {
         $packages = CableTvPackage::with('channels')->withCount('subscriptions')->latest()->paginate(20);
 
-        return view('panels.admin.cable-tv.packages.index', compact('packages'));
+        return view('panels.isp.cable-tv.packages.index', compact('packages'));
     }
 
     /**
@@ -248,7 +248,7 @@ class CableTvController extends Controller
     {
         $channels = CableTvChannel::withCount('packages')->latest()->paginate(20);
 
-        return view('panels.admin.cable-tv.channels.index', compact('channels'));
+        return view('panels.isp.cable-tv.channels.index', compact('channels'));
     }
 
     /**

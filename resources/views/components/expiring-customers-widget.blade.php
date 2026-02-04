@@ -59,7 +59,7 @@
                 <div class="border {{ $colorClasses[$urgencyColor] }} rounded-lg p-3">
                     <div class="flex items-start justify-between">
                         <div class="flex-1 min-w-0">
-                            <a href="{{ route('panel.admin.customers.show', $customer) }}" 
+                            <a href="{{ route('panel.isp.customers.show', $customer) }}" 
                                class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400">
                                 {{ $customer->name }}
                             </a>
@@ -84,12 +84,12 @@
                     
                     <!-- Quick Actions -->
                     <div class="flex space-x-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <a href="{{ route('panel.admin.customers.show', $customer) }}" 
+                        <a href="{{ route('panel.isp.customers.show', $customer) }}" 
                            class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
                             View
                         </a>
                         <span class="text-gray-300 dark:text-gray-600">|</span>
-                        <a href="{{ route('panel.admin.customers.edit', $customer) }}" 
+                        <a href="{{ route('panel.isp.customers.edit', $customer) }}" 
                            class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
                             Extend
                         </a>
@@ -105,7 +105,7 @@
         
         @if($expiringCustomers->count() > 5)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-                <a href="{{ route('panel.admin.customers.index', ['expiring_days' => $days]) }}" 
+                <a href="{{ route('panel.isp.customers.index', ['expiring_days' => $days]) }}" 
                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
                     View All {{ $expiringCustomers->count() }} Expiring Customers →
                 </a>

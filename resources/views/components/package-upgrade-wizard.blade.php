@@ -229,7 +229,7 @@ function confirmUpgrade(customerId, currentPackageId, targetPackageId, targetPac
 
     if (confirmed) {
         // Generate URL using route name (Laravel will handle this when rendered)
-        const url = `{{ route('panel.admin.customers.package-change.store', ['customer' => '__CUSTOMER_ID__']) }}`.replace('__CUSTOMER_ID__', customerId);
+        const url = `{{ route('panel.isp.customers.package-change.store', ['customer' => '__CUSTOMER_ID__']) }}`.replace('__CUSTOMER_ID__', customerId);
         
         // Submit upgrade request
         fetch(url, {

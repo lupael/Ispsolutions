@@ -32,7 +32,7 @@ class CustomerCommunicationController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('panels.admin.customers.communication.send-sms', compact('customer', 'templates'));
+        return view('panels.isp.customers.communication.send-sms', compact('customer', 'templates'));
     }
 
     /**
@@ -96,7 +96,7 @@ class CustomerCommunicationController extends Controller
             ->orderBy('due_date')
             ->get();
 
-        return view('panels.admin.customers.communication.send-payment-link', compact('customer', 'invoices'));
+        return view('panels.isp.customers.communication.send-payment-link', compact('customer', 'invoices'));
     }
 
     /**

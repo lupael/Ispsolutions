@@ -45,7 +45,7 @@ class CustomerWizardController extends Controller
                 ->first();
 
             if ($tempCustomer) {
-                return redirect()->route('panel.admin.customers.wizard.step', ['step' => $tempCustomer->step]);
+                return redirect()->route('panel.isp.customers.wizard.step', ['step' => $tempCustomer->step]);
             }
         }
 
@@ -61,7 +61,7 @@ class CustomerWizardController extends Controller
             'data' => [],
         ]);
 
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 1]);
+        return redirect()->route('panel.isp.customers.wizard.step', ['step' => 1]);
     }
 
     /**
@@ -70,12 +70,12 @@ class CustomerWizardController extends Controller
     public function show(Request $request, int $step): View|RedirectResponse
     {
         if ($step < 1 || $step > self::TOTAL_STEPS) {
-            return redirect()->route('panel.admin.customers.wizard.start');
+            return redirect()->route('panel.isp.customers.wizard.start');
         }
 
         $sessionId = $request->session()->get('wizard_session_id');
         if (!$sessionId) {
-            return redirect()->route('panel.admin.customers.wizard.start');
+            return redirect()->route('panel.isp.customers.wizard.start');
         }
 
         $tempCustomer = TempCustomer::where('session_id', $sessionId)
@@ -104,7 +104,7 @@ class CustomerWizardController extends Controller
     {
         $sessionId = $request->session()->get('wizard_session_id');
         if (!$sessionId) {
-            return redirect()->route('panel.admin.customers.wizard.start');
+            return redirect()->route('panel.isp.customers.wizard.start');
         }
 
         $tempCustomer = TempCustomer::where('session_id', $sessionId)
@@ -134,7 +134,7 @@ class CustomerWizardController extends Controller
             $request->session()->forget('wizard_session_id');
         }
 
-        return redirect()->route('panel.admin.customers.index')
+        return redirect()->route('panel.isp.customers.index')
             ->with('success', 'Customer creation wizard cancelled.');
     }
 
@@ -166,7 +166,7 @@ class CustomerWizardController extends Controller
             return redirect()->back()->with('success', 'Draft saved successfully.');
         }
 
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 2]);
+        return redirect()->route('panel.isp.customers.wizard.step', ['step' => 2]);
     }
 
     /**
@@ -203,7 +203,7 @@ class CustomerWizardController extends Controller
             return redirect()->back()->with('success', 'Draft saved successfully.');
         }
 
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 3]);
+        return redirect()->route('panel.isp.customers.wizard.step', ['step' => 3]);
     }
 
     /**
@@ -243,7 +243,7 @@ class CustomerWizardController extends Controller
             return redirect()->back()->with('success', 'Draft saved successfully.');
         }
 
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 4]);
+        return redirect()->route('panel.isp.customers.wizard.step', ['step' => 4]);
     }
 
     /**
@@ -372,7 +372,7 @@ class CustomerWizardController extends Controller
 
             DB::commit();
 
-            return redirect()->route('panel.admin.customers.show', $customer)
+            return redirect()->route('panel.isp.customers.show', $customer)
                 ->with('success', 'Customer created successfully!')
                 ->with('info', "Username: {$username}. Service is suspended until invoice payment.");
         } catch (\Exception $e) {

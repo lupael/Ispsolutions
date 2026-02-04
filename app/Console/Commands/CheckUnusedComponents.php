@@ -360,7 +360,7 @@ class CheckUnusedComponents extends Command
         $parts = explode('.', $viewName);
         
         // Check for patterns like: view($this->getViewPrefix() . '.index')
-        // If view starts with 'panels' (e.g., panels.admin.something.index), check for dynamic usage
+        // If view starts with 'panels' (e.g., panels.isp.something.index), check for dynamic usage
         if (count($parts) >= 3 && $parts[0] === 'panels') {
             $lastPart = end($parts);
             // Check for dynamic patterns with the last part
@@ -381,7 +381,7 @@ class CheckUnusedComponents extends Command
 
             // Check if middle parts are used dynamically
             if (count($parts) >= 4) {
-                $pathPart = $parts[2]; // e.g., "master-packages" from panels.admin.master-packages.index
+                $pathPart = $parts[2]; // e.g., "master-packages" from panels.isp.master-packages.index
                 if (preg_match("/['\"]" . preg_quote($pathPart, '/') . "\." . preg_quote($lastPart, '/') . "['\"]/", $content)) {
                     return true;
                 }

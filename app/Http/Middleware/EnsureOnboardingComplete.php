@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Onboarding Middleware
  *
- * Redirects admin users to the onboarding page if they haven't completed
+ * Redirects ISP users to the onboarding page if they haven't completed
  * the minimum configuration requirements.
  */
 class EnsureOnboardingComplete
@@ -20,14 +20,14 @@ class EnsureOnboardingComplete
      * Routes that should be accessible even without completing onboarding.
      */
     protected array $except = [
-        'panel.admin.onboarding',
-        'panel.admin.backup-settings.*',
-        'panel.admin.billing-profiles.*',
-        'panel.admin.network.routers.*',
-        'panel.admin.packages.*',
-        'panel.admin.customers.*',
-        'panel.admin.operators.*',
-        'panel.admin.profile.*',
+        'panel.isp.onboarding',
+        'panel.isp.backup-settings.*',
+        'panel.isp.billing-profiles.*',
+        'panel.isp.network.routers.*',
+        'panel.isp.packages.*',
+        'panel.isp.customers.*',
+        'panel.isp.operators.*',
+        'panel.isp.profile.*',
         'logout',
         'language.switch',
     ];
@@ -37,8 +37,8 @@ class EnsureOnboardingComplete
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Only check for admin users
-        if (! Auth::check() || Auth::user()->operator_level !== User::OPERATOR_LEVEL_ADMIN) {
+        // Only check for ISP users
+        if (! Auth::check() || Auth::user()->operator_level !== User::OPERATOR_LEVEL_ISP) {
             return $next($request);
         }
 
@@ -57,7 +57,7 @@ class EnsureOnboardingComplete
 
         // Check if onboarding is complete
         if (! $this->isOnboardingComplete(Auth::user())) {
-            return redirect()->route('panel.admin.onboarding')
+            return redirect()->route('panel.isp.onboarding')
                 ->with('warning', 'Please complete the onboarding process to access this feature.');
         }
 
@@ -71,7 +71,7 @@ class EnsureOnboardingComplete
     {
         // This duplicates logic from MinimumConfigurationController
         // to avoid tight coupling, but maintains the same checks
-        
+
         // Check billing profile exists
         if (! \App\Models\BillingProfile::where('tenant_id', $user->tenant_id)->exists()) {
             return false;

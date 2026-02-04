@@ -32,32 +32,32 @@
 
     <!-- Summary Statistics -->
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <x-info-box
-            title="Total IP Addresses"
+        <x-info-box 
+            title="Total IP Addresses" 
             :value="number_format($analytics['total_ips'] ?? 0)"
             icon="network"
             color="blue"
             subtitle="Across all pools"
         />
-
-        <x-info-box
-            title="Allocated IPs"
+        
+        <x-info-box 
+            title="Allocated IPs" 
             :value="number_format($analytics['allocated_ips'] ?? 0)"
             icon="check"
             color="green"
             :subtitle="number_format($analytics['allocation_percent'] ?? 0, 1) . '% of total'"
         />
-
-        <x-info-box
-            title="Available IPs"
+        
+        <x-info-box 
+            title="Available IPs" 
             :value="number_format($analytics['available_ips'] ?? 0)"
             icon="users"
             color="purple"
             :subtitle="number_format($analytics['available_percent'] ?? 0, 1) . '% of total'"
         />
-
-        <x-info-box
-            title="Total Pools"
+        
+        <x-info-box 
+            title="Total Pools" 
             :value="$analytics['total_pools'] ?? 0"
             icon="chart"
             color="indigo"
@@ -69,7 +69,7 @@
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
             <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Pool Utilization Overview</h2>
-
+            
             <div class="space-y-4">
                 @forelse($poolStats ?? [] as $pool)
                     <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -115,9 +115,9 @@
                         </div>
 
                         <!-- Progress Bar -->
-                        <x-progress-bar
-                            :current="$pool['allocated_ips']"
-                            :total="$pool['total_ips']"
+                        <x-progress-bar 
+                            :current="$pool['allocated_ips']" 
+                            :total="$pool['total_ips']" 
                             height="h-6"
                             :showLabel="true"
                             :showPercentage="true"
@@ -152,7 +152,7 @@
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Allocation by Pool Type</h3>
-
+                
                 <div class="space-y-3">
                     @foreach($analytics['by_type'] ?? [] as $type => $data)
                         <div>
@@ -162,9 +162,9 @@
                                     {{ number_format($data['allocated']) }} / {{ number_format($data['total']) }}
                                 </span>
                             </div>
-                            <x-progress-bar
-                                :current="$data['allocated']"
-                                :total="$data['total']"
+                            <x-progress-bar 
+                                :current="$data['allocated']" 
+                                :total="$data['total']" 
                                 height="h-4"
                                 :showLabel="false"
                                 :showPercentage="true"
@@ -179,7 +179,7 @@
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Top Utilized Pools</h3>
-
+                
                 <div class="space-y-3">
                     @foreach(($analytics['top_utilized'] ?? []) as $pool)
                         <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
@@ -209,7 +209,7 @@
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
             <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Recent IP Allocations</h3>
-
+            
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-900">
@@ -259,12 +259,12 @@
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
             <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Export Analytics</h3>
-
+            
             <!-- Note: Export routes implemented in routes/web.php:
-                 Route::get('panel/isp/network/ip-analytics/export', [ISPController::class, 'exportIpAnalytics'])
+                 Route::get('panel/admin/network/ip-analytics/export', [AdminController::class, 'exportIpAnalytics'])
                       ->name('panel.isp.network.ip-analytics.export');
             -->
-
+            
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('panel.isp.network.ip-analytics.export', ['format' => 'pdf']) }}" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 transition">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,14 +272,14 @@
                     </svg>
                     Export as PDF
                 </a>
-
+                
                 <a href="{{ route('panel.isp.network.ip-analytics.export', ['format' => 'excel']) }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Export as Excel
                 </a>
-
+                
                 <a href="{{ route('panel.isp.network.ip-analytics.export', ['format' => 'csv']) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 transition">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

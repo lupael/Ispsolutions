@@ -31,14 +31,14 @@ class OperatorSubscriptionController extends Controller
         $user = $request->user();
 
         // Only allow operators, sub-operators, and admins
-        if (! $user->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin'])) {
+        if (! $user->hasAnyRole(['isp', 'operator', 'sub-operator', 'superadmin'])) {
             abort(403, 'Unauthorized. Only operators can access subscriptions.');
         }
 
         // Build subscriptions query; admins/superadmins see all, others see only their own
         $query = OperatorSubscription::with('plan');
 
-        if (! $user->hasAnyRole(['admin', 'superadmin'])) {
+        if (! $user->hasAnyRole(['isp', 'superadmin'])) {
             $query->where('operator_id', $user->id);
         }
 
@@ -62,7 +62,7 @@ class OperatorSubscriptionController extends Controller
         $user = auth()->user();
 
         // Authorize access
-        if (! $user->hasAnyRole(['admin', 'superadmin']) && $subscription->operator_id !== $user->id) {
+        if (! $user->hasAnyRole(['isp', 'superadmin']) && $subscription->operator_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
 
@@ -80,7 +80,7 @@ class OperatorSubscriptionController extends Controller
         $user = auth()->user();
 
         // Only operators, sub-operators, and admins can create subscriptions
-        if (! $user->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin'])) {
+        if (! $user->hasAnyRole(['isp', 'operator', 'sub-operator', 'superadmin'])) {
             abort(403, 'Unauthorized');
         }
 
@@ -182,7 +182,7 @@ class OperatorSubscriptionController extends Controller
         $user = auth()->user();
 
         // Authorize access
-        if (! $user->hasAnyRole(['admin', 'superadmin']) && $subscription->operator_id !== $user->id) {
+        if (! $user->hasAnyRole(['isp', 'superadmin']) && $subscription->operator_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',
@@ -259,7 +259,7 @@ class OperatorSubscriptionController extends Controller
         $user = auth()->user();
 
         // Authorize access
-        if (! $user->hasAnyRole(['admin', 'superadmin']) && $subscription->operator_id !== $user->id) {
+        if (! $user->hasAnyRole(['isp', 'superadmin']) && $subscription->operator_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',
@@ -347,7 +347,7 @@ class OperatorSubscriptionController extends Controller
         $user = $request->user();
 
         // Only allow operators, sub-operators, and admins
-        if (! $user->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin'])) {
+        if (! $user->hasAnyRole(['isp', 'operator', 'sub-operator', 'superadmin'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',

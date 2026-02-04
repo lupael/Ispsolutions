@@ -69,11 +69,11 @@
 
     <!-- Actions -->
     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
-        <a href="{{ route('panel.admin.billing-profiles.show', $profile) }}" 
+        <a href="{{ route('panel.isp.billing-profiles.show', $profile) }}" 
            class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
             View Details
         </a>
-        <a href="{{ route('panel.admin.billing-profiles.edit', $profile) }}" 
+        <a href="{{ route('panel.isp.billing-profiles.edit', $profile) }}" 
            class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
             Edit
         </a>

@@ -11,7 +11,7 @@ class UpdateInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasAnyRole(['superadmin', 'admin', 'manager']);
+        return $this->user()->hasAnyRole(['superadmin', 'isp', 'manager']);
     }
 
     /**

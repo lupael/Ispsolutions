@@ -51,7 +51,7 @@ class CustomerHistoryController extends Controller
             ')
             ->first();
 
-        return view('panels.admin.customers.history.internet-history', compact(
+        return view('panels.isp.customers.history.internet-history', compact(
             'customer',
             'sessions',
             'totals',

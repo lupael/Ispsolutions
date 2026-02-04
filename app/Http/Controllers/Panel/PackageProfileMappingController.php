@@ -23,7 +23,7 @@ class PackageProfileMappingController extends Controller
             ->where('package_id', $package->id)
             ->get();
 
-        return view('panels.admin.packages.mappings.index', compact('package', 'mappings'));
+        return view('panels.isp.packages.mappings.index', compact('package', 'mappings'));
     }
 
     /**
@@ -37,7 +37,7 @@ class PackageProfileMappingController extends Controller
         $routers = MikrotikRouter::where('tenant_id', $user->tenant_id)->get();
         $ipPools = IpPool::where('tenant_id', $user->tenant_id)->where('status', 'active')->get();
 
-        return view('panels.admin.packages.mappings.create', compact('package', 'routers', 'ipPools'));
+        return view('panels.isp.packages.mappings.create', compact('package', 'routers', 'ipPools'));
     }
 
     /**
@@ -69,7 +69,7 @@ class PackageProfileMappingController extends Controller
 
         PackageProfileMapping::create($validated);
 
-        return redirect()->route('panel.admin.packages.mappings.index', $package)
+        return redirect()->route('panel.isp.packages.mappings.index', $package)
             ->with('success', 'Mapping created successfully.');
     }
 
@@ -89,7 +89,7 @@ class PackageProfileMappingController extends Controller
         $routers = MikrotikRouter::where('tenant_id', $user->tenant_id)->get();
         $ipPools = IpPool::where('tenant_id', $user->tenant_id)->where('status', 'active')->get();
 
-        return view('panels.admin.packages.mappings.create', compact('package', 'mapping', 'routers', 'ipPools'));
+        return view('panels.isp.packages.mappings.create', compact('package', 'mapping', 'routers', 'ipPools'));
     }
 
     /**
@@ -124,7 +124,7 @@ class PackageProfileMappingController extends Controller
 
         $mapping->update($validated);
 
-        return redirect()->route('panel.admin.packages.mappings.index', $package)
+        return redirect()->route('panel.isp.packages.mappings.index', $package)
             ->with('success', 'Mapping updated successfully.');
     }
 
@@ -142,7 +142,7 @@ class PackageProfileMappingController extends Controller
 
         $mapping->delete();
 
-        return redirect()->route('panel.admin.packages.mappings.index', $package)
+        return redirect()->route('panel.isp.packages.mappings.index', $package)
             ->with('success', 'Mapping deleted successfully.');
     }
 }

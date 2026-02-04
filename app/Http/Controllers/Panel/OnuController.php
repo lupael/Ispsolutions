@@ -54,7 +54,7 @@ class OnuController extends Controller
             'offline' => Onu::where('status', 'offline')->count(),
         ];
 
-        return view('panels.admin.onu.index', compact('onus', 'olts', 'stats'));
+        return view('panels.isp.onu.index', compact('onus', 'olts', 'stats'));
     }
 
     /**
@@ -64,7 +64,7 @@ class OnuController extends Controller
     {
         $onu->load(['olt', 'networkUser']);
 
-        return view('panels.admin.onu.show', compact('onu'));
+        return view('panels.isp.onu.show', compact('onu'));
     }
 
     /**
@@ -73,13 +73,13 @@ class OnuController extends Controller
     public function edit(Onu $onu): View
     {
         $onu->load(['olt', 'networkUser']);
-        
+
         // Load a limited set of network users for better performance
         $networkUsers = NetworkUser::orderBy('username')
             ->limit(self::MAX_NETWORK_USERS_LIMIT)
             ->get();
 
-        return view('panels.admin.onu.edit', compact('onu', 'networkUsers'));
+        return view('panels.isp.onu.edit', compact('onu', 'networkUsers'));
     }
 
     /**
@@ -95,7 +95,7 @@ class OnuController extends Controller
 
         $onu->update($validated);
 
-        return redirect()->route('panel.admin.network.onu.show', $onu)
+        return redirect()->route('panel.isp.network.onu.show', $onu)
             ->with('success', 'ONU updated successfully.');
     }
 
@@ -106,7 +106,7 @@ class OnuController extends Controller
     {
         $onu->delete();
 
-        return redirect()->route('panel.admin.network.onu.index')
+        return redirect()->route('panel.isp.network.onu.index')
             ->with('success', 'ONU deleted successfully.');
     }
 }

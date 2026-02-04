@@ -222,9 +222,18 @@ class MikrotikImportService
             $failed = 0;
             $errors = [];
 
+            // Resolve IP pool names to IDs for this tenant (so imported profiles get ipv4_pool_id)
+            $tenantPools = IpPool::where('tenant_id', $tenantId)->get()->keyBy('name');
+
             DB::beginTransaction();
             foreach ($profiles as $profileData) {
                 try {
+                    $remoteAddress = $profileData['remote_address'] ?? null;
+                    $ipv4PoolId = null;
+                    if (! empty($remoteAddress) && $tenantPools->has($remoteAddress)) {
+                        $ipv4PoolId = $tenantPools->get($remoteAddress)->id;
+                    }
+
                     MikrotikProfile::updateOrCreate(
                         [
                             'name' => $profileData['name'],
@@ -232,8 +241,9 @@ class MikrotikImportService
                         ],
                         [
                             'local_address' => $profileData['local_address'] ?? null,
-                            'remote_address' => $profileData['remote_address'] ?? null,
+                            'remote_address' => $remoteAddress,
                             'rate_limit' => $profileData['rate_limit'] ?? null,
+                            'ipv4_pool_id' => $ipv4PoolId,
                             'tenant_id' => $tenantId,
                         ]
                     );

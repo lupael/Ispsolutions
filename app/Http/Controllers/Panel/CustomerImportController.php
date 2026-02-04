@@ -36,7 +36,7 @@ class CustomerImportController extends Controller
             ->take(10)
             ->get();
 
-        return view('panels.admin.customers.pppoe-import', compact('routers', 'packages', 'recentImports'));
+        return view('panels.isp.customers.pppoe-import', compact('routers', 'packages', 'recentImports'));
     }
 
     /**

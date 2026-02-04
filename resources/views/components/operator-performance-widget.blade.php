@@ -95,7 +95,7 @@
         <!-- View All Link -->
         @if($operatorPerformance->count() > 5)
             <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-                <a href="{{ route('panel.admin.operators') }}" 
+                <a href="{{ route('panel.isp.operators') }}" 
                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
                     View All Operators ({{ $operatorPerformance->count() }}) →
                 </a>

@@ -118,7 +118,7 @@ class AutoDebitController extends Controller
         // Authorization: User can only view their own history
         // Admins/operators can view history for their customers
         if ($history->customer_id !== $user->id) {
-            if (!$user->hasAnyRole(['admin', 'operator', 'superadmin'])) {
+            if (!$user->hasAnyRole(['isp', 'operator', 'superadmin'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized',
@@ -164,7 +164,7 @@ class AutoDebitController extends Controller
             ->where('status', 'failed');
 
         // Filter by customer if not admin
-        if (! $user->hasAnyRole(['admin', 'super-admin'])) {
+        if (! $user->hasAnyRole(['isp', 'super-admin'])) {
             $query->whereHas('customer', function ($q) use ($user) {
                 $q->where('operator_id', $user->id);
             });

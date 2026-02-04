@@ -31,7 +31,7 @@ class IpPoolMigrationController extends Controller
             $query->where('tenant_id', auth()->user()->tenant_id);
         })->get();
 
-        return view('panels.admin.ip-pools.migrate', compact('pools', 'profiles'));
+        return view('panels.isp.ip-pools.migrate', compact('pools', 'profiles'));
     }
 
     /**

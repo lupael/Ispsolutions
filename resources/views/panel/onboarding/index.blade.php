@@ -91,7 +91,7 @@
                 </div>
 
                 <div class="text-center mt-5">
-                    <a href="{{ route('panel.admin.dashboard') }}" class="btn btn-lg btn-success">
+                    <a href="{{ route('panel.isp.dashboard') }}" class="btn btn-lg btn-success">
                         Go to Dashboard
                         <i class="ki-duotone ki-arrow-right fs-3 ms-2">
                             <span class="path1"></span>

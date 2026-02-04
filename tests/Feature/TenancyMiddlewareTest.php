@@ -87,7 +87,7 @@ class TenancyMiddlewareTest extends TestCase
     public function test_middleware_allows_panel_routes_without_tenant(): void
     {
         $panelRoutes = [
-            'http://unknown.com/panel/admin/dashboard',
+            'http://unknown.com/panel/isp/dashboard',
             'http://unknown.com/panel/operator/dashboard',
             'http://unknown.com/panel/manager/dashboard',
         ];
@@ -114,7 +114,7 @@ class TenancyMiddlewareTest extends TestCase
         ]);
 
         $panelRoutes = [
-            'http://test-isp.com/panel/admin/dashboard',
+            'http://test-isp.com/panel/isp/dashboard',
             'http://test-isp.com/panel/operator/dashboard',
             'http://test-isp.com/panel/manager/dashboard',
         ];
@@ -159,7 +159,7 @@ class TenancyMiddlewareTest extends TestCase
         ]);
 
         // Panel routes should work even with inactive tenant (tenant won't be resolved)
-        $request = Request::create('http://inactive-isp.com/panel/admin/dashboard', 'GET');
+        $request = Request::create('http://inactive-isp.com/panel/isp/dashboard', 'GET');
         $middleware = new ResolveTenant($this->tenancyService);
 
         $response = $middleware->handle($request, function ($req) {
@@ -183,7 +183,7 @@ class TenancyMiddlewareTest extends TestCase
         ]);
 
         // Request from unknown domain but with authenticated user
-        $request = Request::create('http://unknown.com/panel/admin/dashboard', 'GET');
+        $request = Request::create('http://unknown.com/panel/isp/dashboard', 'GET');
         $request->setUserResolver(function () use ($user) {
             return $user;
         });

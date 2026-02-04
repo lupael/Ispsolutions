@@ -16,7 +16,7 @@ class SmsGatewayController extends Controller
     {
         $gateways = SmsGateway::latest()->paginate(15);
 
-        return view('panels.admin.sms.gateways.index', compact('gateways'));
+        return view('panels.isp.sms.gateways.index', compact('gateways'));
     }
 
     /**
@@ -24,7 +24,7 @@ class SmsGatewayController extends Controller
      */
     public function create()
     {
-        return view('panels.admin.sms.gateways.create');
+        return view('panels.isp.sms.gateways.create');
     }
 
     /**
@@ -48,7 +48,7 @@ class SmsGatewayController extends Controller
 
         $gateway = SmsGateway::create($validated);
 
-        return redirect()->route('panel.admin.sms.gateways.index')
+        return redirect()->route('panel.isp.sms.gateways.index')
             ->with('success', 'SMS Gateway created successfully.');
     }
 
@@ -57,7 +57,7 @@ class SmsGatewayController extends Controller
      */
     public function show(SmsGateway $gateway)
     {
-        return view('panels.admin.sms.gateways.show', compact('gateway'));
+        return view('panels.isp.sms.gateways.show', compact('gateway'));
     }
 
     /**
@@ -65,7 +65,7 @@ class SmsGatewayController extends Controller
      */
     public function edit(SmsGateway $gateway)
     {
-        return view('panels.admin.sms.gateways.edit', compact('gateway'));
+        return view('panels.isp.sms.gateways.edit', compact('gateway'));
     }
 
     /**
@@ -120,7 +120,7 @@ class SmsGatewayController extends Controller
 
         $gateway->update($validated);
 
-        return redirect()->route('panel.admin.sms.gateways.index')
+        return redirect()->route('panel.isp.sms.gateways.index')
             ->with('success', 'SMS Gateway updated successfully.');
     }
 
@@ -131,7 +131,7 @@ class SmsGatewayController extends Controller
     {
         $gateway->delete();
 
-        return redirect()->route('panel.admin.sms.gateways.index')
+        return redirect()->route('panel.isp.sms.gateways.index')
             ->with('success', 'SMS Gateway deleted successfully.');
     }
 
@@ -175,7 +175,7 @@ class SmsGatewayController extends Controller
         SmsGateway::where('is_default', true)->update(['is_default' => false]);
         $gateway->update(['is_default' => true, 'is_active' => true]);
 
-        return redirect()->route('panel.admin.sms.gateways.index')
+        return redirect()->route('panel.isp.sms.gateways.index')
             ->with('success', 'Gateway set as default successfully.');
     }
 }

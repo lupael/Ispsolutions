@@ -23,7 +23,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('panel.admin.backup-settings.update') }}" method="POST">
+            <form action="{{ route('panel.isp.backup-settings.update') }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="d-flex justify-content-end">
-                    <a href="{{ route('panel.admin.dashboard') }}" class="btn btn-light me-3">Cancel</a>
+                    <a href="{{ route('panel.isp.dashboard') }}" class="btn btn-light me-3">Cancel</a>
                     <button type="submit" class="btn btn-primary">
                         <i class="ki-duotone ki-check fs-2">
                             <span class="path1"></span>

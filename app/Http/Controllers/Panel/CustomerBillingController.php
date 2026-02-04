@@ -32,7 +32,7 @@ class CustomerBillingController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('panels.admin.customers.billing.generate-bill', compact('customer', 'packages'));
+        return view('panels.isp.customers.billing.generate-bill', compact('customer', 'packages'));
     }
 
     /**
@@ -87,7 +87,7 @@ class CustomerBillingController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('panel.admin.customers.show', $customer->id)
+                ->route('panel.isp.customers.show', $customer->id)
                 ->with('success', "Invoice #{$invoice->invoice_number} generated successfully.");
         } catch (\Exception $e) {
             DB::rollBack();
@@ -104,7 +104,7 @@ class CustomerBillingController extends Controller
     {
         $this->authorize('editBillingProfile', $customer);
 
-        return view('panels.admin.customers.billing.edit-profile', compact('customer'));
+        return view('panels.isp.customers.billing.edit-profile', compact('customer'));
     }
 
     /**
@@ -146,7 +146,7 @@ class CustomerBillingController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('panel.admin.customers.show', $customer->id)
+                ->route('panel.isp.customers.show', $customer->id)
                 ->with('success', 'Billing profile updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -163,7 +163,7 @@ class CustomerBillingController extends Controller
     {
         $this->authorize('advancePayment', $customer);
 
-        return view('panels.admin.customers.billing.other-payment', compact('customer'));
+        return view('panels.isp.customers.billing.other-payment', compact('customer'));
     }
 
     /**
@@ -210,7 +210,7 @@ class CustomerBillingController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('panel.admin.customers.show', $customer->id)
+                ->route('panel.isp.customers.show', $customer->id)
                 ->with('success', "Payment recorded successfully. Reference: {$payment->payment_number}");
         } catch (\Exception $e) {
             DB::rollBack();

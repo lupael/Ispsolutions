@@ -16,7 +16,7 @@ use Illuminate\View\View;
 
 /**
  * Master Package Controller
- * 
+ *
  * Handles CRUD operations for master packages
  * Accessible by developer, super-admin, and admin roles
  */
@@ -27,8 +27,8 @@ class MasterPackageController extends Controller
      */
     protected function getRoutePrefix(): string
     {
-        return $this->isAdminContext() 
-            ? 'panel.admin.master-packages' 
+        return $this->isAdminContext()
+            ? 'panel.isp.master-packages'
             : 'panel.developer.master-packages';
     }
 
@@ -38,7 +38,7 @@ class MasterPackageController extends Controller
     protected function getViewPrefix(): string
     {
         return $this->isAdminContext()
-            ? 'panels.admin.master-packages'
+            ? 'panels.isp.master-packages'
             : 'panels.developer.master-packages';
     }
 
@@ -48,7 +48,7 @@ class MasterPackageController extends Controller
     protected function isAdminContext(): bool
     {
         $currentRouteName = request()->route()->getName();
-        return str_starts_with($currentRouteName, 'panel.admin.');
+        return str_starts_with($currentRouteName, 'panel.isp.');
     }
 
     /**
@@ -80,7 +80,7 @@ class MasterPackageController extends Controller
 
         // Filter by tenant for super-admin and admin
         $user = Auth::user();
-        if ($user->operator_level === User::OPERATOR_LEVEL_SUPER_ADMIN || $user->operator_level === User::OPERATOR_LEVEL_ADMIN) {
+        if ($user->operator_level === User::OPERATOR_LEVEL_SUPER_ADMIN || $user->operator_level === User::OPERATOR_LEVEL_ISP) {
             $query->where(function ($q) use ($user) {
                 $q->where('tenant_id', $user->tenant_id)
                   ->orWhereNull('tenant_id'); // Include global packages
@@ -126,12 +126,12 @@ class MasterPackageController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         // Set tenant_id based on user role
-        $validated['tenant_id'] = $user->operator_level === User::OPERATOR_LEVEL_SUPER_ADMIN 
-            ? $user->tenant_id 
+        $validated['tenant_id'] = $user->operator_level === User::OPERATOR_LEVEL_SUPER_ADMIN
+            ? $user->tenant_id
             : null;
-        
+
         $validated['created_by'] = $user->id;
         $validated['is_trial_package'] = $request->boolean('is_trial_package', false);
 
@@ -231,7 +231,7 @@ class MasterPackageController extends Controller
     {
         // Get operators (Admin, Operator, Sub-Operator)
         $operators = User::whereIn('operator_level', [
-            User::OPERATOR_LEVEL_ADMIN,
+            User::OPERATOR_LEVEL_ISP,
             User::OPERATOR_LEVEL_OPERATOR,
             User::OPERATOR_LEVEL_SUB_OPERATOR,
         ])->get();
@@ -280,7 +280,7 @@ class MasterPackageController extends Controller
         $lowMarginWarning = $margin < 10 ? 'Warning: Margin is below 10%' : null;
 
         $user = Auth::user();
-        
+
         OperatorPackageRate::create([
             'tenant_id' => $user->tenant_id,
             'operator_id' => $validated['operator_id'],
@@ -341,10 +341,10 @@ class MasterPackageController extends Controller
                     return $rate->operator !== null;
                 })
                 ->map(function ($rate) use ($masterPackage) {
-                    $margin = $masterPackage->base_price > 0 
-                        ? (($rate->operator_price - $masterPackage->base_price) / $masterPackage->base_price) * 100 
+                    $margin = $masterPackage->base_price > 0
+                        ? (($rate->operator_price - $masterPackage->base_price) / $masterPackage->base_price) * 100
                         : 0;
-                    
+
                     return [
                         'operator' => $rate->operator->name,
                         'price' => $rate->operator_price,
@@ -364,14 +364,14 @@ class MasterPackageController extends Controller
     public function hierarchy(Request $request): View
     {
         $hierarchyService = app(\App\Services\PackageHierarchyService::class);
-        
+
         // Build package tree
         $packages = Package::with(['users', 'parentPackage', 'childPackages'])
             ->orderBy('price', 'asc')
             ->get();
-        
+
         $packageTree = $hierarchyService->buildTree($packages);
-        
+
         return view($this->getViewPrefix() . '.hierarchy', compact('packageTree'));
     }
 
@@ -382,21 +382,21 @@ class MasterPackageController extends Controller
     {
         // Get package IDs from query string
         $packageIds = $request->input('packages', []);
-        
+
         if (is_string($packageIds)) {
             $packageIds = explode(',', $packageIds);
         }
-        
+
         // Load packages for comparison (max 4)
         $packages = Package::whereIn('id', $packageIds)
             ->take(4)
             ->get();
-        
+
         // Get all packages for selection
         $allPackages = Package::where('status', 'active')
             ->orderBy('price', 'asc')
             ->get();
-        
+
         return view($this->getViewPrefix() . '.comparison', compact('packages', 'allPackages'));
     }
 }

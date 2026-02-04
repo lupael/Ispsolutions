@@ -62,7 +62,7 @@ class NasControllerTest extends TestCase
         $response = $this->get(route('panel.isp.network.nas'));
 
         $response->assertOk();
-        $response->assertViewIs('panels.admin.nas.index');
+        $response->assertViewIs('panels.isp.nas.index');
         $response->assertViewHas('devices');
     }
 

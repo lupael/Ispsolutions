@@ -11,7 +11,7 @@ class StoreNetworkUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasAnyRole(['super-admin', 'admin', 'manager', 'staff', 'operator', 'sub-operator']);
+        return $this->user()->hasAnyRole(['super-admin', 'isp', 'manager', 'staff', 'operator', 'sub-operator']);
     }
 
     /**
@@ -27,13 +27,13 @@ class StoreNetworkUserRequest extends FormRequest
             'password' => 'required|string|min:6',
             'package_id' => 'required|exists:packages,id',
             'service_type' => 'required|in:pppoe,hotspot,static_ip',
-            
+
             // Customer information fields (mapped to User model)
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'required|email|max:255|unique:users,email',
             'customer_phone' => 'required|string|max:20',
             'customer_address' => 'nullable|string|max:500',
-            
+
             // Network service fields
             'installation_address' => 'nullable|string|max:500',
             'ip_address' => 'nullable|ip',
@@ -73,14 +73,14 @@ class StoreNetworkUserRequest extends FormRequest
      * Transform the validated data for use with User model.
      * Maps customer_* fields to standard User fields.
      *
-     * Note: Fields like customer_phone, customer_address, installation_address, 
+     * Note: Fields like customer_phone, customer_address, installation_address,
      * mikrotik_router_id, notes, and start_date are validated but not stored in users table.
-     * 
+     *
      * These fields should be:
      * 1. Stored in a related customer_details/customer_metadata table, or
      * 2. Handled by custom controller logic after user creation, or
      * 3. Stored in a JSON meta field on the User model if needed
-     * 
+     *
      * For now, access them via getAdditionalFields() method and handle in the controller.
      *
      * Security Note: radius_password is stored as plain-text for RADIUS compatibility.
@@ -93,36 +93,36 @@ class StoreNetworkUserRequest extends FormRequest
     public function transformForUserModel(): array
     {
         $validated = $this->validated();
-        
+
         return [
             // Map customer fields to User model fields
             'name' => $validated['customer_name'],
             'email' => $validated['customer_email'],
-            
+
             // Network authentication fields
             'username' => $validated['username'],
             'password' => $validated['password'], // Laravel will hash via User::casts()
             'radius_password' => $validated['password'], // Store plain for RADIUS
             'service_type' => $validated['service_type'],
             'service_package_id' => $validated['package_id'],
-            
+
             // Network service fields (from User migration)
             'ip_address' => $validated['ip_address'] ?? null,
             'mac_address' => $validated['mac_address'] ?? null,
             'expiry_date' => $validated['expiry_date'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
-            
+
             // Zone assignment (can be set by controller if needed based on business logic)
             // For example: based on area, router assignment, or package requirements
             'zone_id' => null,
-            
+
             // Set as customer (is_subscriber = true)
             'is_subscriber' => true,
             'operator_level' => null,
             'status' => ($validated['is_active'] ?? true) ? 'active' : 'inactive',
         ];
     }
-    
+
     /**
      * Get additional fields that are validated but not in User model.
      * These should be handled separately by the controller.
@@ -132,7 +132,7 @@ class StoreNetworkUserRequest extends FormRequest
     public function getAdditionalFields(): array
     {
         $validated = $this->validated();
-        
+
         return [
             'customer_phone' => $validated['customer_phone'],
             'customer_address' => $validated['customer_address'] ?? null,

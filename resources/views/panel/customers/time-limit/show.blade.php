@@ -14,7 +14,7 @@
                         Manage time restrictions for {{ $customer->name }} ({{ $customer->username }})
                     </p>
                 </div>
-                <a href="{{ route('panel.admin.customers.show', $customer->id) }}" 
+                <a href="{{ route('panel.isp.customers.show', $customer->id) }}" 
                    class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

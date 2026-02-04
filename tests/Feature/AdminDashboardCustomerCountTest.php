@@ -56,7 +56,7 @@ class AdminDashboardCustomerCountTest extends TestCase
         $subscriberCustomer->assignRole('customer');
 
         // Visit admin dashboard
-        $response = $this->get(route('panel.admin.dashboard'));
+        $response = $this->get(route('panel.isp.dashboard'));
 
         // Assert response is OK
         $response->assertOk();
@@ -99,11 +99,11 @@ class AdminDashboardCustomerCountTest extends TestCase
         $nonSubscriber->assignRole('customer');
 
         // Visit dashboard
-        $dashboardResponse = $this->get(route('panel.admin.dashboard'));
+        $dashboardResponse = $this->get(route('panel.isp.dashboard'));
         $dashboardResponse->assertOk();
 
         // Visit customer list
-        $customersResponse = $this->get(route('panel.admin.customers.index'));
+        $customersResponse = $this->get(route('panel.isp.customers.index'));
         $customersResponse->assertOk();
 
         // Extract stats from dashboard

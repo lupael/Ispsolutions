@@ -28,7 +28,7 @@ class RoleLabelSettingController extends Controller
             ->get()
             ->keyBy('role_slug');
 
-        return view('panels.admin.settings.role-labels', compact('customizableRoles', 'settings'));
+        return view('panels.isp.settings.role-labels', compact('customizableRoles', 'settings'));
     }
 
     /**

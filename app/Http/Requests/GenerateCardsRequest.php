@@ -8,7 +8,7 @@ class GenerateCardsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasRole('admin') || auth()->user()->hasRole('super-admin');
+        return auth()->user()->hasRole('isp') || auth()->user()->hasRole('super-admin');
     }
 
     public function rules(): array

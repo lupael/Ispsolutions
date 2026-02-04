@@ -23,7 +23,7 @@ class VpnController extends Controller
         $stats = $this->vpnService->getDashboardStats();
         $serverHealth = $this->vpnService->monitorServerHealth();
 
-        return view('panels.admin.vpn.dashboard', compact('stats', 'serverHealth'));
+        return view('panels.isp.vpn.dashboard', compact('stats', 'serverHealth'));
     }
 
     /**
@@ -57,7 +57,7 @@ class VpnController extends Controller
         $accounts = $query->latest()->paginate(20);
         $pools = VpnPool::where('tenant_id', auth()->user()->tenant_id)->get();
 
-        return view('panels.admin.vpn.index', compact('accounts', 'pools'));
+        return view('panels.isp.vpn.index', compact('accounts', 'pools'));
     }
 
     /**
@@ -76,7 +76,7 @@ class VpnController extends Controller
         $usageReport = $this->vpnService->generateUsageReport($startDate, $endDate);
         $protocolReport = $this->vpnService->generateProtocolReport($startDate, $endDate);
 
-        return view('panels.admin.vpn.reports', compact('usageReport', 'protocolReport', 'startDate', 'endDate'));
+        return view('panels.isp.vpn.reports', compact('usageReport', 'protocolReport', 'startDate', 'endDate'));
     }
 
     /**

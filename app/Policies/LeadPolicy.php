@@ -12,7 +12,7 @@ class LeadPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['super-admin', 'admin', 'sales-manager', 'manager']);
+        return $user->hasAnyRole(['super-admin', 'isp', 'sales-manager', 'manager']);
     }
 
     /**
@@ -26,7 +26,7 @@ class LeadPolicy
         }
 
         // Admin and sales manager can view leads within their tenant
-        if ($user->hasAnyRole(['admin', 'sales-manager', 'manager']) && $user->tenant_id === $lead->tenant_id) {
+        if ($user->hasAnyRole(['isp', 'sales-manager', 'manager']) && $user->tenant_id === $lead->tenant_id) {
             return true;
         }
 
@@ -38,7 +38,7 @@ class LeadPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['super-admin', 'admin', 'sales-manager', 'manager']);
+        return $user->hasAnyRole(['super-admin', 'isp', 'sales-manager', 'manager']);
     }
 
     /**
@@ -52,7 +52,7 @@ class LeadPolicy
         }
 
         // Admin and sales manager can update leads within their tenant
-        if ($user->hasAnyRole(['admin', 'sales-manager', 'manager'])) {
+        if ($user->hasAnyRole(['isp', 'sales-manager', 'manager'])) {
             return $user->tenant_id === $lead->tenant_id;
         }
 
@@ -65,7 +65,7 @@ class LeadPolicy
     public function delete(User $user, Lead $lead): bool
     {
         // Only super-admin and admin can delete leads
-        return $user->hasAnyRole(['super-admin', 'admin']) &&
+        return $user->hasAnyRole(['super-admin', 'isp']) &&
                ($user->tenant_id === $lead->tenant_id || $user->hasRole('super-admin'));
     }
 
@@ -80,7 +80,7 @@ class LeadPolicy
         }
 
         // Admin and sales manager can convert leads within their tenant
-        if ($user->hasAnyRole(['admin', 'sales-manager', 'manager'])) {
+        if ($user->hasAnyRole(['isp', 'sales-manager', 'manager'])) {
             return $user->tenant_id === $lead->tenant_id && !$lead->isConverted();
         }
 

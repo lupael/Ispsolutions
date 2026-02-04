@@ -25,7 +25,7 @@ class ZoneController extends Controller
             ->orderBy('name')
             ->paginate(20);
 
-        return view('panels.admin.zones.index', compact('zones'));
+        return view('panels.isp.zones.index', compact('zones'));
     }
 
     /**
@@ -40,7 +40,7 @@ class ZoneController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('panels.admin.zones.create', compact('parentZones'));
+        return view('panels.isp.zones.create', compact('parentZones'));
     }
 
     /**
@@ -80,7 +80,7 @@ class ZoneController extends Controller
         Zone::create($validated);
 
         return redirect()
-            ->route('panel.admin.zones.index')
+            ->route('panel.isp.zones.index')
             ->with('success', 'Zone created successfully.');
     }
 
@@ -107,7 +107,7 @@ class ZoneController extends Controller
             return ! $this->isDescendant($zone, $parentZone);
         });
 
-        return view('panels.admin.zones.edit', compact('zone', 'parentZones'));
+        return view('panels.isp.zones.edit', compact('zone', 'parentZones'));
     }
 
     /**
@@ -185,7 +185,7 @@ class ZoneController extends Controller
         $zone->update($validated);
 
         return redirect()
-            ->route('panel.admin.zones.index')
+            ->route('panel.isp.zones.index')
             ->with('success', 'Zone updated successfully.');
     }
 
@@ -231,21 +231,21 @@ class ZoneController extends Controller
 
         if ($customerCount > 0) {
             return redirect()
-                ->route('panel.admin.zones.index')
+                ->route('panel.isp.zones.index')
                 ->with('error', "Cannot delete zone with {$customerCount} customers. Please reassign customers first.");
         }
 
         // Check if zone has children
         if ($zone->children()->count() > 0) {
             return redirect()
-                ->route('panel.admin.zones.index')
+                ->route('panel.isp.zones.index')
                 ->with('error', 'Cannot delete zone with child zones. Please delete or reassign child zones first.');
         }
 
         $zone->delete();
 
         return redirect()
-            ->route('panel.admin.zones.index')
+            ->route('panel.isp.zones.index')
             ->with('success', 'Zone deleted successfully.');
     }
 
@@ -271,7 +271,7 @@ class ZoneController extends Controller
             'child_zones' => $zone->children()->count(),
         ];
 
-        return view('panels.admin.zones.show', compact('zone', 'stats'));
+        return view('panels.isp.zones.show', compact('zone', 'stats'));
     }
 
     /**
@@ -305,7 +305,7 @@ class ZoneController extends Controller
             'active_network_users' => $zones->sum('active_network_users_count'),
         ];
 
-        return view('panels.admin.zones.report', compact('zones', 'totalStats'));
+        return view('panels.isp.zones.report', compact('zones', 'totalStats'));
     }
 
     /**

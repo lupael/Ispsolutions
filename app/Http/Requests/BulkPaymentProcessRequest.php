@@ -11,7 +11,7 @@ class BulkPaymentProcessRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasAnyRole(['superadmin', 'admin', 'manager', 'accountant']);
+        return $this->user()->hasAnyRole(['superadmin', 'isp', 'manager', 'accountant']);
     }
 
     /**

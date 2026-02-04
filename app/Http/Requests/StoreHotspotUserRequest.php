@@ -11,7 +11,7 @@ class StoreHotspotUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasAnyRole(['super-admin', 'admin', 'manager', 'staff', 'operator', 'sub-operator']);
+        return $this->user()->hasAnyRole(['super-admin', 'isp', 'manager', 'staff', 'operator', 'sub-operator']);
     }
 
     /**

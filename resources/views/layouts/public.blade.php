@@ -32,7 +32,7 @@
                             $user = auth()->user();
                             $roleRoutes = [
                                 'super-admin' => 'panel.super-admin.dashboard',
-                                'admin' => 'panel.admin.dashboard',
+                                'admin' => 'panel.isp.dashboard',
                                 'developer' => 'panel.developer.dashboard',
                                 'manager' => 'panel.manager.dashboard',
                                 'operator' => 'panel.operator.dashboard',

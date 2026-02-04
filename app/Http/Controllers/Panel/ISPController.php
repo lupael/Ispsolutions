@@ -31,6 +31,7 @@ use App\Services\AuditLogService;
 use App\Services\CustomerCacheService;
 use App\Services\CustomerFilterService;
 use App\Services\ExcelExportService;
+use App\Services\MikrotikImportService;
 use App\Services\MikrotikService;
 use App\Services\NotificationService;
 use App\Services\PdfExportService;
@@ -607,7 +608,7 @@ class ISPController extends Controller
             'total' => NetworkUser::where('tenant_id', $tenantId)->count(),
         ];
 
-        return view('panels.admin.network-users.index', compact('networkUsers', 'stats'));
+        return view('panels.isp.network-users.index', compact('networkUsers', 'stats'));
     }
     */
 
@@ -628,7 +629,7 @@ class ISPController extends Controller
         $packages = Package::where('tenant_id', $tenantId)->where('status', 'active')->get();
         $routers = MikrotikRouter::where('tenant_id', $tenantId)->where('status', 'active')->get();
 
-        return view('panels.admin.network-users.create', compact('customers', 'packages', 'routers'));
+        return view('panels.isp.network-users.create', compact('customers', 'packages', 'routers'));
     }
     */
 
@@ -701,7 +702,7 @@ class ISPController extends Controller
             }
         }
 
-        return redirect()->route('panel.admin.network-users')
+        return redirect()->route('panel.isp.network-users')
             ->with('success', 'Network user created successfully.');
     }
     */
@@ -715,7 +716,7 @@ class ISPController extends Controller
     {
         $networkUser = NetworkUser::with(['user', 'package'])->findOrFail($id);
 
-        return view('panels.admin.network-users.show', compact('networkUser'));
+        return view('panels.isp.network-users.show', compact('networkUser'));
     }
     */
 
@@ -733,7 +734,7 @@ class ISPController extends Controller
         $packages = Package::where('status', 'active')->get();
         $routers = MikrotikRouter::where('status', 'active')->get();
 
-        return view('panels.admin.network-users.edit', compact('networkUser', 'customers', 'packages', 'routers'));
+        return view('panels.isp.network-users.edit', compact('networkUser', 'customers', 'packages', 'routers'));
     }
     */
 
@@ -792,7 +793,7 @@ class ISPController extends Controller
             }
         }
 
-        return redirect()->route('panel.admin.network-users')
+        return redirect()->route('panel.isp.network-users')
             ->with('success', 'Network user updated successfully.');
     }
     */
@@ -807,7 +808,7 @@ class ISPController extends Controller
         $networkUser = NetworkUser::findOrFail($id);
         $networkUser->delete();
 
-        return redirect()->route('panel.admin.network-users')
+        return redirect()->route('panel.isp.network-users')
             ->with('success', 'Network user deleted successfully.');
     }
     */
@@ -821,7 +822,7 @@ class ISPController extends Controller
     {
         $routers = MikrotikRouter::where('status', 'active')->get();
 
-        return view('panels.admin.network-users.import', compact('routers'));
+        return view('panels.isp.network-users.import', compact('routers'));
     }
     */
 
@@ -846,7 +847,7 @@ class ISPController extends Controller
             $secrets = $mikrotikService->importSecrets($validated['router_id']);
 
             if (empty($secrets)) {
-                return redirect()->route('panel.admin.network-users.import')
+                return redirect()->route('panel.isp.network-users.import')
                     ->with('error', 'No users found on the selected router or unable to connect.');
             }
 
@@ -917,7 +918,7 @@ class ISPController extends Controller
                 $message .= ' Encountered ' . count($errors) . ' errors.';
             }
 
-            return redirect()->route('panel.admin.network-users')
+            return redirect()->route('panel.isp.network-users')
                 ->with('success', $message)
                 ->with('import_errors', $errors);
 
@@ -927,7 +928,7 @@ class ISPController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('panel.admin.network-users.import')
+            return redirect()->route('panel.isp.network-users.import')
                 ->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
@@ -940,7 +941,7 @@ class ISPController extends Controller
     {
         $packages = ServicePackage::paginate(20);
 
-        return view('panels.admin.packages.index', compact('packages'));
+        return view('panels.isp.packages.index', compact('packages'));
     }
 
     /**
@@ -950,7 +951,7 @@ class ISPController extends Controller
     {
         $profiles = MikrotikProfile::all();
 
-        return view('panels.admin.packages.create', compact('profiles'));
+        return view('panels.isp.packages.create', compact('profiles'));
     }
 
     /**
@@ -974,7 +975,7 @@ class ISPController extends Controller
         // Tenant ID is automatically set by BelongsToTenant trait
         ServicePackage::create($validated);
 
-        return redirect()->route('panel.admin.packages.index')
+        return redirect()->route('panel.isp.packages.index')
             ->with('success', 'Package created successfully.');
     }
 
@@ -986,7 +987,7 @@ class ISPController extends Controller
         // Find package within current tenant scope (automatically filtered by BelongsToTenant trait)
         $package = ServicePackage::findOrFail($id);
 
-        return view('panels.admin.packages.edit', compact('package'));
+        return view('panels.isp.packages.edit', compact('package'));
     }
 
     /**
@@ -1012,7 +1013,7 @@ class ISPController extends Controller
 
         $package->update($validated);
 
-        return redirect()->route('panel.admin.packages.index')
+        return redirect()->route('panel.isp.packages.index')
             ->with('success', 'Package updated successfully.');
     }
 
@@ -1025,7 +1026,7 @@ class ISPController extends Controller
         $package = ServicePackage::findOrFail($id);
         $package->delete();
 
-        return redirect()->route('panel.admin.packages.index')
+        return redirect()->route('panel.isp.packages.index')
             ->with('success', 'Package deleted successfully.');
     }
 
@@ -1034,7 +1035,7 @@ class ISPController extends Controller
      */
     public function settings(): View
     {
-        return view('panels.admin.settings');
+        return view('panels.isp.settings');
     }
 
     /**
@@ -1053,7 +1054,7 @@ class ISPController extends Controller
     {
         $devices = CiscoDevice::latest()->paginate(20);
 
-        return view('panels.admin.cisco.index', compact('devices'));
+        return view('panels.isp.cisco.index', compact('devices'));
     }
 
     /**
@@ -1131,7 +1132,7 @@ class ISPController extends Controller
             'filtered' => $total,
         ];
 
-        return view('panels.admin.customers.index', compact(
+        return view('panels.isp.customers.index', compact(
             'customers',
             'packages',
             'zones',
@@ -1149,7 +1150,7 @@ class ISPController extends Controller
     {
         $packages = ServicePackage::all();
 
-        return view('panels.admin.customers.create', compact('packages'));
+        return view('panels.isp.customers.create', compact('packages'));
     }
 
     /**
@@ -1212,7 +1213,7 @@ class ISPController extends Controller
                 \Cache::tags(['customers'])->flush();
             }
 
-            return redirect()->route('panel.admin.customers.index')
+            return redirect()->route('panel.isp.customers.index')
                 ->with('success', 'Customer created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1246,7 +1247,7 @@ class ISPController extends Controller
 
         $packages = ServicePackage::where('tenant_id', $tenantId)->get();
 
-        return view('panels.admin.customers.edit', compact('customer', 'packages'));
+        return view('panels.isp.customers.edit', compact('customer', 'packages'));
     }
 
     /**
@@ -1296,7 +1297,7 @@ class ISPController extends Controller
 
         $customer->update($updateData);
 
-        return redirect()->route('panel.admin.customers.show', $customer->id)
+        return redirect()->route('panel.isp.customers.show', $customer->id)
             ->with('success', 'Customer updated successfully.');
     }
 
@@ -1492,7 +1493,7 @@ class ISPController extends Controller
         $customer = NetworkUser::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
         $customer->delete();
 
-        return redirect()->route('panel.admin.customers.index')
+        return redirect()->route('panel.isp.customers.index')
             ->with('success', 'Customer deleted successfully.');
     }
 
@@ -1579,7 +1580,7 @@ class ISPController extends Controller
             ->limit(20)
             ->get();
 
-        return view('panels.admin.customers.show', compact(
+        return view('panels.isp.customers.show', compact(
             'customer',
             'onu',
             'packages',
@@ -1885,7 +1886,7 @@ class ISPController extends Controller
             ->latest('deleted_at')
             ->paginate(20);
 
-        return view('panels.admin.customers.deleted', compact('customers'));
+        return view('panels.isp.customers.deleted', compact('customers'));
     }
 
     /**
@@ -1901,7 +1902,7 @@ class ISPController extends Controller
 
         $customer->restore();
 
-        return redirect()->route('panel.admin.customers.deleted')
+        return redirect()->route('panel.isp.customers.deleted')
             ->with('success', 'Customer restored successfully.');
     }
 
@@ -1918,7 +1919,7 @@ class ISPController extends Controller
 
         $customer->forceDelete();
 
-        return redirect()->route('panel.admin.customers.deleted')
+        return redirect()->route('panel.isp.customers.deleted')
             ->with('success', 'Customer permanently deleted.');
     }
 
@@ -1934,7 +1935,7 @@ class ISPController extends Controller
             'sessions' => 0,
         ];
 
-        return view('panels.admin.customers.online', compact('customers', 'stats'));
+        return view('panels.isp.customers.online', compact('customers', 'stats'));
     }
 
     /**
@@ -1944,7 +1945,7 @@ class ISPController extends Controller
     {
         $customers = NetworkUser::with('package')->latest()->paginate(20);
 
-        return view('panels.admin.customers.offline', compact('customers'));
+        return view('panels.isp.customers.offline', compact('customers'));
     }
 
     /**
@@ -1963,7 +1964,7 @@ class ISPController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
-        return view('panels.admin.customers.import-requests', compact('importRequests'));
+        return view('panels.isp.customers.import-requests', compact('importRequests'));
     }
 
     /**
@@ -1974,7 +1975,50 @@ class ISPController extends Controller
         $routers = MikrotikRouter::all();
         $packages = ServicePackage::all();
 
-        return view('panels.admin.customers.pppoe-import', compact('routers', 'packages'));
+        return view('panels.isp.customers.pppoe-import', compact('routers', 'packages'));
+    }
+
+    /**
+     * Process PPPoE customer import from router (web form handler).
+     */
+    public function processPppoeCustomerImport(Request $request, MikrotikImportService $importService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'router_id' => 'required|exists:mikrotik_routers,id',
+            'package_id' => 'nullable|exists:service_packages,id',
+            'filter_disabled' => 'nullable|boolean',
+            'generate_bills' => 'nullable|boolean',
+        ]);
+
+        $options = [
+            'filter_disabled' => (bool) ($validated['filter_disabled'] ?? true),
+            'generate_bills' => (bool) ($validated['generate_bills'] ?? false),
+        ];
+
+        try {
+            $result = $importService->importPppSecrets((int) $validated['router_id'], $options);
+
+            if ($result['success']) {
+                $message = "Successfully imported {$result['imported']} customers.";
+                if (! empty($result['errors'])) {
+                    $message .= ' ' . count($result['errors']) . ' error(s): ' . implode('; ', array_slice($result['errors'], 0, 3));
+                }
+
+                return redirect()->route('panel.isp.customers.pppoe-import')
+                    ->with('success', $message);
+            }
+
+            return redirect()->route('panel.isp.customers.pppoe-import')
+                ->with('error', $result['errors'][0] ?? 'Import failed.');
+        } catch (\Exception $e) {
+            Log::error('PPPoE customer import failed', [
+                'router_id' => $validated['router_id'],
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('panel.isp.customers.pppoe-import')
+                ->with('error', 'Import failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -1984,7 +2028,7 @@ class ISPController extends Controller
     {
         $packages = ServicePackage::all();
 
-        return view('panels.admin.customers.bulk-update', compact('packages'));
+        return view('panels.isp.customers.bulk-update', compact('packages'));
     }
 
     /**
@@ -1992,7 +2036,7 @@ class ISPController extends Controller
      */
     public function accountTransactions(): View
     {
-        return view('panels.admin.accounting.transactions');
+        return view('panels.isp.accounting.transactions');
     }
 
     /**
@@ -2000,7 +2044,7 @@ class ISPController extends Controller
      */
     public function paymentGatewayTransactions(): View
     {
-        return view('panels.admin.accounting.payment-gateway-transactions');
+        return view('panels.isp.accounting.payment-gateway-transactions');
     }
 
     /**
@@ -2008,7 +2052,7 @@ class ISPController extends Controller
      */
     public function accountStatement(): View
     {
-        return view('panels.admin.accounting.statement');
+        return view('panels.isp.accounting.statement');
     }
 
     /**
@@ -2016,7 +2060,7 @@ class ISPController extends Controller
      */
     public function accountsPayable(): View
     {
-        return view('panels.admin.accounting.payable');
+        return view('panels.isp.accounting.payable');
     }
 
     /**
@@ -2024,7 +2068,7 @@ class ISPController extends Controller
      */
     public function accountsReceivable(): View
     {
-        return view('panels.admin.accounting.receivable');
+        return view('panels.isp.accounting.receivable');
     }
 
     /**
@@ -2032,7 +2076,7 @@ class ISPController extends Controller
      */
     public function incomeExpenseReport(): View
     {
-        return view('panels.admin.accounting.income-expense-report');
+        return view('panels.isp.accounting.income-expense-report');
     }
 
     /**
@@ -2040,7 +2084,7 @@ class ISPController extends Controller
      */
     public function expenseReport(): View
     {
-        return view('panels.admin.accounting.expense-report');
+        return view('panels.isp.accounting.expense-report');
     }
 
     /**
@@ -2048,7 +2092,7 @@ class ISPController extends Controller
      */
     public function expenses(): View
     {
-        return view('panels.admin.accounting.expenses');
+        return view('panels.isp.accounting.expenses');
     }
 
     /**
@@ -2056,7 +2100,7 @@ class ISPController extends Controller
      */
     public function vatCollections(): View
     {
-        return view('panels.admin.accounting.vat-collections');
+        return view('panels.isp.accounting.vat-collections');
     }
 
     /**
@@ -2119,7 +2163,7 @@ class ISPController extends Controller
             'pending_amount' => \App\Models\Payment::where('status', 'pending')->sum('amount'),
         ];
 
-        return view('panels.admin.accounting.customer-payments', compact('payments', 'stats'));
+        return view('panels.isp.accounting.customer-payments', compact('payments', 'stats'));
     }
 
     /**
@@ -2127,7 +2171,7 @@ class ISPController extends Controller
      */
     public function gatewayCustomerPayments(): View
     {
-        return view('panels.admin.accounting.gateway-customer-payments');
+        return view('panels.isp.accounting.gateway-customer-payments');
     }
 
     /**
@@ -2178,7 +2222,7 @@ class ISPController extends Controller
             })->count(),
         ];
 
-        return view('panels.admin.operators.index', compact('operators', 'stats'));
+        return view('panels.isp.operators.index', compact('operators', 'stats'));
     }
 
     /**
@@ -2186,7 +2230,7 @@ class ISPController extends Controller
      */
     public function operatorsCreate(): View
     {
-        return view('panels.admin.operators.create');
+        return view('panels.isp.operators.create');
     }
 
     /**
@@ -2196,7 +2240,7 @@ class ISPController extends Controller
     {
         $operator = User::with('roles')->findOrFail($id);
 
-        return view('panels.admin.operators.edit', compact('operator'));
+        return view('panels.isp.operators.edit', compact('operator'));
     }
 
     /**
@@ -2247,7 +2291,7 @@ class ISPController extends Controller
         // Assign operator role using the model method
         $user->assignRole('operator');
 
-        return redirect()->route('panel.admin.operators')
+        return redirect()->route('panel.isp.operators')
             ->with('success', 'Operator created successfully with all configurations.');
     }
 
@@ -2281,7 +2325,7 @@ class ISPController extends Controller
 
         $operator->update($updateData);
 
-        return redirect()->route('panel.admin.operators')
+        return redirect()->route('panel.isp.operators')
             ->with('success', 'Operator updated successfully.');
     }
 
@@ -2294,13 +2338,13 @@ class ISPController extends Controller
 
         // Prevent deleting own account
         if ($operator->id === auth()->id()) {
-            return redirect()->route('panel.admin.operators')
+            return redirect()->route('panel.isp.operators')
                 ->with('error', 'You cannot delete your own account.');
         }
 
         $operator->delete();
 
-        return redirect()->route('panel.admin.operators')
+        return redirect()->route('panel.isp.operators')
             ->with('success', 'Operator deleted successfully.');
     }
 
@@ -2325,7 +2369,7 @@ class ISPController extends Controller
             'avg_team_size' => 0,
         ];
 
-        return view('panels.admin.operators.sub-operators', compact('hierarchy', 'stats'));
+        return view('panels.isp.operators.sub-operators', compact('hierarchy', 'stats'));
     }
 
     /**
@@ -2351,7 +2395,7 @@ class ISPController extends Controller
             'departments' => 4,
         ];
 
-        return view('panels.admin.operators.staff', compact('staff', 'stats'));
+        return view('panels.isp.operators.staff', compact('staff', 'stats'));
     }
 
     /**
@@ -2368,7 +2412,7 @@ class ISPController extends Controller
             'days_active' => $operator->created_at->diffInDays(now()),
         ];
 
-        return view('panels.admin.operators.profile', compact('operator', 'stats'));
+        return view('panels.isp.operators.profile', compact('operator', 'stats'));
     }
 
     /**
@@ -2378,7 +2422,7 @@ class ISPController extends Controller
     {
         $operator = User::with('roles')->findOrFail($id);
 
-        return view('panels.admin.operators.special-permissions', compact('operator'));
+        return view('panels.isp.operators.special-permissions', compact('operator'));
     }
 
     /**
@@ -2398,7 +2442,7 @@ class ISPController extends Controller
         // Example: $operator->syncPermissions($validated['permissions'] ?? []);
 
         return redirect()
-            ->route('panel.admin.operators.special-permissions', $id)
+            ->route('panel.isp.operators.special-permissions', $id)
             ->with('success', 'Special permissions updated successfully.');
     }
 
@@ -2423,7 +2467,7 @@ class ISPController extends Controller
                 ->sum('amount'),
         ];
 
-        return view('panels.admin.payment-gateways.index', compact('gateways', 'stats'));
+        return view('panels.isp.payment-gateways.index', compact('gateways', 'stats'));
     }
 
     /**
@@ -2431,7 +2475,7 @@ class ISPController extends Controller
      */
     public function paymentGatewaysCreate(): View
     {
-        return view('panels.admin.payment-gateways.create');
+        return view('panels.isp.payment-gateways.create');
     }
 
     /**
@@ -2474,7 +2518,7 @@ class ISPController extends Controller
             'configuration' => $configuration,
         ]);
 
-        return redirect()->route('panel.admin.payment-gateways')
+        return redirect()->route('panel.isp.payment-gateways')
             ->with('success', 'Payment gateway configured successfully.');
     }
 
@@ -2492,7 +2536,7 @@ class ISPController extends Controller
             'warning' => 0,
         ];
 
-        return view('panels.admin.network.routers', compact('routers', 'stats'));
+        return view('panels.isp.network.routers', compact('routers', 'stats'));
     }
 
     /**
@@ -2500,7 +2544,7 @@ class ISPController extends Controller
      */
     public function routersCreate(): View
     {
-        return view('panels.admin.network.routers-create');
+        return view('panels.isp.network.routers-create');
     }
 
     /**
@@ -2606,7 +2650,7 @@ class ISPController extends Controller
 
             DB::commit();
 
-            return redirect()->route('panel.admin.network.routers')
+            return redirect()->route('panel.isp.network.routers')
                 ->with('success', 'Router and NAS entry created successfully!')
                 ->with('router_id', $router->id)
                 ->with('configure_prompt', 'Would you like to configure this router now for RADIUS integration and PPP profiles?');
@@ -2630,7 +2674,7 @@ class ISPController extends Controller
     {
         $router = MikrotikRouter::with('nas')->findOrFail($id);
 
-        return view('panels.admin.network.routers-edit', compact('router'));
+        return view('panels.isp.network.routers-edit', compact('router'));
     }
 
     /**
@@ -2714,7 +2758,7 @@ class ISPController extends Controller
 
             DB::commit();
 
-            return redirect()->route('panel.admin.network.routers')
+            return redirect()->route('panel.isp.network.routers')
                 ->with('success', 'Router and linked NAS entry updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -2737,7 +2781,7 @@ class ISPController extends Controller
         $router = MikrotikRouter::findOrFail($id);
         $router->delete();
 
-        return redirect()->route('panel.admin.network.routers')
+        return redirect()->route('panel.isp.network.routers')
             ->with('success', 'Router deleted successfully.');
     }
 
@@ -2755,7 +2799,7 @@ class ISPController extends Controller
             'online_onus' => 0,
         ];
 
-        return view('panels.admin.network.olt', compact('devices', 'stats'));
+        return view('panels.isp.network.olt', compact('devices', 'stats'));
     }
 
     /**
@@ -2763,7 +2807,7 @@ class ISPController extends Controller
      */
     public function oltCreate(): View
     {
-        return view('panels.admin.network.olt-create');
+        return view('panels.isp.network.olt-create');
     }
 
     /**
@@ -2771,7 +2815,7 @@ class ISPController extends Controller
      */
     public function oltDashboard(): View
     {
-        return view('panels.admin.olt.dashboard');
+        return view('panels.isp.olt.dashboard');
     }
 
     /**
@@ -2792,14 +2836,14 @@ class ISPController extends Controller
             'unknown' => $onus->whereNull('signal_rx')->count(),
         ];
 
-        return view('panels.admin.olt.details', compact('olt', 'onus', 'signalStats'));
+        return view('panels.isp.olt.details', compact('olt', 'onus', 'signalStats'));
     }
 
     public function oltMonitor(int $id): View
     {
         $olt = Olt::findOrFail($id);
 
-        return view('panels.admin.olt.monitor', compact('olt'));
+        return view('panels.isp.olt.monitor', compact('olt'));
     }
 
     /**
@@ -2809,7 +2853,7 @@ class ISPController extends Controller
     {
         $olt = Olt::findOrFail($id);
 
-        return view('panels.admin.olt.performance', compact('olt'));
+        return view('panels.isp.olt.performance', compact('olt'));
     }
 
     /**
@@ -2817,7 +2861,7 @@ class ISPController extends Controller
      */
     public function oltTemplates(): View
     {
-        return view('panels.admin.olt.templates');
+        return view('panels.isp.olt.templates');
     }
 
     /**
@@ -2825,7 +2869,7 @@ class ISPController extends Controller
      */
     public function oltSnmpTraps(): View
     {
-        return view('panels.admin.olt.snmp-traps');
+        return view('panels.isp.olt.snmp-traps');
     }
 
     /**
@@ -2833,7 +2877,7 @@ class ISPController extends Controller
      */
     public function oltFirmware(): View
     {
-        return view('panels.admin.olt.firmware');
+        return view('panels.isp.olt.firmware');
     }
 
     /**
@@ -2841,7 +2885,7 @@ class ISPController extends Controller
      */
     public function oltBackups(): View
     {
-        return view('panels.admin.olt.backups');
+        return view('panels.isp.olt.backups');
     }
 
     /**
@@ -2876,7 +2920,7 @@ class ISPController extends Controller
                         CiscoDevice::where('status', 'active')->count(),
         ];
 
-        return view('panels.admin.network.devices', compact('devices', 'stats'));
+        return view('panels.isp.network.devices', compact('devices', 'stats'));
     }
 
     /**
@@ -2924,7 +2968,7 @@ class ISPController extends Controller
             'alerts' => collect(), // Placeholder for future alert system implementation
         ];
 
-        return view('panels.admin.network.device-monitors', compact('monitors'));
+        return view('panels.isp.network.device-monitors', compact('monitors'));
     }
 
     /**
@@ -2997,7 +3041,7 @@ class ISPController extends Controller
             'critical' => $devices->where('status', 'critical')->count(),
         ];
 
-        return view('panels.admin.network.devices-map', compact('devices', 'stats'));
+        return view('panels.isp.network.devices-map', compact('devices', 'stats'));
     }
 
     /**
@@ -3019,7 +3063,7 @@ class ISPController extends Controller
             'pools' => $pools->total(),
         ];
 
-        return view('panels.admin.network.ipv4-pools', compact('pools', 'stats'));
+        return view('panels.isp.network.ipv4-pools', compact('pools', 'stats'));
     }
 
     /**
@@ -3027,7 +3071,7 @@ class ISPController extends Controller
      */
     public function ipv4PoolsCreate(): View
     {
-        return view('panels.admin.network.ipv4-pools-create');
+        return view('panels.isp.network.ipv4-pools-create');
     }
 
     /**
@@ -3064,7 +3108,7 @@ class ISPController extends Controller
             'status' => 'active',
         ]);
 
-        return redirect()->route('panel.admin.network.ipv4-pools')
+        return redirect()->route('panel.isp.network.ipv4-pools')
             ->with('success', 'IPv4 pool created successfully.');
     }
 
@@ -3077,7 +3121,7 @@ class ISPController extends Controller
         $tenantId = auth()->user()->tenant_id;
         $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
 
-        return view('panels.admin.network.ipv4-pools-edit', compact('pool'));
+        return view('panels.isp.network.ipv4-pools-edit', compact('pool'));
     }
 
     /**
@@ -3114,7 +3158,7 @@ class ISPController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        return redirect()->route('panel.admin.network.ipv4-pools')
+        return redirect()->route('panel.isp.network.ipv4-pools')
             ->with('success', 'IPv4 pool updated successfully.');
     }
 
@@ -3128,7 +3172,7 @@ class ISPController extends Controller
         $pool = IpPool::where('tenant_id', $tenantId)->findOrFail($id);
         $pool->delete();
 
-        return redirect()->route('panel.admin.network.ipv4-pools')
+        return redirect()->route('panel.isp.network.ipv4-pools')
             ->with('success', 'IPv4 pool deleted successfully.');
     }
 
@@ -3149,12 +3193,12 @@ class ISPController extends Controller
                 ->whereIn('id', $validated['ids'])
                 ->delete();
 
-            return redirect()->route('panel.admin.network.ipv4-pools')
+            return redirect()->route('panel.isp.network.ipv4-pools')
                 ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
         } catch (\Exception $e) {
             Log::error("Failed to bulk delete IP pools: " . $e->getMessage());
-            
-            return redirect()->route('panel.admin.network.ipv4-pools')
+
+            return redirect()->route('panel.isp.network.ipv4-pools')
                 ->with('error', 'Failed to delete IP pools. Please try again.');
         }
     }
@@ -3173,7 +3217,7 @@ class ISPController extends Controller
             'available' => 0, // Placeholder for calculating available IPs based on subnet capacity
         ];
 
-        return view('panels.admin.network.ipv6-pools', compact('pools', 'stats'));
+        return view('panels.isp.network.ipv6-pools', compact('pools', 'stats'));
     }
 
     /**
@@ -3181,7 +3225,7 @@ class ISPController extends Controller
      */
     public function ipv6PoolsCreate(): View
     {
-        return view('panels.admin.network.ipv6-pools-create');
+        return view('panels.isp.network.ipv6-pools-create');
     }
 
     /**
@@ -3216,7 +3260,7 @@ class ISPController extends Controller
             'status' => 'active',
         ]);
 
-        return redirect()->route('panel.admin.network.ipv6-pools')
+        return redirect()->route('panel.isp.network.ipv6-pools')
             ->with('success', 'IPv6 pool created successfully.');
     }
 
@@ -3227,7 +3271,7 @@ class ISPController extends Controller
     {
         $pool = IpPool::findOrFail($id);
 
-        return view('panels.admin.network.ipv6-pools-edit', compact('pool'));
+        return view('panels.isp.network.ipv6-pools-edit', compact('pool'));
     }
 
     /**
@@ -3262,7 +3306,7 @@ class ISPController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        return redirect()->route('panel.admin.network.ipv6-pools')
+        return redirect()->route('panel.isp.network.ipv6-pools')
             ->with('success', 'IPv6 pool updated successfully.');
     }
 
@@ -3274,7 +3318,7 @@ class ISPController extends Controller
         $pool = IpPool::findOrFail($id);
         $pool->delete();
 
-        return redirect()->route('panel.admin.network.ipv6-pools')
+        return redirect()->route('panel.isp.network.ipv6-pools')
             ->with('success', 'IPv6 pool deleted successfully.');
     }
 
@@ -3300,7 +3344,7 @@ class ISPController extends Controller
         $ipv4Pools = IpPool::where('tenant_id', $tenantId)->where('pool_type', 'ipv4')->where('status', 'active')->get();
         $ipv6Pools = IpPool::where('tenant_id', $tenantId)->where('pool_type', 'ipv6')->where('status', 'active')->get();
 
-        return view('panels.admin.network.pppoe-profiles', compact('profiles', 'stats', 'routers', 'ipv4Pools', 'ipv6Pools'));
+        return view('panels.isp.network.pppoe-profiles', compact('profiles', 'stats', 'routers', 'ipv4Pools', 'ipv6Pools'));
     }
 
     /**
@@ -3330,7 +3374,7 @@ class ISPController extends Controller
 
         MikrotikProfile::create($validated);
 
-        return redirect()->route('panel.admin.network.pppoe-profiles')
+        return redirect()->route('panel.isp.network.pppoe-profiles')
             ->with('success', 'PPPoE profile created successfully.');
     }
 
@@ -3381,7 +3425,7 @@ class ISPController extends Controller
 
         $profile->update($validated);
 
-        return redirect()->route('panel.admin.network.pppoe-profiles')
+        return redirect()->route('panel.isp.network.pppoe-profiles')
             ->with('success', 'PPPoE profile updated successfully.');
     }
 
@@ -3397,7 +3441,7 @@ class ISPController extends Controller
 
         $profile->delete();
 
-        return redirect()->route('panel.admin.network.pppoe-profiles')
+        return redirect()->route('panel.isp.network.pppoe-profiles')
             ->with('success', 'PPPoE profile deleted successfully.');
     }
 
@@ -3417,12 +3461,12 @@ class ISPController extends Controller
                 ->whereHas('router')
                 ->delete();
 
-            return redirect()->route('panel.admin.network.pppoe-profiles')
+            return redirect()->route('panel.isp.network.pppoe-profiles')
                 ->with('success', "{$deletedCount} PPPoE profile(s) deleted successfully.");
         } catch (\Exception $e) {
             Log::error("Failed to bulk delete PPPoE profiles: " . $e->getMessage());
-            
-            return redirect()->route('panel.admin.network.pppoe-profiles')
+
+            return redirect()->route('panel.isp.network.pppoe-profiles')
                 ->with('error', 'Failed to delete PPPoE profiles. Please try again.');
         }
     }
@@ -3434,7 +3478,7 @@ class ISPController extends Controller
     {
         $package = ServicePackage::findOrFail($id);
 
-        return view('panels.admin.network.package-fup-edit', compact('package'));
+        return view('panels.isp.network.package-fup-edit', compact('package'));
     }
 
     /**
@@ -3442,7 +3486,7 @@ class ISPController extends Controller
      */
     public function pingTest(): View
     {
-        return view('panels.admin.network.ping-test');
+        return view('panels.isp.network.ping-test');
     }
 
     /**
@@ -3450,7 +3494,7 @@ class ISPController extends Controller
      */
     public function smsSend(): View
     {
-        return view('panels.admin.sms.send');
+        return view('panels.isp.sms.send');
     }
 
     /**
@@ -3458,7 +3502,7 @@ class ISPController extends Controller
      */
     public function smsBroadcast(): View
     {
-        return view('panels.admin.sms.broadcast');
+        return view('panels.isp.sms.broadcast');
     }
 
     /**
@@ -3466,7 +3510,7 @@ class ISPController extends Controller
      */
     public function smsHistories(): View
     {
-        return view('panels.admin.sms.histories');
+        return view('panels.isp.sms.histories');
     }
 
     /**
@@ -3474,7 +3518,7 @@ class ISPController extends Controller
      */
     public function smsEvents(): View
     {
-        return view('panels.admin.sms.events');
+        return view('panels.isp.sms.events');
     }
 
     /**
@@ -3482,7 +3526,7 @@ class ISPController extends Controller
      */
     public function dueDateNotification(): View
     {
-        return view('panels.admin.sms.due-date-notification');
+        return view('panels.isp.sms.due-date-notification');
     }
 
     /**
@@ -3490,7 +3534,7 @@ class ISPController extends Controller
      */
     public function paymentLinkBroadcast(): View
     {
-        return view('panels.admin.sms.payment-link-broadcast');
+        return view('panels.isp.sms.payment-link-broadcast');
     }
 
     /**
@@ -3521,7 +3565,7 @@ class ISPController extends Controller
             'this_month' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->copy()->startOfMonth(), now()->copy()->endOfMonth()])->count(),
         ];
 
-        return view('panels.admin.logs.router', compact('logs', 'stats'));
+        return view('panels.isp.logs.router', compact('logs', 'stats'));
     }
 
     /**
@@ -3540,7 +3584,7 @@ class ISPController extends Controller
 
             // If no users with usernames, return empty results
             if (empty($tenantUsernames)) {
-                return view('panels.admin.logs.radius', [
+                return view('panels.isp.logs.radius', [
                     'logs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
                     'stats' => [
                         'total' => 0,
@@ -3581,7 +3625,7 @@ class ISPController extends Controller
             ];
         }
 
-        return view('panels.admin.logs.radius', compact('logs', 'stats'));
+        return view('panels.isp.logs.radius', compact('logs', 'stats'));
     }
 
     /**
@@ -3633,7 +3677,7 @@ class ISPController extends Controller
             'file_size' => file_exists($logFile) ? filesize($logFile) : 0,
         ];
 
-        return view('panels.admin.logs.scheduler', compact('logs', 'stats'));
+        return view('panels.isp.logs.scheduler', compact('logs', 'stats'));
     }
 
     /**
@@ -3670,7 +3714,7 @@ class ISPController extends Controller
             'this_month' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
         ];
 
-        return view('panels.admin.logs.activity', compact('logs', 'stats'));
+        return view('panels.isp.logs.activity', compact('logs', 'stats'));
     }
 
     /**
@@ -3728,7 +3772,7 @@ class ISPController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
-        return view('panels.admin.logs.laravel', compact('logs', 'stats'));
+        return view('panels.isp.logs.laravel', compact('logs', 'stats'));
     }
 
     /**
@@ -3749,7 +3793,7 @@ class ISPController extends Controller
 
             // If no users with usernames, return empty results
             if (empty($tenantUsernames)) {
-                return view('panels.admin.logs.ppp', [
+                return view('panels.isp.logs.ppp', [
                     'logs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
                     'stats' => [
                         'total' => 0,
@@ -3768,7 +3812,7 @@ class ISPController extends Controller
                 });
 
             // Additional filter by ownership for non-admin roles
-            if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+            if (! in_array($userRole, ['developer', 'super-admin', 'isp', 'manager'])) {
                 // For operators and staff, show only their assigned customers
                 if ($userRole === 'operator' || $userRole === 'staff') {
                     $customerIds = $user->customers()->pluck('id')->toArray();
@@ -3824,7 +3868,7 @@ class ISPController extends Controller
             session()->flash('error', 'RADIUS database table not found. Please ensure RADIUS is properly configured and migrations have been run.');
         }
 
-        return view('panels.admin.logs.ppp', compact('logs', 'stats'));
+        return view('panels.isp.logs.ppp', compact('logs', 'stats'));
     }
 
     /**
@@ -3845,7 +3889,7 @@ class ISPController extends Controller
 
             // If no users with usernames, return empty results
             if (empty($tenantUsernames)) {
-                return view('panels.admin.logs.hotspot', [
+                return view('panels.isp.logs.hotspot', [
                     'logs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50),
                     'stats' => [
                         'total' => 0,
@@ -3866,7 +3910,7 @@ class ISPController extends Controller
                 });
 
             // Additional filter by ownership for non-admin roles
-            if (! in_array($userRole, ['developer', 'super-admin', 'admin', 'manager'])) {
+            if (! in_array($userRole, ['developer', 'super-admin', 'isp', 'manager'])) {
                 // For operators and staff, show only their assigned customers
                 if ($userRole === 'operator' || $userRole === 'staff') {
                     $customerIds = $user->customers()->pluck('id')->toArray();
@@ -3922,7 +3966,7 @@ class ISPController extends Controller
             session()->flash('error', 'RADIUS database table not found. Please ensure RADIUS is properly configured and migrations have been run.');
         }
 
-        return view('panels.admin.logs.hotspot', compact('logs', 'stats'));
+        return view('panels.isp.logs.hotspot', compact('logs', 'stats'));
     }
 
     /**
@@ -4265,7 +4309,7 @@ class ISPController extends Controller
         $currentUser = auth()->user();
 
         // Only allow super-admins and admins to impersonate
-        if (! $currentUser->hasAnyRole(['super-admin', 'admin'])) {
+        if (! $currentUser->hasAnyRole(['super-admin', 'isp'])) {
             abort(403, 'Unauthorized to impersonate users.');
         }
 
@@ -4311,13 +4355,13 @@ class ISPController extends Controller
 
         if (method_exists($operator, 'hasRole')) {
             // Keep admins / super-admins on the admin dashboard
-            if ($operator->hasAnyRole(['super-admin', 'admin'])) {
-                $redirectRoute = 'panel.admin.dashboard';
+            if ($operator->hasAnyRole(['super-admin', 'isp'])) {
+                $redirectRoute = 'panel.isp.dashboard';
                 // Send operators to their own dashboard if route exists
             } elseif ($operator->hasRole('operator')) {
                 $redirectRoute = \Illuminate\Support\Facades\Route::has('panel.operator.dashboard')
                     ? 'panel.operator.dashboard'
-                    : 'panel.admin.dashboard';
+                    : 'panel.isp.dashboard';
             }
         }
 
@@ -4348,7 +4392,7 @@ class ISPController extends Controller
         $adminId = session('impersonate_by');
 
         if (! $adminId) {
-            return redirect()->route('panel.admin.dashboard')
+            return redirect()->route('panel.isp.dashboard')
                 ->with('error', 'No active impersonation session.');
         }
 
@@ -4358,13 +4402,13 @@ class ISPController extends Controller
 
         if (
             ! $admin ||
-            ! $admin->hasAnyRole(['super-admin', 'admin']) ||
+            ! $admin->hasAnyRole(['super-admin', 'isp']) ||
             ($currentUser && property_exists($currentUser, 'tenant_id') && $admin->tenant_id !== $currentUser->tenant_id)
         ) {
             // Clear impersonation data and do not restore an invalid or unauthorized admin account
             session()->forget(['impersonate_by', 'impersonate_at', 'impersonating', 'impersonated_user_name']);
 
-            return redirect()->route('panel.admin.dashboard')
+            return redirect()->route('panel.isp.dashboard')
                 ->with('error', 'Unable to restore the original admin account.');
         }
 
@@ -4373,7 +4417,7 @@ class ISPController extends Controller
 
         auth()->loginUsingId($admin->id);
 
-        return redirect()->route('panel.admin.dashboard')
+        return redirect()->route('panel.isp.dashboard')
             ->with('success', 'You are now logged back in as admin.');
     }
 
@@ -4386,7 +4430,7 @@ class ISPController extends Controller
             $query->where('slug', 'operator');
         })->latest()->paginate(20);
 
-        return view('panels.admin.operators.wallets', compact('operators'));
+        return view('panels.isp.operators.wallets', compact('operators'));
     }
 
     /**
@@ -4396,7 +4440,7 @@ class ISPController extends Controller
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
 
-        return view('panels.admin.operators.add-funds', compact('operator'));
+        return view('panels.isp.operators.add-funds', compact('operator'));
     }
 
     /**
@@ -4432,7 +4476,7 @@ class ISPController extends Controller
 
             DB::commit();
 
-            return redirect()->route('panel.admin.operators.wallets')
+            return redirect()->route('panel.isp.operators.wallets')
                 ->with('success', 'Funds added successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -4448,7 +4492,7 @@ class ISPController extends Controller
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
 
-        return view('panels.admin.operators.deduct-funds', compact('operator'));
+        return view('panels.isp.operators.deduct-funds', compact('operator'));
     }
 
     /**
@@ -4484,7 +4528,7 @@ class ISPController extends Controller
 
             DB::commit();
 
-            return redirect()->route('panel.admin.operators.wallets')
+            return redirect()->route('panel.isp.operators.wallets')
                 ->with('success', 'Funds deducted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -4505,7 +4549,7 @@ class ISPController extends Controller
             ->latest()
             ->paginate(50);
 
-        return view('panels.admin.operators.wallet-history', compact('operator', 'transactions'));
+        return view('panels.isp.operators.wallet-history', compact('operator', 'transactions'));
     }
 
     /**
@@ -4515,7 +4559,7 @@ class ISPController extends Controller
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
 
-        return view('panels.admin.operators.add-nttn-cost', compact('operator'));
+        return view('panels.isp.operators.add-nttn-cost', compact('operator'));
     }
 
     /**
@@ -4545,7 +4589,7 @@ class ISPController extends Controller
 
             DB::commit();
 
-            return redirect()->route('panel.admin.operators.cost-history', $operator->id)
+            return redirect()->route('panel.isp.operators.cost-history', $operator->id)
                 ->with('success', 'NTTN cost added successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -4561,7 +4605,7 @@ class ISPController extends Controller
     {
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
 
-        return view('panels.admin.operators.add-bandwidth-cost', compact('operator'));
+        return view('panels.isp.operators.add-bandwidth-cost', compact('operator'));
     }
 
     /**
@@ -4591,7 +4635,7 @@ class ISPController extends Controller
 
             DB::commit();
 
-            return redirect()->route('panel.admin.operators.cost-history', $operator->id)
+            return redirect()->route('panel.isp.operators.cost-history', $operator->id)
                 ->with('success', 'Bandwidth cost added successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -4620,7 +4664,7 @@ class ISPController extends Controller
             ->where('cost_type', 'bandwidth')
             ->sum('amount');
 
-        return view('panels.admin.operators.cost-history', compact('operator', 'costs', 'totalNttnCost', 'totalBandwidthCost'));
+        return view('panels.isp.operators.cost-history', compact('operator', 'costs', 'totalNttnCost', 'totalBandwidthCost'));
     }
 
     /**
@@ -4630,13 +4674,13 @@ class ISPController extends Controller
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         $operators = User::where('tenant_id', $tenantId)
             ->whereHas('roles', function ($query) {
                 $query->where('slug', 'operator');
             })->with('packageRates.package')->latest()->paginate(20);
 
-        return view('panels.admin.operators.package-rates', compact('operators'));
+        return view('panels.isp.operators.package-rates', compact('operators'));
     }
 
     /**
@@ -4646,7 +4690,7 @@ class ISPController extends Controller
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
@@ -4661,7 +4705,7 @@ class ISPController extends Controller
             ->pluck('package_id')
             ->toArray();
 
-        return view('panels.admin.operators.assign-package-rate', compact('operator', 'packages', 'existingRates'));
+        return view('panels.isp.operators.assign-package-rate', compact('operator', 'packages', 'existingRates'));
     }
 
     /**
@@ -4671,7 +4715,7 @@ class ISPController extends Controller
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
@@ -4705,7 +4749,7 @@ class ISPController extends Controller
             $validated
         );
 
-        return redirect()->route('panel.admin.operators.package-rates')
+        return redirect()->route('panel.isp.operators.package-rates')
             ->with('success', 'Package rate assigned successfully.');
     }
 
@@ -4716,7 +4760,7 @@ class ISPController extends Controller
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
@@ -4726,7 +4770,7 @@ class ISPController extends Controller
             ->where('tenant_id', $tenantId)
             ->delete();
 
-        return redirect()->route('panel.admin.operators.package-rates')
+        return redirect()->route('panel.isp.operators.package-rates')
             ->with('success', 'Package rate removed successfully.');
     }
 
@@ -4739,7 +4783,7 @@ class ISPController extends Controller
             $query->where('slug', 'operator');
         })->with('smsRate')->latest()->paginate(20);
 
-        return view('panels.admin.operators.sms-rates', compact('operators'));
+        return view('panels.isp.operators.sms-rates', compact('operators'));
     }
 
     /**
@@ -4751,7 +4795,7 @@ class ISPController extends Controller
 
         $smsRate = OperatorSmsRate::where('operator_id', $operator->id)->first();
 
-        return view('panels.admin.operators.assign-sms-rate', compact('operator', 'smsRate'));
+        return view('panels.isp.operators.assign-sms-rate', compact('operator', 'smsRate'));
     }
 
     /**
@@ -4774,7 +4818,7 @@ class ISPController extends Controller
             $validated
         );
 
-        return redirect()->route('panel.admin.operators.sms-rates')
+        return redirect()->route('panel.isp.operators.sms-rates')
             ->with('success', 'SMS rate assigned successfully.');
     }
 
@@ -4787,7 +4831,7 @@ class ISPController extends Controller
 
         OperatorSmsRate::where('operator_id', $operator->id)->delete();
 
-        return redirect()->route('panel.admin.operators.sms-rates')
+        return redirect()->route('panel.isp.operators.sms-rates')
             ->with('success', 'SMS rate removed successfully.');
     }
 
@@ -4802,7 +4846,7 @@ class ISPController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('panels.admin.nas.index', compact('devices'));
+        return view('panels.isp.nas.index', compact('devices'));
     }
 
     /**
@@ -4810,7 +4854,7 @@ class ISPController extends Controller
      */
     public function nasCreate(): View
     {
-        return view('panels.admin.nas.create');
+        return view('panels.isp.nas.create');
     }
 
     /**
@@ -4835,7 +4879,7 @@ class ISPController extends Controller
 
         Nas::create($validated);
 
-        return redirect()->route('panel.admin.network.nas')
+        return redirect()->route('panel.isp.network.nas')
             ->with('success', 'NAS device created successfully.');
     }
 
@@ -4846,7 +4890,7 @@ class ISPController extends Controller
     {
         $device = Nas::where('tenant_id', getCurrentTenantId())->findOrFail($id);
 
-        return view('panels.admin.nas.show', compact('device'));
+        return view('panels.isp.nas.show', compact('device'));
     }
 
     /**
@@ -4856,7 +4900,7 @@ class ISPController extends Controller
     {
         $device = Nas::where('tenant_id', getCurrentTenantId())->findOrFail($id);
 
-        return view('panels.admin.nas.edit', compact('device'));
+        return view('panels.isp.nas.edit', compact('device'));
     }
 
     /**
@@ -4886,7 +4930,7 @@ class ISPController extends Controller
 
         $device->update($validated);
 
-        return redirect()->route('panel.admin.network.nas')
+        return redirect()->route('panel.isp.network.nas')
             ->with('success', 'NAS device updated successfully.');
     }
 
@@ -4898,7 +4942,7 @@ class ISPController extends Controller
         $device = Nas::where('tenant_id', getCurrentTenantId())->findOrFail($id);
         $device->delete();
 
-        return redirect()->route('panel.admin.network.nas')
+        return redirect()->route('panel.isp.network.nas')
             ->with('success', 'NAS device deleted successfully.');
     }
 
@@ -4973,7 +5017,7 @@ class ISPController extends Controller
 
         Olt::create($validated);
 
-        return redirect()->route('panel.admin.network.olt')
+        return redirect()->route('panel.isp.network.olt')
             ->with('success', 'OLT device created successfully.');
     }
 
@@ -4984,7 +5028,7 @@ class ISPController extends Controller
     {
         $olt = Olt::where('tenant_id', getCurrentTenantId())->findOrFail($id);
 
-        return view('panels.admin.olt.show', compact('olt'));
+        return view('panels.isp.olt.show', compact('olt'));
     }
 
     /**
@@ -4994,7 +5038,7 @@ class ISPController extends Controller
     {
         $olt = Olt::where('tenant_id', getCurrentTenantId())->findOrFail($id);
 
-        return view('panels.admin.olt.edit', compact('olt'));
+        return view('panels.isp.olt.edit', compact('olt'));
     }
 
     /**
@@ -5039,7 +5083,7 @@ class ISPController extends Controller
 
         $olt->update($validated);
 
-        return redirect()->route('panel.admin.network.olt')
+        return redirect()->route('panel.isp.network.olt')
             ->with('success', 'OLT device updated successfully.');
     }
 
@@ -5051,7 +5095,7 @@ class ISPController extends Controller
         $olt = Olt::where('tenant_id', getCurrentTenantId())->findOrFail($id);
         $olt->delete();
 
-        return redirect()->route('panel.admin.network.olt')
+        return redirect()->route('panel.isp.network.olt')
             ->with('success', 'OLT device deleted successfully.');
     }
 
@@ -5145,7 +5189,7 @@ class ISPController extends Controller
                 ->count(),
         ];
 
-        return view('panels.admin.mikrotik.monitoring', compact('routers', 'stats'));
+        return view('panels.isp.mikrotik.monitoring', compact('routers', 'stats'));
     }
 
     /**
@@ -5169,7 +5213,7 @@ class ISPController extends Controller
             \Illuminate\Support\Facades\Log::debug('Could not fetch PPP active sessions for router details', ['id' => $id, 'error' => $e->getMessage()]);
         }
 
-        return view('panels.admin.mikrotik.details', compact('router', 'deviceMonitor', 'activeSessions'));
+        return view('panels.isp.mikrotik.details', compact('router', 'deviceMonitor', 'activeSessions'));
     }
 
     /**
@@ -5180,7 +5224,7 @@ class ISPController extends Controller
         $router = MikrotikRouter::where('tenant_id', getCurrentTenantId())
             ->findOrFail($id);
 
-        return view('panels.admin.mikrotik.monitor', compact('router'));
+        return view('panels.isp.mikrotik.monitor', compact('router'));
     }
 
     /**
@@ -5191,7 +5235,7 @@ class ISPController extends Controller
         $router = MikrotikRouter::where('tenant_id', getCurrentTenantId())
             ->findOrFail($id);
 
-        return view('panels.admin.mikrotik.configure', compact('router'));
+        return view('panels.isp.mikrotik.configure', compact('router'));
     }
 
     /**
@@ -5289,7 +5333,7 @@ class ISPController extends Controller
             'total_value' => \App\Models\RechargeCard::where('tenant_id', getCurrentTenantId())->where('status', 'active')->sum('denomination'),
         ];
 
-        return view('panels.admin.cards.index', compact('cards', 'stats'));
+        return view('panels.isp.cards.index', compact('cards', 'stats'));
     }
 
     /**
@@ -5303,7 +5347,7 @@ class ISPController extends Controller
             })
             ->get();
 
-        return view('panels.admin.cards.create', compact('operators'));
+        return view('panels.isp.cards.create', compact('operators'));
     }
 
     /**
@@ -5351,7 +5395,7 @@ class ISPController extends Controller
                 ->with('error', 'An error occurred while generating the cards. Please try again.');
         }
 
-        return redirect()->route('panel.admin.cards.index')
+        return redirect()->route('panel.isp.cards.index')
             ->with('success', count($cards) . ' cards generated successfully.');
     }
 
@@ -5377,7 +5421,7 @@ class ISPController extends Controller
         }
 
         if ($validated['format'] === 'pdf') {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('panels.admin.cards.export-pdf', compact('cards'));
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('panels.isp.cards.export-pdf', compact('cards'));
 
             return $pdf->download('recharge-cards-' . now()->format('Y-m-d') . '.pdf');
         } else {
@@ -5398,7 +5442,7 @@ class ISPController extends Controller
             ->with(['generatedBy', 'assignedTo', 'usedBy'])
             ->findOrFail($id);
 
-        return view('panels.admin.cards.show', compact('card'));
+        return view('panels.isp.cards.show', compact('card'));
     }
 
     /**
@@ -5433,7 +5477,7 @@ class ISPController extends Controller
             ->latest('used_at')
             ->paginate(20);
 
-        return view('panels.admin.cards.used-mapping', compact('usedCards'));
+        return view('panels.isp.cards.used-mapping', compact('usedCards'));
     }
 
     /**
@@ -5445,7 +5489,7 @@ class ISPController extends Controller
         $poolStats = $this->getPoolStats();
         $recentAllocations = $this->getRecentAllocations();
 
-        return view('panels.admin.network.ip-pool-analytics', compact('analytics', 'poolStats', 'recentAllocations'));
+        return view('panels.isp.network.ip-pool-analytics', compact('analytics', 'poolStats', 'recentAllocations'));
     }
 
     /**

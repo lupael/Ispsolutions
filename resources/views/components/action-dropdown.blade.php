@@ -43,7 +43,7 @@ $widthClasses = match($width) {
          style="display: none;">
         <div class="rounded-md ring-1 ring-black ring-opacity-5 {{ $contentClasses }}">
             <!-- View Details -->
-            <a href="{{ route('panel.admin.customers.show', $customer->id) }}" 
+            <a href="{{ route('panel.isp.customers.show', $customer->id) }}" 
                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                 <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -54,7 +54,7 @@ $widthClasses = match($width) {
 
             <!-- Edit -->
             @can('update', $customer)
-            <a href="{{ route('panel.admin.customers.edit', $customer->id) }}" 
+            <a href="{{ route('panel.isp.customers.edit', $customer->id) }}" 
                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                 <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -143,7 +143,7 @@ $widthClasses = match($width) {
 
             <!-- Delete -->
             @can('delete', $customer)
-            <form action="{{ route('panel.admin.customers.destroy', $customer->id) }}" 
+            <form action="{{ route('panel.isp.customers.destroy', $customer->id) }}" 
                   method="POST" 
                   class="w-full"
                   onsubmit="return confirm('Are you sure you want to delete this customer? This action cannot be undone.');">
@@ -168,7 +168,7 @@ $widthClasses = match($width) {
 function suspendCustomer(customerId) {
     if (!confirm('Are you sure you want to suspend this customer?')) return;
     
-    fetch(`/panel/admin/customers/${customerId}/suspend`, {
+    fetch(`/panel/isp/customers/${customerId}/suspend`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ function suspendCustomer(customerId) {
 function activateCustomer(customerId) {
     if (!confirm('Are you sure you want to activate this customer?')) return;
     
-    fetch(`/panel/admin/customers/${customerId}/activate`, {
+    fetch(`/panel/isp/customers/${customerId}/activate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -214,23 +214,23 @@ function activateCustomer(customerId) {
 }
 
 function changePackage(customerId) {
-    window.location.href = `/panel/admin/customers/${customerId}/change-package`;
+    window.location.href = `/panel/isp/customers/${customerId}/change-package`;
 }
 
 function rechargeCustomer(customerId) {
-    window.location.href = `/panel/admin/customers/${customerId}/recharge`;
+    window.location.href = `/panel/isp/customers/${customerId}/recharge`;
 }
 
 function viewUsage(customerId) {
-    window.location.href = `/panel/admin/customers/${customerId}/usage`;
+    window.location.href = `/panel/isp/customers/${customerId}/usage`;
 }
 
 function manageMacBinding(customerId) {
-    window.location.href = `/panel/admin/customers/${customerId}/mac-binding`;
+    window.location.href = `/panel/isp/customers/${customerId}/mac-binding`;
 }
 
 function sendSMS(customerId) {
-    window.location.href = `/panel/admin/customers/${customerId}/send-sms`;
+    window.location.href = `/panel/isp/customers/${customerId}/send-sms`;
 }
 </script>
 @endpush

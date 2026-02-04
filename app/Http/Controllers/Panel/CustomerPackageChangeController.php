@@ -48,7 +48,7 @@ class CustomerPackageChangeController extends Controller
         // Get upgrade options and recommendations
         $upgradeOptions = $this->upgradeService->getUpgradeOptions($customer);
 
-        return view('panels.admin.customers.change-package', compact(
+        return view('panels.isp.customers.change-package', compact(
             'customer',
             'packages',
             'networkUser',
@@ -162,7 +162,7 @@ class CustomerPackageChangeController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('panel.admin.customers.show', $customer->id)
+                ->route('panel.isp.customers.show', $customer->id)
                 ->with('success', 'Package changed successfully');
         } catch (\Exception $e) {
             DB::rollBack();

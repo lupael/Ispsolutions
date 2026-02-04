@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Store Operator Subscription Request
- * 
+ *
  * Validates operator subscription creation requests
  * Reference: REFERENCE_SYSTEM_QUICK_GUIDE.md - Phase 2: Subscription Payments
  */
@@ -20,7 +20,7 @@ class StoreOperatorSubscriptionRequest extends FormRequest
     public function authorize(): bool
     {
         // Only operators, sub-operators, and admins can create subscriptions
-        return $this->user()->hasAnyRole(['admin', 'operator', 'sub-operator', 'superadmin']);
+        return $this->user()->hasAnyRole(['isp', 'operator', 'sub-operator', 'superadmin']);
     }
 
     /**

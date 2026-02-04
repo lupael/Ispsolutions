@@ -30,7 +30,7 @@ class WalletController extends Controller
             abort(403);
         }
 
-        return view('panels.admin.wallet.adjust', compact('user'));
+        return view('panels.isp.wallet.adjust', compact('user'));
     }
 
     /**
@@ -78,6 +78,6 @@ class WalletController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('panels.admin.wallet.history', compact('user', 'transactions'));
+        return view('panels.isp.wallet.history', compact('user', 'transactions'));
     }
 }

@@ -61,7 +61,7 @@ class SpecialPermissionController extends Controller
 
         $availablePermissions = $this->permissionService->getAvailablePermissions();
 
-        return view('panels.admin.special-permissions.index', compact('permissions', 'users', 'availablePermissions'));
+        return view('panels.isp.special-permissions.index', compact('permissions', 'users', 'availablePermissions'));
     }
 
     /**
@@ -78,7 +78,7 @@ class SpecialPermissionController extends Controller
 
         $availablePermissions = $this->permissionService->getAvailablePermissions();
 
-        return view('panels.admin.special-permissions.create', compact('users', 'availablePermissions'));
+        return view('panels.isp.special-permissions.create', compact('users', 'availablePermissions'));
     }
 
     /**
@@ -110,7 +110,7 @@ class SpecialPermissionController extends Controller
             grantedBy: auth()->user()
         );
 
-        return redirect()->route('panel.admin.special-permissions.index')
+        return redirect()->route('panel.isp.special-permissions.index')
             ->with('success', 'Special permission granted successfully.');
     }
 
@@ -123,7 +123,7 @@ class SpecialPermissionController extends Controller
 
         $this->permissionService->revokePermission($specialPermission);
 
-        return redirect()->route('panel.admin.special-permissions.index')
+        return redirect()->route('panel.isp.special-permissions.index')
             ->with('success', 'Special permission revoked successfully.');
     }
 }

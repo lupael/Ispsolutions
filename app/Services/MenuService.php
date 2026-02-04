@@ -42,9 +42,9 @@ class MenuService
         elseif ($user->hasRole('super-admin')) {
             $menu = $this->getSuperAdminMenu();
         }
-        // Admin menu
-        elseif ($user->hasRole('admin')) {
-            $menu = $this->getAdminMenu();
+        // ISP menu
+        elseif ($user->hasRole('isp')) {
+            $menu = $this->getIspMenu();
         }
         // Manager menu
         elseif ($user->hasRole('manager')) {
@@ -197,63 +197,63 @@ class MenuService
     }
 
     /**
-     * Get Admin menu items.
+     * Get ISP menu items.
      */
-    protected function getAdminMenu(): array
+    protected function getIspMenu(): array
     {
         return [
             [
                 'title' => 'Dashboard',
                 'icon' => 'ki-home-3',
-                'route' => 'panel.admin.dashboard',
+                'route' => 'panel.isp.dashboard',
             ],
             [
                 'title' => 'Customers',
                 'icon' => 'ki-profile-user',
                 'children' => [
-                    ['title' => 'All Customers', 'route' => 'panel.admin.customers'],
-                    ['title' => 'Add Customer', 'route' => 'panel.admin.customers.create'],
-                    ['title' => 'Online Customers', 'route' => 'panel.admin.customers.online'],
-                    ['title' => 'Offline Customers', 'route' => 'panel.admin.customers.offline'],
+                    ['title' => 'All Customers', 'route' => 'panel.isp.customers.index'],
+                    ['title' => 'Add Customer', 'route' => 'panel.isp.customers.create'],
+                    ['title' => 'Online Customers', 'route' => 'panel.isp.customers.online'],
+                    ['title' => 'Offline Customers', 'route' => 'panel.isp.customers.offline'],
                 ],
             ],
             [
                 'title' => 'Network Management',
                 'icon' => 'ki-abstract-26',
                 'children' => [
-                    ['title' => 'Customers', 'route' => 'panel.admin.customers'],
-                    ['title' => 'MikroTik', 'route' => 'panel.admin.mikrotik'],
-                    ['title' => 'NAS Devices', 'route' => 'panel.admin.nas'],
-                    ['title' => 'OLT Devices', 'route' => 'panel.admin.olt'],
-                    ['title' => 'IP Pools', 'route' => 'panel.admin.network.ipv4-pools'],
+                    ['title' => 'Customers', 'route' => 'panel.isp.customers.index'],
+                    ['title' => 'MikroTik', 'route' => 'panel.isp.mikrotik'],
+                    ['title' => 'NAS Devices', 'route' => 'panel.isp.network.nas'],
+                    ['title' => 'OLT Devices', 'route' => 'panel.isp.network.olt'],
+                    ['title' => 'IP Pools', 'route' => 'panel.isp.network.ipv4-pools'],
                 ],
             ],
             [
                 'title' => 'Packages',
                 'icon' => 'ki-package',
-                'route' => 'panel.admin.packages',
+                'route' => 'panel.isp.packages.index',
             ],
             [
                 'title' => 'Billing',
                 'icon' => 'ki-bill',
                 'children' => [
-                    ['title' => 'Transactions', 'route' => 'panel.admin.accounting.transactions'],
-                    ['title' => 'Customer Payments', 'route' => 'panel.admin.accounting.customer-payments'],
-                    ['title' => 'Income/Expense', 'route' => 'panel.admin.accounting.income-expense-report'],
+                    ['title' => 'Transactions', 'route' => 'panel.isp.accounting.transactions'],
+                    ['title' => 'Customer Payments', 'route' => 'panel.isp.accounting.customer-payments'],
+                    ['title' => 'Income/Expense', 'route' => 'panel.isp.accounting.income-expense-report'],
                 ],
             ],
             [
                 'title' => 'SMS',
                 'icon' => 'ki-message-text-2',
                 'children' => [
-                    ['title' => 'Send SMS', 'route' => 'panel.admin.sms.send'],
-                    ['title' => 'SMS History', 'route' => 'panel.admin.sms.histories'],
+                    ['title' => 'Send SMS', 'route' => 'panel.isp.sms.send'],
+                    ['title' => 'SMS History', 'route' => 'panel.isp.sms.histories'],
                 ],
             ],
             [
                 'title' => 'Settings',
                 'icon' => 'ki-setting-2',
-                'route' => 'panel.admin.settings',
+                'route' => 'panel.isp.settings',
             ],
         ];
     }

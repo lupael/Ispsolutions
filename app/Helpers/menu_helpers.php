@@ -81,9 +81,12 @@ if (! function_exists('getSidebarMenu')) {
 
         $operatorType = $user->operator_type ?? 'customer';
 
-        // Backward compatibility: map group_admin to admin
+        // Backward compatibility: map group_admin to admin; admin and isp share ISP panel menu
         if ($operatorType === 'group_admin') {
             $operatorType = 'admin';
+        }
+        if (in_array($operatorType, ['admin', 'isp'], true)) {
+            $operatorType = 'admin'; // both use same sidebar config (panel.isp routes)
         }
 
         $allMenus = config("sidebars.{$operatorType}", []);
@@ -183,7 +186,7 @@ if (! function_exists('relativeTime')) {
 if (! function_exists('expiryText')) {
     /**
      * Get expiry status text with relative time ("Expires in 5 days")
-     * 
+     *
      * @param \Carbon\Carbon|string|null $expiryDate
      */
     function expiryText(\Carbon\Carbon|string|null $expiryDate, bool $short = false): string

@@ -12,7 +12,7 @@ class InvoicePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['super-admin', 'admin', 'manager', 'staff']);
+        return $user->hasAnyRole(['super-admin', 'isp', 'manager', 'staff']);
     }
 
     /**
@@ -21,7 +21,7 @@ class InvoicePolicy
     public function view(User $user, Invoice $invoice): bool
     {
         // Super admin and admin can view all invoices
-        if ($user->hasAnyRole(['super-admin', 'admin'])) {
+        if ($user->hasAnyRole(['super-admin', 'isp'])) {
             return true;
         }
 
@@ -51,7 +51,7 @@ class InvoicePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['super-admin', 'admin', 'manager']);
+        return $user->hasAnyRole(['super-admin', 'isp', 'manager']);
     }
 
     /**
@@ -60,7 +60,7 @@ class InvoicePolicy
     public function update(User $user, Invoice $invoice): bool
     {
         // Only admins and managers can update invoices
-        if ($user->hasAnyRole(['super-admin', 'admin', 'manager'])) {
+        if ($user->hasAnyRole(['super-admin', 'isp', 'manager'])) {
             return $user->tenant_id === $invoice->tenant_id || $user->hasRole('super-admin');
         }
 
@@ -73,7 +73,7 @@ class InvoicePolicy
     public function delete(User $user, Invoice $invoice): bool
     {
         // Only super-admin and admin can delete invoices
-        return $user->hasAnyRole(['super-admin', 'admin']) &&
+        return $user->hasAnyRole(['super-admin', 'isp']) &&
                ($user->tenant_id === $invoice->tenant_id || $user->hasRole('super-admin'));
     }
 
@@ -88,7 +88,7 @@ class InvoicePolicy
         }
 
         // Admins can pay any invoice in their tenant
-        if ($user->hasAnyRole(['super-admin', 'admin', 'manager']) &&
+        if ($user->hasAnyRole(['super-admin', 'isp', 'manager']) &&
             ($user->tenant_id === $invoice->tenant_id || $user->hasRole('super-admin'))) {
             return true;
         }
@@ -102,7 +102,7 @@ class InvoicePolicy
     public function recordPayment(User $user, Invoice $invoice): bool
     {
         // Only admins and managers can record manual payments
-        return $user->hasAnyRole(['super-admin', 'admin', 'manager']) &&
+        return $user->hasAnyRole(['super-admin', 'isp', 'manager']) &&
                ($user->tenant_id === $invoice->tenant_id || $user->hasRole('super-admin'));
     }
 }

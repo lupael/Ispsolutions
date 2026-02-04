@@ -72,16 +72,16 @@ return [
             'key' => 'dashboard',
             'label' => 'Dashboard',
             'icon' => 'bi-speedometer2',
-            'route' => 'panel.admin.dashboard',
+            'route' => 'panel.isp.dashboard',
         ],
         [
             'key' => 'operators_managers',
             'label' => 'Operators & Managers',
             'icon' => 'bi-people-fill',
             'children' => [
-                ['label' => 'Operators', 'route' => 'panel.admin.operators.index'],
-                ['label' => 'Sub-Operators', 'route' => 'panel.admin.operators.sub-operators'],
-                ['label' => 'Managers', 'route' => 'panel.admin.operators.staff'],
+                ['label' => 'Operators', 'route' => 'panel.isp.operators.index'],
+                ['label' => 'Sub-Operators', 'route' => 'panel.isp.operators.sub-operators'],
+                ['label' => 'Managers', 'route' => 'panel.isp.operators.staff'],
             ],
         ],
         [
@@ -89,9 +89,9 @@ return [
             'label' => 'Routers & Packages',
             'icon' => 'bi-hdd-network',
             'children' => [
-                ['label' => 'Routers', 'route' => 'panel.admin.network.routers'],
-                ['label' => 'Master Packages', 'route' => 'panel.admin.packages.index'],
-                ['label' => 'PPPoE Profiles', 'route' => 'panel.admin.network.pppoe-profiles'],
+                ['label' => 'Routers', 'route' => 'panel.isp.network.routers'],
+                ['label' => 'Master Packages', 'route' => 'panel.isp.packages.index'],
+                ['label' => 'PPPoE Profiles', 'route' => 'panel.isp.network.pppoe-profiles'],
             ],
         ],
         [
@@ -99,8 +99,8 @@ return [
             'label' => 'OLT Management',
             'icon' => 'bi-broadcast',
             'children' => [
-                ['label' => 'OLT Dashboard', 'route' => 'panel.admin.olt.dashboard'],
-                ['label' => 'ONU Devices', 'route' => 'panel.admin.network.onu.index'],
+                ['label' => 'OLT Dashboard', 'route' => 'panel.isp.olt.dashboard'],
+                ['label' => 'ONU Devices', 'route' => 'panel.isp.network.onu.index'],
             ],
         ],
         [
@@ -108,8 +108,8 @@ return [
             'label' => 'Recharge Cards',
             'icon' => 'bi-credit-card-2-front',
             'children' => [
-                ['label' => 'Card Generation', 'route' => 'panel.admin.cards.generate'],
-                ['label' => 'Distributor Management', 'route' => 'panel.admin.cards.distributors'],
+                ['label' => 'Card Generation', 'route' => 'panel.isp.cards.generate'],
+                ['label' => 'Distributor Management', 'route' => 'panel.isp.cards.distributors'],
             ],
         ],
         [
@@ -117,11 +117,11 @@ return [
             'label' => 'Customers',
             'icon' => 'bi-people',
             'children' => [
-                ['label' => 'All Customers', 'route' => 'panel.admin.customers'],
-                ['label' => 'Online Customers', 'route' => 'panel.admin.customers.online'],
-                ['label' => 'Offline Customers', 'route' => 'panel.admin.customers.offline'],
-                ['label' => 'Import Customers', 'route' => 'panel.admin.customers.pppoe-import'],
-                ['label' => 'Customer Zones', 'route' => 'panel.admin.zones.index'],
+                ['label' => 'All Customers', 'route' => 'panel.isp.customers'],
+                ['label' => 'Online Customers', 'route' => 'panel.isp.customers.online'],
+                ['label' => 'Offline Customers', 'route' => 'panel.isp.customers.offline'],
+                ['label' => 'Import Customers', 'route' => 'panel.isp.customers.pppoe-import'],
+                ['label' => 'Customer Zones', 'route' => 'panel.isp.zones.index'],
             ],
         ],
         [
@@ -129,10 +129,10 @@ return [
             'label' => 'Cable TV',
             'icon' => 'bi-tv',
             'children' => [
-                ['label' => 'Subscriptions', 'route' => 'panel.admin.cable-tv.index'],
-                ['label' => 'Add Subscription', 'route' => 'panel.admin.cable-tv.create'],
-                ['label' => 'Packages', 'route' => 'panel.admin.cable-tv.packages.index'],
-                ['label' => 'Channels', 'route' => 'panel.admin.cable-tv.channels.index'],
+                ['label' => 'Subscriptions', 'route' => 'panel.isp.cable-tv.index'],
+                ['label' => 'Add Subscription', 'route' => 'panel.isp.cable-tv.create'],
+                ['label' => 'Packages', 'route' => 'panel.isp.cable-tv.packages.index'],
+                ['label' => 'Channels', 'route' => 'panel.isp.cable-tv.channels.index'],
             ],
         ],
         [
@@ -140,9 +140,9 @@ return [
             'label' => 'Bills & Payments',
             'icon' => 'bi-receipt',
             'children' => [
-                ['label' => 'Billing', 'route' => 'panel.admin.bills.index'],
-                ['label' => 'Payment Verification', 'route' => 'panel.admin.payments.index'],
-                ['label' => 'Due Notifications', 'route' => 'panel.admin.sms.due-date-notification'],
+                ['label' => 'Billing', 'route' => 'panel.isp.bills.index'],
+                ['label' => 'Payment Verification', 'route' => 'panel.isp.payments.index'],
+                ['label' => 'Due Notifications', 'route' => 'panel.isp.sms.due-date-notification'],
             ],
         ],
         [
@@ -150,9 +150,9 @@ return [
             'label' => 'Incomes & Expenses',
             'icon' => 'bi-cash-stack',
             'children' => [
-                ['label' => 'Transactions', 'route' => 'panel.admin.accounting.transactions'],
-                ['label' => 'Expenses', 'route' => 'panel.admin.accounting.expenses'],
-                ['label' => 'Income/Expense Report', 'route' => 'panel.admin.accounting.income-expense-report'],
+                ['label' => 'Transactions', 'route' => 'panel.isp.accounting.transactions'],
+                ['label' => 'Expenses', 'route' => 'panel.isp.accounting.expenses'],
+                ['label' => 'Income/Expense Report', 'route' => 'panel.isp.accounting.income-expense-report'],
             ],
         ],
         [
@@ -160,8 +160,8 @@ return [
             'label' => 'Complaints & Support',
             'icon' => 'bi-headset',
             'children' => [
-                ['label' => 'Ticket Management', 'route' => 'panel.admin.tickets.index'],
-                ['label' => 'Categories', 'route' => 'panel.admin.tickets.categories'],
+                ['label' => 'Ticket Management', 'route' => 'panel.isp.tickets.index'],
+                ['label' => 'Categories', 'route' => 'panel.isp.tickets.categories'],
             ],
         ],
         [
@@ -169,24 +169,24 @@ return [
             'label' => 'Reports',
             'icon' => 'bi-graph-up',
             'children' => [
-                ['label' => 'BTRC Reports', 'route' => 'panel.admin.reports.btrc'],
-                ['label' => 'Financial Reports', 'route' => 'panel.admin.reports.financial'],
-                ['label' => 'Customer Reports', 'route' => 'panel.admin.reports.customer'],
+                ['label' => 'BTRC Reports', 'route' => 'panel.isp.reports.btrc'],
+                ['label' => 'Financial Reports', 'route' => 'panel.isp.reports.financial'],
+                ['label' => 'Customer Reports', 'route' => 'panel.isp.reports.customer'],
             ],
         ],
         [
             'key' => 'analytics_dashboard',
             'label' => 'Analytics Dashboard',
             'icon' => 'bi-bar-chart-line',
-            'route' => 'panel.admin.analytics.dashboard',
+            'route' => 'panel.isp.analytics.dashboard',
         ],
         [
             'key' => 'affiliate_program',
             'label' => 'Affiliate Program',
             'icon' => 'bi-share',
             'children' => [
-                ['label' => 'Referral Tracking', 'route' => 'panel.admin.affiliate.referrals'],
-                ['label' => 'Commission Tracking', 'route' => 'panel.admin.affiliate.commissions'],
+                ['label' => 'Referral Tracking', 'route' => 'panel.isp.affiliate.referrals'],
+                ['label' => 'Commission Tracking', 'route' => 'panel.isp.affiliate.commissions'],
             ],
         ],
         [
@@ -194,8 +194,8 @@ return [
             'label' => 'VAT Management',
             'icon' => 'bi-calculator',
             'children' => [
-                ['label' => 'Tax Profiles', 'route' => 'panel.admin.vat.profiles'],
-                ['label' => 'Collections', 'route' => 'panel.admin.accounting.vat-collections'],
+                ['label' => 'Tax Profiles', 'route' => 'panel.isp.vat.profiles'],
+                ['label' => 'Collections', 'route' => 'panel.isp.accounting.vat-collections'],
             ],
         ],
         [
@@ -203,9 +203,9 @@ return [
             'label' => 'SMS Services',
             'icon' => 'bi-chat-dots',
             'children' => [
-                ['label' => 'Gateway Configuration', 'route' => 'panel.admin.sms.gateway'],
-                ['label' => 'Broadcasting', 'route' => 'panel.admin.sms.broadcast'],
-                ['label' => 'SMS History', 'route' => 'panel.admin.sms.histories'],
+                ['label' => 'Gateway Configuration', 'route' => 'panel.isp.sms.gateway'],
+                ['label' => 'Broadcasting', 'route' => 'panel.isp.sms.broadcast'],
+                ['label' => 'SMS History', 'route' => 'panel.isp.sms.histories'],
             ],
         ],
         [
@@ -213,9 +213,9 @@ return [
             'label' => 'Configuration',
             'icon' => 'bi-gear',
             'children' => [
-                ['label' => 'Billing Profiles', 'route' => 'panel.admin.config.billing'],
-                ['label' => 'Custom Fields', 'route' => 'panel.admin.config.custom-fields'],
-                ['label' => 'All Devices', 'route' => 'panel.admin.network.devices'],
+                ['label' => 'Billing Profiles', 'route' => 'panel.isp.config.billing'],
+                ['label' => 'Custom Fields', 'route' => 'panel.isp.config.custom-fields'],
+                ['label' => 'All Devices', 'route' => 'panel.isp.network.devices'],
                 // Temporarily hidden from device list as per issue requirements
                 // Note: Cisco and MikroTik still accessible via direct routes if needed
             ],
@@ -225,8 +225,8 @@ return [
             'label' => 'Activity Logs',
             'icon' => 'bi-journal-text',
             'children' => [
-                ['label' => 'Audit Trail', 'route' => 'panel.admin.logs.audit'],
-                ['label' => 'Authentication Logs', 'route' => 'panel.admin.logs.auth'],
+                ['label' => 'Audit Trail', 'route' => 'panel.isp.logs.audit'],
+                ['label' => 'Authentication Logs', 'route' => 'panel.isp.logs.auth'],
             ],
         ],
         [

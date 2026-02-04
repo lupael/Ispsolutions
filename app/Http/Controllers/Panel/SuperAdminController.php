@@ -47,7 +47,7 @@ class SuperAdminController extends Controller
     public function users(): View
     {
         $superAdmin = auth()->user();
-        
+
         $users = User::with('roles')
             ->whereDoesntHave('roles', function ($query) {
                 $query->where('slug', 'developer');
@@ -93,7 +93,7 @@ class SuperAdminController extends Controller
 
         // Get the role to check its level
         $role = \App\Models\Role::findOrFail($validated['role_id']);
-        
+
         // Authorization check: Super Admin can only create Admins (level 20)
         if (!auth()->user()->canCreateUserWithLevel($role->level)) {
             abort(403, 'You are not authorized to create users with this role.');
@@ -249,9 +249,9 @@ class SuperAdminController extends Controller
             ]);
 
             // Assign Admin role
-            $adminRole = \App\Models\Role::where('slug', 'admin')->first();
-            if ($adminRole) {
-                $admin->roles()->attach($adminRole->id, ['tenant_id' => $tenant->id]);
+            $ispRole = \App\Models\Role::where('slug', 'isp')->first();
+            if ($ispRole) {
+                $admin->roles()->attach($ispRole->id, ['tenant_id' => $tenant->id]);
             }
 
             return ['tenant' => $tenant, 'admin' => $admin];

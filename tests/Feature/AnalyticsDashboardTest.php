@@ -51,7 +51,7 @@ class AnalyticsDashboardTest extends TestCase
             ->get(route('panel.isp.analytics.dashboard'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('panels.admin.analytics.dashboard');
+        $response->assertViewIs('panels.isp.analytics.dashboard');
         $response->assertViewHas('analytics');
         $response->assertViewHas('startDate');
         $response->assertViewHas('endDate');
@@ -121,7 +121,7 @@ class AnalyticsDashboardTest extends TestCase
             ->get(route('panel.isp.analytics.revenue-report'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('panels.admin.analytics.revenue-report');
+        $response->assertViewIs('panels.isp.analytics.revenue-report');
         $response->assertViewHas('analytics');
     }
 
@@ -131,7 +131,7 @@ class AnalyticsDashboardTest extends TestCase
             ->get(route('panel.isp.analytics.customer-report'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('panels.admin.analytics.customer-report');
+        $response->assertViewIs('panels.isp.analytics.customer-report');
         $response->assertViewHas('analytics');
     }
 
@@ -141,7 +141,7 @@ class AnalyticsDashboardTest extends TestCase
             ->get(route('panel.isp.analytics.service-report'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('panels.admin.analytics.service-report');
+        $response->assertViewIs('panels.isp.analytics.service-report');
         $response->assertViewHas('analytics');
     }
 

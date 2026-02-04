@@ -16,7 +16,7 @@ use Illuminate\View\View;
 
 /**
  * Operator Package Controller
- * 
+ *
  * Handles operator-specific package rate management
  * Accessible by admin and operator roles
  */
@@ -28,10 +28,10 @@ class OperatorPackageController extends Controller
     public function index(): View
     {
         $user = Auth::user();
-        
+
         // Get master packages available to this operator
         $query = MasterPackage::active()->public();
-        
+
         // If operator has tenant, include tenant-specific and global packages
         if ($user->tenant_id) {
             $query->where(function ($q) use ($user) {
@@ -41,15 +41,15 @@ class OperatorPackageController extends Controller
         } else {
             $query->whereNull('tenant_id');
         }
-        
+
         $masterPackages = $query->get();
-        
+
         // Get operator's existing rates
         $operatorRates = OperatorPackageRate::where('operator_id', $user->id)
             ->with('masterPackage')
             ->get();
 
-        return view('panels.admin.operator-packages.index', compact('masterPackages', 'operatorRates'));
+        return view('panels.isp.operator-packages.index', compact('masterPackages', 'operatorRates'));
     }
 
     /**
@@ -59,21 +59,21 @@ class OperatorPackageController extends Controller
     {
         $masterPackageId = $request->get('master_package_id');
         $masterPackage = MasterPackage::findOrFail($masterPackageId);
-        
+
         $user = Auth::user();
-        
+
         // Check if operator already has a rate for this master package
         $existingRate = OperatorPackageRate::where('operator_id', $user->id)
             ->where('master_package_id', $masterPackage->id)
             ->first();
-        
+
         if ($existingRate) {
             return redirect()
-                ->route('panel.admin.operator-packages.index')
+                ->route('panel.isp.operator-packages.index')
                 ->withErrors(['error' => 'You already have a rate configured for this master package.']);
         }
 
-        return view('panels.admin.operator-packages.create', compact('masterPackage'));
+        return view('panels.isp.operator-packages.create', compact('masterPackage'));
     }
 
     /**
@@ -112,8 +112,8 @@ class OperatorPackageController extends Controller
         }
 
         // Calculate margin
-        $margin = $masterPackage->base_price > 0 
-            ? (($validated['operator_price'] - $masterPackage->base_price) / $masterPackage->base_price) * 100 
+        $margin = $masterPackage->base_price > 0
+            ? (($validated['operator_price'] - $masterPackage->base_price) / $masterPackage->base_price) * 100
             : 0;
 
         OperatorPackageRate::create([
@@ -132,7 +132,7 @@ class OperatorPackageController extends Controller
         }
 
         return redirect()
-            ->route('panel.admin.operator-packages.index')
+            ->route('panel.isp.operator-packages.index')
             ->with('success', $message);
     }
 
@@ -142,20 +142,20 @@ class OperatorPackageController extends Controller
     public function edit(OperatorPackageRate $operatorRate): View
     {
         $user = Auth::user();
-        
+
         // Ensure operator can only edit their own rates
         if ($operatorRate->operator_id !== $user->id) {
             abort(403, 'Unauthorized access to this operator rate.');
         }
 
         $masterPackage = $operatorRate->masterPackage;
-        
+
         // Check if master package exists
         if (!$masterPackage) {
             abort(404, 'Master package not found for this operator rate.');
         }
 
-        return view('panels.admin.operator-packages.edit', compact('operatorRate', 'masterPackage'));
+        return view('panels.isp.operator-packages.edit', compact('operatorRate', 'masterPackage'));
     }
 
     /**
@@ -164,7 +164,7 @@ class OperatorPackageController extends Controller
     public function update(Request $request, OperatorPackageRate $operatorRate): RedirectResponse
     {
         $user = Auth::user();
-        
+
         // Ensure operator can only update their own rates
         if ($operatorRate->operator_id !== $user->id) {
             abort(403, 'Unauthorized access to this operator rate.');
@@ -181,7 +181,7 @@ class OperatorPackageController extends Controller
         // Check if master package exists
         if (!$masterPackage) {
             return redirect()
-                ->route('panel.admin.operator-packages.index')
+                ->route('panel.isp.operator-packages.index')
                 ->withErrors(['error' => 'Master package not found for this operator rate.']);
         }
 
@@ -194,8 +194,8 @@ class OperatorPackageController extends Controller
         }
 
         // Calculate margin
-        $margin = $masterPackage->base_price > 0 
-            ? (($validated['operator_price'] - $masterPackage->base_price) / $masterPackage->base_price) * 100 
+        $margin = $masterPackage->base_price > 0
+            ? (($validated['operator_price'] - $masterPackage->base_price) / $masterPackage->base_price) * 100
             : 0;
 
         $operatorRate->update($validated);
@@ -206,7 +206,7 @@ class OperatorPackageController extends Controller
         }
 
         return redirect()
-            ->route('panel.admin.operator-packages.index')
+            ->route('panel.isp.operator-packages.index')
             ->with('success', $message);
     }
 
@@ -216,7 +216,7 @@ class OperatorPackageController extends Controller
     public function destroy(OperatorPackageRate $operatorRate): RedirectResponse
     {
         $user = Auth::user();
-        
+
         // Ensure operator can only delete their own rates
         if ($operatorRate->operator_id !== $user->id) {
             abort(403, 'Unauthorized access to this operator rate.');
@@ -233,7 +233,7 @@ class OperatorPackageController extends Controller
         $operatorRate->delete();
 
         return redirect()
-            ->route('panel.admin.operator-packages.index')
+            ->route('panel.isp.operator-packages.index')
             ->with('success', 'Operator package rate deleted successfully.');
     }
 
@@ -244,9 +244,9 @@ class OperatorPackageController extends Controller
     {
         $operatorPrice = $request->get('operator_price', 0);
         $marginPercentage = $request->get('margin', 20);
-        
+
         $suggestedPrice = round($operatorPrice * (1 + $marginPercentage / 100), 2);
-        
+
         return response()->json([
             'suggested_price' => $suggestedPrice,
             'margin' => $marginPercentage,
@@ -259,7 +259,7 @@ class OperatorPackageController extends Controller
     public function assignToSubOperator(Request $request, OperatorPackageRate $operatorRate): RedirectResponse
     {
         $user = Auth::user();
-        
+
         // Ensure this is the operator's own rate
         if ($operatorRate->operator_id !== $user->id) {
             abort(403, 'Unauthorized access.');

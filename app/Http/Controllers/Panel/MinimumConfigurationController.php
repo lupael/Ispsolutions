@@ -60,7 +60,7 @@ class MinimumConfigurationController extends Controller
             'name' => 'Billing Profile',
             'description' => 'Create at least one billing profile',
             'completed' => $this->checkBillingProfileExists($operator),
-            'route' => 'panel.admin.billing-profiles.create',
+            'route' => 'panel.isp.billing-profiles.create',
             'required' => true,
         ];
 
@@ -69,7 +69,7 @@ class MinimumConfigurationController extends Controller
             'name' => 'Router Registration',
             'description' => 'Add at least one router (NAS)',
             'completed' => $this->checkRouterExists($operator),
-            'route' => 'panel.admin.network.routers.create',
+            'route' => 'panel.isp.network.routers.create',
             'required' => true,
         ];
 
@@ -78,28 +78,28 @@ class MinimumConfigurationController extends Controller
             'name' => 'Customer Data',
             'description' => 'Add at least one customer or import request',
             'completed' => $this->checkCustomerDataExists($operator),
-            'route' => 'panel.admin.customers.create',
+            'route' => 'panel.isp.customers.create',
             'required' => true,
         ];
 
         // Step 5: Assign Billing Profile to Self
-        if ($operator->operator_level === User::OPERATOR_LEVEL_ADMIN) {
+        if ($operator->operator_level === User::OPERATOR_LEVEL_ISP) {
             $steps[] = [
                 'name' => 'Assign Billing Profile to Self',
                 'description' => 'Assign a billing profile to your account',
                 'completed' => $this->checkOperatorHasBillingProfile($operator),
-                'route' => 'panel.admin.operators.edit',
+                'route' => 'panel.isp.operators.edit',
                 'required' => true,
             ];
         }
 
         // Step 6: Assign Billing Profile to Resellers
-        if ($operator->operator_level === User::OPERATOR_LEVEL_ADMIN) {
+        if ($operator->operator_level === User::OPERATOR_LEVEL_ISP) {
             $steps[] = [
                 'name' => 'Assign Billing Profile to Operators',
                 'description' => 'All operators must have billing profiles',
                 'completed' => $this->checkAllOperatorsHaveBillingProfiles($operator),
-                'route' => 'panel.admin.operators.index',
+                'route' => 'panel.isp.operators.index',
                 'required' => true,
             ];
         }
@@ -109,7 +109,7 @@ class MinimumConfigurationController extends Controller
             'name' => 'Package Assignment',
             'description' => 'Create packages from master packages',
             'completed' => $this->checkPackagesExist($operator),
-            'route' => 'panel.admin.packages.create',
+            'route' => 'panel.isp.packages.create',
             'required' => true,
         ];
 
@@ -118,7 +118,7 @@ class MinimumConfigurationController extends Controller
             'name' => 'Package Pricing',
             'description' => 'All packages must have price > 1 (except Trial)',
             'completed' => $this->checkPackagePricing($operator),
-            'route' => 'panel.admin.packages.index',
+            'route' => 'panel.isp.packages.index',
             'required' => true,
         ];
 
@@ -127,7 +127,7 @@ class MinimumConfigurationController extends Controller
             'name' => 'Backup Settings',
             'description' => 'Configure backup settings for authentication',
             'completed' => $this->checkBackupSettingsConfigured($operator),
-            'route' => 'panel.admin.backup-settings.create',
+            'route' => 'panel.isp.backup-settings.create',
             'required' => true,
         ];
 
@@ -136,7 +136,7 @@ class MinimumConfigurationController extends Controller
             'name' => 'Profile Completion',
             'description' => 'Complete your company profile',
             'completed' => $this->checkProfileCompleted($operator),
-            'route' => 'panel.admin.profile.edit',
+            'route' => 'panel.isp.profile.edit',
             'required' => true,
         ];
 

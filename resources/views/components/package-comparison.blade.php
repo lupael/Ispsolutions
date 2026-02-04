@@ -142,7 +142,7 @@
                             @foreach($packagesToCompare as $package)
                                 <td class="px-4 py-4">
                                     <div class="flex flex-col space-y-2">
-                                        <a href="{{ route('panel.admin.master-packages.show', $package->id) }}" 
+                                        <a href="{{ route('panel.isp.master-packages.show', $package->id) }}" 
                                            class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">
                                             {{ __('packages.package_details') }}
                                         </a>

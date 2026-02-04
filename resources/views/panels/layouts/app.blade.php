@@ -35,7 +35,7 @@
                                     You are currently impersonating: <strong>{{ session('impersonated_user_name') }}</strong>
                                 </span>
                             </div>
-                            <form action="{{ route('panel.admin.stop-impersonating') }}" method="POST" class="mt-2 sm:mt-0">
+                            <form action="{{ route('panel.isp.stop-impersonating') }}" method="POST" class="mt-2 sm:mt-0">
                                 @csrf
                                 <button type="submit" class="bg-white text-yellow-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-50 transition duration-150">
                                     Return to Admin Account

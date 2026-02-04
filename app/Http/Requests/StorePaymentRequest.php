@@ -8,7 +8,7 @@ class StorePaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasRole('admin') ||
+        return auth()->user()->hasRole('isp') ||
                auth()->user()->hasRole('super-admin') ||
                auth()->id() === (int) $this->input('user_id');
     }

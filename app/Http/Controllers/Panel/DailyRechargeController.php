@@ -75,7 +75,7 @@ class DailyRechargeController extends Controller
             );
 
             return redirect()
-                ->route('panel.admin.customers.daily-recharge.show', $customer)
+                ->route('panel.isp.customers.daily-recharge.show', $customer)
                 ->with('success', "Daily recharge successful. Package activated for {$days} day(s). Amount: " . number_format($amount, 2));
         } catch (\Exception $e) {
             return redirect()

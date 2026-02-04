@@ -26,7 +26,7 @@
                     Save
                 </button>
             </div>
-            <form id="general-info-form" @input="markDirty('general')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
+            <form id="general-info-form" @input="markDirty('general')" data-update-url="{{ route('panel.isp.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
@@ -107,7 +107,7 @@
                     Save
                 </button>
             </div>
-            <form id="credentials-form" @input="markDirty('credentials')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
+            <form id="credentials-form" @input="markDirty('credentials')" data-update-url="{{ route('panel.isp.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
@@ -145,7 +145,7 @@
                     Save
                 </button>
             </div>
-            <form id="address-form" @input="markDirty('address')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
+            <form id="address-form" @input="markDirty('address')" data-update-url="{{ route('panel.isp.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Address</label>
@@ -215,7 +215,7 @@
                     Save
                 </button>
             </div>
-            <form id="network-form" @input="markDirty('network')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
+            <form id="network-form" @input="markDirty('network')" data-update-url="{{ route('panel.isp.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Router Name</label>
@@ -247,7 +247,7 @@
                     Save
                 </button>
             </div>
-            <form id="mac-form" @input="markDirty('mac')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
+            <form id="mac-form" @input="markDirty('mac')" data-update-url="{{ route('panel.isp.customers.partial-update', $customer->id) }}">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">MAC Address</label>
@@ -338,7 +338,7 @@
                     Save
                 </button>
             </div>
-            <form id="comments-form" @input="markDirty('comments')" data-update-url="{{ route('panel.admin.customers.partial-update', $customer->id) }}">
+            <form id="comments-form" @input="markDirty('comments')" data-update-url="{{ route('panel.isp.customers.partial-update', $customer->id) }}">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                     <textarea name="comments" rows="4" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Add any notes or comments about this customer...">{{ optional($networkUser)->comments ?? '' }}</textarea>

@@ -22,7 +22,7 @@ class BillingProfileController extends Controller
             ->orderBy('name')
             ->paginate(15);
 
-        return view('panels.admin.billing-profiles.index', compact('profiles'));
+        return view('panels.isp.billing-profiles.index', compact('profiles'));
     }
 
     /**
@@ -30,7 +30,7 @@ class BillingProfileController extends Controller
      */
     public function create(): View
     {
-        return view('panels.admin.billing-profiles.create');
+        return view('panels.isp.billing-profiles.create');
     }
 
     /**
@@ -69,7 +69,7 @@ class BillingProfileController extends Controller
             'is_active' => $request->has('is_active'),
         ]);
 
-        return redirect()->route('panel.admin.billing-profiles.index')
+        return redirect()->route('panel.isp.billing-profiles.index')
             ->with('success', 'Billing profile created successfully.');
     }
 
@@ -85,7 +85,7 @@ class BillingProfileController extends Controller
 
         $billingProfile->loadCount('users');
 
-        return view('panels.admin.billing-profiles.show', compact('billingProfile'));
+        return view('panels.isp.billing-profiles.show', compact('billingProfile'));
     }
 
     /**
@@ -98,7 +98,7 @@ class BillingProfileController extends Controller
             abort(403);
         }
 
-        return view('panels.admin.billing-profiles.edit', compact('billingProfile'));
+        return view('panels.isp.billing-profiles.edit', compact('billingProfile'));
     }
 
     /**
@@ -141,7 +141,7 @@ class BillingProfileController extends Controller
             'is_active' => $request->has('is_active'),
         ]);
 
-        return redirect()->route('panel.admin.billing-profiles.index')
+        return redirect()->route('panel.isp.billing-profiles.index')
             ->with('success', 'Billing profile updated successfully.');
     }
 
@@ -162,7 +162,7 @@ class BillingProfileController extends Controller
 
         $billingProfile->delete();
 
-        return redirect()->route('panel.admin.billing-profiles.index')
+        return redirect()->route('panel.isp.billing-profiles.index')
             ->with('success', 'Billing profile deleted successfully.');
     }
 }

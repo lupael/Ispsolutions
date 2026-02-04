@@ -55,7 +55,7 @@ class ResolveTenant
             'login',
             'register',
             'health',
-            'panel/admin/*',
+            'panel/isp/*',
             'panel/operator/*',
             'panel/manager/*',
         ];

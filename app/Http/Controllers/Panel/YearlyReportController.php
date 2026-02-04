@@ -22,7 +22,7 @@ class YearlyReportController extends Controller
         $currentYear = Carbon::now()->year;
         $years = range($currentYear, $currentYear - 5);
 
-        return view('panels.admin.reports.yearly.index', compact('years'));
+        return view('panels.isp.reports.yearly.index', compact('years'));
     }
 
     /**
@@ -71,7 +71,7 @@ class YearlyReportController extends Controller
 
         $grandTotal = array_sum($totalByDistributor);
 
-        return view('panels.admin.reports.yearly.card-distributor-payments', compact(
+        return view('panels.isp.reports.yearly.card-distributor-payments', compact(
             'year',
             'distributors',
             'monthlyData',
@@ -135,7 +135,7 @@ class YearlyReportController extends Controller
         $yearlyTotal = array_sum(array_column($monthlyIncome, 'total'));
         $averageMonthly = $yearlyTotal / 12;
 
-        return view('panels.admin.reports.yearly.cash-in', compact(
+        return view('panels.isp.reports.yearly.cash-in', compact(
             'year',
             'monthlyIncome',
             'sourceBreakdown',
@@ -193,7 +193,7 @@ class YearlyReportController extends Controller
         $yearlyTotal = array_sum(array_column($monthlyExpenses, 'total'));
         $averageMonthly = $yearlyTotal / 12;
 
-        return view('panels.admin.reports.yearly.cash-out', compact(
+        return view('panels.isp.reports.yearly.cash-out', compact(
             'year',
             'monthlyExpenses',
             'categoryBreakdown',
@@ -296,7 +296,7 @@ class YearlyReportController extends Controller
             }
         }
 
-        return view('panels.admin.reports.yearly.operator-income', compact(
+        return view('panels.isp.reports.yearly.operator-income', compact(
             'year',
             'operators',
             'monthlyData',
@@ -348,7 +348,7 @@ class YearlyReportController extends Controller
         $yearlyTotal = array_sum(array_column($monthlyExpenses, 'total'));
         $averageMonthly = $yearlyTotal / 12;
 
-        return view('panels.admin.reports.yearly.expenses', compact(
+        return view('panels.isp.reports.yearly.expenses', compact(
             'year',
             'monthlyExpenses',
             'categoryTotals',
@@ -420,7 +420,7 @@ class YearlyReportController extends Controller
     public function exportPdf(Request $request, string $reportType)
     {
         // Redirect to the report view page instead of placeholder
-        return redirect()->route('panel.admin.reports.yearly.index', ['year' => $request->input('year')])
+        return redirect()->route('panel.isp.reports.yearly.index', ['year' => $request->input('year')])
             ->with('info', 'PDF export functionality is planned for future release. Please use Excel export or print the report page.');
     }
 }

@@ -23,7 +23,7 @@ class CustomerSuspendDateController extends Controller
     {
         $this->authorize('editSuspendDate', $customer);
 
-        return view('panels.admin.customers.suspend-date.edit', compact('customer'));
+        return view('panels.isp.customers.suspend-date.edit', compact('customer'));
     }
 
     /**
@@ -65,7 +65,7 @@ class CustomerSuspendDateController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('panel.admin.customers.show', $customer->id)
+                ->route('panel.isp.customers.show', $customer->id)
                 ->with('success', 'Suspend date updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();

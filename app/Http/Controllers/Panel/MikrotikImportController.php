@@ -31,7 +31,7 @@ class MikrotikImportController extends Controller
         $routers = MikrotikRouter::where('tenant_id', $tenantId)->get();
         $nasDevices = Nas::where('tenant_id', $tenantId)->get();
 
-        return view('panels.admin.mikrotik.import', compact('routers', 'nasDevices'));
+        return view('panels.isp.mikrotik.import', compact('routers', 'nasDevices'));
     }
 
     /**

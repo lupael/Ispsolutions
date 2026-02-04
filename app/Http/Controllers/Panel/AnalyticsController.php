@@ -43,7 +43,7 @@ class AnalyticsController extends Controller
         $behaviorAnalytics = $this->analyticsService->getCustomerBehaviorAnalytics($tenantId);
         $predictiveAnalytics = $this->analyticsService->getPredictiveAnalytics($tenantId);
 
-        return view('panels.admin.analytics.dashboard', compact(
+        return view('panels.isp.analytics.dashboard', compact(
             'analytics',
             'behaviorAnalytics',
             'predictiveAnalytics',
@@ -215,7 +215,7 @@ class AnalyticsController extends Controller
 
         $analytics = $this->analyticsService->getRevenueAnalytics($startDate, $endDate, $tenantId);
 
-        return view('panels.admin.analytics.revenue-report', compact('analytics', 'startDate', 'endDate'));
+        return view('panels.isp.analytics.revenue-report', compact('analytics', 'startDate', 'endDate'));
     }
 
     /**
@@ -245,7 +245,7 @@ class AnalyticsController extends Controller
 
         $analytics = $this->analyticsService->getCustomerAnalytics($startDate, $endDate, $tenantId);
 
-        return view('panels.admin.analytics.customer-report', compact('analytics', 'startDate', 'endDate'));
+        return view('panels.isp.analytics.customer-report', compact('analytics', 'startDate', 'endDate'));
     }
 
     /**
@@ -275,7 +275,7 @@ class AnalyticsController extends Controller
 
         $analytics = $this->analyticsService->getServiceAnalytics($startDate, $endDate, $tenantId);
 
-        return view('panels.admin.analytics.service-report', compact('analytics', 'startDate', 'endDate'));
+        return view('panels.isp.analytics.service-report', compact('analytics', 'startDate', 'endDate'));
     }
 
     /**

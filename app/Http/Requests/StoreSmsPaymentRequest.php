@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Store SMS Payment Request
- * 
+ *
  * Validates SMS payment purchase requests from operators
  * Reference: REFERENCE_SYSTEM_QUICK_GUIDE.md - Phase 2: SMS Payment Integration
  */
@@ -20,7 +20,7 @@ class StoreSmsPaymentRequest extends FormRequest
     public function authorize(): bool
     {
         // Only operators, sub-operators, and admins can purchase SMS credits
-        return $this->user()->hasAnyRole(['admin', 'operator', 'sub-operator']);
+        return $this->user()->hasAnyRole(['isp', 'operator', 'sub-operator']);
     }
 
     /**

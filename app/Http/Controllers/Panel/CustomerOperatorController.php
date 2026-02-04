@@ -30,7 +30,7 @@ class CustomerOperatorController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('panels.admin.customers.operator.change', compact('customer', 'operators'));
+        return view('panels.isp.customers.operator.change', compact('customer', 'operators'));
     }
 
     /**
@@ -92,7 +92,7 @@ class CustomerOperatorController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('panel.admin.customers.show', $customer->id)
+                ->route('panel.isp.customers.show', $customer->id)
                 ->with('success', "Customer transferred to {$newOperator->name} successfully.");
         } catch (\Exception $e) {
             DB::rollBack();

@@ -62,10 +62,10 @@ class AdminCustomerCreationTest extends TestCase
         ];
 
         // Make POST request to create customer
-        $response = $this->post(route('panel.admin.customers.store'), $customerData);
+        $response = $this->post(route('panel.isp.customers.store'), $customerData);
 
         // Assert redirect to customers list
-        $response->assertRedirect(route('panel.admin.customers.index'));
+        $response->assertRedirect(route('panel.isp.customers.index'));
         $response->assertSessionHas('success', 'Customer created successfully.');
 
         // Assert customer was created in users table
@@ -108,7 +108,7 @@ class AdminCustomerCreationTest extends TestCase
             'status' => 'active',
         ];
 
-        $this->post(route('panel.admin.customers.store'), $customerData);
+        $this->post(route('panel.isp.customers.store'), $customerData);
 
         $customer = User::where('username', 'radiususer')->first();
 
@@ -125,7 +125,7 @@ class AdminCustomerCreationTest extends TestCase
         $this->actingAs($this->admin);
 
         // Missing required fields
-        $response = $this->post(route('panel.admin.customers.store'), []);
+        $response = $this->post(route('panel.isp.customers.store'), []);
 
         $response->assertSessionHasErrors(['username', 'password', 'service_type', 'package_id', 'status']);
     }
@@ -150,7 +150,7 @@ class AdminCustomerCreationTest extends TestCase
             'status' => 'active',
         ];
 
-        $response = $this->post(route('panel.admin.customers.store'), $customerData);
+        $response = $this->post(route('panel.isp.customers.store'), $customerData);
 
         $response->assertSessionHasErrors(['username']);
     }
@@ -168,7 +168,7 @@ class AdminCustomerCreationTest extends TestCase
             // No customer_name provided
         ];
 
-        $this->post(route('panel.admin.customers.store'), $customerData);
+        $this->post(route('panel.isp.customers.store'), $customerData);
 
         $customer = User::where('username', 'fallbackuser')->first();
 
@@ -189,7 +189,7 @@ class AdminCustomerCreationTest extends TestCase
             // No email provided
         ];
 
-        $this->post(route('panel.admin.customers.store'), $customerData);
+        $this->post(route('panel.isp.customers.store'), $customerData);
 
         $customer = User::where('username', 'noemailuser')->first();
 
@@ -209,7 +209,7 @@ class AdminCustomerCreationTest extends TestCase
             'status' => 'active',
         ];
 
-        $this->post(route('panel.admin.customers.store'), $customerData);
+        $this->post(route('panel.isp.customers.store'), $customerData);
 
         $customer = User::where('username', 'tenantcustomer')->first();
 

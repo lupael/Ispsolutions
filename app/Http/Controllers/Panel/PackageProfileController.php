@@ -21,7 +21,7 @@ class PackageProfileController extends Controller
     public function index(Package $package): View
     {
         // Check if user can view packages
-        abort_unless(auth()->user()->hasAnyRole(['admin', 'superadmin']), 403);
+        abort_unless(auth()->user()->hasAnyRole(['isp', 'superadmin']), 403);
 
         // Get all routers
         $routers = MikrotikRouter::where('status', 'active')->get();
@@ -39,7 +39,7 @@ class PackageProfileController extends Controller
                 ->get();
         }
 
-        return view('panels.admin.packages.profile-association', compact(
+        return view('panels.isp.packages.profile-association', compact(
             'package',
             'routers',
             'mappings',
@@ -53,7 +53,7 @@ class PackageProfileController extends Controller
     public function update(Request $request, Package $package): RedirectResponse
     {
         // Check if user can manage packages
-        abort_unless(auth()->user()->hasAnyRole(['admin', 'superadmin']), 403);
+        abort_unless(auth()->user()->hasAnyRole(['isp', 'superadmin']), 403);
 
         $validated = $request->validate([
             'mappings' => 'required|array',
@@ -76,11 +76,11 @@ class PackageProfileController extends Controller
         $profilesByRouter = MikrotikProfile::whereIn('router_id', $routerIdsUnique)
             ->get()
             ->groupBy('router_id');
-        
+
         foreach ($validated['mappings'] as $mapping) {
             $routerProfiles = $profilesByRouter->get($mapping['router_id'], collect());
             $profileExists = $routerProfiles->contains('name', $mapping['profile_name']);
-            
+
             if (!$profileExists) {
                 return redirect()
                     ->back()

@@ -39,14 +39,14 @@ class MikrotikDbSyncController extends Controller
         $routers = MikrotikRouter::with('nas')
             ->where('tenant_id', getCurrentTenantId())
             ->get();
-        
+
         $recentImports = CustomerImport::with('router', 'nas')
             ->where('tenant_id', getCurrentTenantId())
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-        
-        return view('panels.admin.network.router-import', compact('routers', 'recentImports'));
+
+        return view('panels.isp.network.router-import', compact('routers', 'recentImports'));
     }
 
     /**
@@ -63,11 +63,11 @@ class MikrotikDbSyncController extends Controller
             MikrotikIpPool::where('router_id', $router->id)->delete();
 
             $ip4pools = $this->apiService->getMktRows($router, 'ip/pool', []);
-            
+
             $importedCount = 0;
             foreach ($ip4pools as $ip4pool) {
                 $ranges = $this->parseIpPool($ip4pool['ranges'] ?? $ip4pool['range'] ?? '');
-                
+
                 if (empty($ranges)) {
                     continue;
                 }
@@ -77,7 +77,7 @@ class MikrotikDbSyncController extends Controller
                     'name' => $ip4pool['name'] ?? 'unnamed',
                     'ranges' => $ranges,
                 ]);
-                
+
                 $importedCount++;
             }
 
@@ -119,7 +119,7 @@ class MikrotikDbSyncController extends Controller
                 ->delete();
 
             $pppProfiles = $this->apiService->getMktRows($router, 'ppp/profile', ['default' => 'no']);
-            
+
             $importedCount = 0;
             foreach ($pppProfiles as $pppProfile) {
                 MikrotikProfile::create([
@@ -132,7 +132,7 @@ class MikrotikDbSyncController extends Controller
                     'session_timeout' => $pppProfile['session-timeout'] ?? null,
                     'idle_timeout' => $pppProfile['idle-timeout'] ?? null,
                 ]);
-                
+
                 $importedCount++;
             }
 
@@ -161,7 +161,7 @@ class MikrotikDbSyncController extends Controller
 
     /**
      * Import PPP secrets from router (IspBills pattern)
-     * 
+     *
      * Creates router-side backup before importing
      */
     public function importPppSecrets(Request $request, int $routerId): JsonResponse
@@ -206,13 +206,13 @@ class MikrotikDbSyncController extends Controller
 
             $query = ($importDisabledUser === 'no') ? ['disabled' => 'no'] : [];
             $secrets = $this->apiService->getMktRows($router, 'ppp/secret', $query);
-            
+
             $customerImport->update(['total_count' => count($secrets)]);
-            
+
             $importedCount = 0;
             $failedCount = 0;
             $errors = [];
-            
+
             foreach ($secrets as $secret) {
                 try {
                     MikrotikPppSecret::create([
@@ -228,7 +228,7 @@ class MikrotikDbSyncController extends Controller
                     'disabled' => $secret['disabled'] ?? 'no',
                     'comment' => $secret['comment'] ?? null,
                     ]);
-                    
+
                     $importedCount++;
                 } catch (\Exception $e) {
                     $failedCount++;
@@ -291,8 +291,8 @@ class MikrotikDbSyncController extends Controller
             'ppp_secrets' => $this->importPppSecrets($request, $routerId)->getData(true),
         ];
 
-        $allSuccess = $results['ip_pools']['success'] 
-            && $results['ppp_profiles']['success'] 
+        $allSuccess = $results['ip_pools']['success']
+            && $results['ppp_profiles']['success']
             && $results['ppp_secrets']['success'];
 
         return response()->json([
@@ -304,12 +304,12 @@ class MikrotikDbSyncController extends Controller
 
     /**
      * Parse IP pool ranges from MikroTik format and normalize as an array.
-     * 
+     *
      * Supports:
      * - CIDR: 192.168.1.0/24
      * - Hyphen range: 192.168.1.1-192.168.1.254
      * - Comma-separated: 192.168.1.1,192.168.1.2
-     * 
+     *
      * @param string $ranges Raw ranges string from MikroTik
      * @return array<int,string> Normalized array of range strings
      */
