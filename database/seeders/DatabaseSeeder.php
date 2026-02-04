@@ -39,13 +39,17 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
             'is_active' => true,
+            'is_subscriber' => true,
             'activated_at' => now(),
+            'service_type' => 'pppoe',
         ]);
 
         // Create additional test users with packages
         User::factory(10)->create([
             'is_active' => true,
+            'is_subscriber' => true,
             'activated_at' => now(),
+            'service_type' => 'pppoe',
         ]);
 
         $this->command->info('Database seeding completed successfully!');

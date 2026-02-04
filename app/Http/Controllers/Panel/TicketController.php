@@ -124,7 +124,7 @@ class TicketController extends Controller
             // For Operators and Sub-Operators: only show their subordinates (customers they manage)
             if ($user->isOperatorRole() || $user->isSubOperator()) {
                 $customers = $user->subordinates()
-                    ->where('operator_level', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->where('is_subscriber', true)
                     ->orderBy('name')
                     ->limit(1000)
                     ->get(['id', 'name', 'email']);
@@ -133,7 +133,7 @@ class TicketController extends Controller
                 // Limit to 1000 customers to avoid performance issues
                 // For larger lists, consider implementing search/autocomplete
                 $customers = User::where('tenant_id', $user->tenant_id)
-                    ->where('operator_level', '>=', User::OPERATOR_LEVEL_CUSTOMER)
+                    ->where('is_subscriber', true)
                     ->orderBy('name')
                     ->limit(1000)
                     ->get(['id', 'name', 'email']);

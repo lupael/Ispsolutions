@@ -1145,11 +1145,9 @@ class AdminController extends Controller
     /**
      * Show customer create form.
      */
-    public function customersCreate(): View
+    public function customersCreate(): RedirectResponse
     {
-        $packages = ServicePackage::all();
-
-        return view('panels.admin.customers.create', compact('packages'));
+        return redirect()->route('panel.admin.customers.wizard.start');
     }
 
     /**
@@ -1164,7 +1162,6 @@ class AdminController extends Controller
             'password' => 'required|string|min:8',
             'service_type' => 'required|in:pppoe,hotspot,cable-tv,static_ip,other',
             'package_id' => 'required|exists:packages,id',
-            'status' => 'required|in:active,inactive,suspended',
             'customer_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:20',
@@ -1194,7 +1191,7 @@ class AdminController extends Controller
                 'service_package_id' => $validated['package_id'],
                 // Network service fields
                 'service_type' => $validated['service_type'],
-                'status' => $validated['status'],
+                'status' => 'suspended', // Default to suspended
                 'ip_address' => $validated['ip_address'] ?? null,
                 'mac_address' => $validated['mac_address'] ?? null,
             ]);
