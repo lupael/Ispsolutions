@@ -1,12 +1,7 @@
-<?php
-
-declare(strict_types=1);
-
-namespace App\Http\Controllers\Panel;
-
 use App\Events\ImportPppCustomersRequested;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerImport;
+use App\Models\MasterPackage;
 use App\Models\MikrotikRouter;
 use App\Models\Package;
 use Illuminate\Http\JsonResponse;
@@ -21,13 +16,21 @@ class CustomerImportController extends Controller
     public function index(): View
     {
         $tenantId = auth()->user()->tenant_id;
+        $user = auth()->user();
         
         // Get active routers (NAS functionality is now integrated into routers)
         $routers = MikrotikRouter::where('tenant_id', $tenantId)
             ->where('status', 'active')
             ->get();
             
-        $packages = Package::where('tenant_id', $tenantId)->get();
+        $packagesQuery = MasterPackage::where('status', 'active');
+        if ($user->operator_level === \App\Models\User::OPERATOR_LEVEL_SUPER_ADMIN || $user->operator_level === \App\Models\User::OPERATOR_LEVEL_ADMIN) {
+            $packagesQuery->where(function ($q) use ($user) {
+                $q->where('tenant_id', $user->tenant_id)
+                  ->orWhereNull('tenant_id'); // Include global packages
+            });
+        }
+        $packages = $packagesQuery->get();
 
         // Get recent imports
         $recentImports = CustomerImport::where('operator_id', auth()->id())
@@ -57,7 +60,7 @@ class CustomerImportController extends Controller
             'package_id' => [
                 'nullable',
                 'integer',
-                'exists:packages,id',
+                'exists:master_packages,id',
             ],
         ]);
 
@@ -77,14 +80,13 @@ class CustomerImportController extends Controller
 
             // Verify package belongs to tenant if provided (security check)
             if (!empty($validated['package_id'])) {
-                $package = Package::where('id', $validated['package_id'])
-                    ->where('tenant_id', $tenantId)
+                $package = MasterPackage::where('id', $validated['package_id'])
                     ->first();
 
                 if (!$package) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Invalid package selected. Package must belong to your tenant.',
+                        'message' => 'Invalid package selected.',
                     ], 422);
                 }
             }
@@ -125,42 +127,5 @@ class CustomerImportController extends Controller
                 'message' => 'Failed to start import: ' . $e->getMessage(),
             ], 500);
         }
-    }
-
-    /**
-     * Get import status.
-     */
-    public function status(int $importId): JsonResponse
-    {
-        $import = CustomerImport::where('operator_id', auth()->id())
-            ->findOrFail($importId);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'status' => $import->status,
-                'total' => $import->total_count,
-                'success' => $import->success_count,
-                'failed' => $import->failed_count,
-                'progress' => $import->getProgressPercentage(),
-                'errors' => $import->errors,
-            ],
-        ]);
-    }
-
-    /**
-     * Get import history.
-     */
-    public function history(Request $request): JsonResponse
-    {
-        $imports = CustomerImport::where('operator_id', auth()->id())
-            ->with(['nas', 'router'])
-            ->latest()
-            ->paginate($request->input('per_page', 20));
-
-        return response()->json([
-            'success' => true,
-            'data' => $imports,
-        ]);
     }
 }

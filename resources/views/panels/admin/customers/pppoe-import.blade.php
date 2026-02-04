@@ -70,7 +70,7 @@
                     <select name="package_id" id="package_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">Choose a package...</option>
                         @foreach($packages ?? [] as $package)
-                            <option value="{{ $package->id }}">{{ $package->name }} - {{ $package->speed ?? 'N/A' }}</option>
+                            <option value="{{ $package->id }}">{{ $package->name }} - {{ $package->speed_download }} Mbps / {{ $package->speed_upload }} Mbps</option>
                         @endforeach
                     </select>
                     <p class="mt-1 text-sm text-gray-500">This package will be assigned to all imported customers</p>
