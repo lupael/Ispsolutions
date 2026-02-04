@@ -1,3 +1,7 @@
+<?php
+
+namespace App\Http\Controllers\Panel;
+
 use App\Events\ImportPppCustomersRequested;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerImport;
