@@ -143,20 +143,6 @@ class RoleSeeder extends Seeder
                     'complaints.respond',
                 ],
             ],
-            [
-                'name' => 'Customer',
-                'slug' => 'customer',
-                'description' => 'End user with self-service access',
-                'level' => 100,
-                'permissions' => [
-                    'profile.view',
-                    'profile.update',
-                    'billing.view.own',
-                    'usage.view.own',
-                    'tickets.create',
-                    'tickets.view.own',
-                ],
-            ],
         ];
 
         foreach ($roles as $roleData) {

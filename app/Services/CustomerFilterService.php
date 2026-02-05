@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\NetworkUser;
+
 use App\Enums\CustomerOverallStatus;
 use Illuminate\Support\Collection;
 
@@ -218,9 +218,7 @@ class CustomerFilterService
             $filtered = $filtered->filter(function ($customer) use ($searchTerm) {
                 return str_contains(strtolower($customer->name ?? ''), $searchTerm) ||
                        str_contains(strtolower($customer->mobile ?? ''), $searchTerm) ||
-                       str_contains(strtolower($customer->username ?? ''), $searchTerm) ||
-                       str_contains(strtolower($customer->user?->name ?? ''), $searchTerm) ||
-                       str_contains(strtolower($customer->user?->mobile ?? ''), $searchTerm);
+                       str_contains(strtolower($customer->username ?? ''), $searchTerm);
             });
         }
 

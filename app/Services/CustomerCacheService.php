@@ -23,10 +23,9 @@ class CustomerCacheService
     /**
      * Get cached customer list.
      */
-    public function getCustomers(int $tenantId, ?int $roleId = null, bool $refresh = false): Collection
+    public function getCustomers(int $tenantId, bool $refresh = false): Collection
     {
-        $roleId = $roleId ?? 0; // Use 0 as default if roleId is null
-        $cacheKey = "customers:tenant:{$tenantId}:role:{$roleId}";
+        $cacheKey = "customers:tenant:{$tenantId}";
 
         if ($refresh) {
             Cache::forget($cacheKey);

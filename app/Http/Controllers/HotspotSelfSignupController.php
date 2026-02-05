@@ -362,7 +362,7 @@ class HotspotSelfSignupController extends Controller
             $invoice = DB::transaction(function () use ($hotspotUser, $package) {
                 return Invoice::create([
                     'tenant_id' => $hotspotUser->tenant_id,
-                    'network_user_id' => null, // Hotspot user, not network user
+                    'customer_id' => null, // Hotspot user, not a regular customer
                     'invoice_number' => 'HS-' . strtoupper(Str::random(8)),
                     'invoice_date' => now(),
                     'due_date' => now()->addDays(1),

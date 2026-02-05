@@ -266,8 +266,6 @@ class ZoneController extends Controller
         $stats = [
             'total_customers' => $zone->customers()->count(),
             'active_customers' => $zone->customers()->where('is_active', true)->count(),
-            'total_network_users' => $zone->networkUsers()->count(),
-            'active_network_users' => $zone->networkUsers()->where('status', 'active')->count(),
             'child_zones' => $zone->children()->count(),
         ];
 
@@ -288,10 +286,6 @@ class ZoneController extends Controller
                 'customers as active_customers_count' => function ($query) {
                     $query->where('is_active', true);
                 },
-                'networkUsers',
-                'networkUsers as active_network_users_count' => function ($query) {
-                    $query->where('is_active', true);
-                },
             ])
             ->orderBy('name')
             ->get();
@@ -301,8 +295,6 @@ class ZoneController extends Controller
             'active_zones' => $zones->where('is_active', true)->count(),
             'total_customers' => $zones->sum('customers_count'),
             'active_customers' => $zones->sum('active_customers_count'),
-            'total_network_users' => $zones->sum('network_users_count'),
-            'active_network_users' => $zones->sum('active_network_users_count'),
         ];
 
         return view('panels.admin.zones.report', compact('zones', 'totalStats'));

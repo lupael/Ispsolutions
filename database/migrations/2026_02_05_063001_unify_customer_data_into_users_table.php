@@ -15,19 +15,45 @@ return new class extends Migration
     {
         // Part 1: Add columns to the users table
         Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->unique()->nullable()->after('email');
-            $table->enum('service_type', ['pppoe', 'hotspot', 'static'])->default('pppoe')->after('username');
-            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('service_type');
-            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->onDelete('set null')->after('status');
-            $table->foreignId('zone_id')->nullable()->constrained('zones')->onDelete('set null')->after('tenant_id');
-            $table->date('expiry_date')->nullable()->after('zone_id');
-            $table->string('connection_type')->nullable()->after('expiry_date');
-            $table->string('billing_type')->nullable()->after('connection_type');
-            $table->string('device_type')->nullable()->after('billing_type');
-            $table->string('mac_address')->nullable()->after('device_type');
-            $table->string('ip_address')->nullable()->after('mac_address');
-            $table->boolean('is_subscriber')->default(false)->after('ip_address');
-            $table->string('customer_id')->unique()->nullable()->after('is_subscriber');
+            if (!Schema::hasColumn('users', 'username')) {
+                $table->string('username')->unique()->nullable()->after('email');
+            }
+            if (!Schema::hasColumn('users', 'service_type')) {
+                $table->enum('service_type', ['pppoe', 'hotspot', 'static'])->default('pppoe')->after('username');
+            }
+            if (!Schema::hasColumn('users', 'status')) {
+                $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('service_type');
+            }
+            if (!Schema::hasColumn('users', 'tenant_id')) {
+                $table->foreignId('tenant_id')->nullable()->constrained('tenants')->onDelete('set null')->after('status');
+            }
+            if (!Schema::hasColumn('users', 'zone_id')) {
+                $table->foreignId('zone_id')->nullable()->constrained('zones')->onDelete('set null')->after('tenant_id');
+            }
+            if (!Schema::hasColumn('users', 'expiry_date')) {
+                $table->date('expiry_date')->nullable()->after('zone_id');
+            }
+            if (!Schema::hasColumn('users', 'connection_type')) {
+                $table->string('connection_type')->nullable()->after('expiry_date');
+            }
+            if (!Schema::hasColumn('users', 'billing_type')) {
+                $table->string('billing_type')->nullable()->after('connection_type');
+            }
+            if (!Schema::hasColumn('users', 'device_type')) {
+                $table->string('device_type')->nullable()->after('billing_type');
+            }
+            if (!Schema::hasColumn('users', 'mac_address')) {
+                $table->string('mac_address')->nullable()->after('device_type');
+            }
+            if (!Schema::hasColumn('users', 'ip_address')) {
+                $table->string('ip_address')->nullable()->after('mac_address');
+            }
+            if (!Schema::hasColumn('users', 'is_subscriber')) {
+                $table->boolean('is_subscriber')->default(false)->after('ip_address');
+            }
+            if (!Schema::hasColumn('users', 'customer_id')) {
+                $table->string('customer_id')->unique()->nullable()->after('is_subscriber');
+            }
         });
 
         // Part 2: Migrate data from customers to users

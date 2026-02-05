@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'distributor.api' => \App\Http\Middleware\ValidateDistributorApiKey::class,
             'onboarding.complete' => \App\Http\Middleware\EnsureOnboardingComplete::class,
             'trust.snmp' => \App\Http\Middleware\TrustSnmpTrapSource::class,
+            'is_customer' => \App\Http\Middleware\IsCustomer::class,
         ]);
 
         // Add global middleware

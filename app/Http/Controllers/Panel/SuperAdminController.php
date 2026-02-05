@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
+use App\Models\Customer;
 use App\Models\PaymentGateway;
 use App\Models\Role;
 use App\Models\SmsGateway;
@@ -28,7 +28,7 @@ class SuperAdminController extends Controller
             'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                 $query->whereIn('slug', $excludedRoleSlugs);
             })->count(),
-            'total_network_users' => NetworkUser::count(),
+            'total_customers' => Customer::count(),
             'active_users' => User::where('is_active', true)
                 ->whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                     $query->whereIn('slug', $excludedRoleSlugs);

@@ -174,7 +174,12 @@ Route::get('/', function () {
     if (Auth::check()) {
         $user = Auth::user();
 
-        // Role to route mapping
+        // New check for subscribers
+        if ($user->is_subscriber) {
+            return redirect()->route('panel.customer.dashboard');
+        }
+
+        // Role to route mapping for operators
         $roleRoutes = [
             'super-admin' => 'panel.super-admin.dashboard',
             'admin' => 'panel.admin.dashboard',
@@ -184,7 +189,6 @@ Route::get('/', function () {
             'sub-operator' => 'panel.sub-operator.dashboard',
             'card-distributor' => 'panel.card-distributor.dashboard',
             'staff' => 'panel.staff.dashboard',
-            'customer' => 'panel.customer.dashboard',
         ];
 
         // Check user roles and redirect accordingly
@@ -1027,7 +1031,7 @@ Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middle
 });
 
 // Customer Panel
-Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'tenant', 'role:customer'])->group(function () {
+Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'tenant', 'is_customer'])->group(function () {
     Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
     Route::put('/profile', [CustomerController::class, 'updateProfile'])->name('profile.update');

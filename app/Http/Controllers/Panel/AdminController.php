@@ -13,7 +13,7 @@ use App\Models\IpPool;
 use App\Models\MikrotikProfile;
 use App\Models\MikrotikRouter;
 use App\Models\Nas;
-use App\Models\NetworkUser;
+use App\Models\Customer;
 use App\Models\Olt;
 use App\Models\OperatorCost;
 use App\Models\OperatorPackageRate;
@@ -105,7 +105,7 @@ class AdminController extends Controller
                 $query->whereIn('slug', $excludedRoleSlugs);
             })->count(),
             // Count customers with network service types (previously NetworkUser count)
-            'total_network_users' => User::where('is_subscriber', true)
+            'total_customers' => User::where('is_subscriber', true)
                 ->whereNotNull('service_type')
                 ->count(),
             'active_users' => User::where('is_active', true)
@@ -583,357 +583,6 @@ class AdminController extends Controller
     }
 
     /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Network credentials are now stored directly in the User model.
-     * Customers should be managed via customer routes instead.
-     *
-     * Display network users listing.
-     * Enforce tenant isolation - Admin can only see network users in their own tenant.
-     */
-    /*
-    public function networkUsers(): View
-    {
-        $tenantId = auth()->user()->tenant_id;
-
-        $networkUsers = NetworkUser::with(['user', 'package'])
-            ->where('tenant_id', $tenantId)
-            ->latest()
-            ->paginate(20);
-
-        $stats = [
-            'active' => NetworkUser::where('tenant_id', $tenantId)->where('status', 'active')->count(),
-            'suspended' => NetworkUser::where('tenant_id', $tenantId)->where('status', 'suspended')->count(),
-            'inactive' => NetworkUser::where('tenant_id', $tenantId)->where('status', 'inactive')->count(),
-            'total' => NetworkUser::where('tenant_id', $tenantId)->count(),
-        ];
-
-        return view('panels.admin.network-users.index', compact('networkUsers', 'stats'));
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Show the form for creating a new network user.
-     * Enforce tenant isolation - Only show customers, packages, and routers from Admin's tenant.
-     */
-    /*
-    public function networkUsersCreate(): View
-    {
-        $tenantId = auth()->user()->tenant_id;
-
-        $customers = User::where('tenant_id', $tenantId)
-            ->whereHas('roles', function ($query) {
-                $query->where('slug', 'customer');
-            })->get();
-        $packages = Package::where('tenant_id', $tenantId)->where('status', 'active')->get();
-        $routers = MikrotikRouter::where('tenant_id', $tenantId)->where('status', 'active')->get();
-
-        return view('panels.admin.network-users.create', compact('customers', 'packages', 'routers'));
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Store a newly created network user.
-     */
-    /*
-    public function networkUsersStore(Request $request)
-    {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'username' => 'required|string|max:255|unique:customers,username',
-            'password' => 'required|string|min:6',
-            'package_id' => 'required|exists:packages,id',
-            'service_type' => 'required|in:pppoe,hotspot,static',
-            'status' => 'required|in:active,suspended,inactive',
-        ]);
-
-        // Don't store the password in the database - it should be managed via router API
-        $networkUserData = [
-            'user_id' => $validated['user_id'],
-            'username' => $validated['username'],
-            'package_id' => $validated['package_id'],
-            'service_type' => $validated['service_type'],
-            'status' => $validated['status'],
-        ];
-
-        $networkUser = NetworkUser::create($networkUserData);
-
-        // Push the password to the actual router via MikrotikService
-        // SECURITY WARNING: MikrotikService currently uses HTTP for router communication.
-        // For production environments, configure HTTPS with certificate validation in the
-        // MikrotikService to protect credentials during transmission. See MikrotikService
-        // class documentation for security considerations.
-        if ($validated['service_type'] === 'pppoe') {
-            // Select router with explicit ordering for consistency
-            $router = MikrotikRouter::where('status', 'active')
-                ->orderBy('id')
-                ->first();
-
-            if ($router) {
-                try {
-                    $mikrotikService = app(MikrotikService::class);
-
-                    // Resolve PPPoE profile for this package and router
-                    $profileName = 'default';
-                    $profileMapping = PackageProfileMapping::where('package_id', $validated['package_id'])
-                        ->where('router_id', $router->id)
-                        ->first();
-
-                    if ($profileMapping && ! empty($profileMapping->profile_name)) {
-                        $profileName = $profileMapping->profile_name;
-                    }
-
-                    $mikrotikService->createPppoeUser([
-                        'router_id' => $router->id,
-                        'username' => $validated['username'],
-                        'password' => $validated['password'],
-                        'service' => 'pppoe',
-                        'profile' => $profileName,
-                    ]);
-                } catch (\Exception $e) {
-                    // Log the error but don't fail the user creation
-                    Log::warning('Failed to sync network user to router', [
-                        'username' => $validated['username'],
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-        }
-
-        return redirect()->route('panel.admin.network-users')
-            ->with('success', 'Network user created successfully.');
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Display the specified network user.
-     */
-    /*
-    public function networkUsersShow($id): View
-    {
-        $networkUser = NetworkUser::with(['user', 'package'])->findOrFail($id);
-
-        return view('panels.admin.network-users.show', compact('networkUser'));
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Show the form for editing the specified network user.
-     */
-    /*
-    public function networkUsersEdit($id): View
-    {
-        $networkUser = NetworkUser::findOrFail($id);
-        $customers = User::whereHas('roles', function ($query) {
-            $query->where('slug', 'customer');
-        })->get();
-        $packages = Package::where('status', 'active')->get();
-        $routers = MikrotikRouter::where('status', 'active')->get();
-
-        return view('panels.admin.network-users.edit', compact('networkUser', 'customers', 'packages', 'routers'));
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Update the specified network user.
-     */
-    /*
-    public function networkUsersUpdate(Request $request, $id)
-    {
-        $networkUser = NetworkUser::findOrFail($id);
-
-        // Capture original username before update for router sync
-        $originalUsername = $networkUser->username;
-
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'username' => 'required|string|max:255|unique:customers,username,' . $id,
-            'password' => 'nullable|string|min:6',
-            'package_id' => 'required|exists:packages,id',
-            'service_type' => 'required|in:pppoe,hotspot,static',
-            'status' => 'required|in:active,suspended,inactive',
-        ]);
-
-        // Update only the allowed fields (not password)
-        $networkUserData = [
-            'user_id' => $validated['user_id'],
-            'username' => $validated['username'],
-            'package_id' => $validated['package_id'],
-            'service_type' => $validated['service_type'],
-            'status' => $validated['status'],
-        ];
-
-        $networkUser->update($networkUserData);
-
-        // If password is provided, update it on the router via MikrotikService
-        // SECURITY WARNING: MikrotikService currently uses HTTP for router communication.
-        // For production environments, configure HTTPS with certificate validation in the
-        // MikrotikService to protect credentials during transmission. See MikrotikService
-        // class documentation for security considerations.
-        if (! empty($validated['password']) && $validated['service_type'] === 'pppoe') {
-            try {
-                $mikrotikService = app(MikrotikService::class);
-
-                // Use original username to locate the user on the router
-                $mikrotikService->updatePppoeUser($originalUsername, [
-                    'password' => $validated['password'],
-                ]);
-            } catch (\Exception $e) {
-                // Log the error but don't fail the update
-                Log::warning('Failed to sync password update to router', [
-                    'original_username' => $originalUsername,
-                    'new_username' => $validated['username'],
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        return redirect()->route('panel.admin.network-users')
-            ->with('success', 'Network user updated successfully.');
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Remove the specified network user.
-     */
-    /*
-    public function networkUsersDestroy($id)
-    {
-        $networkUser = NetworkUser::findOrFail($id);
-        $networkUser->delete();
-
-        return redirect()->route('panel.admin.network-users')
-            ->with('success', 'Network user deleted successfully.');
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Show the form for importing network users from router.
-     */
-    /*
-    public function networkUsersImport(): View
-    {
-        $routers = MikrotikRouter::where('status', 'active')->get();
-
-        return view('panels.admin.network-users.import', compact('routers'));
-    }
-    */
-
-    /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Process the import of network users from router.
-     */
-    /*
-    public function networkUsersProcessImport(Request $request)
-    {
-        $validated = $request->validate([
-            'router_id' => 'required|exists:mikrotik_routers,id',
-            'skip_existing' => 'boolean',
-            'auto_create_customers' => 'boolean',
-            'sync_packages' => 'boolean',
-        ]);
-
-        try {
-            $mikrotikService = app(\App\Services\MikrotikService::class);
-
-            // Import secrets (PPPoE users) from router
-            $secrets = $mikrotikService->importSecrets($validated['router_id']);
-
-            if (empty($secrets)) {
-                return redirect()->route('panel.admin.network-users.import')
-                    ->with('error', 'No users found on the selected router or unable to connect.');
-            }
-
-            $imported = 0;
-            $skipped = 0;
-            $errors = [];
-
-            foreach ($secrets as $secret) {
-                try {
-                    // Skip if user already exists
-                    if ($validated['skip_existing'] ?? true) {
-                        if (NetworkUser::where('username', $secret['name'])->exists()) {
-                            $skipped++;
-
-                            continue;
-                        }
-                    }
-
-                    // Find or create customer if auto_create_customers is enabled
-                    $userId = null;
-                    if ($validated['auto_create_customers'] ?? false) {
-                        $emailDomain = config('app.imported_user_domain', 'imported.local');
-                        $customer = User::firstOrCreate(
-                            ['email' => $secret['name'] . '@' . $emailDomain],
-                            [
-                                'name' => $secret['name'],
-                                'password' => bcrypt(Str::random(32)), // Strong random password
-                            ]
-                        );
-                        $userId = $customer->id;
-                    }
-
-                    // Find package by profile name if sync_packages is enabled
-                    $packageId = null;
-                    if ($validated['sync_packages'] ?? true) {
-                        $package = Package::where('name', 'like', '%' . ($secret['profile'] ?? 'default') . '%')->first();
-                        $packageId = $package?->id;
-                    }
-
-                    // Normalize disabled flag and determine status
-                    $disabledRaw = $secret['disabled'] ?? false;
-                    $isDisabled = in_array($disabledRaw, [true, 1, '1', 'yes', 'true', 'on'], true);
-                    $status = $isDisabled ? 'inactive' : 'active';
-
-                    // Create network user - don't store the password
-                    NetworkUser::create([
-                        'user_id' => $userId,
-                        'username' => $secret['name'],
-                        'service_type' => $secret['service'] ?? 'pppoe',
-                        'package_id' => $packageId,
-                        'status' => $status,
-                    ]);
-
-                    // Note: Passwords remain on the router and are not stored in our database
-                    // for security reasons. Users must be managed via the router API.
-
-                    $imported++;
-                } catch (\Exception $e) {
-                    $errors[] = "Failed to import user {$secret['name']}: " . $e->getMessage();
-                }
-            }
-
-            $message = "Successfully imported {$imported} network users.";
-            if ($skipped > 0) {
-                $message .= " Skipped {$skipped} existing users.";
-            }
-            if (! empty($errors)) {
-                $message .= ' Encountered ' . count($errors) . ' errors.';
-            }
-
-            return redirect()->route('panel.admin.network-users')
-                ->with('success', $message)
-                ->with('import_errors', $errors);
-
-        } catch (\Exception $e) {
-            Log::error('Network users import failed', [
-                'router_id' => $validated['router_id'],
-                'error' => $e->getMessage(),
-            ]);
-
-            return redirect()->route('panel.admin.network-users.import')
-                ->with('error', 'Import failed: ' . $e->getMessage());
-        }
-    }
-    */
-
-    /**
      * Display packages listing.
      */
     public function packages(): View
@@ -1062,7 +711,6 @@ class AdminController extends Controller
     public function customers(Request $request): View
     {
         $tenantId = auth()->user()->tenant_id;
-        $roleId = auth()->user()->role_id;
         $refresh = $request->boolean('refresh', false);
         $perPage = $request->input('per_page', session('customers_per_page', 25));
 
@@ -1076,7 +724,7 @@ class AdminController extends Controller
         $filterService = app(CustomerFilterService::class);
 
         // Get cached customers
-        $allCustomers = $cacheService->getCustomers($tenantId, $roleId, $refresh);
+        $allCustomers = $cacheService->getCustomers($tenantId, $refresh);
 
         // Attach online status
         $allCustomers = $cacheService->attachOnlineStatus($allCustomers, $refresh);
@@ -1228,18 +876,7 @@ class AdminController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
 
-        // Try to find as User first (User model now has network fields)
-        $customer = User::where('tenant_id', $tenantId)->find($id);
-
-        // If not found as User, try finding as NetworkUser and get the related User
-        if (! $customer) {
-            $networkUser = NetworkUser::with('user')->where('tenant_id', $tenantId)->find($id);
-            if ($networkUser && $networkUser->user) {
-                $customer = $networkUser->user;
-            } else {
-                abort(404, 'Customer not found');
-            }
-        }
+$customer = User::where('tenant_id', $tenantId)->findOrFail($id);
 
         $packages = ServicePackage::where('tenant_id', $tenantId)->get();
 
@@ -1257,18 +894,7 @@ class AdminController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
 
-        // Try to find as User first
-        $customer = User::where('tenant_id', $tenantId)->find($id);
-
-        // If not found as User, try finding as NetworkUser and get the related User
-        if (! $customer) {
-            $networkUser = NetworkUser::with('user')->where('tenant_id', $tenantId)->find($id);
-            if ($networkUser && $networkUser->user) {
-                $customer = $networkUser->user;
-            } else {
-                abort(404, 'Customer not found');
-            }
-        }
+        $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
 
         $validated = $request->validate([
             'username' => 'required|string|min:3|max:255|unique:users,username,' . $customer->id . '|regex:/^[a-zA-Z0-9_-]+$/',
@@ -1304,62 +930,49 @@ class AdminController extends Controller
     public function customersPartialUpdate(Request $request, $id)
     {
         try {
-            // Load User model (not NetworkUser) since $id is User ID from the show page
-            $user = User::with('networkUser')->findOrFail($id);
+            $user = User::findOrFail($id);
 
-            if (! $user->networkUser) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Network user not found for this customer.',
-                ], 404);
-            }
-
-            $networkUser = $user->networkUser;
-
-            // Authorize the action
             $this->authorize('update', $user);
 
-            // Handle different section updates based on provided fields
             $updated = false;
 
             // General Information section
-            if ($request->has(['status', 'customer_name', 'phone', 'email', 'zone_id'])) {
+            if ($request->hasAny(['status', 'customer_name', 'phone', 'email', 'zone_id'])) {
                 $validated = $request->validate([
                     'status' => 'sometimes|in:active,inactive,suspended',
                     'zone_id' => 'nullable|exists:zones,id',
-                ]);
-
-                if (isset($validated['status'])) {
-                    $networkUser->update(['status' => $validated['status']]);
-                    $updated = true;
-                }
-
-                if ($request->has('zone_id')) {
-                    $networkUser->update(['zone_id' => $validated['zone_id']]);
-                    $updated = true;
-                }
-
-                // Update User model fields
-                $userValidated = $request->validate([
                     'customer_name' => 'sometimes|string|max:255',
                     'phone' => 'sometimes|string|max:20',
-                    'email' => 'sometimes|email|max:255',
+                    'email' => 'sometimes|email|max:255|unique:users,email,' . $id,
                 ]);
 
-                if (! empty($userValidated)) {
-                    $user->update([
-                        'name' => $userValidated['customer_name'] ?? $user->name,
-                        'phone' => $userValidated['phone'] ?? $user->phone,
-                        'email' => $userValidated['email'] ?? $user->email,
-                    ]);
+                $updateData = [];
+                if (isset($validated['status'])) {
+                    $updateData['status'] = $validated['status'];
+                }
+                if ($request->filled('zone_id')) {
+                    $updateData['zone_id'] = $validated['zone_id'];
+                }
+                if (isset($validated['customer_name'])) {
+                    $updateData['name'] = $validated['customer_name'];
+                }
+                if (isset($validated['phone'])) {
+                    $updateData['phone'] = $validated['phone'];
+                }
+                if (isset($validated['email'])) {
+                    $updateData['email'] = $validated['email'];
+                }
+
+                if (!empty($updateData)) {
+                    $user->update($updateData);
                     $updated = true;
                 }
             }
 
             // Credentials section
-            if ($request->has(['username', 'password'])) {
+            if ($request->hasAny(['username', 'password'])) {
                 $validated = $request->validate([
-                    'username' => 'sometimes|string|min:3|max:255|unique:customers,username,' . $networkUser->id . '|regex:/^[a-zA-Z0-9_-]+$/',
+                    'username' => 'sometimes|string|min:3|max:255|unique:users,username,' . $id . '|regex:/^[a-zA-Z0-9_-]+$/',
                     'password' => 'nullable|string|min:8',
                 ]);
 
@@ -1367,18 +980,19 @@ class AdminController extends Controller
                 if (isset($validated['username'])) {
                     $updateData['username'] = $validated['username'];
                 }
-                if (! empty($validated['password'])) {
+                if (!empty($validated['password'])) {
                     $updateData['password'] = bcrypt($validated['password']);
+                    $updateData['radius_password'] = $validated['password'];
                 }
 
-                if (! empty($updateData)) {
-                    $networkUser->update($updateData);
+                if (!empty($updateData)) {
+                    $user->update($updateData);
                     $updated = true;
                 }
             }
 
             // Address section
-            if ($request->has(['address', 'city', 'zip_code', 'state'])) {
+            if ($request->hasAny(['address', 'city', 'zip_code', 'state'])) {
                 $validated = $request->validate([
                     'address' => 'nullable|string|max:500',
                     'city' => 'nullable|string|max:100',
@@ -1386,33 +1000,29 @@ class AdminController extends Controller
                     'state' => 'nullable|string|max:100',
                 ]);
 
-                $user->update($validated);
-                $updated = true;
+                if (!empty($validated)) {
+                    $user->update($validated);
+                    $updated = true;
+                }
             }
 
             // Network section
-            if ($request->has(['router_id', 'ip_address'])) {
+            if ($request->hasAny(['router_id', 'ip_address'])) {
                 $validated = $request->validate([
                     'router_id' => 'nullable|exists:mikrotik_routers,id',
                     'ip_address' => 'nullable|ip',
                 ]);
 
                 if (isset($validated['router_id'])) {
-                    $networkUser->update(['router_id' => $validated['router_id']]);
+                    $user->update(['router_id' => $validated['router_id']]);
                     $updated = true;
                 }
 
-                // Handle IP address - update or create IpAllocation
                 if (isset($validated['ip_address'])) {
-                    $ipAllocation = $user->ipAllocations()->first();
-                    if ($ipAllocation) {
-                        $ipAllocation->update(['ip_address' => $validated['ip_address']]);
-                    } else {
-                        $user->ipAllocations()->create([
-                            'ip_address' => $validated['ip_address'],
-                            'username' => $networkUser->username,
-                        ]);
-                    }
+                    $user->ipAllocations()->updateOrCreate(
+                        ['user_id' => $user->id],
+                        ['ip_address' => $validated['ip_address'], 'username' => $user->username]
+                    );
                     $updated = true;
                 }
             }
@@ -1420,60 +1030,32 @@ class AdminController extends Controller
             // MAC address section
             if ($request->has('mac_address')) {
                 $validated = $request->validate([
-                    'mac_address' => 'nullable|string|max:17',
+                    'mac_address' => 'nullable|string|max:17|regex:/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/',
                 ]);
 
-                if (! empty($validated['mac_address'])) {
-                    $macAddress = $user->macAddresses()->first();
-                    if ($macAddress) {
-                        $macAddress->update(['mac_address' => $validated['mac_address']]);
-                    } else {
-                        $user->macAddresses()->create(['mac_address' => $validated['mac_address']]);
-                    }
-                    $updated = true;
-                }
+                $user->update(['mac_address' => $validated['mac_address']]);
+                $updated = true;
             }
 
             // Comments section
             if ($request->has('comments')) {
-                $validated = $request->validate([
-                    'comments' => 'nullable|string|max:1000',
-                ]);
-
-                $networkUser->update(['comments' => $validated['comments']]);
+                $validated = $request->validate(['comments' => 'nullable|string|max:1000']);
+                $user->update(['comments' => $validated['comments']]);
                 $updated = true;
             }
 
-            if (! $updated) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No valid fields provided for update.',
-                ], 400);
+            if (!$updated) {
+                return response()->json(['success' => false, 'message' => 'No valid fields provided for update.'], 400);
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Changes saved successfully.',
-            ]);
-
+            return response()->json(['success' => true, 'message' => 'Changes saved successfully.']);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $e->errors(),
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Validation failed.', 'errors' => $e->errors()], 422);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You are not authorized to update this customer.',
-            ], 403);
+            return response()->json(['success' => false, 'message' => 'You are not authorized to update this customer.'], 403);
         } catch (\Exception $e) {
             \Log::error('Failed to update customer: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update customer. Please try again.',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to update customer. Please try again.'], 500);
         }
     }
 
@@ -1486,7 +1068,7 @@ class AdminController extends Controller
      */
     public function customersDestroy($id)
     {
-        $customer = NetworkUser::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
+        $customer = User::where('tenant_id', auth()->user()->tenant_id)->where('is_subscriber', true)->findOrFail($id);
         $customer->delete();
 
         return redirect()->route('panel.admin.customers.index')
@@ -1502,40 +1084,16 @@ class AdminController extends Controller
         $tenantId = auth()->user()->tenant_id;
 
         // Load the User model which is what all customer actions expect
-        // The $id could be either User ID or NetworkUser ID, so we need to handle both cases
+        // The $id could be either User ID or Customer ID, so we need to handle both cases
         $customer = User::with([
-            'networkUser.package',
-            'networkUser.sessions',
+            'package',
+            'sessions',
             'ipAllocations',
             'macAddresses',
-        ])->where('tenant_id', $tenantId)->find($id);
+        ])->where('tenant_id', $tenantId)->findOrFail($id);
 
-        // If not found as User, try finding as NetworkUser and get the related User
-        if (! $customer) {
-            // Mirror the eager loading done above by loading the same User relations via NetworkUser
-            $networkUser = NetworkUser::with([
-                'user.ipAllocations',
-                'user.macAddresses',
-                'package',
-                'sessions',
-            ])->where('tenant_id', $tenantId)->find($id);
-
-            if ($networkUser && $networkUser->user) {
-                $customer = $networkUser->user;
-                $customer->setRelation('networkUser', $networkUser);
-            } else {
-                if ($networkUser && ! $networkUser->user) {
-                    \Log::warning('NetworkUser found without associated User', ['network_user_id' => $id]);
-                }
-                abort(404, 'Customer not found');
-            }
-        }
-
-        // Load ONU information if the customer has an associated NetworkUser
-        $onu = null;
-        if ($customer->networkUser) {
-            $onu = \App\Models\Onu::where('network_user_id', $customer->networkUser->id)->with('olt')->first();
-        }
+        // Load ONU information if the customer has an associated ONU
+        $onu = \App\Models\Onu::where('customer_id', $customer->id)->with('olt')->first();
 
         // Load additional data for inline editing - enforcing tenant isolation
         $packages = ServicePackage::where('tenant_id', $tenantId)->select('id', 'name')->orderBy('name')->get();
@@ -1924,7 +1482,7 @@ class AdminController extends Controller
      */
     public function onlineCustomers(): View
     {
-        $customers = NetworkUser::with('package')->where('status', 'active')->latest()->paginate(20);
+        $customers = User::with('package')->where('is_subscriber', true)->where('status', 'active')->latest()->paginate(20);
 
         $stats = [
             'online' => $customers->total(),
@@ -1939,7 +1497,7 @@ class AdminController extends Controller
      */
     public function offlineCustomers(): View
     {
-        $customers = NetworkUser::with('package')->latest()->paginate(20);
+        $customers = User::with('package')->where('is_subscriber', true)->where('status', 'inactive')->latest()->paginate(20);
 
         return view('panels.admin.customers.offline', compact('customers'));
     }

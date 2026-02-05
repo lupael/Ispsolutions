@@ -20,7 +20,7 @@ class ManagerController extends Controller
         $tenantId = auth()->user()->tenant_id;
 
         $stats = [
-            'total_network_users' => User::where('tenant_id', $tenantId)
+            'total_customers' => User::where('tenant_id', $tenantId)
                 ->where('is_subscriber', true)->count(),
             'active_sessions' => NetworkUserSession::where('tenant_id', $tenantId)
                 ->whereNull('end_time')->count(),
