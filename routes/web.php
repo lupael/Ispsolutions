@@ -267,6 +267,7 @@ Route::get('/panel/search', [SearchController::class, 'search'])->middleware(['a
 // Super Admin Panel
 Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['auth', 'role:super-admin'])->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::resource('admins', \App\Http\Controllers\SuperAdminController::class);
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::get('/users/create', [SuperAdminController::class, 'usersCreate'])->name('users.create');
     Route::post('/users', [SuperAdminController::class, 'usersStore'])->name('users.store');
@@ -315,6 +316,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
 // Admin Panel
 Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'tenant', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::resource('users', \App\Http\Controllers\AdminController::class);
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('users.create');
     Route::post('/users', [AdminController::class, 'usersStore'])->name('users.store');
@@ -1081,12 +1083,7 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     Route::post('/tenancies/{tenant}/toggle-status', [DeveloperController::class, 'toggleTenancyStatus'])->name('tenancies.toggle-status');
 
     // Super Admin Management
-    Route::get('/super-admins', [DeveloperController::class, 'superAdmins'])->name('super-admins.index');
-    Route::get('/super-admins/create', [DeveloperController::class, 'createSuperAdmin'])->name('super-admins.create');
-    Route::post('/super-admins', [DeveloperController::class, 'storeSuperAdmin'])->name('super-admins.store');
-    Route::get('/super-admins/{id}', [DeveloperController::class, 'showSuperAdmin'])->name('super-admins.show');
-    Route::get('/super-admins/{id}/edit', [DeveloperController::class, 'editSuperAdmin'])->name('super-admins.edit');
-    Route::put('/super-admins/{id}', [DeveloperController::class, 'updateSuperAdmin'])->name('super-admins.update');
+    Route::resource('super-admins', \App\Http\Controllers\DeveloperController::class);
 
     // Admin (ISP) Management
     Route::get('/admins', [DeveloperController::class, 'allAdmins'])->name('admins.index');

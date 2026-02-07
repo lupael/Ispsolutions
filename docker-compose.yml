@@ -1,3 +1,5 @@
+version: '2.2'
+
 # SECURITY NOTE: Database ports (3306, 3307) are exposed to the host for development.
 # For production deployments, remove port mappings or use docker-compose.prod.yml override
 # to prevent external access to databases.
@@ -16,23 +18,20 @@ services:
     networks:
       - ispsolution
     depends_on:
-      db:
-        condition: service_healthy
-      radius-db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+      - db
+      - radius-db
+      - redis
     environment:
-      - APP_ENV=${APP_ENV:-local}
-      - APP_DEBUG=${APP_DEBUG:-true}
-      - DB_CONNECTION=${DB_CONNECTION:-mysql}
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_DATABASE=${DB_DATABASE:-ispsolution}
-      - DB_USERNAME=${DB_USERNAME:-ispsolution}
-      - DB_PASSWORD=${DB_PASSWORD:-secret}
-      - RADIUS_DB_HOST=radius-db
-      - REDIS_HOST=redis
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-ispsolution}
+      DB_USERNAME: ${DB_USERNAME:-ispsolution}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      RADIUS_DB_HOST: radius-db
+      REDIS_HOST: redis
     ports:
       - "8000:8000"
     healthcheck:
@@ -40,7 +39,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 30s
 
   db:
     image: mysql:8.0
@@ -62,7 +60,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
 
   radius-db:
     image: mysql:8.0
@@ -84,7 +81,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
 
   redis:
     image: redis:7-alpine
