@@ -30,6 +30,9 @@ class OltSnmpService
             'onu_rx_power' => '.1.3.6.1.4.1.13464.1.11.4.1.1.22',     // ontReceivedOpticalPower
             'onu_tx_power' => '.1.3.6.1.4.1.13464.1.11.4.1.1.23',     // ontMeanOpticalLaunchPower
             'onu_distance' => '.1.3.6.1.4.1.13464.1.11.4.1.1.32',     // ontDistance
+            'onu_model' => '.1.3.6.1.4.1.17409.2.3.4.1.1.10',        // onuChipVendor
+            'onu_hw_version' => '.1.3.6.1.4.1.17409.2.3.4.1.1.12',     // onuChipVersion
+            'onu_sw_version' => '.1.3.6.1.4.1.17409.2.3.4.1.1.13',     // onuSoftwareVersion
         ],
         'huawei' => [
             'onu_list' => '.1.3.6.1.4.1.2011.6.128.1.1.2.43.1.3', // ONU serial numbers
@@ -37,6 +40,9 @@ class OltSnmpService
             'onu_rx_power' => '.1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4', // RX optical power
             'onu_tx_power' => '.1.3.6.1.4.1.2011.6.128.1.1.2.51.1.6', // TX optical power
             'onu_distance' => '.1.3.6.1.4.1.2011.6.128.1.1.2.53.1.1', // Distance
+            'onu_model' => '.1.3.6.1.4.1.2011.5.104.1.1.1.1.2',     // hwGonuEquipId
+            'onu_hw_version' => '.1.3.6.1.4.1.2011.5.104.1.1.1.1.14',    // hwGonuChipVendor
+            'onu_sw_version' => '.1.3.6.1.4.1.2011.5.104.1.1.1.1.8',     // hwGonuSwVersion (assumption)
         ],
         'zte' => [
             'onu_list' => '.1.3.6.1.4.1.3902.1012.3.28.1.1.5', // ONU serial numbers
@@ -44,6 +50,9 @@ class OltSnmpService
             'onu_rx_power' => '.1.3.6.1.4.1.3902.1012.3.50.12.1.1.10', // RX power
             'onu_tx_power' => '.1.3.6.1.4.1.3902.1012.3.50.12.1.1.9', // TX power
             'onu_distance' => '.1.3.6.1.4.1.3902.1012.3.28.2.1.9', // Distance
+            'onu_model' => '.1.3.6.1.4.1.3902.1082.120.1.1.1.1.2',    // zxAnPonRmOnuModel
+            'onu_hw_version' => '.1.3.6.1.4.1.3902.1082.120.1.1.1.1.3',    // zxAnPonRmOnuHwVersion
+            'onu_sw_version' => '.1.3.6.1.4.1.3902.1082.120.1.1.1.1.4',    // zxAnPonRmOnuSwVersion
         ],
         'bdcom' => [
             'onu_list' => '.1.3.6.1.4.1.3320.101.11.1.1.3', // ONU serial numbers
@@ -51,6 +60,9 @@ class OltSnmpService
             'onu_rx_power' => '.1.3.6.1.4.1.3320.101.108.1.1.9', // RX power
             'onu_tx_power' => '.1.3.6.1.4.1.3320.101.108.1.1.10', // TX power
             'onu_distance' => '.1.3.6.1.4.1.3320.101.11.1.1.8', // Distance
+            'onu_model' => '.1.3.6.1.4.1.3320.101.10.1.1.2',     // ONU Model ID
+            'onu_hw_version' => '.1.3.6.1.4.1.3320.101.10.1.1.1',     // ONU Vendor ID
+            'onu_sw_version' => null, // Not available
         ],
     ];
 
@@ -96,6 +108,9 @@ class OltSnmpService
                     'signal_rx' => null,
                     'signal_tx' => null,
                     'distance' => null,
+                    'model' => null,
+                    'hw_version' => null,
+                    'sw_version' => null,
                 ];
 
                 // Try to get additional details
@@ -132,6 +147,40 @@ class OltSnmpService
                     }
                 } catch (\Exception $e) {
                     // Continue without distance
+                }
+
+                // Get vendor specific details
+                try {
+                    if (isset($oids['onu_model'])) {
+                        $model = $this->snmpGet($olt, $oids['onu_model'] . '.' . $index);
+                        if ($model !== null && $model !== false) {
+                            $onu['model'] = $this->cleanSnmpString($model);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Continue without model
+                }
+
+                try {
+                    if (isset($oids['onu_hw_version'])) {
+                        $hwVersion = $this->snmpGet($olt, $oids['onu_hw_version'] . '.' . $index);
+                        if ($hwVersion !== null && $hwVersion !== false) {
+                            $onu['hw_version'] = $this->cleanSnmpString($hwVersion);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Continue without hw_version
+                }
+
+                try {
+                    if (isset($oids['onu_sw_version'])) {
+                        $swVersion = $this->snmpGet($olt, $oids['onu_sw_version'] . '.' . $index);
+                        if ($swVersion !== null && $swVersion !== false) {
+                            $onu['sw_version'] = $this->cleanSnmpString($swVersion);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Continue without sw_version
                 }
 
                 $discoveredOnus[] = $onu;
@@ -493,5 +542,14 @@ class OltSnmpService
 
         // Vendor-specific distance conversion
         return (int) $value;
+    }
+    private function cleanSnmpString(string $string): string
+    {
+        // Remove common prefixes and clean the string
+        $string = trim($string);
+        $string = preg_replace('/^(STRING: |HEX-STRING: )/', '', $string);
+        $string = str_replace('"', '', $string);
+
+        return trim($string);
     }
 }
