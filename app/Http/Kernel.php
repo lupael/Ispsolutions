@@ -32,8 +32,9 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \\App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-
-        ],
+            \\App\Http\Middleware\ResolveTenant::class,
+            \\App\Http\Middleware\SetLocale::class,
+        ]
 
         'api' => [
             'throttle:api',
@@ -54,7 +55,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\CheckRole::class,
         'permission' => \App\Http\Middleware\CheckPermission::class,
-        'resolve.tenant' => \App\Http\Middleware\ResolveTenant::class,
         'subscription' => \App\Http\Middleware\CheckSubscription::class,
     ];
 }
