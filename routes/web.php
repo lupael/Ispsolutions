@@ -265,7 +265,7 @@ Route::get('/demo10', function () {
 Route::get('/panel/search', [SearchController::class, 'search'])->middleware(['auth'])->name('panel.search');
 
 // Super Admin Panel
-Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['auth', 'subscription', 'role:super-admin'])->group(function () {
+Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['auth', 'role:super-admin'])->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::resource('admins', \App\Http\Controllers\SuperAdminController::class);
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
@@ -314,7 +314,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
 });
 
 // Admin Panel
-Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'subscription', 'role:admin'])->group(function () {
+Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     // Route::resource('users', \App\Http\Controllers\AdminController::class);
     Route::get('/users', [AdminController::class, 'users'])->name('users');
@@ -894,7 +894,7 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'subscri
 });
 
 // Sales Manager Panel
-Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware(['auth', 'subscription', 'role:sales-manager'])->group(function () {
+Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware(['auth', 'role:sales-manager'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\SalesManagerController::class, 'dashboard'])->name('dashboard');
 
     // Admin (ISP Client) Management
@@ -924,7 +924,7 @@ Route::prefix('panel/sales-manager')->name('panel.sales-manager.')->middleware([
 });
 
 // Manager Panel
-Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'subscription', 'role:manager'])->group(function () {
+Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
     // DEPRECATED: Network users now managed via Customer model
     // Route::get('/network-users', [ManagerController::class, 'networkUsers'])->name('network-users');
@@ -938,7 +938,7 @@ Route::prefix('panel/manager')->name('panel.manager.')->middleware(['auth', 'sub
 });
 
 // Operator Panel
-Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 'subscription', 'role:operator'])->group(function () {
+Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 'role:operator'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\OperatorController::class, 'dashboard'])->name('dashboard');
     Route::get('/sub-operators', [\App\Http\Controllers\Panel\OperatorController::class, 'subOperators'])->name('sub-operators.index');
     Route::get('/customers', [\App\Http\Controllers\Panel\OperatorController::class, 'customers'])->name('customers.index');
@@ -974,7 +974,7 @@ Route::prefix('panel/operator')->name('panel.operator.')->middleware(['auth', 's
 });
 
 // Sub-Operator Panel
-Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['auth', 'subscription', 'role:sub-operator'])->group(function () {
+Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['auth', 'role:sub-operator'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\SubOperatorController::class, 'dashboard'])->name('dashboard');
     Route::get('/customers', [\App\Http\Controllers\Panel\SubOperatorController::class, 'customers'])->name('customers.index');
     Route::get('/customers/{customer}', [\App\Http\Controllers\Panel\SubOperatorController::class, 'showCustomer'])->name('customers.show');
@@ -988,7 +988,7 @@ Route::prefix('panel/sub-operator')->name('panel.sub-operator.')->middleware(['a
 });
 
 // Accountant Panel
-Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth', 'subscription', 'role:accountant'])->group(function () {
+Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth', 'role:accountant'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Panel\AccountantController::class, 'dashboard'])->name('dashboard');
     Route::get('/reports/income-expense', [\App\Http\Controllers\Panel\AccountantController::class, 'incomeExpenseReport'])->name('reports.income-expense');
     Route::get('/reports/payments', [\App\Http\Controllers\Panel\AccountantController::class, 'paymentHistory'])->name('reports.payments');
@@ -1001,7 +1001,7 @@ Route::prefix('panel/accountant')->name('panel.accountant.')->middleware(['auth'
 });
 
 // Staff Panel
-Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'subscription', 'role:staff'])->group(function () {
+Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
     // DEPRECATED: Network users now managed via Customer model
     // Route::get('/network-users', [StaffController::class, 'networkUsers'])->name('network-users');
@@ -1018,7 +1018,7 @@ Route::prefix('panel/staff')->name('panel.staff.')->middleware(['auth', 'subscri
 });
 
 // Card Distributor Panel
-Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'subscription', 'role:card-distributor'])->group(function () {
+Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middleware(['auth', 'role:card-distributor'])->group(function () {
     Route::get('/dashboard', [CardDistributorController::class, 'dashboard'])->name('dashboard');
     Route::get('/cards', [CardDistributorController::class, 'cards'])->name('cards');
     Route::get('/cards/{card}', [CardDistributorController::class, 'showCard'])->name('cards.show');
@@ -1033,7 +1033,7 @@ Route::prefix('panel/card-distributor')->name('panel.card-distributor.')->middle
 });
 
 // Customer Panel
-Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'subscription', 'is_customer'])->group(function () {
+Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 'is_customer'])->group(function () {
     Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
     Route::put('/profile', [CustomerController::class, 'updateProfile'])->name('profile.update');
@@ -1071,7 +1071,7 @@ Route::prefix('panel/customer')->name('panel.customer.')->middleware(['auth', 's
 });
 
 // Developer Panel (Supreme Authority)
-Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 'subscription', 'role:developer'])->group(function () {
+Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 'role:developer'])->group(function () {
     Route::get('/dashboard', [DeveloperController::class, 'dashboard'])->name('dashboard');
 
     // Tenancy Management
