@@ -1291,7 +1291,6 @@ class User extends Authenticatable
 
         return null;
     }
-}
 
     /**
      * Get the subscription plan for this Super Admin user
@@ -1301,4 +1300,6 @@ class User extends Authenticatable
     {
         return $this->belongsTo(SubscriptionPlan::class);
     }
+
+}
 
