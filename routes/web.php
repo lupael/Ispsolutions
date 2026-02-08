@@ -316,7 +316,7 @@ Route::prefix('panel/super-admin')->name('panel.super-admin.')->middleware(['aut
 // Admin Panel
 Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'resolve.tenant', 'subscription', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::resource('users', \App\Http\Controllers\AdminController::class);
+    // Route::resource('users', \App\Http\Controllers\AdminController::class);
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('users.create');
     Route::post('/users', [AdminController::class, 'usersStore'])->name('users.store');
