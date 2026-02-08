@@ -109,6 +109,14 @@ class Tenant extends Model
     }
 
     /**
+     * Get the admin user for the tenant.
+     */
+    public function admin()
+    {
+        return $this->hasOne(User::class)->where('operator_level', 20);
+    }
+
+    /**
      * Check if tenant is active.
      */
     public function isActive(): bool

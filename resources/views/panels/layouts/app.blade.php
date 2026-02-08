@@ -23,7 +23,7 @@
             @include('panels.partials.navigation')
 
             <!-- Impersonation Banner -->
-            @if(session('impersonating'))
+            @if(session()->has('impersonator_id'))
                 <div class="bg-yellow-500 text-white shadow-lg">
                     <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8">
                         <div class="flex items-center justify-between flex-wrap">
@@ -32,15 +32,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                                 <span class="font-semibold">
-                                    You are currently impersonating: <strong>{{ session('impersonated_user_name') }}</strong>
+                                    You are currently impersonating: <strong>{{ auth()->user()->name }}</strong>
                                 </span>
                             </div>
-                            <form action="{{ route('panel.admin.stop-impersonating') }}" method="POST" class="mt-2 sm:mt-0">
-                                @csrf
-                                <button type="submit" class="bg-white text-yellow-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-50 transition duration-150">
-                                    Return to Admin Account
-                                </button>
-                            </form>
+                            <a href="{{ route('panel.developer.stop-impersonating') }}" class="mt-2 sm:mt-0 bg-white text-yellow-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-50 transition duration-150">
+                                Return to your Account
+                            </a>
                         </div>
                     </div>
                 </div>

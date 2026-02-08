@@ -62,7 +62,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $isp->created_at->format('Y-m-d') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('panel.super-admin.isp.edit', $isp->id) }}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1 px-3 rounded">
+                            <a href="{{ route('panel.super-admin.isp.edit', $isp->admin->id) }}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1 px-3 rounded">
                                 Edit
                             </a>
                         </td>

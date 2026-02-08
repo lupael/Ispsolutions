@@ -6,9 +6,17 @@
 <div class="container mx-auto px-4 sm:px-6 lg:px-8">
     <div class="mb-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Error Logs (Last 100 entries)</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Recent error entries from Laravel log file</p>
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Error Logs (Last 100 entries)</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Recent error entries from Laravel log file</p>
+                </div>
+                <form action="{{ route('panel.developer.error-logs.clear') }}" method="POST" onsubmit="return confirm('Are you sure you want to clear the error log?');">
+                    @csrf
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">
+                        Clear Log
+                    </button>
+                </form>
             </div>
             <div class="p-6">
                 @if($logs->count() > 0)

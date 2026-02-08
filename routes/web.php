@@ -1125,6 +1125,7 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     Route::get('/audit-logs', [DeveloperController::class, 'auditLogs'])->name('audit-logs');
     Route::get('/logs', [DeveloperController::class, 'logs'])->name('logs');
     Route::get('/error-logs', [DeveloperController::class, 'errorLogs'])->name('error-logs');
+    Route::post('/error-logs/clear', [DeveloperController::class, 'clearErrorLogs'])->name('error-logs.clear');
 
     // API Management
     Route::get('/api-docs', [DeveloperController::class, 'apiDocs'])->name('api-docs');
@@ -1133,6 +1134,10 @@ Route::prefix('panel/developer')->name('panel.developer.')->middleware(['auth', 
     // System Tools
     Route::get('/settings', [DeveloperController::class, 'settings'])->name('settings');
     Route::get('/debug', [DeveloperController::class, 'debug'])->name('debug');
+
+    // Impersonation Routes
+    Route::get('/users/{user}/impersonate', [DeveloperController::class, 'impersonate'])->name('users.impersonate');
+    Route::get('/stop-impersonating', [DeveloperController::class, 'stopImpersonating'])->name('stop-impersonating');
 
     // Role Settings
     Route::get('/settings/roles', [DeveloperController::class, 'showRoleSettings'])->name('settings.roles');

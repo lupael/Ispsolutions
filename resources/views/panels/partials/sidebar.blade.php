@@ -312,8 +312,8 @@
                     ['label' => 'Application Logs', 'route' => 'panel.developer.logs'],
                     ['label' => 'Audit Logs', 'route' => 'panel.developer.audit-logs'],
                     ['label' => 'Error Logs', 'route' => 'panel.developer.error-logs'],
-                    ['label' => 'RADIUS Logs', 'route' => 'panel.admin.logs.radius'],
-                    ['label' => 'Laravel Logs', 'route' => 'panel.admin.logs.laravel'],
+                    ['label' => 'RADIUS Logs', 'route' => 'panel.developer.logs'],
+                    ['label' => 'Laravel Logs', 'route' => 'panel.developer.error-logs'],
                 ]
             ],
             [

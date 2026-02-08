@@ -177,7 +177,7 @@ class SuperAdminController extends Controller
      */
     public function roles(): View
     {
-        $roles = Role::withCount('users')->get();
+        $roles = Role::withCount('users')->where('slug', '!=', 'developer')->get();
 
         return view('panels.super-admin.roles.index', compact('roles'));
     }
@@ -187,7 +187,7 @@ class SuperAdminController extends Controller
      */
     public function ispIndex(): View
     {
-        $isps = Tenant::withCount('users')->latest()->paginate(20);
+        $isps = Tenant::withCount('users')->with('admin')->latest()->paginate(20);
 
         return view('panels.super-admin.isp.index', compact('isps'));
     }

@@ -339,16 +339,16 @@ class DeveloperController extends Controller
      */
     public function auditLogs(): View
     {
-        $logs = \App\Models\AuditLog::allTenants()
+        $logs = \App\Models\AuditLog::withoutGlobalScope('tenant')
             ->with(['user', 'auditable'])
             ->latest()
             ->paginate(50);
 
         $stats = [
-            'total' => \App\Models\AuditLog::allTenants()->count(),
-            'today' => \App\Models\AuditLog::allTenants()->whereDate('created_at', today())->count(),
-            'this_week' => \App\Models\AuditLog::allTenants()->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-            'this_month' => \App\Models\AuditLog::allTenants()->whereMonth('created_at', now()->month)->count(),
+            'total' => \App\Models\AuditLog::withoutGlobalScope('tenant')->count(),
+            'today' => \App\Models\AuditLog::withoutGlobalScope('tenant')->whereDate('created_at', today())->count(),
+            'this_week' => \App\Models\AuditLog::withoutGlobalScope('tenant')->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            'this_month' => \App\Models\AuditLog::withoutGlobalScope('tenant')->whereMonth('created_at', now()->month)->count(),
         ];
 
         return view('panels.developer.audit-logs', compact('logs', 'stats'));
@@ -435,6 +435,20 @@ class DeveloperController extends Controller
         }
 
         return view('panels.developer.error-logs', compact('logs'));
+    }
+
+    /**
+     * Clear the error log file.
+     */
+    public function clearErrorLogs(): RedirectResponse
+    {
+        $logFile = storage_path('logs/laravel.log');
+
+        if (file_exists($logFile)) {
+            file_put_contents($logFile, '');
+        }
+
+        return redirect()->back()->with('success', 'Error log cleared successfully.');
     }
 
     /**
@@ -707,6 +721,36 @@ class DeveloperController extends Controller
 
         return redirect()->route('panel.developer.subscriptions.index')
             ->with('success', 'Subscription plan deleted successfully.');
+    }
+
+    /**
+     * Impersonate a user.
+     */
+    public function impersonate(User $user): RedirectResponse
+    {
+        if ($user->isDeveloper()) {
+            return redirect()->back()->with('error', 'Cannot impersonate another developer.');
+        }
+
+        session()->put('impersonator_id', auth()->id());
+        auth()->login($user);
+
+        return redirect()->route('panel.dashboard')->with('success', 'Impersonating ' . $user->name);
+    }
+
+    /**
+     * Stop impersonating a user.
+     */
+    public function stopImpersonating(): RedirectResponse
+    {
+        if (!session()->has('impersonator_id')) {
+            return redirect()->back()->with('error', 'You are not impersonating anyone.');
+        }
+
+        $impersonatorId = session()->pull('impersonator_id');
+        auth()->loginUsingId($impersonatorId);
+
+        return redirect()->route('panel.developer.dashboard')->with('success', 'Stopped impersonating.');
     }
 
     /**
