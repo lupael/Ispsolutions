@@ -44,8 +44,8 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Network Users</dt>
-                            <dd class="text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ $stats['total_network_users'] }}</dd>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Subscribers</dt>
+                            <dd class="text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ $stats['total_subscribers'] }}</dd>
                         </dl>
                     </div>
                 </div>

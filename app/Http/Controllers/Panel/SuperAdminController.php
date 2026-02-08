@@ -28,7 +28,7 @@ class SuperAdminController extends Controller
             'total_users' => User::whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                 $query->whereIn('slug', $excludedRoleSlugs);
             })->count(),
-            'total_customers' => Customer::count(),
+            'total_subscribers' => User::where('is_subscriber', true)->count(),
             'active_users' => User::where('is_active', true)
                 ->whereDoesntHave('roles', function ($query) use ($excludedRoleSlugs) {
                     $query->whereIn('slug', $excludedRoleSlugs);

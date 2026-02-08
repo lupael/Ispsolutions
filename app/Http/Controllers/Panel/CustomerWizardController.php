@@ -40,7 +40,6 @@ class CustomerWizardController extends Controller
         if ($sessionId) {
             $tempCustomer = TempCustomer::where('session_id', $sessionId)
                 ->where('user_id', auth()->id())
-                ->where('tenant_id', getCurrentTenantId())
                 ->notExpired()
                 ->first();
 
@@ -55,7 +54,6 @@ class CustomerWizardController extends Controller
 
         $tempCustomer = TempCustomer::create([
             'user_id' => auth()->id(),
-            'tenant_id' => getCurrentTenantId(),
             'session_id' => $sessionId,
             'step' => 1,
             'data' => [],
@@ -80,7 +78,6 @@ class CustomerWizardController extends Controller
 
         $tempCustomer = TempCustomer::where('session_id', $sessionId)
             ->where('user_id', auth()->id())
-            ->where('tenant_id', getCurrentTenantId())
             ->notExpired()
             ->firstOrFail();
 
@@ -109,7 +106,6 @@ class CustomerWizardController extends Controller
 
         $tempCustomer = TempCustomer::where('session_id', $sessionId)
             ->where('user_id', auth()->id())
-            ->where('tenant_id', getCurrentTenantId())
             ->notExpired()
             ->firstOrFail();
 
@@ -211,8 +207,7 @@ class CustomerWizardController extends Controller
      */
     private function showStep3(TempCustomer $tempCustomer, array $data): View
     {
-        $packages = ServicePackage::where('tenant_id', getCurrentTenantId())
-            ->where('is_active', true)
+        $packages = ServicePackage::where('is_active', true)
             ->orderBy('price')
             ->get();
 
@@ -251,8 +246,7 @@ class CustomerWizardController extends Controller
      */
     private function showStep4(TempCustomer $tempCustomer, array $data): View
     {
-        $zones = Zone::where('tenant_id', getCurrentTenantId())
-            ->where('is_active', true)
+        $zones = Zone::where('is_active', true)
             ->orderBy('name')
             ->get();
 
@@ -303,7 +297,6 @@ class CustomerWizardController extends Controller
 
             // Create customer user with network credentials
             $customer = User::create([
-                'tenant_id' => getCurrentTenantId(),
                 'name' => $allData['name'],
                 'email' => $allData['email'],
                 'username' => $username,
@@ -353,7 +346,6 @@ class CustomerWizardController extends Controller
             $endDate = $startDate->copy()->addDays($validityDays);
 
             $invoice = Invoice::create([
-                'tenant_id' => getCurrentTenantId(),
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'user_id' => $customer->id,
                 'package_id' => $allData['package_id'],
