@@ -11,12 +11,12 @@ class DeveloperController extends Controller
     public function index()
     {
         $superAdmins = User::role('super-admin')->get();
-        return view('developer.index', compact('superAdmins'));
+        return view('panels.developer.index', compact('superAdmins'));
     }
 
     public function create()
     {
-        return view('developer.create');
+        return view('panels.developer.create');
     }
 
     public function store(Request $request)
@@ -35,7 +35,7 @@ class DeveloperController extends Controller
 
     public function edit(User $user)
     {
-        return view('developer.edit', compact('user'));
+        return view('panels.developer.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)

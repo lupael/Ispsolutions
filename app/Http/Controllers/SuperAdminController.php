@@ -12,12 +12,12 @@ class SuperAdminController extends Controller
     public function index()
     {
         $admins = User::role('admin')->where('parent_id', Auth::id())->get();
-        return view('super-admin.index', compact('admins'));
+        return view('panels.super-admin.index', compact('admins'));
     }
 
     public function create()
     {
-        return view('super-admin.create');
+        return view('panels.super-admin.create');
     }
 
     public function store(Request $request)
@@ -36,7 +36,7 @@ class SuperAdminController extends Controller
 
     public function edit(User $user)
     {
-        return view('super-admin.edit', compact('user'));
+        return view('panels.super-admin.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)

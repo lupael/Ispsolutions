@@ -11,12 +11,12 @@ class AdminController extends Controller
     public function index()
     {
         $users = User::where('parent_id', Auth::id())->get();
-        return view('admin.index', compact('users'));
+        return view('panels.admin.index', compact('users'));
     }
 
     public function create()
     {
-        return view('admin.create');
+        return view('panels.admin.create');
     }
 
     public function store(Request $request)
@@ -34,7 +34,7 @@ class AdminController extends Controller
 
     public function edit(User $user)
     {
-        return view('admin.edit', compact('user'));
+        return view('panels.admin.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)

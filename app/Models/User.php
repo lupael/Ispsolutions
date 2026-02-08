@@ -100,6 +100,8 @@ class User extends Authenticatable
         'is_active',
         'activated_at',
         'created_by',
+        'subscription_plan_id',
+        'expires_at',
         'operator_level',
         'is_subscriber',
         'disabled_menus',
@@ -190,6 +192,7 @@ class User extends Authenticatable
             'expiry_date' => 'date',
             'suspend_date' => 'date',
             'sms_low_balance_notified_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 
@@ -1289,3 +1292,13 @@ class User extends Authenticatable
         return null;
     }
 }
+
+    /**
+     * Get the subscription plan for this Super Admin user
+     * Used for B2B2B subscription tracking and enforcement
+     */
+    public function subscriptionPlan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class);
+    }
+

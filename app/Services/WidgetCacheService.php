@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\NetworkUser;
+use App\Models\Customer;
 use App\Models\Package;
 use App\Models\SmsLog;
 use App\Models\SubscriptionBill;
@@ -96,14 +96,13 @@ class WidgetCacheService
         try {
             $today = Carbon::today();
 
-            // Find users expiring today from network_users table
-            // NOTE: Expiry logic uses expiry_date field on network_users
-            // - Active users with status != 'suspended' and is_active = true are checked
-            $usersAtRisk = NetworkUser::where('tenant_id', $tenantId)
+            // Find customers (users) expiring today
+            // NOTE: expiry_date exists on the unified users table
+            $usersAtRisk = Customer::where('tenant_id', $tenantId)
                 ->where('status', '!=', 'suspended')
                 ->where('is_active', true)
                 ->whereDate('expiry_date', $today)
-                ->with(['package', 'user'])
+                ->with(['package'])
                 ->get();
 
             $totalCount = $usersAtRisk->count();
@@ -124,7 +123,7 @@ class WidgetCacheService
 
             // Count by zone (if zone_id exists on users)
             $byZone = $usersAtRisk->groupBy(function ($user) {
-                return $user->user->zone_id ?? 'unassigned';
+                return $user->zone_id ?? 'unassigned';
             })->map(function ($group, $zoneId) {
                 return [
                     'zone_id' => $zoneId,
