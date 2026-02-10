@@ -23,7 +23,7 @@ print_done() { echo -e "\033[0;32m[SUCCESS]\033[0m $1"; }
 # 1. System Prep
 print_status "Preparing System..."
 apt-get update -y
-apt-get install -y software-properties-common curl wget git unzip zip gnupg2 build-essential openssl ufw certbot python3-certbot-nginx
+apt-get install -y software-properties-common curl wget git unzip zip gnupg2 build-essential openssl ufw certbot python3-certbot-nginx logrotate
 
 # 2. Silence services to prevent FreeRADIUS crash loop
 echo -e '#!/bin/sh\nexit 101' | sudo tee /usr/sbin/policy-rc.d
@@ -78,8 +78,6 @@ EOF
 # 6. FreeRADIUS Setup
 print_status "Configuring FreeRADIUS..."
 mysql --defaults-extra-file="$MYSQL_CONF" "${RADIUS_DB_NAME}" < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
-
-# Load extended schemas for usage/accounting/quota
 mysql --defaults-extra-file="$MYSQL_CONF" "${RADIUS_DB_NAME}" < /etc/freeradius/3.0/mods-config/sql/ippool/mysql/schema.sql || true
 mysql --defaults-extra-file="$MYSQL_CONF" "${RADIUS_DB_NAME}" < /etc/freeradius/3.0/mods-config/sql/counter/mysql/schema.sql || true
 
@@ -120,6 +118,15 @@ composer install --no-dev --optimize-autoloader
 php artisan key:generate
 php artisan migrate --seed --force
 chown -R www-data:www-data "$INSTALL_DIR"
+
+# 8b. Frontend Build
+print_status "Building frontend assets..."
+npm install --legacy-peer-deps
+npm run build
+
+# 8c. Laravel Scheduler (cron)
+print_status "Configuring Laravel scheduler..."
+( crontab -l 2>/dev/null; echo "* * * * * cd ${INSTALL_DIR} && php artisan schedule:run >> /dev/null 2>&1" ) | crontab -
 
 # 9. Nginx Configuration
 print_status "Configuring Nginx..."
@@ -192,11 +199,4 @@ ExecStart=/usr/bin/php ${INSTALL_DIR}/artisan queue:work --sleep=3 --tries=3 --t
 WorkingDirectory=${INSTALL_DIR}
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=ispsolution-queue
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl daemon-reexec
-systemctl enable isps
+SyslogIdentifier
