@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Helpers;
 
 use App\Models\Olt;
+use Illuminate\Support\Str;
 
 /**
  * Helper class for OLT vendor detection.
@@ -63,23 +64,23 @@ class OltVendorDetector
             return self::VENDOR_GENERIC;
         }
         
-        if (str_contains($searchText, 'vsol') || str_contains($searchText, 'v-sol')) {
+        if (Str::contains($searchText, 'vsol') || Str::contains($searchText, 'v-sol')) {
             return self::VENDOR_VSOL;
         }
         
-        if (str_contains($searchText, 'huawei')) {
+        if (Str::contains($searchText, 'huawei')) {
             return self::VENDOR_HUAWEI;
         }
         
-        if (str_contains($searchText, 'zte')) {
+        if (Str::contains($searchText, 'zte')) {
             return self::VENDOR_ZTE;
         }
         
-        if (str_contains($searchText, 'fiberhome') || str_contains($searchText, 'fiber home')) {
+        if (Str::contains($searchText, 'fiberhome') || Str::contains($searchText, 'fiber home')) {
             return self::VENDOR_FIBERHOME;
         }
         
-        if (str_contains($searchText, 'bdcom')) {
+        if (Str::contains($searchText, 'bdcom')) {
             return self::VENDOR_BDCOM;
         }
         

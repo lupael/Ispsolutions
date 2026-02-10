@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class DailyRechargeService
@@ -77,7 +78,7 @@ class DailyRechargeService
                     'user_id' => $customer->id,
                     'tenant_id' => $customer->tenant_id,
                     'username' => $customer->email,
-                    'password' => bcrypt(Str::random(12)),
+                    'password' => Hash::make(Str::random(12)),
                     'service_type' => 'pppoe',
                     'package_id' => $package->id,
                     'expiry_date' => Carbon::now()->addDays($days),

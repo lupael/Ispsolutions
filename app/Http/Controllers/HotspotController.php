@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class HotspotController extends Controller
@@ -119,7 +120,7 @@ class HotspotController extends Controller
 
         try {
             if (! empty($validated['password'])) {
-                $validated['password'] = bcrypt($validated['password']);
+                $validated['password'] = Hash::make($validated['password']);
             } else {
                 unset($validated['password']);
             }

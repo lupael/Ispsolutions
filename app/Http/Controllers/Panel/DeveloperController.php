@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
 
 class DeveloperController extends Controller
 {
@@ -165,7 +166,7 @@ class DeveloperController extends Controller
             $superAdmin = User::create([
                 'name' => $validated['super_admin_name'],
                 'email' => $validated['super_admin_email'],
-                'password' => bcrypt($validated['super_admin_password']),
+                'password' => Hash::make($validated['super_admin_password']),
                 'tenant_id' => null, // Will be set after tenant creation
                 'operator_level' => 10, // Super Admin level
                 'is_active' => true,
@@ -561,7 +562,7 @@ class DeveloperController extends Controller
         $admin->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => ! empty($validated['password']) ? bcrypt($validated['password']) : $admin->password,
+            'password' => ! empty($validated['password']) ? Hash::make($validated['password']) : $admin->password,
         ]);
 
         return redirect()->route('panel.developer.super-admins.index')
@@ -927,7 +928,7 @@ class DeveloperController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
-        $validated['password'] = bcrypt($validated['password']);
+        $validated['password'] = Hash::make($validated['password']);
         $validated['operator_level'] = 10; // Super Admin level
 
         $user = User::create($validated);

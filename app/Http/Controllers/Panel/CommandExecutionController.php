@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\Process\Process as SymfonyProcess;
 
@@ -260,7 +261,7 @@ class CommandExecutionController extends Controller
         $command = strtolower($command);
 
         foreach (self::BLACKLISTED_PATTERNS as $pattern) {
-            if (str_contains($command, strtolower($pattern))) {
+            if (Str::contains($command, strtolower($pattern))) {
                 return true;
             }
         }
@@ -277,7 +278,7 @@ class CommandExecutionController extends Controller
         $dangerousChars = [';', '&&', '||', '|', '`', '$', '(', ')', '<', '>', '&', "\n", "\r"];
 
         foreach ($dangerousChars as $char) {
-            if (str_contains($command, $char)) {
+            if (Str::contains($command, $char)) {
                 return true;
             }
         }

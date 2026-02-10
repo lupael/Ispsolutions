@@ -843,14 +843,14 @@ class OltService implements OltServiceInterface
      */
     private function createConnection(Olt $olt)
     {
+        // Prefer Telnet if the OLT is configured to use it
         $protocol = strtolower($olt->management_protocol ?? 'ssh');
 
         if ($protocol === 'telnet') {
             return new \App\Services\TelnetClient($olt->ip_address, (int) ($olt->port ?? 23));
         }
 
-        // Default to SSH
-        $connection = new SSH2($olt->ip_address, (int) ($olt->port ?? 22));
+        $connection = new SSH2($olt->ip_address, $olt->port);
         $connection->setTimeout(30);
 
         return $connection;

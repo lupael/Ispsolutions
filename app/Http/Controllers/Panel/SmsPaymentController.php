@@ -13,6 +13,7 @@ use App\Services\SmsBalanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -515,7 +516,7 @@ class SmsPaymentController extends Controller
         }
 
         // Check for "SmsPayment-" prefix
-        if (str_contains($identifier, 'SmsPayment-')) {
+        if (Str::contains($identifier, 'SmsPayment-')) {
             $idPart = str_replace('SmsPayment-', '', $identifier);
             if ($idPart !== '' && ctype_digit($idPart)) {
                 $localPaymentId = (int) $idPart;
@@ -707,7 +708,7 @@ class SmsPaymentController extends Controller
         $localPaymentId = $this->extractLocalPaymentId($merchantInvoice);
         
         // Fallback: parse from transaction ID if value_a is not set
-        if (!$localPaymentId && $tranId && str_contains($tranId, 'SmsPayment-')) {
+        if (!$localPaymentId && $tranId && Str::contains($tranId, 'SmsPayment-')) {
             $parts = explode('SmsPayment-', $tranId);
             if (count($parts) > 1) {
                 $localPaymentId = $this->extractLocalPaymentId($parts[1]);

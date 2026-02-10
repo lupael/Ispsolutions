@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\PaymentGateway;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PaymentGatewayService
 {
@@ -399,7 +400,7 @@ class PaymentGatewayService
         $dataString = json_encode($data);
 
         // Format public key properly
-        if (! str_contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
+        if (! Str::contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
             $publicKey = "-----BEGIN PUBLIC KEY-----\n" . chunk_split($publicKey, 64, "\n") . '-----END PUBLIC KEY-----';
         }
 
@@ -419,7 +420,7 @@ class PaymentGatewayService
         $dataString = json_encode($data);
 
         // Format private key properly
-        if (! str_contains($privateKey, '-----BEGIN PRIVATE KEY-----') && ! str_contains($privateKey, '-----BEGIN RSA PRIVATE KEY-----')) {
+        if (! Str::contains($privateKey, '-----BEGIN PRIVATE KEY-----') && ! Str::contains($privateKey, '-----BEGIN RSA PRIVATE KEY-----')) {
             $privateKey = "-----BEGIN PRIVATE KEY-----\n" . chunk_split($privateKey, 64, "\n") . '-----END PRIVATE KEY-----';
         }
 
@@ -437,7 +438,7 @@ class PaymentGatewayService
     protected function verifyNagadSignature(string $data, string $signature, string $publicKey): bool
     {
         // Format public key properly
-        if (! str_contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
+        if (! Str::contains($publicKey, '-----BEGIN PUBLIC KEY-----')) {
             $publicKey = "-----BEGIN PUBLIC KEY-----\n" . chunk_split($publicKey, 64, "\n") . '-----END PUBLIC KEY-----';
         }
 

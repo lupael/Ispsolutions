@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class SuperAdminController extends Controller
@@ -102,7 +103,7 @@ class SuperAdminController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => bcrypt($validated['password']),
+            'password' => Hash::make($validated['password']),
             'tenant_id' => auth()->user()->tenant_id, // Enforce tenant isolation
             'operator_level' => $role->level,
             'created_by' => auth()->id(),
@@ -144,7 +145,7 @@ class SuperAdminController extends Controller
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => ! empty($validated['password']) ? bcrypt($validated['password']) : $user->password,
+            'password' => ! empty($validated['password']) ? Hash::make($validated['password']) : $user->password,
         ]);
 
         $user->roles()->sync([$validated['role_id']]);
@@ -240,7 +241,7 @@ class SuperAdminController extends Controller
             $admin = User::create([
                 'name' => $validated['admin_name'],
                 'email' => $validated['admin_email'],
-                'password' => bcrypt($validated['admin_password']),
+                'password' => Hash::make($validated['admin_password']),
                 'tenant_id' => $tenant->id,
                 'operator_level' => 20, // Admin level
                 'is_active' => true,

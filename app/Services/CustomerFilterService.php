@@ -7,6 +7,7 @@ namespace App\Services;
 
 use App\Enums\CustomerOverallStatus;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class CustomerFilterService
 {
@@ -216,9 +217,9 @@ class CustomerFilterService
         if (!empty($filters['search'])) {
             $searchTerm = strtolower($filters['search']);
             $filtered = $filtered->filter(function ($customer) use ($searchTerm) {
-                return str_contains(strtolower($customer->name ?? ''), $searchTerm) ||
-                       str_contains(strtolower($customer->mobile ?? ''), $searchTerm) ||
-                       str_contains(strtolower($customer->username ?? ''), $searchTerm);
+                return Str::contains(strtolower($customer->name ?? ''), $searchTerm) ||
+                       Str::contains(strtolower($customer->mobile ?? ''), $searchTerm) ||
+                       Str::contains(strtolower($customer->username ?? ''), $searchTerm);
             });
         }
 
