@@ -95,33 +95,30 @@ sql {
 EOF
 ln -sf /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/
 chgrp freerad /etc/freeradius/3.0/mods-available/sql
-# 7. Firewall Rules
+
+sudo rm /usr/sbin/policy-rc.d
+systemctl restart freeradius || true
+
+# 7. Firewall Rules (fixed syntax)
 print_status "Configuring Firewall..."
-ufw allow 22/tcp 23/tcp 80/tcp 443/tcp 1812/udp 1813/udp 3306/tcp 6379/tcp 53 8080/tcp \
-    8728/tcp 8729/tcp 8787/tcp 161/udp 162/udp 2222/tcp 2323/tcp 1700/udp
-ufw --force enable
-
-# 8. Web App Installation
-print_status "Cloning ISP Solution..."
-mkdir -p "$INSTALL_DIR"
-git clone https://github.com/i4edubd/ispsolution.git "$INSTALL_DIR"
-cd "$INSTALL_DIR"
-cp .env.example .env
-
-sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_NAME}|" .env
-sed -i "s|DB_USERNAME=.*|DB_USERNAME=${DB_USER}|" .env
-sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" .env
-
-curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-composer install --no-dev --optimize-autoloader
-php artisan key:generate
-php artisan migrate --seed --force
-chown -R www-data:www-data "$INSTALL 7 to End
-```bash
-# 7. Firewall Rules
-print_status "Configuring Firewall..."
-ufw allow 22/tcp 23/tcp 80/tcp 443/tcp 1812/udp 1813/udp 3306/tcp 6379/tcp 53 8080/tcp \
-    8728/tcp 8729/tcp 8787/tcp 161/udp 162/udp 2222/tcp 2323/tcp 1700/udp
+ufw allow 22/tcp
+ufw allow 23/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw allow 1812/udp
+ufw allow 1813/udp
+ufw allow 3306/tcp
+ufw allow 6379/tcp
+ufw allow 53
+ufw allow 8080/tcp
+ufw allow 8728/tcp
+ufw allow 8729/tcp
+ufw allow 8787/tcp
+ufw allow 161/udp
+ufw allow 162/udp
+ufw allow 2222/tcp
+ufw allow 2323/tcp
+ufw allow 1700/udp
 ufw --force enable
 
 # 8. Web App Installation
@@ -146,40 +143,14 @@ print_status "Building frontend assets..."
 npm install --legacy-peer-deps
 npm run build
 
-# 10. Laravel Scheduler_DIR"
-
-# 9. Frontend Build
-print_status "Building frontend assets..."
-npm install --legacy-peer-deps
-npm run build
-
 # 10. Laravel Scheduler (cron)
-print_status "Configuring Laravel scheduler..."
-( crontab -l 2>/dev/null; echo "* * (cron)
 print_status "Configuring Laravel scheduler..."
 ( crontab -l 2>/dev/null; echo "* * * * * cd ${INSTALL_DIR} && php artisan schedule:run >> /dev/null 2>&1" ) | crontab -
 
 # 11. Nginx Configuration
 print_status "Configuring Nginx..."
 cat > /etc/nginx/sites-available/ispsolution <<EOF
- * * * cd ${INSTALL_DIR} && php artisan schedule:run >> /dev/null 2>&1" ) | crontab -
-
-# 11. Nginx Configuration
-print_status "Configuring Nginx..."
-cat > /etc/nginx/sites-available/ispsolution <<EOF
 server {
-    listen 80;
-    server_name ${DOMAIN_NAME};
-
-    root ${INSTALL_DIR}/public;
-    index index.php index.html;
-
-    location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
-    }
-
-    location ~ \.php\$ {
-        include snippets/fastcgi-php.confserver {
     listen 80;
     server_name ${DOMAIN_NAME};
 
@@ -200,38 +171,14 @@ server {
     location ~ /\.ht {
         deny all;
     }
-;
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\.ht {
-        deny all;
-    }
 }
-EOF
-
-ln -sf /etc}
 EOF
 
 ln -sf /etc/nginx/sites-available/ispsolution /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
 
-# 12. SSL with/nginx/sites-available/ispsolution /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
-
 # 12. SSL with Certbot
-print_status "Obtaining SSL Certificate Certbot
 print_status "Obtaining SSL Certificate..."
-certbot --nginx -d ${DOMAIN_NAME} --non-interactive --agree-tos -m admin@${DOMAIN_NAME}
-
-# 13. Laravel Queue Worker Service
-print_status "Configuring Laravel Queue Worker..."
-cat > /etc/systemd/system/ispsolution-queue.service <<EOF
-[Unit]
-Description=Laravel Queue Worker for ISP Solution
-After=network.target..."
 certbot --nginx -d ${DOMAIN_NAME} --non-interactive --agree-tos -m admin@${DOMAIN_NAME}
 
 # 13. Laravel Queue Worker Service
@@ -245,20 +192,7 @@ After=network.target
 User=www-data
 Group=www-data
 Restart=always
-ExecStart
-
-[Service]
-User=www-data
-Group=www-data
-Restart=always
 ExecStart=/usr/bin/php ${INSTALL_DIR}/artisan queue:work --sleep=3 --tries=3 --timeout=90
-WorkingDirectory=${INSTALL_DIR}
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=ispsolution-queue
-
-[Install]
-WantedBy=multi-user.target=/usr/bin/php ${INSTALL_DIR}/artisan queue:work --sleep=3 --tries=3 --timeout=90
 WorkingDirectory=${INSTALL_DIR}
 StandardOutput=syslog
 StandardError=syslog
@@ -275,29 +209,8 @@ systemctl start ispsolution-queue
 # 14. Log Rotation
 print_status "Configuring log rotation..."
 cat > /etc/logrotate.d/ispsolution <<EOF
-${INSTALL_DIR}/storage
-EOF
-
-systemctl daemon-reexec
-systemctl enable ispsolution-queue
-systemctl start ispsolution-queue
-
-# 14. Log Rotation
-print_status "Configuring log rotation..."
-cat > /etc/logrotate.d/ispsolution <<EOF
 ${INSTALL_DIR}/storage/logs/*.log {
-   /logs/*.log {
     daily
-    missingok
-    rotate 14
-    compress
-    delaycompress
-    notifempty
-    create 640 www-data www-data
-}
-EOF
-
-cat daily
     missingok
     rotate 14
     compress
@@ -313,37 +226,17 @@ cat > /etc/logrotate.d/freeradius <<EOF
     missingok
     rotate 8
     compress
-    delaycompress > /etc/logrotate.d/freeradius <<EOF
-/var/log/freeradius/*.log {
-    weekly
-    missingok
-    rotate 8
-    compress
     delaycompress
     notifempty
     create 640 freerad freerad
 }
 EOF
 
-# 15. Credentials
-    notifempty
-    create 640 freerad freerad
-}
-EOF
-
 # 15. Credentials Summary
-cat <<EOF > /root/ispsolution-credentials.txt Summary
 cat <<EOF > /root/ispsolution-credentials.txt
 MySQL Root Password: ${DB_ROOT_PASSWORD}
 App Database: ${DB_NAME} (User: ${DB_USER} / Pass: ${DB_PASSWORD})
-Radius Database: ${RADIUS_DB_NAME} (User: ${RADIUS_DB_USER} / Pass
-MySQL Root Password: ${DB_ROOT_PASSWORD}
-App Database: ${DB_NAME} (User: ${DB_USER} / Pass: ${DB_PASSWORD})
 Radius Database: ${RADIUS_DB_NAME} (User: ${RADIUS_DB_USER} / Pass: ${RADIUS_DB_PASSWORD})
-EOF
-
-[ -f "$MYSQL_CONF" ] && rm "$MYSQL_CONF"
-print_done "Installation Finished! Check: ${RADIUS_DB_PASSWORD})
 EOF
 
 [ -f "$MYSQL_CONF" ] && rm "$MYSQL_CONF"
