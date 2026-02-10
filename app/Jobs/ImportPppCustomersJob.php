@@ -16,6 +16,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class ImportPppCustomersJob implements ShouldQueue
 {
@@ -205,7 +206,7 @@ class ImportPppCustomersJob implements ShouldQueue
                 [
                     'name' => $secret['name'] ?? $secret['username'],
                     'email' => $secret['email'] ?? null,
-                    'password' => bcrypt($secret['password']),
+                    'password' => Hash::make($secret['password']),
                     'role_id' => $this->getCustomerRoleId(),
                     'is_active' => ! ($secret['disabled'] ?? false),
                 ]

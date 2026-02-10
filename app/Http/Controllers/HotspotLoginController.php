@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class HotspotLoginController extends Controller
 {
@@ -135,7 +136,7 @@ class HotspotLoginController extends Controller
             $userMessage = 'Unable to send OTP at this time. Please try again later.';
             
             // If it's an OtpService exception, it's already user-friendly
-            if (str_contains($e->getMessage(), 'OTP') || str_contains($e->getMessage(), 'try again')) {
+            if (Str::contains($e->getMessage(), 'OTP') || Str::contains($e->getMessage(), 'try again')) {
                 $userMessage = $e->getMessage();
             }
 
@@ -234,7 +235,7 @@ class HotspotLoginController extends Controller
             $userMessage = 'Unable to verify OTP. Please try again.';
             
             // If it's an OtpService exception, it's already user-friendly
-            if (str_contains($e->getMessage(), 'OTP') || str_contains($e->getMessage(), 'attempts')) {
+            if (Str::contains($e->getMessage(), 'OTP') || Str::contains($e->getMessage(), 'attempts')) {
                 $userMessage = $e->getMessage();
             }
 

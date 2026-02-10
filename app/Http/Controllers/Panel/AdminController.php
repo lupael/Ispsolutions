@@ -28,6 +28,8 @@ use App\Models\ServicePackage;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AuditLogService;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use App\Services\CustomerCacheService;
 use App\Services\CustomerFilterService;
 use App\Services\ExcelExportService;
@@ -80,8 +82,8 @@ class AdminController extends Controller
         } catch (\Illuminate\Database\QueryException $e) {
             // Swallow "table not found" (42S02) and "permission denied" (42000) errors
             $sqlState = $e->getCode();
-            $isTableNotFound = $sqlState === '42S02' || str_contains($e->getMessage(), '42S02');
-            $isPermissionDenied = $sqlState === '42000' || str_contains($e->getMessage(), '42000');
+            $isTableNotFound = $sqlState === '42S02' || Str::contains($e->getMessage(), '42S02');
+            $isPermissionDenied = $sqlState === '42000' || Str::contains($e->getMessage(), '42000');
 
             if ($isTableNotFound || $isPermissionDenied) {
                 $reason = $isTableNotFound ? 'table not found' : 'permission denied';
@@ -497,7 +499,7 @@ class AdminController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => bcrypt($validated['password']),
+            'password' => Hash::make($validated['password']),
             'is_active' => true,
             'tenant_id' => auth()->user()->tenant_id, // Enforce tenant isolation
             'operator_level' => $role->level,
@@ -549,7 +551,7 @@ class AdminController extends Controller
 
         // Only update password if provided
         if (! empty($validated['password'])) {
-            $updateData['password'] = bcrypt($validated['password']);
+            $updateData['password'] = Hash::make($validated['password']);
         }
 
         $user->update($updateData);
@@ -827,7 +829,7 @@ class AdminController extends Controller
                 'name' => $validated['customer_name'] ?? $validated['username'],
                 'email' => $validated['email'] ?? $validated['username'] . '@local.customer',
                 'username' => $validated['username'],
-                'password' => bcrypt($validated['password']), // Hashed for app login
+                'password' => Hash::make($validated['password']), // Hashed for app login
                 'radius_password' => $validated['password'], // Plain text for RADIUS
                 'phone' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
@@ -981,7 +983,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
                     $updateData['username'] = $validated['username'];
                 }
                 if (!empty($validated['password'])) {
-                    $updateData['password'] = bcrypt($validated['password']);
+                    $updateData['password'] = Hash::make($validated['password']);
                     $updateData['radius_password'] = $validated['password'];
                 }
 
@@ -1781,7 +1783,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => bcrypt($validated['password']),
+            'password' => Hash::make($validated['password']),
             'company_name' => $validated['company_name'] ?? null,
             'company_address' => $validated['company_address'] ?? null,
             'company_phone' => $validated['company_phone'] ?? null,
@@ -1831,7 +1833,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
 
         // Only update password if provided
         if (! empty($validated['password'])) {
-            $updateData['password'] = bcrypt($validated['password']);
+            $updateData['password'] = Hash::make($validated['password']);
         }
 
         $operator->update($updateData);

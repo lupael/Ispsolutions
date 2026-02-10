@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class MikrotikImportService
 {
@@ -104,17 +105,17 @@ class MikrotikImportService
         $subnetMask = null;
 
         // Handle CIDR notation (e.g., 192.168.1.0/24)
-        if (str_contains($range, '/')) {
+        if (Str::contains($range, '/')) {
             $result = $this->parseCidr($range);
             $ips = $result['ips'];
             $subnetMask = $result['subnet_mask'];
         }
         // Handle hyphen range (e.g., 192.168.1.1-254)
-        elseif (str_contains($range, '-')) {
+        elseif (Str::contains($range, '-')) {
             $ips = $this->parseHyphenRange($range);
         }
         // Handle comma-separated (e.g., 192.168.1.1,192.168.1.2)
-        elseif (str_contains($range, ',')) {
+        elseif (Str::contains($range, ',')) {
             $ips = array_map('trim', explode(',', $range));
         }
         // Single IP

@@ -336,7 +336,7 @@ class VpnProvisioningService
     private function parseIpRange(string $range): array
     {
         // Simple implementation - can be enhanced
-        if (str_contains($range, '-')) {
+        if (Str::contains($range, '-')) {
             // Format: 192.168.1.1-254
             preg_match('/^(\d+\.\d+\.\d+\.)(\d+)-(\d+)$/', $range, $matches);
             if (count($matches) === 4) {

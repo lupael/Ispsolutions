@@ -9,6 +9,7 @@ use App\Models\MikrotikRouter;
 use App\Models\NetworkUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Router Comment Helper
@@ -151,7 +152,7 @@ class RouterCommentHelper
     public static function parseComment(string $comment): array
     {
         // Detect format by checking for '--' separator (IspBills format)
-        if (str_contains($comment, '--')) {
+        if (Str::contains($comment, '--')) {
             return self::parseIspBillsComment($comment);
         }
         
@@ -184,7 +185,7 @@ class RouterCommentHelper
         $data = [];
         
         foreach ($parts as $part) {
-            if (str_contains($part, '--')) {
+            if (Str::contains($part, '--')) {
                 [$key, $value] = explode('--', $part, 2);
                 $data[trim($key)] = trim($value);
             }
