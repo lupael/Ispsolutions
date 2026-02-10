@@ -39,14 +39,14 @@ The role system has been completely updated and consolidated in v3.1:
 ### Deprecated Role Documentation
 The following role-related files are now **deprecated** and replaced by ROLE_SYSTEM.md:
 
-| Old File | Status | Replacement |
-|----------|--------|-------------|
-| **ROLE_HIERARCHY_CLARIFICATION.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
-| **ROLE_HIERARCHY_IMPLEMENTATION.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
-| **ROLE_SYSTEM_QUICK_REFERENCE.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
-| **SUMMARY.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
-| **DATA_ISOLATION.md** | ⚠️ Keep for now | See also ROLE_SYSTEM.md |
-| **docs/PR1_TENANCY_AND_ROLES.md** | ⚠️ Deprecated | ROLE_SYSTEM.md |
+| Old File | Status | Replacement | Notes |
+|----------|--------|-------------|-------|
+| **ROLE_HIERARCHY_CLARIFICATION.md** | ⚠️ Deprecated | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) | Content merged. |
+| **ROLE_HIERARCHY_IMPLEMENTATION.md** | ⚠️ Deprecated | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) | Content merged. |
+| **ROLE_SYSTEM_QUICK_REFERENCE.md** | ⚠️ Deprecated | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) | Content merged. |
+| **SUMMARY.md** | ⚠️ Deprecated | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) | Content merged. |
+| **DATA_ISOLATION.md** | ⚠️ Deprecated | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) | Content merged into Data Isolation section. |
+| **docs/PR1_TENANCY_AND_ROLES.md** | ⚠️ Deprecated | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) | Content merged. |
 
 **Migration Path**: Use **[ROLE_SYSTEM.md](ROLE_SYSTEM.md)** for all role system documentation.
 
@@ -131,12 +131,12 @@ The following files have been successfully removed or archived:
 | Old | New |
 |-----|-----|
 | ROLE_HIERARCHY_CLARIFICATION.md | ROLE_SYSTEM.md |
-| ROLE_HIERARCHY_IMPLEMENTATION.md | ROLE_SYSTEM.md |
-| ROLE_SYSTEM_QUICK_REFERENCE.md | ROLE_SYSTEM.md |
-| SUMMARY.md | ROLE_SYSTEM.md |
-| DATA_ISOLATION.md | ROLE_SYSTEM.md (Data Isolation section) |
-| docs/API_DOCUMENTATION.md | docs/API.md |
-| docs/PR1_TENANCY_AND_ROLES.md | ROLE_SYSTEM.md |
+| ROLE_HIERARCHY_IMPLEMENTATION.md | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) |
+| ROLE_SYSTEM_QUICK_REFERENCE.md | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) |
+| SUMMARY.md | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) |
+| DATA_ISOLATION.md | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) (Data Isolation section) |
+| docs/API_DOCUMENTATION.md | [docs/API.md](docs/API.md) |
+| docs/PR1_TENANCY_AND_ROLES.md | [ROLE_SYSTEM.md](ROLE_SYSTEM.md) |
 
 ### For Documentation Links
 
@@ -151,7 +151,7 @@ Update any links to deprecated files:
 <!-- New -->
 [Role System](ROLE_SYSTEM.md)
 [Quick Reference](ROLE_SYSTEM.md#role-hierarchy)
-[Data Isolation](DATA_ISOLATION.md)
+[Data Isolation](ROLE_SYSTEM.md#3-data-isolation-and-tenancy)
 ```
 
 ### For Code Comments

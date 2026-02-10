@@ -95,7 +95,7 @@ This is the central documentation hub for the ISP Solution project. All document
 ## 📊 System Architecture
 
 ### Multi-Tenancy & Roles
-The system supports a hierarchical role structure (see [ROLE_SYSTEM.md](docs/technical/ROLE_SYSTEM.md)):
+The system supports a hierarchical role structure (see [ROLE_SYSTEM.md](ROLE_SYSTEM.md)):
 1. **Developer** (Level 0) - Global system access, all ISP tenants
 2. **Super Admin** (Level 10) - Tenancy owner, manages Admins
 3. **Admin** (Level 20) - ISP owner, manages operations
