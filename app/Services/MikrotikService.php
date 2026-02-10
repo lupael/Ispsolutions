@@ -51,14 +51,14 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return false;
             }
 
             // Validate router IP to prevent SSRF attacks
             if (! $this->isValidRouterIpAddress($router->ip_address)) {
-                Log::error('Router IP address validation failed - potential SSRF attempt', [
+                Log::channel('device_operations')->error('Router IP address validation failed - potential SSRF attempt', [
                     'router_id' => $routerId,
                     'ip_address' => $router->ip_address,
                 ]);
@@ -72,11 +72,11 @@ class MikrotikService implements MikrotikServiceInterface
             $client->query($query)->read();
 
             $this->currentRouter = $router;
-            Log::info('Connected to MikroTik router via Binary API', ['router_id' => $routerId]);
+            Log::channel('device_operations')->info('Connected to MikroTik router via Binary API', ['router_id' => $routerId]);
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -84,7 +84,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error connecting to MikroTik router', [
+            Log::channel('device_operations')->error('Error connecting to MikroTik router', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -135,14 +135,14 @@ class MikrotikService implements MikrotikServiceInterface
                 'status' => 'synced',
             ]);
 
-            Log::info('PPPoE user created on MikroTik via Binary API', [
+            Log::channel('device_operations')->info('PPPoE user created on MikroTik via Binary API', [
                 'router_id' => $router->id,
                 'username' => $userData['username'],
             ]);
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout while creating PPPoE user', [
+            Log::channel('device_operations')->error('Socket connection timeout while creating PPPoE user', [
                 'router_id' => $userData['router_id'] ?? null,
                 'username' => $userData['username'] ?? 'unknown',
                 'error' => $e->getMessage(),
@@ -150,7 +150,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error creating PPPoE user', [
+            Log::channel('device_operations')->error('Error creating PPPoE user', [
                 'username' => $userData['username'] ?? 'unknown',
                 'error' => $e->getMessage(),
             ]);
@@ -168,7 +168,7 @@ class MikrotikService implements MikrotikServiceInterface
             $localUser = MikrotikPppoeUser::where('username', $username)->first();
 
             if (! $localUser) {
-                Log::error('PPPoE user not found in local database', ['username' => $username]);
+                Log::channel('device_operations')->error('PPPoE user not found in local database', ['username' => $username]);
 
                 return false;
             }
@@ -178,21 +178,21 @@ class MikrotikService implements MikrotikServiceInterface
 
             // Update user on MikroTik via Binary API
             $client = $this->createClient($router);
-            
+
             // First, find the secret by name to get its .id
             $findQuery = (new Query('/ppp/secret/print'))
                 ->equal('name', $username);
             $secrets = $client->query($findQuery)->read();
-            
+
             if (empty($secrets)) {
-                Log::error('PPPoE user not found on MikroTik router', [
+                Log::channel('device_operations')->error('PPPoE user not found on MikroTik router', [
                     'router_id' => $router->id,
                     'router_name' => $router->name,
                     'username' => $username,
                 ]);
                 return false;
             }
-            
+
             // Update using the .id
             $setQuery = (new Query('/ppp/secret/set'))
                 ->equal('.id', $secrets[0]['.id'])
@@ -201,7 +201,7 @@ class MikrotikService implements MikrotikServiceInterface
                 ->equal('profile', $userData['profile'] ?? $localUser->profile)
                 ->equal('local-address', $userData['local_address'] ?? $localUser->local_address)
                 ->equal('remote-address', $userData['remote_address'] ?? $localUser->remote_address);
-            
+
             $client->query($setQuery)->read();
 
             // Update local database
@@ -214,7 +214,7 @@ class MikrotikService implements MikrotikServiceInterface
                 'status' => 'synced',
             ]);
 
-            Log::info('PPPoE user updated on MikroTik', [
+            Log::channel('device_operations')->info('PPPoE user updated on MikroTik', [
                 'router_id' => $router->id,
                 'router_name' => $router->name,
                 'username' => $username,
@@ -222,7 +222,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while updating PPPoE user', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while updating PPPoE user', [
                 'router_id' => $localUser->router->id ?? null,
                 'router_name' => $localUser->router->name ?? 'Unknown',
                 'username' => $username,
@@ -231,7 +231,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error updating PPPoE user', [
+            Log::channel('device_operations')->error('Error updating PPPoE user', [
                 'router_id' => $localUser->router->id ?? null,
                 'router_name' => $localUser->router->name ?? 'Unknown',
                 'username' => $username,
@@ -251,7 +251,7 @@ class MikrotikService implements MikrotikServiceInterface
             $localUser = MikrotikPppoeUser::where('username', $username)->first();
 
             if (! $localUser) {
-                Log::error('PPPoE user not found in local database', ['username' => $username]);
+                Log::channel('device_operations')->error('PPPoE user not found in local database', ['username' => $username]);
 
                 return false;
             }
@@ -261,14 +261,14 @@ class MikrotikService implements MikrotikServiceInterface
 
             // Delete user from MikroTik via Binary API
             $client = $this->createClient($router);
-            
+
             // First, find the secret by name to get its .id
             $findQuery = (new Query('/ppp/secret/print'))
                 ->equal('name', $username);
             $secrets = $client->query($findQuery)->read();
-            
+
             if (empty($secrets)) {
-                Log::warning('PPPoE user not found on MikroTik router for deletion', [
+                Log::channel('device_operations')->warning('PPPoE user not found on MikroTik router for deletion', [
                     'router_id' => $router->id,
                     'router_name' => $router->name,
                     'username' => $username,
@@ -277,17 +277,17 @@ class MikrotikService implements MikrotikServiceInterface
                 $localUser->update(['status' => 'inactive']);
                 return true;
             }
-            
+
             // Remove using the .id
             $removeQuery = (new Query('/ppp/secret/remove'))
                 ->equal('.id', $secrets[0]['.id']);
-            
+
             $client->query($removeQuery)->read();
 
             // Update local database status
             $localUser->update(['status' => 'inactive']);
 
-            Log::info('PPPoE user deleted from MikroTik', [
+            Log::channel('device_operations')->info('PPPoE user deleted from MikroTik', [
                 'router_id' => $router->id,
                 'router_name' => $router->name,
                 'username' => $username,
@@ -295,7 +295,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while deleting PPPoE user', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while deleting PPPoE user', [
                 'router_id' => $localUser->router->id ?? null,
                 'router_name' => $localUser->router->name ?? 'Unknown',
                 'username' => $username,
@@ -304,7 +304,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error deleting PPPoE user', [
+            Log::channel('device_operations')->error('Error deleting PPPoE user', [
                 'router_id' => $localUser->router->id ?? null,
                 'router_name' => $localUser->router->name ?? 'Unknown',
                 'username' => $username,
@@ -324,7 +324,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
@@ -336,7 +336,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return $this->normalizeApiResponse($response);
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while getting active sessions', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while getting active sessions', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -344,7 +344,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error getting active sessions', [
+            Log::channel('device_operations')->error('Error getting active sessions', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -361,7 +361,7 @@ class MikrotikService implements MikrotikServiceInterface
     {
         try {
             if (! $this->currentRouter) {
-                Log::error('No router connected');
+                Log::channel('device_operations')->error('No router connected');
 
                 return false;
             }
@@ -370,10 +370,10 @@ class MikrotikService implements MikrotikServiceInterface
             $client = $this->createClient($this->currentRouter);
             $query = (new Query('/ppp/active/remove'))
                 ->equal('.id', $sessionId);
-            
+
             $client->query($query)->read();
 
-            Log::info('Session disconnected on MikroTik', [
+            Log::channel('device_operations')->info('Session disconnected on MikroTik', [
                 'router_id' => $this->currentRouter->id,
                 'router_name' => $this->currentRouter->name,
                 'session_id' => $sessionId,
@@ -381,7 +381,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while disconnecting session', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while disconnecting session', [
                 'router_id' => $this->currentRouter->id ?? null,
                 'router_name' => $this->currentRouter->name ?? 'Unknown',
                 'session_id' => $sessionId,
@@ -390,7 +390,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error disconnecting session', [
+            Log::channel('device_operations')->error('Error disconnecting session', [
                 'router_id' => $this->currentRouter->id ?? null,
                 'router_name' => $this->currentRouter->name ?? 'Unknown',
                 'session_id' => $sessionId,
@@ -410,7 +410,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
@@ -420,14 +420,14 @@ class MikrotikService implements MikrotikServiceInterface
             $query = new Query('/ppp/profile/print');
             $response = $client->query($query)->read();
 
-            Log::info('Successfully fetched profiles from MikroTik via Binary API', [
+            Log::channel('device_operations')->info('Successfully fetched profiles from MikroTik via Binary API', [
                 'router_id' => $routerId,
                 'count' => count($response),
             ]);
 
             return $this->normalizeApiResponse($response);
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout while getting profiles', [
+            Log::channel('device_operations')->error('Socket connection timeout while getting profiles', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -435,7 +435,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error getting profiles', [
+            Log::channel('device_operations')->error('Error getting profiles', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -466,7 +466,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return false;
             }
@@ -479,7 +479,7 @@ class MikrotikService implements MikrotikServiceInterface
                 ->equal('rate-limit', $profileData['rate_limit'] ?? '')
                 ->equal('session-timeout', isset($profileData['session_timeout']) ? (string) $profileData['session_timeout'] : '0')
                 ->equal('idle-timeout', isset($profileData['idle_timeout']) ? (string) $profileData['idle_timeout'] : '0');
-            
+
             $client->query($query)->read();
 
             MikrotikProfile::updateOrCreate(
@@ -496,7 +496,7 @@ class MikrotikService implements MikrotikServiceInterface
                 ]
             );
 
-            Log::info('PPPoE profile created', [
+            Log::channel('device_operations')->info('PPPoE profile created', [
                 'router_id' => $routerId,
                 'router_name' => $router->name,
                 'profile' => $profileData['name'],
@@ -504,7 +504,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while creating PPPoE profile', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while creating PPPoE profile', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -512,7 +512,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error creating PPPoE profile', [
+            Log::channel('device_operations')->error('Error creating PPPoE profile', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -536,7 +536,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return $profiles;
         } catch (\Exception $e) {
-            Log::error('Error importing profiles', [
+            Log::channel('device_operations')->error('Error importing profiles', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
@@ -581,7 +581,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             DB::commit();
 
-            Log::info('Profiles synced', [
+            Log::channel('device_operations')->info('Profiles synced', [
                 'router_id' => $routerId,
                 'count' => $synced,
             ]);
@@ -590,7 +590,7 @@ class MikrotikService implements MikrotikServiceInterface
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Error syncing profiles', [
+            Log::channel('device_operations')->error('Error syncing profiles', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
@@ -608,7 +608,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return false;
             }
@@ -619,7 +619,7 @@ class MikrotikService implements MikrotikServiceInterface
             $query = (new Query('/ip/pool/add'))
                 ->equal('name', $poolData['name'])
                 ->equal('ranges', $ranges);
-            
+
             $client->query($query)->read();
 
             MikrotikIpPool::updateOrCreate(
@@ -632,7 +632,7 @@ class MikrotikService implements MikrotikServiceInterface
                 ]
             );
 
-            Log::info('IP pool created', [
+            Log::channel('device_operations')->info('IP pool created', [
                 'router_id' => $routerId,
                 'router_name' => $router->name,
                 'pool' => $poolData['name'],
@@ -640,7 +640,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while creating IP pool', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while creating IP pool', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -648,7 +648,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error creating IP pool', [
+            Log::channel('device_operations')->error('Error creating IP pool', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -667,7 +667,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
@@ -677,14 +677,14 @@ class MikrotikService implements MikrotikServiceInterface
             $query = new Query('/ip/pool/print');
             $response = $client->query($query)->read();
 
-            Log::info('Successfully imported IP pools from MikroTik via Binary API', [
+            Log::channel('device_operations')->info('Successfully imported IP pools from MikroTik via Binary API', [
                 'router_id' => $routerId,
                 'count' => count($response),
             ]);
 
             return $this->normalizeApiResponse($response);
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout while importing IP pools', [
+            Log::channel('device_operations')->error('Socket connection timeout while importing IP pools', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -692,7 +692,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error importing IP pools', [
+            Log::channel('device_operations')->error('Error importing IP pools', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -736,7 +736,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             DB::commit();
 
-            Log::info('IP pools synced', [
+            Log::channel('device_operations')->info('IP pools synced', [
                 'router_id' => $routerId,
                 'count' => $synced,
             ]);
@@ -745,7 +745,7 @@ class MikrotikService implements MikrotikServiceInterface
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Error syncing IP pools', [
+            Log::channel('device_operations')->error('Error syncing IP pools', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
@@ -763,7 +763,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
@@ -773,14 +773,14 @@ class MikrotikService implements MikrotikServiceInterface
             $query = new Query('/ppp/secret/print');
             $response = $client->query($query)->read();
 
-            Log::info('Successfully imported secrets from MikroTik via Binary API', [
+            Log::channel('device_operations')->info('Successfully imported secrets from MikroTik via Binary API', [
                 'router_id' => $routerId,
                 'count' => count($response),
             ]);
 
             return $this->normalizeApiResponse($response);
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout while importing secrets', [
+            Log::channel('device_operations')->error('Socket connection timeout while importing secrets', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -788,7 +788,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error importing secrets', [
+            Log::channel('device_operations')->error('Error importing secrets', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -835,7 +835,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             DB::commit();
 
-            Log::info('Secrets synced', [
+            Log::channel('device_operations')->info('Secrets synced', [
                 'router_id' => $routerId,
                 'count' => $synced,
             ]);
@@ -844,7 +844,7 @@ class MikrotikService implements MikrotikServiceInterface
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Error syncing secrets', [
+            Log::channel('device_operations')->error('Error syncing secrets', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
@@ -862,14 +862,14 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return false;
             }
 
             // Validate router IP to prevent SSRF attacks
             if (! $this->isValidRouterIpAddress($router->ip_address)) {
-                Log::error('Router IP address validation failed - potential SSRF attempt', [
+                Log::channel('device_operations')->error('Router IP address validation failed - potential SSRF attempt', [
                     'router_id' => $routerId,
                     'ip_address' => $router->ip_address,
                 ]);
@@ -891,7 +891,7 @@ class MikrotikService implements MikrotikServiceInterface
                     $configDetails[$configType] = $settings;
                 } else {
                     // Configuration failed - rollback all previously applied configurations
-                    Log::error('Configuration failed, rolling back previously applied configurations', [
+                    Log::channel('device_operations')->error('Configuration failed, rolling back previously applied configurations', [
                         'router_id' => $routerId,
                         'failed_config_type' => $configType,
                         'applied_configs' => $appliedConfigs,
@@ -902,7 +902,7 @@ class MikrotikService implements MikrotikServiceInterface
                         try {
                             $this->rollbackConfiguration($router, $appliedType, $configDetails[$appliedType]);
                         } catch (\Exception $rollbackException) {
-                            Log::error('Failed to rollback configuration', [
+                            Log::channel('device_operations')->error('Failed to rollback configuration', [
                                 'router_id' => $router->id,
                                 'config_type' => $appliedType,
                                 'error' => $rollbackException->getMessage(),
@@ -912,7 +912,7 @@ class MikrotikService implements MikrotikServiceInterface
 
                     DB::rollBack();
 
-                    Log::error('Failed to configure router - configuration aborted and rolled back', [
+                    Log::channel('device_operations')->error('Failed to configure router - configuration aborted and rolled back', [
                         'router_id' => $routerId,
                         'failed_at' => $configType,
                         'rolled_back' => $appliedConfigs,
@@ -933,7 +933,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             DB::commit();
 
-            Log::info('Router configured successfully', [
+            Log::channel('device_operations')->info('Router configured successfully', [
                 'router_id' => $routerId,
                 'config_types' => $appliedConfigs,
             ]);
@@ -942,7 +942,7 @@ class MikrotikService implements MikrotikServiceInterface
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Error configuring router', [
+            Log::channel('device_operations')->error('Error configuring router', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
             ]);
@@ -957,7 +957,7 @@ class MikrotikService implements MikrotikServiceInterface
      */
     private function rollbackConfiguration(MikrotikRouter $router, string $configType, array $settings): void
     {
-        Log::info('Attempting to rollback configuration', [
+        Log::channel('device_operations')->info('Attempting to rollback configuration', [
             'router_id' => $router->id,
             'config_type' => $configType,
         ]);
@@ -981,7 +981,7 @@ class MikrotikService implements MikrotikServiceInterface
                 break;
         }
 
-        Log::warning('Rollback not fully implemented for configuration type', [
+        Log::channel('device_operations')->warning('Rollback not fully implemented for configuration type', [
             'router_id' => $router->id,
             'config_type' => $configType,
         ]);
@@ -1003,11 +1003,11 @@ class MikrotikService implements MikrotikServiceInterface
                 case 'queue':
                     return $this->configureQueue($router, $settings);
                 default:
-                    Log::warning('Unknown configuration type', ['config_type' => $configType]);
+                    Log::channel('device_operations')->warning('Unknown configuration type', ['config_type' => $configType]);
                     return false;
             }
         } catch (\Exception $e) {
-            Log::error('Error applying configuration', [
+            Log::channel('device_operations')->error('Error applying configuration', [
                 'router_id' => $router->id,
                 'config_type' => $configType,
                 'error' => $e->getMessage(),
@@ -1038,7 +1038,7 @@ class MikrotikService implements MikrotikServiceInterface
             }
 
             if (empty($pppoeConfig)) {
-                Log::warning('No PPPoE configuration settings provided', [
+                Log::channel('device_operations')->warning('No PPPoE configuration settings provided', [
                     'router_id' => $router->id,
                 ]);
 
@@ -1050,7 +1050,7 @@ class MikrotikService implements MikrotikServiceInterface
                 $existing = $this->mikrotikApiService->getMktRows($router, '/interface/pppoe-server/server');
                 foreach ($existing as $server) {
                     if (isset($server['interface']) && $server['interface'] === $pppoeConfig['interface']) {
-                        Log::info('PPPoE server already exists on interface, skipping creation', [
+                        Log::channel('device_operations')->info('PPPoE server already exists on interface, skipping creation', [
                             'router_id' => $router->id,
                             'interface' => $pppoeConfig['interface'],
                         ]);
@@ -1061,14 +1061,14 @@ class MikrotikService implements MikrotikServiceInterface
 
             $result = $this->mikrotikApiService->addMktRows($router, '/interface/pppoe-server/server', [$pppoeConfig]);
 
-            Log::info('PPPoE configuration applied', [
+            Log::channel('device_operations')->info('PPPoE configuration applied', [
                 'router_id' => $router->id,
                 'result' => $result,
             ]);
 
             return $result['success'] ?? false;
         } catch (\Exception $e) {
-            Log::error('Error configuring PPPoE', [
+            Log::channel('device_operations')->error('Error configuring PPPoE', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
             ]);
@@ -1094,7 +1094,7 @@ class MikrotikService implements MikrotikServiceInterface
                 ->first();
 
             if ($existingPool !== null) {
-                Log::info('IP pool already exists, skipping creation', [
+                Log::channel('device_operations')->info('IP pool already exists, skipping creation', [
                     'router_id' => $router->id,
                     'pool_name' => $poolConfig['name'],
                 ]);
@@ -1103,14 +1103,14 @@ class MikrotikService implements MikrotikServiceInterface
             }
             $result = $this->mikrotikApiService->addMktRows($router, '/ip/pool', [$poolConfig]);
 
-            Log::info('IP pool configuration applied', [
+            Log::channel('device_operations')->info('IP pool configuration applied', [
                 'router_id' => $router->id,
                 'result' => $result,
             ]);
 
             return $result['success'] ?? false;
         } catch (\Exception $e) {
-            Log::error('Error configuring IP pool', [
+            Log::channel('device_operations')->error('Error configuring IP pool', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
             ]);
@@ -1194,7 +1194,7 @@ class MikrotikService implements MikrotikServiceInterface
             // Build and validate firewall rule configuration
             $firewallConfig = $this->buildValidatedFirewallConfig($settings);
             if ($firewallConfig === null) {
-                Log::error('Firewall configuration rejected due to invalid or unsafe settings', [
+                Log::channel('device_operations')->error('Firewall configuration rejected due to invalid or unsafe settings', [
                     'router_id' => $router->id,
                     'settings' => $settings,
                 ]);
@@ -1203,14 +1203,14 @@ class MikrotikService implements MikrotikServiceInterface
 
             $result = $this->mikrotikApiService->addMktRows($router, '/ip/firewall/filter', [$firewallConfig]);
 
-            Log::info('Firewall configuration applied', [
+            Log::channel('device_operations')->info('Firewall configuration applied', [
                 'router_id' => $router->id,
                 'result' => $result,
             ]);
 
             return $result['success'] ?? false;
         } catch (\Exception $e) {
-            Log::error('Error configuring firewall', [
+            Log::channel('device_operations')->error('Error configuring firewall', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
             ]);
@@ -1232,14 +1232,14 @@ class MikrotikService implements MikrotikServiceInterface
 
             $result = $this->mikrotikApiService->addMktRows($router, '/queue/simple', [$queueConfig]);
 
-            Log::info('Queue configuration applied', [
+            Log::channel('device_operations')->info('Queue configuration applied', [
                 'router_id' => $router->id,
                 'result' => $result,
             ]);
 
             return $result['success'] ?? false;
         } catch (\Exception $e) {
-            Log::error('Error configuring queue', [
+            Log::channel('device_operations')->error('Error configuring queue', [
                 'router_id' => $router->id,
                 'error' => $e->getMessage(),
             ]);
@@ -1256,7 +1256,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return false;
             }
@@ -1267,7 +1267,7 @@ class MikrotikService implements MikrotikServiceInterface
                 ->equal('password', $vpnData['password'])
                 ->equal('service', $vpnData['service'] ?? 'l2tp')
                 ->equal('profile', $vpnData['profile'] ?? 'default');
-            
+
             $client->query($query)->read();
 
             MikrotikVpnAccount::create([
@@ -1278,7 +1278,7 @@ class MikrotikService implements MikrotikServiceInterface
                 'enabled' => $vpnData['enabled'] ?? true,
             ]);
 
-            Log::info('VPN account created', [
+            Log::channel('device_operations')->info('VPN account created', [
                 'router_id' => $routerId,
                 'router_name' => $router->name,
                 'username' => $vpnData['username'],
@@ -1286,7 +1286,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while creating VPN account', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while creating VPN account', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1294,7 +1294,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error creating VPN account', [
+            Log::channel('device_operations')->error('Error creating VPN account', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1313,7 +1313,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
@@ -1324,7 +1324,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return $this->normalizeApiResponse($response);
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while getting VPN status', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while getting VPN status', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1332,7 +1332,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error getting VPN status', [
+            Log::channel('device_operations')->error('Error getting VPN status', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1351,7 +1351,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return false;
             }
@@ -1366,7 +1366,7 @@ class MikrotikService implements MikrotikServiceInterface
                 ->equal('burst-threshold', $queueData['burst_threshold'] ?? '')
                 ->equal('burst-time', $queueData['burst_time'] ?? '0')
                 ->equal('priority', $queueData['priority'] ?? '8');
-            
+
             $client->query($query)->read();
 
             MikrotikQueue::create([
@@ -1381,7 +1381,7 @@ class MikrotikService implements MikrotikServiceInterface
                 'priority' => $queueData['priority'] ?? 8,
             ]);
 
-            Log::info('Queue created', [
+            Log::channel('device_operations')->info('Queue created', [
                 'router_id' => $routerId,
                 'router_name' => $router->name,
                 'queue' => $queueData['name'],
@@ -1389,7 +1389,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while creating queue', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while creating queue', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1397,7 +1397,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error creating queue', [
+            Log::channel('device_operations')->error('Error creating queue', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1416,7 +1416,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
@@ -1427,7 +1427,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return $this->normalizeApiResponse($response);
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while getting queues', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while getting queues', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1435,7 +1435,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error getting queues', [
+            Log::channel('device_operations')->error('Error getting queues', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1454,23 +1454,23 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return false;
             }
 
             $client = $this->createClient($router);
             $query = new Query('/ip/firewall/filter/add');
-            
+
             // Add all rule data as parameters, normalizing keys for MikroTik (underscores -> hyphens)
             foreach ($ruleData as $key => $value) {
                 $normalizedKey = str_replace('_', '-', (string) $key);
                 $query->equal($normalizedKey, $value);
             }
-            
+
             $client->query($query)->read();
 
-            Log::info('Firewall rule added', [
+            Log::channel('device_operations')->info('Firewall rule added', [
                 'router_id' => $routerId,
                 'router_name' => $router->name,
                 'chain' => $ruleData['chain'] ?? 'forward',
@@ -1478,7 +1478,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return true;
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while adding firewall rule', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while adding firewall rule', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1486,7 +1486,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error adding firewall rule', [
+            Log::channel('device_operations')->error('Error adding firewall rule', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1505,7 +1505,7 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
@@ -1516,7 +1516,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return $this->normalizeApiResponse($response);
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while getting firewall rules', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while getting firewall rules', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1524,7 +1524,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error getting firewall rules', [
+            Log::channel('device_operations')->error('Error getting firewall rules', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1555,7 +1555,7 @@ class MikrotikService implements MikrotikServiceInterface
 
         // Validate IP format
         if (! filter_var($ipAddress, FILTER_VALIDATE_IP)) {
-            Log::warning('Invalid IP address format', ['ip' => $ipAddress]);
+            Log::channel('device_operations')->warning('Invalid IP address format', ['ip' => $ipAddress]);
 
             return false;
         }
@@ -1567,7 +1567,7 @@ class MikrotikService implements MikrotikServiceInterface
         if (! $allowPrivateIps) {
             // Check if IP is in private ranges
             if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-                Log::warning('Blocked connection to private/reserved IP address', [
+                Log::channel('device_operations')->warning('Blocked connection to private/reserved IP address', [
                     'ip' => $ipAddress,
                     'hint' => 'Set services.mikrotik.allow_private_ips=true in config to allow internal IPs',
                 ]);
@@ -1581,9 +1581,9 @@ class MikrotikService implements MikrotikServiceInterface
 
     /**
      * Get system resources (CPU, memory, uptime) from MikroTik router
-     * 
+     *
      * Returns an array with keys: cpu-load, free-memory, total-memory, uptime
-     * 
+     *
      * {@inheritDoc}
      */
     public function getResources(int $routerId): array
@@ -1592,14 +1592,14 @@ class MikrotikService implements MikrotikServiceInterface
             $router = MikrotikRouter::find($routerId);
 
             if (! $router) {
-                Log::error('Router not found', ['router_id' => $routerId]);
+                Log::channel('device_operations')->error('Router not found', ['router_id' => $routerId]);
 
                 return [];
             }
 
             // Validate router IP to prevent SSRF attacks
             if (! $this->isValidRouterIpAddress($router->ip_address)) {
-                Log::error('Router IP address validation failed - potential SSRF attempt', [
+                Log::channel('device_operations')->error('Router IP address validation failed - potential SSRF attempt', [
                     'router_id' => $routerId,
                     'router_name' => $router->name,
                     'ip_address' => $router->ip_address,
@@ -1615,7 +1615,7 @@ class MikrotikService implements MikrotikServiceInterface
             $response = $client->query($query)->read();
             $responseTime = (int)((microtime(true) - $startTime) * 1000);
 
-            Log::info('System resources retrieved from MikroTik', [
+            Log::channel('device_operations')->info('System resources retrieved from MikroTik', [
                 'router_id' => $routerId,
                 'router_name' => $router->name,
             ]);
@@ -1630,7 +1630,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return !empty($response) ? $response[0] : [];
         } catch (\RouterOS\Exceptions\ConnectException $e) {
-            Log::error('Socket connection timeout to MikroTik router while getting system resources', [
+            Log::channel('device_operations')->error('Socket connection timeout to MikroTik router while getting system resources', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1647,7 +1647,7 @@ class MikrotikService implements MikrotikServiceInterface
 
             return [];
         } catch (\Exception $e) {
-            Log::error('Error getting system resources from MikroTik', [
+            Log::channel('device_operations')->error('Error getting system resources from MikroTik', [
                 'router_id' => $routerId,
                 'router_name' => $router->name ?? 'Unknown',
                 'error' => $e->getMessage(),
@@ -1668,7 +1668,7 @@ class MikrotikService implements MikrotikServiceInterface
 
     /**
      * Create Binary API client for router with SSL/TLS support
-     * 
+     *
      * @param MikrotikRouter $router Router instance with encrypted credentials
      * @return Client Connected Binary API client
      */
@@ -1692,7 +1692,7 @@ class MikrotikService implements MikrotikServiceInterface
 
     /**
      * Normalize Binary API response to match expected format
-     * 
+     *
      * @param array $response Raw response from Binary API
      * @return array Normalized response
      */
@@ -1700,23 +1700,23 @@ class MikrotikService implements MikrotikServiceInterface
     {
         return array_map(function ($item) {
             $normalized = [];
-            
+
             foreach ($item as $key => $value) {
                 // Keep original key
                 $normalized[$key] = $value;
-                
+
                 // Skip dot-prefixed keys like .id for underscore conversion
                 if (strpos($key, '.') === 0) {
                     continue;
                 }
-                
+
                 // Convert hyphen to underscore for compatibility
                 $underscoreKey = str_replace('-', '_', $key);
                 if ($underscoreKey !== $key) {
                     $normalized[$underscoreKey] = $value;
                 }
             }
-            
+
             return $normalized;
         }, $response);
     }

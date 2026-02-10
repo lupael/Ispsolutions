@@ -822,6 +822,12 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
         ->name('logs.activity')
         ->middleware('role:developer,super-admin,admin');
 
+    // Device Operations Log Viewer
+    Route::get('/logs/device-operations', [\App\Http\Controllers\Admin\LogViewerController::class, 'deviceOperations'])
+        ->name('logs.device_operations')
+        ->middleware('role:developer,super-admin,admin');
+
+
     // Analytics Routes
     Route::get('/analytics/dashboard', [AnalyticsController::class, 'dashboard'])->name('analytics.dashboard');
     Route::get('/analytics/revenue-report', [AnalyticsController::class, 'revenueReport'])->name('analytics.revenue-report');
