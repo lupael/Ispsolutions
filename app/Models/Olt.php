@@ -47,7 +47,7 @@ class Olt extends Model
     protected $fillable = [
         'tenant_id',
         'name',
-        'brand',
+        'vendor',
         'ip_address',
         'port',
         'telnet_port',
@@ -87,6 +87,7 @@ class Olt extends Model
      */
     protected $casts = [
         'port' => 'integer',
+        'telnet_port' => 'integer',
         'username' => 'encrypted',
         'password' => 'encrypted',
         'snmp_community' => 'encrypted',
@@ -106,6 +107,8 @@ class Olt extends Model
 
     /**
      * Get the backups for the OLT.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function backups(): HasMany
     {
@@ -114,6 +117,9 @@ class Olt extends Model
 
     /**
      * Scope a query to only include active OLTs.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeActive($query)
     {
@@ -122,6 +128,9 @@ class Olt extends Model
 
     /**
      * Scope a query to only include inactive OLTs.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeInactive($query)
     {
@@ -130,6 +139,9 @@ class Olt extends Model
 
     /**
      * Scope a query to only include OLTs in maintenance mode.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeMaintenance($query)
     {
@@ -138,6 +150,8 @@ class Olt extends Model
 
     /**
      * Check if the OLT is active.
+     *
+     * @return bool
      */
     public function isActive(): bool
     {
@@ -146,6 +160,8 @@ class Olt extends Model
 
     /**
      * Check if the OLT can be connected to.
+     *
+     * @return bool
      */
     public function canConnect(): bool
     {
@@ -153,24 +169,23 @@ class Olt extends Model
     }
 
     /**
-     * Get the detected vendor for this OLT.
+     * Get the detected vendor for this OLT if not explicitly set.
+     *
+     * @param string|null $value The value from the 'vendor' column.
+     * @return string
      */
-    public function getVendorAttribute(): string
+    public function getVendorAttribute(?string $value): string
     {
-        return OltVendorDetector::detect($this);
+        return $value ?? OltVendorDetector::detect($this);
     }
 
     /**
      * Get the correct management port based on protocol.
      */
-    public function getPortAttribute($value): int
+    public function getManagementPort(): int
     {
-        // If telnet is used and telnet_port is set, prefer it
-        if ($this->management_protocol === 'telnet' && !empty($this->telnet_port)) {
-            return (int) $this->telnet_port;
-        }
-
-        // Fallback to the default port
-        return (int) $value;
+        return $this->management_protocol === 'telnet' && !empty($this->telnet_port)
+            ? $this->telnet_port
+            : $this->port;
     }
 }

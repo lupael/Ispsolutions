@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
 class TempCustomer extends Model
 {
@@ -40,11 +38,6 @@ class TempCustomer extends Model
         static::creating(function ($model) {
             if (!$model->expires_at) {
                 $model->expires_at = now()->addHours(24);
-            }
-
-            // Automatically set tenant_id from the authenticated user if not already set
-            if (Auth::check() && !$model->tenant_id) {
-                $model->tenant_id = Auth::user()->tenant_id;
             }
         });
     }
@@ -117,10 +110,10 @@ class TempCustomer extends Model
     /**
      * Extend the expiration time.
      */
-    public function extend(int $hours = 24): void
+    public function extend(int $hours = 24): bool
     {
         $this->expires_at = now()->addHours($hours);
-        $this->save();
+        return $this->save();
     }
 
     /**

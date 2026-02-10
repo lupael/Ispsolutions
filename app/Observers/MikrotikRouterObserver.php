@@ -24,14 +24,14 @@ class MikrotikRouterObserver
             $nas = Nas::create([
                 'tenant_id' => $mikrotikRouter->tenant_id,
                 'name' => 'NAS-' . $mikrotikRouter->name,
-                'nas_name' => $mikrotikRouter->name,
+                'nas_name' => $mikrotikRouter->ip_address, // Use IP for RADIUS NAS identifier
                 'short_name' => $this->generateShortName($mikrotikRouter->name),
                 'type' => 'mikrotik',
                 'ports' => 1812, // Standard RADIUS port
                 'secret' => $mikrotikRouter->radius_secret ?? \Illuminate\Support\Str::random(32),
-                'server' => $mikrotikRouter->ip_address,
+                'server' => null, // 'nas_name' is the server identifier
                 'description' => 'Auto-created NAS entry for Mikrotik router: ' . $mikrotikRouter->name,
-                'status' => $mikrotikRouter->status === 'active' ? 'active' : 'inactive',
+                'status' => $mikrotikRouter->isActive() ? Nas::STATUS_ACTIVE : 'inactive',
             ]);
 
             // Link the router to the newly created NAS
@@ -63,20 +63,30 @@ class MikrotikRouterObserver
             return;
         }
 
+        // Determine if any NAS-related fields have changed
+        $nasRelatedFields = ['ip_address', 'radius_secret', 'status'];
+        if (!$mikrotikRouter->wasChanged($nasRelatedFields)) {
+            return;
+        }
+
         try {
             $nas = Nas::find($mikrotikRouter->nas_id);
             if ($nas) {
                 // Sync relevant fields to NAS
-                $nas->update([
-                    'server' => $mikrotikRouter->ip_address,
-                    'secret' => $mikrotikRouter->radius_secret ?? $nas->secret,
-                    'status' => $mikrotikRouter->status === 'active' ? 'active' : 'inactive',
-                ]);
+                $nasData = [];
+                if ($mikrotikRouter->wasChanged('ip_address')) {
+                    $nasData['nas_name'] = $mikrotikRouter->ip_address;
+                }
+                if ($mikrotikRouter->wasChanged('radius_secret') && $mikrotikRouter->radius_secret) {
+                    $nasData['secret'] = $mikrotikRouter->radius_secret;
+                }
+                if ($mikrotikRouter->wasChanged('status')) {
+                    $nasData['status'] = $mikrotikRouter->isActive() ? Nas::STATUS_ACTIVE : 'inactive';
+                }
 
-                Log::info('Synced Mikrotik router changes to NAS entry', [
-                    'router_id' => $mikrotikRouter->id,
-                    'nas_id' => $nas->id,
-                ]);
+                $nas->update($nasData);
+
+                Log::info('Synced Mikrotik router changes to NAS entry', ['router_id' => $mikrotikRouter->id, 'nas_id' => $nas->id, 'changes' => array_keys($nasData)]);
             }
         } catch (\Exception $e) {
             Log::error('Failed to sync Mikrotik router changes to NAS entry', [
@@ -85,19 +95,6 @@ class MikrotikRouterObserver
                 'error' => $e->getMessage(),
             ]);
         }
-    }
-
-    /**
-     * Handle the MikrotikRouter "deleted" event.
-     */
-    public function deleted(MikrotikRouter $mikrotikRouter): void
-    {
-        // Optionally delete the associated NAS entry
-        // For now, we'll keep it for historical records
-        // Uncomment if you want to auto-delete NAS entries:
-        // if ($mikrotikRouter->nas_id) {
-        //     Nas::find($mikrotikRouter->nas_id)?->delete();
-        // }
     }
 
     /**

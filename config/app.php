@@ -197,6 +197,7 @@ return [
         App\Providers\AppServiceProvider::class,
         App\Providers\TenancyServiceProvider::class,
         App\Providers\NetworkServiceProvider::class,
+        Spatie\Permission\PermissionServiceProvider::class,
     ],
 
 

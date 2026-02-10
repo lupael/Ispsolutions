@@ -18,6 +18,15 @@ class MikrotikRouter extends Model
     use HasFactory;
     use HasAuditLog;
 
+    /**
+     * Status constants for the router's administrative state.
+     */
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+
+    public const API_STATUS_ONLINE = 'online';
+    public const API_STATUS_OFFLINE = 'offline';
+
     protected $fillable = [
         'tenant_id',
         'nas_id',
@@ -64,10 +73,12 @@ class MikrotikRouter extends Model
         return $this->belongsTo(Nas::class, 'nas_id');
     }
 
-    // Alias for backward compatibility - returns PPPoE users (MikrotikPppoeUser models)
-    // Note: This does NOT return NetworkUser models. NetworkUsers are indirectly related through PackageProfileMapping
-    // If you need NetworkUser models, query through packageMappings relationship
-    public function networkUsers(): HasMany
+    /**
+     * @deprecated Use pppoeUsers() instead. This is an alias for backward compatibility.
+     * @note This method returns a collection of MikrotikPppoeUser models, NOT User or NetworkUser models.
+     * @return HasMany
+     */
+    public function legacyPppoeUsers(): HasMany
     {
         return $this->pppoeUsers();
     }
@@ -112,12 +123,28 @@ class MikrotikRouter extends Model
     // Optimized query scopes
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', 'active');
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 
     public function scopeByTenant(Builder $query, int $tenantId): Builder
     {
         return $query->where('tenant_id', $tenantId);
+    }
+
+    /**
+     * Check if the router is administratively active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    /**
+     * Check if the router's API is currently online.
+     */
+    public function isApiOnline(): bool
+    {
+        return $this->api_status === self::API_STATUS_ONLINE;
     }
 
     /**
@@ -140,14 +167,14 @@ class MikrotikRouter extends Model
 
     /**
      * Disconnect from the router
+     * @return bool
      */
-    public function disconnect(): void
+    public function disconnect(): bool
     {
-        $this->update([
-            'api_status' => 'offline',
+        return $this->update([
+            'api_status' => self::API_STATUS_OFFLINE,
             'last_checked_at' => now(),
         ]);
-        // Additional cleanup can be added here if needed
     }
 
     /**
@@ -158,15 +185,15 @@ class MikrotikRouter extends Model
         try {
             $service = app(\App\Services\MikrotikService::class);
             $connected = $service->connectRouter($this->id);
-            
+
             if ($connected) {
                 $this->update([
-                    'api_status' => 'online',
+                    'api_status' => self::API_STATUS_ONLINE,
                     'last_checked_at' => now()
                 ]);
                 return true;
             }
-            
+
             return false;
         } catch (\Exception $e) {
             \Log::error("Router connection failed: " . $e->getMessage(), [
@@ -189,7 +216,7 @@ class MikrotikRouter extends Model
             $this->update([
                 'last_checked_at' => now(),
             ]);
-            
+
             \Log::info("Router stats refresh placeholder called", [
                 'router_id' => $this->id,
                 'router_name' => $this->name

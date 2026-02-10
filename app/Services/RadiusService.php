@@ -27,38 +27,22 @@ class RadiusService implements RadiusServiceInterface
      */
     public function createUser(string $username, string $password, array $attributes = []): bool
     {
-        try {
-            DB::connection('radius')->transaction(function () use ($username, $password, $attributes) {
-                // Create password check entry
-                RadCheck::create([
-                    'username' => $username,
-                    'attribute' => 'Cleartext-Password',
-                    'op' => ':=',
-                    'value' => $password,
-                ]);
-
-                // Create reply attributes
-                foreach ($attributes as $attribute => $value) {
-                    RadReply::create([
-                        'username' => $username,
-                        'attribute' => $attribute,
-                        'op' => '=',
-                        'value' => $value,
-                    ]);
-                }
-            });
-
-            Log::info('RADIUS user created', ['username' => $username]);
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to create RADIUS user', [
+        return $this->executeTransaction('create', $username, function () use ($username, $password, $attributes) {
+            // Create password check entry based on configured hash method
+            $passwordAttributes = $this->preparePasswordAttributes($password);
+            RadCheck::create([
                 'username' => $username,
-                'error' => $e->getMessage(),
+                'attribute' => $passwordAttributes['attribute'],
+                'op' => ':=',
+                'value' => $passwordAttributes['value'],
             ]);
 
-            return false;
-        }
+            // Create reply attributes
+            foreach ($attributes as $attribute => $value) {
+                if ($value === null) continue; // Don't create attributes for null values
+                RadReply::create(['username' => $username, 'attribute' => $attribute, 'op' => '=', 'value' => $value]);
+            }
+        });
     }
 
     /**
@@ -66,42 +50,34 @@ class RadiusService implements RadiusServiceInterface
      */
     public function updateUser(string $username, array $attributes): bool
     {
-        try {
-            DB::connection('radius')->transaction(function () use ($username, $attributes) {
-                // Update password if provided
-                if (isset($attributes['password'])) {
-                    RadCheck::where('username', $username)
-                        ->where('attribute', 'Cleartext-Password')
-                        ->update(['value' => $attributes['password']]);
-                    unset($attributes['password']);
-                }
+        return $this->executeTransaction('update', $username, function () use ($username, $attributes) {
+            // Update password if provided, respecting hash method
+            if (isset($attributes['password'])) {
+                $passwordAttributes = $this->preparePasswordAttributes($attributes['password']);
+                // Remove old password attributes before setting new one
+                RadCheck::where('username', $username)->whereIn('attribute', ['Cleartext-Password', 'MD5-Password', 'SHA1-Password'])->delete();
+                RadCheck::create([
+                    'username' => $username,
+                    'attribute' => $passwordAttributes['attribute'],
+                    'op' => ':=',
+                    'value' => $passwordAttributes['value'],
+                ]);
+                unset($attributes['password']);
+            }
 
-                // Update reply attributes
-                foreach ($attributes as $attribute => $value) {
+            // Update or remove reply attributes
+            foreach ($attributes as $attribute => $value) {
+                if ($value === null) {
+                    // If value is null, remove the attribute
+                    RadReply::where('username', $username)->where('attribute', $attribute)->delete();
+                } else {
                     RadReply::updateOrCreate(
-                        [
-                            'username' => $username,
-                            'attribute' => $attribute,
-                        ],
-                        [
-                            'op' => '=',
-                            'value' => $value,
-                        ]
+                        ['username' => $username, 'attribute' => $attribute],
+                        ['op' => '=', 'value' => $value]
                     );
                 }
-            });
-
-            Log::info('RADIUS user updated', ['username' => $username]);
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to update RADIUS user', [
-                'username' => $username,
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
+            }
+        });
     }
 
     /**
@@ -109,39 +85,24 @@ class RadiusService implements RadiusServiceInterface
      */
     public function deleteUser(string $username): bool
     {
-        try {
-            DB::connection('radius')->transaction(function () use ($username) {
-                RadCheck::where('username', $username)->delete();
-                RadReply::where('username', $username)->delete();
-            });
-
-            Log::info('RADIUS user deleted', ['username' => $username]);
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to delete RADIUS user', [
-                'username' => $username,
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
+        return $this->executeTransaction('delete', $username, function () use ($username) {
+            RadCheck::where('username', $username)->delete();
+            RadReply::where('username', $username)->delete();
+        });
     }
 
     /**
-     * {@inheritDoc}
+     * @deprecated This method uses the deprecated NetworkUser model. Use createUser/updateUser/deleteUser directly.
      */
     public function syncUser(NetworkUser $user, array $attributes = []): bool
     {
         try {
             // Check if user exists in RADIUS
             $exists = RadCheck::where('username', $user->username)->exists();
-
             if ($user->status === 'active') {
                 // Prepare attributes
                 $password = $attributes['password'] ?? $user->password;
                 $mergedAttributes = array_merge(['password' => $password], $attributes);
-
                 // Create or update user in RADIUS
                 if ($exists) {
                     return $this->updateUser($user->username, $mergedAttributes);
@@ -153,7 +114,6 @@ class RadiusService implements RadiusServiceInterface
                 if ($exists) {
                     return $this->deleteUser($user->username);
                 }
-
                 return true;
             }
         } catch (\Exception $e) {
@@ -244,17 +204,23 @@ class RadiusService implements RadiusServiceInterface
                 'connection' => config('radius.connection', 'radius'),
             ]);
 
+            $passwordAttribute = $this->preparePasswordAttributes($password);
+
             // Check if user exists and password matches
-            $user = RadCheck::where('username', $username)
-                ->where('attribute', 'Cleartext-Password')
-                ->where('value', $password)
+            $userCheck = RadCheck::where('username', $username)
+                ->where('attribute', $passwordAttribute['attribute'])
                 ->first();
 
-            if ($user) {
+            $passwordMatches = false;
+            if ($userCheck) {
+                $passwordMatches = $userCheck->value === $passwordAttribute['value'];
+            }
+
+            if ($passwordMatches) {
                 Log::info('RADIUS authenticate: User authenticated successfully', [
                     'username' => $username,
                 ]);
-                
+
                 return [
                     'success' => true,
                     'username' => $username,
@@ -412,6 +378,53 @@ class RadiusService implements RadiusServiceInterface
                 'total_download_bytes' => 0,
                 'total_session_time' => 0,
             ];
+        }
+    }
+
+    /**
+     * Prepares the password attribute and value based on the configured hash method.
+     *
+     * @return array{attribute: string, value: string}
+     */
+    private function preparePasswordAttributes(string $password): array
+    {
+        $hashMethod = config('radius.authenticate.hash', 'cleartext');
+
+        return match ($hashMethod) {
+            'md5' => ['attribute' => 'MD5-Password', 'value' => md5($password)],
+            'sha1' => ['attribute' => 'SHA1-Password', 'value' => sha1($password)],
+            default => ['attribute' => 'Cleartext-Password', 'value' => $password],
+        };
+    }
+
+    /**
+     * Executes a database transaction with standardized logging and error handling.
+     *
+     * @param string $action The action being performed (e.g., 'create', 'update', 'delete').
+     * @param string $username The username being affected.
+     * @param \Closure $callback The database operations to execute within the transaction.
+     * @return bool True on success, false on failure.
+     */
+    private function executeTransaction(string $action, string $username, \Closure $callback): bool
+    {
+        try {
+            DB::connection('radius')->transaction($callback);
+
+            Log::info("RADIUS user {$action}d successfully", [
+                'username' => $username,
+                'action' => $action,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Failed to {$action} RADIUS user", [
+                'username' => $username,
+                'action' => $action,
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : 'Trace hidden in production',
+            ]);
+
+            return false;
         }
     }
 }

@@ -12,6 +12,16 @@ class OltSnmpTrap extends Model
 {
     use BelongsToTenant;
 
+    /**
+     * Severity level constants for SNMP traps.
+     */
+    public const SEVERITY_INFO = 'info';
+    public const SEVERITY_WARNING = 'warning';
+    public const SEVERITY_AVERAGE = 'average';
+    public const SEVERITY_HIGH = 'high';
+    public const SEVERITY_CRITICAL = 'critical';
+    public const SEVERITY_DISASTER = 'disaster';
+
     protected $fillable = [
         'olt_id',
         'tenant_id',
@@ -34,29 +44,65 @@ class OltSnmpTrap extends Model
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * Get the OLT that generated the trap.
+     */
     public function olt(): BelongsTo
     {
         return $this->belongsTo(Olt::class);
     }
 
+    /**
+     * Get the user who acknowledged the trap.
+     */
     public function acknowledgedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'acknowledged_by');
     }
 
+    /**
+     * Scope a query to only include unacknowledged traps.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
     public function scopeUnacknowledged($query)
     {
         return $query->where('is_acknowledged', false);
     }
 
+    /**
+     * Scope a query to only include acknowledged traps.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAcknowledged($query)
+    {
+        return $query->where('is_acknowledged', true);
+    }
+
+    /**
+     * Scope a query to filter traps by severity.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $severity
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
     public function scopeBySeverity($query, string $severity)
     {
         return $query->where('severity', $severity);
     }
 
-    public function acknowledge(int $userId): void
+    /**
+     * Mark the trap as acknowledged by a user.
+     *
+     * @param int $userId The ID of the user acknowledging the trap.
+     * @return bool True on success, false on failure.
+     */
+    public function acknowledge(int $userId): bool
     {
-        $this->update([
+        return $this->update([
             'is_acknowledged' => true,
             'acknowledged_at' => now(),
             'acknowledged_by' => $userId,

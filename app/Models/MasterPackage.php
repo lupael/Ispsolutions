@@ -15,12 +15,12 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * Master Package Model
- * 
+ *
  * Represents the top-level package in the 3-tier hierarchy:
  * 1. Master Package (this) - Created by developer/super-admin
  * 2. Operator Package Rate - Operator-specific pricing
  * 3. Package - Final customer packages
- * 
+ *
  * @property int $id
  * @property int|null $tenant_id
  * @property int $created_by
@@ -40,6 +40,11 @@ use Illuminate\Support\Facades\Cache;
 class MasterPackage extends Model
 {
     use BelongsToTenant, HasFactory;
+
+    /**
+     * The unit in which bandwidth is stored in the database.
+     */
+    public const BANDWIDTH_UNIT = 'Kbps';
 
     protected $fillable = [
         'tenant_id',
@@ -104,6 +109,21 @@ class MasterPackage extends Model
     }
 
     /**
+     * Get all customers (users) associated with this master package through its child packages.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function customers(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            User::class,
+            Package::class,
+            'master_package_id', // Foreign key on the intermediate `packages` table.
+            'service_package_id' // Foreign key on the final `users` table.
+        );
+    }
+
+    /**
      * Scope query to active packages only
      */
     public function scopeActive(Builder $query): Builder
@@ -161,7 +181,7 @@ class MasterPackage extends Model
             get: fn () => Cache::remember(
                 "master_package_customerCount_{$this->id}",
                 150, // TTL: 150 seconds (2.5 minutes)
-                fn () => $this->packages()->withCount('users')->get()->sum('users_count')
+                fn () => $this->customers()->count()
             )
         )->shouldCache();
     }
@@ -171,36 +191,25 @@ class MasterPackage extends Model
      */
     public function canDelete(): bool
     {
-        // Cannot delete trial packages
-        if ($this->is_trial_package) {
-            return false;
-        }
-
-        // Cannot delete if operators or customers exist
-        if ($this->operatorRates()->count() > 0 || $this->customer_count > 0) {
-            return false;
-        }
-
-        return true;
+        // A package can be deleted if there is no reason to prevent its deletion.
+        return $this->getDeletionPreventionReason() === null;
     }
 
     /**
      * Get deletion prevention reason
      */
-    public function getDeletionPreventionReason(): ?string
+    public function getDeletionPreventionReason(bool $checkOperators = true, bool $checkCustomers = true): ?string
     {
         if ($this->is_trial_package) {
-            return 'Cannot delete trial packages';
+            return 'Cannot delete trial packages.';
         }
 
-        $operatorCount = $this->operatorRates()->count();
-        if ($operatorCount > 0) {
-            return "Cannot delete: {$operatorCount} operator(s) are using this package";
+        if ($checkOperators && $this->operatorRates()->exists()) {
+            return 'Cannot delete: This package is being used by one or more operators.';
         }
 
-        $customerCount = $this->customer_count;
-        if ($customerCount > 0) {
-            return "Cannot delete: {$customerCount} customer(s) are using packages derived from this master package";
+        if ($checkCustomers && $this->customers()->exists()) {
+            return 'Cannot delete: One or more customers are subscribed to packages derived from this master package.';
         }
 
         return null;
@@ -241,12 +250,12 @@ class MasterPackage extends Model
     {
         // Determine if bandwidth is in Mbps or Kbps range
         $download = $this->speed_download ?? 0;
-        
-        if ($download >= 1024) {
+
+        if (self::BANDWIDTH_UNIT === 'Kbps' && $download >= 1024) {
             return 'Mbps';
         }
-        
-        return 'Kbps';
+
+        return self::BANDWIDTH_UNIT;
     }
 
     /**
@@ -258,7 +267,7 @@ class MasterPackage extends Model
         if (!$this->volume_limit) {
             return null;
         }
-        
+
         // Convert MB to bytes
         return $this->volume_limit * 1024 * 1024;
     }

@@ -14,7 +14,7 @@ class CustomerPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('view_customers') || $user->operator_level <= 80;
+        return $user->isStaffMember() || $user->hasPermission('view_customers');
     }
 
     /**
@@ -22,46 +22,8 @@ class CustomerPolicy
      */
     public function view(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin can view all
-        if ($user->operator_level <= 20) {
-            // Check tenant isolation
-            if ($user->tenant_id && $customer->tenant_id !== $user->tenant_id) {
-                return false;
-            }
-            return true;
-        }
-
-        // Check if user has permission
-        if (! $user->hasPermission('view_customers')) {
-            return false;
-        }
-
-        // Check tenant isolation
-        if ($user->tenant_id && $customer->tenant_id !== $user->tenant_id) {
-            return false;
-        }
-
-        // Check if has special permission to access all customers
-        if ($this->hasSpecialPermission($user, 'access_all_customers')) {
-            return true;
-        }
-
-        // Check manager hierarchy (if manager_id is set)
-        if ($customer->manager_id === $user->id) {
-            return true;
-        }
-
-        // Check if customer is in user's management hierarchy
-        if ($this->isInHierarchy($user, $customer)) {
-            return true;
-        }
-
-        // Operators and sub-operators can view their own customers
-        if ($user->operator_level <= 40) {
-            return $this->isInHierarchy($user, $customer);
-        }
-
-        return false;
+        // A user can view a customer if they have the general permission and can manage that specific user based on hierarchy.
+        return ($user->hasPermission('view_customers') || $user->operator_level <= 80) && $user->canManage($customer);
     }
 
     /**
@@ -69,7 +31,8 @@ class CustomerPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('create_customers') || $user->operator_level <= 30;
+        // Use the dedicated method on the User model for clarity.
+        return $user->canCreateCustomer();
     }
 
     /**
@@ -77,66 +40,8 @@ class CustomerPolicy
      */
     public function update(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin can edit all customers (no permission check needed)
-        if ($user->operator_level <= 20) {
-            // Check tenant isolation
-            if ($user->tenant_id && $customer->tenant_id !== $user->tenant_id) {
-                return false;
-            }
-            return true;
-        }
-
-        // For other roles, check permission
-        if (! $user->hasPermission('edit_customers')) {
-            return false;
-        }
-
-        // Check tenant isolation
-        if ($user->tenant_id && $customer->tenant_id !== $user->tenant_id) {
-            return false;
-        }
-
-        // Check if has special permission
-        if ($this->hasSpecialPermission($user, 'access_all_customers')) {
-            return true;
-        }
-
-        // Check manager hierarchy
-        if ($customer->manager_id === $user->id) {
-            return true;
-        }
-
-        // Check if customer is in user's management hierarchy
-        return $this->isInHierarchy($user, $customer);
-    }
-
-    /**
-     * Check if customer is in user's zone or area.
-     *
-     * Note: Zone/area-based restrictions are not currently enforced because the
-     * corresponding attributes (zone_id, area_id) are not available on the User model.
-     * Access control is handled by other checks in this policy (tenant, hierarchy,
-     * permissions, etc.).
-     */
-    private function isSameZoneOrArea(User $user, User $customer): bool
-    {
-        // If zone/area fields are added in the future, implement checks here
-        // For now, return false to not grant automatic access
-        return false;
-    }
-
-    /**
-     * Check if customer is in user's management hierarchy.
-     */
-    private function isInHierarchy(User $user, User $customer): bool
-    {
-        // Check if user created this customer
-        if (isset($customer->created_by) && $customer->created_by === $user->id) {
-            return true;
-        }
-
-        // Check if customer is in user's subordinates
-        return $user->subordinates()->where('id', $customer->id)->exists();
+        // A user can update a customer if they have the general permission and can manage that specific user.
+        return ($user->hasPermission('edit_customers') || $user->operator_level <= 40) && $user->canManage($customer);
     }
 
     /**
@@ -145,17 +50,7 @@ class CustomerPolicy
      */
     public function delete(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            // Check tenant isolation
-            if ($user->tenant_id && $customer->tenant_id !== $user->tenant_id) {
-                return false;
-            }
-            return true;
-        }
-
-        // Operator and Sub-Operator do NOT have access to delete customers
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -164,8 +59,7 @@ class CustomerPolicy
      */
     public function restore(User $user, User $customer): bool
     {
-        // Same permissions as delete
-        return $this->delete($user, $customer);
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -174,8 +68,7 @@ class CustomerPolicy
      */
     public function forceDelete(User $user, User $customer): bool
     {
-        // Same permissions as delete
-        return $this->delete($user, $customer);
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -183,12 +76,7 @@ class CustomerPolicy
      */
     public function suspend(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin have automatic access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        return $this->update($user, $customer) && $user->hasPermission('suspend_customers');
+        return ($user->hasPermission('suspend_customers') || $this->isAdminOrHigher($user)) && $user->canManage($customer);
     }
 
     /**
@@ -196,12 +84,7 @@ class CustomerPolicy
      */
     public function activate(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin have automatic access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        return $this->update($user, $customer) && $user->hasPermission('activate_customers');
+        return ($user->hasPermission('activate_customers') || $this->isAdminOrHigher($user)) && $user->canManage($customer);
     }
 
     /**
@@ -210,13 +93,7 @@ class CustomerPolicy
      */
     public function disconnect(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to disconnect
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -224,12 +101,7 @@ class CustomerPolicy
      */
     public function changePackage(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin have automatic access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        return $this->update($user, $customer) && $user->hasPermission('change_package');
+        return ($user->hasPermission('change_package') || $this->isAdminOrHigher($user)) && $user->canManage($customer);
     }
 
     /**
@@ -238,13 +110,7 @@ class CustomerPolicy
      */
     public function editSpeedLimit(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to edit speed limits
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -253,13 +119,7 @@ class CustomerPolicy
      */
     public function activateFup(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to activate FUP
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -267,12 +127,7 @@ class CustomerPolicy
      */
     public function removeMacBind(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin have automatic access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        return $this->update($user, $customer) && $user->hasPermission('remove_mac_bind');
+        return ($user->hasPermission('remove_mac_bind') || $this->isAdminOrHigher($user)) && $user->canManage($customer);
     }
 
     /**
@@ -281,13 +136,7 @@ class CustomerPolicy
      */
     public function generateBill(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to generate bills
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -296,13 +145,7 @@ class CustomerPolicy
      */
     public function editBillingProfile(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to edit billing profile
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -310,12 +153,7 @@ class CustomerPolicy
      */
     public function sendSms(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin have automatic access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        return $user->hasPermission('send_sms') && $this->view($user, $customer);
+        return ($user->hasPermission('send_sms') || $this->isAdminOrHigher($user)) && $user->canManage($customer);
     }
 
     /**
@@ -323,12 +161,7 @@ class CustomerPolicy
      */
     public function sendLink(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin have automatic access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        return $user->hasPermission('send_payment_link') && $this->view($user, $customer);
+        return ($user->hasPermission('send_payment_link') || $this->isAdminOrHigher($user)) && $user->canManage($customer);
     }
 
     /**
@@ -336,12 +169,7 @@ class CustomerPolicy
      */
     public function advancePayment(User $user, User $customer): bool
     {
-        // Developer, Super Admin, and Admin have automatic access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        return $user->hasPermission('record_payments') && $this->view($user, $customer);
+        return ($user->hasPermission('record_payments') || $this->isAdminOrHigher($user)) && $user->canManage($customer);
     }
 
     /**
@@ -350,13 +178,7 @@ class CustomerPolicy
      */
     public function changeOperator(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return true;
-        }
-        
-        // Operator and Sub-Operator do NOT have access to change operator
-        return false;
+        return $this->isAdminOrHigher($user);
     }
 
     /**
@@ -365,13 +187,7 @@ class CustomerPolicy
      */
     public function editSuspendDate(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to edit suspend date
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -380,13 +196,7 @@ class CustomerPolicy
      */
     public function dailyRecharge(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to daily recharge
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
@@ -395,24 +205,16 @@ class CustomerPolicy
      */
     public function hotspotRecharge(User $user, User $customer): bool
     {
-        // Only Developer, Super Admin, and Admin have access
-        if ($user->operator_level <= 20) {
-            return $this->view($user, $customer);
-        }
-        
-        // Operator and Sub-Operator do NOT have access to hotspot recharge
-        return false;
+        return $this->isAdminOrHigher($user) && $user->canManage($customer);
     }
 
     /**
-     * Check if user has a special permission.
+     * Helper to check for Admin, Super Admin, or Developer roles.
      */
-    private function hasSpecialPermission(User $user, string $permission): bool
+    private function isAdminOrHigher(User $user): bool
     {
-        return $user->operatorPermissions()
-            ->where('permission_key', $permission)
-            ->where('is_enabled', true)
-            ->exists();
+        // operator_level <= 20 covers Admin, Super Admin, and Developer.
+        return $user->operator_level <= User::OPERATOR_LEVEL_ADMIN;
     }
 
     /**
@@ -421,17 +223,7 @@ class CustomerPolicy
      */
     public function manageChildAccount(User $reseller, User $customer): bool
     {
-        // Check if the customer is a child of this reseller
-        if ($customer->parent_id === $reseller->id) {
-            return true;
-        }
-
-        // Also check if admin/superadmin
-        if ($reseller->operator_level <= 20) {
-            return true;
-        }
-
-        return false;
+        return $reseller->canManage($customer);
     }
 
     /**
@@ -449,7 +241,7 @@ class CustomerPolicy
     public function assignChildAccount(User $user): bool
     {
         // Only admins and verified resellers can assign child accounts
-        return $user->operator_level <= 20 || 
+        return $user->operator_level <= 20 ||
                ($user->is_reseller ?? false) === true;
     }
 }

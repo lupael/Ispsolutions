@@ -7,24 +7,12 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * User Observer
- * 
+ *
  * Automatically provisions customers to RADIUS when they are created, updated, or deleted.
  * Only applies to users with is_subscriber = true (customers) and network service types.
  */
 class UserObserver
 {
-    /**
-     * Handle the User "creating" event.
-     * Auto-generate customer_id for customers before creation.
-     */
-    public function creating(User $user): void
-    {
-        // Only generate customer_id for customers (is_subscriber = true)
-        if ($user->is_subscriber === true && empty($user->customer_id)) {
-            $user->customer_id = $this->generateCustomerId();
-        }
-    }
-
     /**
      * Handle the User "created" event.
      * Automatically provision customer to RADIUS on creation.
@@ -38,9 +26,13 @@ class UserObserver
 
         try {
             // Sync to RADIUS
-            if ($user->username && $user->radius_password) {
-                $user->syncToRadius(['password' => $user->radius_password]);
-                Log::info("Customer {$user->username} provisioned to RADIUS", ['user_id' => $user->id]);
+            if ($user->username) {
+                $attributes = [];
+                if ($user->radius_password) {
+                    $attributes['password'] = $user->radius_password;
+                }
+                $user->syncToRadius($attributes);
+                Log::info("Customer {$user->username} provisioned to RADIUS on creation.", ['user_id' => $user->id]);
             }
         } catch (\Exception $e) {
             Log::error("Failed to provision customer to RADIUS on creation", [
@@ -50,22 +42,6 @@ class UserObserver
             ]);
             // Don't throw exception to avoid blocking customer creation
         }
-    }
-
-    /**
-     * Generate a unique 5-6 digit customer ID.
-     */
-    private function generateCustomerId(): string
-    {
-        do {
-            // Generate a random 5-6 digit number
-            $customerId = str_pad((string) random_int(10000, 999999), 6, '0', STR_PAD_LEFT);
-            
-            // Check if it already exists
-            $exists = User::where('customer_id', $customerId)->exists();
-        } while ($exists);
-
-        return $customerId;
     }
 
     /**
@@ -82,9 +58,9 @@ class UserObserver
         try {
             // Check if network-related fields changed
             // Use wasChanged() because updated() fires after save (isDirty() would always be false)
-            $networkFields = ['status', 'is_active', 'ip_address', 'mac_address', 'service_type', 'radius_password'];
+            $networkFields = ['status', 'is_active', 'ip_address', 'mac_address', 'service_type', 'radius_password', 'username'];
             $changed = false;
-            
+
             foreach ($networkFields as $field) {
                 if ($user->wasChanged($field)) {
                     $changed = true;
@@ -98,23 +74,14 @@ class UserObserver
 
             // Sync to RADIUS
             if ($user->username) {
-                // If not active for RADIUS, remove from RADIUS
-                if (!$user->isActiveForRadius()) {
-                    $user->removeFromRadius();
-                    Log::info("Customer {$user->username} removed from RADIUS (not active)", ['user_id' => $user->id]);
-                } else {
-                    // Update RADIUS attributes
-                    $attributes = [];
-                    if ($user->radius_password) {
-                        $attributes['password'] = $user->radius_password;
-                    }
-                    if ($user->ip_address) {
-                        $attributes['Framed-IP-Address'] = $user->ip_address;
-                    }
-                    
-                    $user->syncToRadius($attributes);
-                    Log::info("Customer {$user->username} synced to RADIUS", ['user_id' => $user->id]);
+                // The syncToRadius method is idempotent. It will create, update, or delete
+                // the RADIUS user based on the user's current state.
+                $attributes = [];
+                if ($user->wasChanged('radius_password') && $user->radius_password) {
+                    $attributes['password'] = $user->radius_password;
                 }
+                $user->syncToRadius($attributes);
+                Log::info("Customer {$user->username} synced to RADIUS on update.", ['user_id' => $user->id]);
             }
         } catch (\Exception $e) {
             Log::error("Failed to sync customer to RADIUS on update", [

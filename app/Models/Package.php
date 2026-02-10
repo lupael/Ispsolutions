@@ -23,6 +23,11 @@ class Package extends Model
 {
     use BelongsToTenant, HasFactory;
 
+    /**
+     * The unit in which bandwidth is stored in the database.
+     */
+    public const BANDWIDTH_UNIT = 'Kbps';
+
     protected $fillable = [
         'tenant_id',
         'operator_id',
@@ -200,8 +205,7 @@ class Package extends Model
     protected function price(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value > 0 ? $value : 1,
-            set: fn ($value) => $value
+            get: fn ($value) => $value > 0 ? $value : 1
         );
     }
 
@@ -240,12 +244,12 @@ class Package extends Model
     {
         // Determine if bandwidth is in Mbps or Kbps range
         $download = $this->bandwidth_download ?? 0;
-        
-        if ($download >= 1024) {
+
+        if (self::BANDWIDTH_UNIT === 'Kbps' && $download >= 1024) {
             return 'Mbps';
         }
-        
-        return 'Kbps';
+
+        return self::BANDWIDTH_UNIT;
     }
 
     /**
@@ -263,7 +267,7 @@ class Package extends Model
      * Task 8.3: Get available upgrade packages
      * Returns packages that can be upgraded to from this package
      */
-    public function getAvailableUpgrades(): \Illuminate\Database\Eloquent\Collection
+    public function getAvailableUpgrades(): \Illuminate\Database\Eloquent\Collection|array
     {
         // Get packages with higher price/bandwidth that share the same parent
         return self::where('status', 'active')
@@ -300,8 +304,8 @@ class Package extends Model
     public function getInheritedAttribute(string $attribute, $default = null)
     {
         // If this package has the attribute set, use it
-        if ($this->{$attribute} !== null && $this->{$attribute} !== '') {
-            return $this->{$attribute};
+        if (!blank($this->getAttribute($attribute))) {
+            return $this->getAttribute($attribute);
         }
 
         // Otherwise, try to inherit from parent

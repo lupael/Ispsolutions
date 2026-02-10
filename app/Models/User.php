@@ -216,7 +216,7 @@ class User extends Authenticatable
 
     /**
      * Alias for servicePackage() for convenience.
-     * 
+     *
      * Note: This returns the User's subscription/billing package (service_package_id).
      * For the NetworkUser's active network service package, use $user->currentPackage instead.
      * - package: User's subscription package (for billing, subscription management)
@@ -254,7 +254,7 @@ class User extends Authenticatable
 
     /**
      * Get the network user for this customer.
-     * 
+     *
      * @deprecated Network credentials now stored directly on User model.
      *             This relationship maintained for backward compatibility only.
      *             Use User model fields directly (username, service_type, etc.)
@@ -479,11 +479,11 @@ class User extends Authenticatable
     /**
      * Check if user is an operator (staff member).
      *
-     * According to config/operators_permissions.php, level 100 represents a customer.
-     * This method treats only users with operator_level < 100 as operators,
-     * so level 100 users (customers) are NOT considered operators.
+     * This method identifies any non-customer user (i.e., an internal staff member).
+     * It is distinct from `isOperatorRole()` which checks for the specific 'Operator' role (level 30).
+     * Customers (level 100 or `is_subscriber` = true) are not considered staff members.
      */
-    public function isOperator(): bool
+    public function isStaffMember(): bool
     {
         return $this->operator_level < 100;
     }
@@ -583,17 +583,9 @@ class User extends Authenticatable
 
         // Super Admin can only manage users in their own tenants
         if ($this->operator_level === 10) {
-            // Check if the other user belongs to a tenant created by this Super Admin
-            // Using a direct comparison to avoid N+1 query issues
-            if ($otherUser->tenant_id) {
-                $tenantCreatedBy = \App\Models\Tenant::where('id', $otherUser->tenant_id)
-                    ->value('created_by');
-                if ($tenantCreatedBy === $this->id) {
-                    return $this->operator_level < $otherUser->operator_level;
-                }
-            }
-
-            return false;
+            // Optimized to prevent N+1 queries. Assumes `tenant` relationship can be eager-loaded.
+            return $otherUser->tenant?->created_by === $this->id
+                && $this->operator_level < $otherUser->operator_level;
         }
 
         // For all other roles, ensure same tenant and lower level
@@ -609,38 +601,19 @@ class User extends Authenticatable
      * - Admin: Can create Operators (30), Sub-Operators (40), Managers (50), Accountants (70), Staff (80), and Customers (100) within their ISP
      * - Operator: Can create Sub-Operators (level 40) and Customers (level 100)
      * - Sub-Operator: Can only create Customers (level 100)
-     * 
+     *
      * Note: Lower level numbers = higher privilege (0 = Developer, 100 = Customer)
      */
     public function canCreateUserWithLevel(int $targetLevel): bool
     {
-        // Developer can create Super Admins (level 10) and all subordinate roles (higher level numbers)
-        if ($this->isDeveloper()) {
-            return $targetLevel >= 10; // Can create level 10+ (all roles except Developer)
-        }
-
-        // Super Admin can ONLY create Admins (level 20) within their own tenants
-        if ($this->isSuperAdmin()) {
-            return $targetLevel === 20;
-        }
-
-        // Admin can create Operators (30), Sub-Operators (40), Managers (50), Accountants (70), Staff (80), and Customers (100)
-        if ($this->isAdmin()) {
-            return in_array($targetLevel, [30, 40, 50, 70, 80, 100]);
-        }
-
-        // Operator can create Sub-Operators (40) and Customers (100) only
-        if ($this->isOperatorRole()) {
-            return in_array($targetLevel, [40, 100]);
-        }
-
-        // Sub-Operator can only create Customers (100)
-        if ($this->isSubOperator()) {
-            return $targetLevel === 100;
-        }
-
-        // Managers, Staff, Accountant cannot create users
-        return false;
+        return match ($this->operator_level) {
+            self::OPERATOR_LEVEL_DEVELOPER => $targetLevel >= self::OPERATOR_LEVEL_SUPER_ADMIN,
+            self::OPERATOR_LEVEL_SUPER_ADMIN => $targetLevel === self::OPERATOR_LEVEL_ADMIN,
+            self::OPERATOR_LEVEL_ADMIN => in_array($targetLevel, [30, 40, 50, 70, 80, 100]),
+            self::OPERATOR_LEVEL_OPERATOR => in_array($targetLevel, [40, 100]),
+            self::OPERATOR_LEVEL_SUB_OPERATOR => $targetLevel === 100,
+            default => false, // Managers, Staff, Accountants, etc., cannot create users.
+        };
     }
 
     /**
@@ -927,16 +900,16 @@ class User extends Authenticatable
      */
     public function getUsernameAttribute($value)
     {
-        // If value is explicitly set programmatically (not from database), use it
-        if (!is_null($value)) {
+        // If 'username' column exists on the users table and has a value, use it.
+        if (array_key_exists('username', $this->attributes) && !is_null($value)) {
             return $value;
         }
-        
+
         // Try to get from networkUser if it exists and is loaded
         if ($this->relationLoaded('networkUser') && $this->networkUser) {
             return $this->networkUser->username;
         }
-        
+
         // Final fallback to email
         return $this->email;
     }
@@ -949,23 +922,23 @@ class User extends Authenticatable
      */
     public function getStatusAttribute($value)
     {
-        // If value is explicitly set programmatically (not from database), use it
-        if (!is_null($value)) {
+        // If 'status' column exists on the users table and has a value, use it.
+        if (array_key_exists('status', $this->attributes) && !is_null($value)) {
             return $value;
         }
-        
+
         // Try to get from networkUser if it exists and is loaded
         if ($this->relationLoaded('networkUser') && $this->networkUser) {
             return $this->networkUser->status;
         }
-        
+
         // Default status
         return null;
     }
 
     /**
      * Get current active package (from networkUser if available, otherwise servicePackage)
-     * 
+     *
      * Note: This differs from the package() relationship method (line 175):
      * - package() returns User's subscription/billing package (service_package_id)
      * - currentPackage returns NetworkUser's active network service package
@@ -976,7 +949,7 @@ class User extends Authenticatable
         if ($this->relationLoaded('networkUser') && $this->networkUser) {
             return $this->networkUser->package;
         }
-        
+
         return $this->servicePackage;
     }
 
@@ -991,27 +964,27 @@ class User extends Authenticatable
 
     /**
      * Get sessions from network user (for backward compatibility)
-     * 
+     *
      * Note: Returns empty collection if networkUser relationship isn't loaded.
      * Ensure networkUser.sessions is eager-loaded in controller to avoid N+1 queries.
      */
     public function getSessionsAttribute()
     {
-        return $this->relationLoaded('networkUser') && $this->networkUser 
-            ? $this->networkUser->sessions 
+        return $this->relationLoaded('networkUser') && $this->networkUser
+            ? $this->networkUser->sessions
             : collect();
     }
 
     /**
      * Get service type from network user (for backward compatibility)
-     * 
+     *
      * Note: Returns null if networkUser relationship isn't loaded.
      * Ensure networkUser is eager-loaded in controller to avoid N+1 queries.
      */
     public function getServiceTypeAttribute()
     {
-        return $this->relationLoaded('networkUser') && $this->networkUser 
-            ? $this->networkUser->service_type 
+        return $this->relationLoaded('networkUser') && $this->networkUser
+            ? $this->networkUser->service_type
             : null;
     }
 
@@ -1025,7 +998,7 @@ class User extends Authenticatable
 
     /**
      * Get IP address (needs to be fetched from network user or IP allocations)
-     * 
+     *
      * Note: Returns null if ipAllocations relationship isn't loaded.
      * Ensure ipAllocations is eager-loaded in controller to avoid N+1 queries.
      */
@@ -1038,7 +1011,7 @@ class User extends Authenticatable
 
     /**
      * Get MAC address (needs to be fetched from MAC addresses)
-     * 
+     *
      * Note: Returns null if macAddresses relationship isn't loaded.
      * Ensure macAddresses is eager-loaded in controller to avoid N+1 queries.
      */
@@ -1076,9 +1049,8 @@ class User extends Authenticatable
 
         // Check if customer should be active in RADIUS
         if ($this->isActiveForRadius()) {
-            // Use the radius_password field (plain text for RADIUS)
-            $password = $attributes['password'] ?? $this->radius_password ?? $this->username;
-            
+            // Use the network_password accessor which contains the fallback logic
+            $password = $attributes['password'] ?? $this->network_password;
             return $radiusService->createUser($this->username, $password, $allAttributes);
         } else {
             // Remove from RADIUS if suspended/inactive
@@ -1100,7 +1072,7 @@ class User extends Authenticatable
         }
 
         $radiusService = app(\App\Services\RadiusService::class);
-        
+
         return $radiusService->updateUser($this->username, $attributes);
     }
 
@@ -1117,7 +1089,7 @@ class User extends Authenticatable
         }
 
         $radiusService = app(\App\Services\RadiusService::class);
-        
+
         return $radiusService->deleteUser($this->username);
     }
 
@@ -1129,13 +1101,13 @@ class User extends Authenticatable
     public function isNetworkCustomer(): bool
     {
         // FIXED: Use is_subscriber instead of operator_level to identify customers
-        return $this->is_subscriber === true && 
+        return $this->is_subscriber === true &&
                in_array($this->service_type, ['pppoe', 'hotspot', 'static', 'static_ip', 'vpn']);
     }
 
     /**
      * Get the network password (plain text for RADIUS).
-     * 
+     *
      * @return string|null
      */
     public function getNetworkPasswordAttribute(): ?string
@@ -1222,11 +1194,11 @@ class User extends Authenticatable
 
         // Future expiration
         $daysRemaining = $now->diffInDays($expiryDate);
-        
+
         if ($daysRemaining <= 1) {
             return __('billing.expires_tomorrow');
         }
-        
+
         return __('billing.will_expire', [
             'days' => $daysRemaining,
             'date' => $expiryDate->format('Y-m-d')
@@ -1302,4 +1274,3 @@ class User extends Authenticatable
     }
 
 }
-

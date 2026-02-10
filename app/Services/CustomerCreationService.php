@@ -2,20 +2,33 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
+use Illuminate\Support\Facades\Cache;
 
 class CustomerCreationService
 {
-    public function createCustomer(array $data): User
+    public function __construct(private LoggerInterface $logger)
+    {
+    }
+
+    /**
+     * Create a new customer with their network credentials.
+     *
+     * @param array $data The customer data.
+     * @return Customer The newly created customer model.
+     * @throws \Exception If customer creation fails.
+     */
+    public function createCustomer(array $data): Customer
     {
         try {
             DB::beginTransaction();
 
-            // Create customer user with network credentials
-            $customer = User::create([
+            // Use the Customer model to leverage its creating() event hook.
+            // This automatically sets is_subscriber, operator_level, and customer_id.
+            $customer = Customer::create([
                 'tenant_id' => $data['tenant_id'],
                 'name' => $data['name'],
                 'email' => $data['email'],
@@ -24,9 +37,7 @@ class CustomerCreationService
                 'radius_password' => $data['password'], // Plain text for RADIUS
                 'phone' => $data['phone'] ?? null,
                 'address' => $data['address'] ?? null,
-                'operator_level' => User::OPERATOR_LEVEL_CUSTOMER,
                 'is_active' => $data['is_active'] ?? true,
-                'is_subscriber' => true, // Mark as subscriber for customer list filtering
                 'activated_at' => now(),
                 'created_by' => $data['created_by'],
                 'service_package_id' => $data['service_package_id'],
@@ -50,15 +61,13 @@ class CustomerCreationService
 
             DB::commit();
 
-            // Clear customer cache to ensure new customer appears immediately
-            if (class_exists('\App\Services\CustomerCacheService')) {
-                \Cache::tags(['customers'])->flush();
-            }
+            // Invalidate the specific cache for this tenant for better performance.
+            Cache::forget("customers:tenant:{$customer->tenant_id}");
 
             return $customer;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to create customer: ' . $e->getMessage());
+            $this->logger->error('Failed to create customer', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             throw $e;
         }
     }
