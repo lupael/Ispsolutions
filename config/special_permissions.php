@@ -50,7 +50,7 @@ return [
     'bulk_operations' => [
         'label' => 'Bulk Operations',
         'description' => 'Can perform bulk operations (suspend, activate, bill generate)',
-        'default' => false,
+        'default' => true,
     ],
 
     'router_config_access' => [
@@ -93,31 +93,31 @@ return [
     'generate_bills' => [
         'label' => 'Generate Bills',
         'description' => 'Can generate bills for customers',
-        'default' => false,
+        'default' => true,
     ],
 
     'edit_billing_profile' => [
         'label' => 'Edit Billing Profile',
         'description' => 'Can edit customer billing profiles',
-        'default' => false,
+        'default' => true,
     ],
 
     'record_payments' => [
         'label' => 'Record Payments',
         'description' => 'Can record customer payments',
-        'default' => false,
+        'default' => true,
     ],
 
     'send_sms' => [
         'label' => 'Send SMS',
         'description' => 'Can send SMS messages to customers',
-        'default' => false,
+        'default' => true,
     ],
 
     'send_payment_link' => [
         'label' => 'Send Payment Link',
         'description' => 'Can send payment links to customers',
-        'default' => false,
+        'default' => true,
     ],
 
     'change_operator' => [

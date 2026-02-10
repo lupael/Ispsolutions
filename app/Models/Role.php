@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     /**
      * The attributes that are mass assignable.
@@ -19,6 +20,7 @@ class Role extends Model
         'name',
         'slug',
         'description',
+        'guard_name',
         'permissions',
         'level',
     ];
@@ -31,16 +33,6 @@ class Role extends Model
     protected $casts = [
         'permissions' => 'array',
     ];
-
-    /**
-     * Get the users that have this role.
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'role_user')
-            ->withPivot('tenant_id')
-            ->withTimestamps();
-    }
 
     /**
      * Check if role has a specific permission.

@@ -72,30 +72,12 @@ interface MonitoringServiceInterface
     public function getBandwidthGraph(string $type, int $id, string $period): array;
 
     /**
-     * Aggregate raw bandwidth data to hourly
+     * Aggregate bandwidth data from a source period to a target period.
+     *
+     * @param string $sourcePeriod The source period (e.g., 'raw', 'hourly', 'daily').
+     * @param string $targetPeriod The target period (e.g., 'hourly', 'daily', 'monthly').
      *
      * @return int Number of records processed
      */
-    public function aggregateHourlyData(): int;
-
-    /**
-     * Aggregate hourly bandwidth data to daily
-     *
-     * @return int Number of records processed
-     */
-    public function aggregateDailyData(): int;
-
-    /**
-     * Aggregate daily bandwidth data to weekly
-     *
-     * @return int Number of records processed
-     */
-    public function aggregateWeeklyData(): int;
-
-    /**
-     * Aggregate weekly bandwidth data to monthly
-     *
-     * @return int Number of records processed
-     */
-    public function aggregateMonthlyData(): int;
+    public function aggregateData(string $sourcePeriod, string $targetPeriod): int;
 }

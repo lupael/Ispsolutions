@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Helpers\OltVendorDetector;
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,7 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Olt extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     /**
      * The attributes that are mass assignable.
@@ -95,14 +97,6 @@ class Olt extends Model
     ];
 
     /**
-     * Get the tenant that owns the OLT.
-     */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
-    /**
      * Get the ONUs for the OLT.
      */
     public function onus(): HasMany
@@ -156,5 +150,27 @@ class Olt extends Model
     public function canConnect(): bool
     {
         return $this->isActive() && ! empty($this->ip_address) && ! empty($this->username) && ! empty($this->password);
+    }
+
+    /**
+     * Get the detected vendor for this OLT.
+     */
+    public function getVendorAttribute(): string
+    {
+        return OltVendorDetector::detect($this);
+    }
+
+    /**
+     * Get the correct management port based on protocol.
+     */
+    public function getPortAttribute($value): int
+    {
+        // If telnet is used and telnet_port is set, prefer it
+        if ($this->management_protocol === 'telnet' && !empty($this->telnet_port)) {
+            return (int) $this->telnet_port;
+        }
+
+        // Fallback to the default port
+        return (int) $value;
     }
 }

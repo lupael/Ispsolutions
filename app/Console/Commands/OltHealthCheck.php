@@ -15,7 +15,7 @@ class OltHealthCheck extends Command
      *
      * @var string
      */
-    protected $signature = 'olt:health-check 
+    protected $signature = 'olt:health-check
                             {--olt= : Specific OLT ID to check}
                             {--details : Show detailed information}';
 
@@ -41,7 +41,7 @@ class OltHealthCheck extends Command
                 // Check specific OLT
                 $olt = Olt::findOrFail($oltId);
 
-                return $this->checkOlt($olt, $oltService, $details);
+                return $this->checkAndReportOlt($olt, $oltService, $details);
             }
 
             // Check all active OLTs
@@ -57,23 +57,7 @@ class OltHealthCheck extends Command
             $unhealthy = 0;
 
             foreach ($olts as $olt) {
-                $result = $oltService->testConnection($olt->id);
-
-                if ($result['success']) {
-                    $healthy++;
-                    if ($details) {
-                        $this->info("✓ {$olt->name} ({$olt->ip_address}) - Healthy (Latency: {$result['latency']}ms)");
-                    }
-                } else {
-                    $unhealthy++;
-                    $this->error("✗ {$olt->name} ({$olt->ip_address}) - Unhealthy: {$result['message']}");
-
-                    // Update health status
-                    $olt->update([
-                        'health_status' => 'unhealthy',
-                        'last_health_check_at' => now(),
-                    ]);
-                }
+                $this->checkAndReportOlt($olt, $oltService, $details, $healthy, $unhealthy);
             }
 
             $this->newLine();
@@ -93,29 +77,36 @@ class OltHealthCheck extends Command
     /**
      * Check a specific OLT.
      */
-    private function checkOlt(Olt $olt, OltServiceInterface $oltService, bool $details): int
+    private function checkAndReportOlt(Olt $olt, OltServiceInterface $oltService, bool $details, int &$healthy = 0, int &$unhealthy = 0): int
     {
-        $this->info("Checking OLT: {$olt->name} ({$olt->ip_address})");
+        $isSingleCheck = $this->option('olt') !== null;
+
+        if ($isSingleCheck) {
+            $this->info("Checking OLT: {$olt->name} ({$olt->ip_address})");
+        }
 
         $result = $oltService->testConnection($olt->id);
 
         if ($result['success']) {
-            $this->info('✓ Connection successful');
-            $this->info("  Latency: {$result['latency']}ms");
+            $healthy++;
+            $this->info("✓ {$olt->name} ({$olt->ip_address}) - Healthy (Latency: {$result['latency']}ms)");
+
+            $olt->update([
+                'health_status' => 'healthy',
+                'last_health_check_at' => now(),
+            ]);
 
             if ($details) {
                 $stats = $oltService->getOltStatistics($olt->id);
                 $this->newLine();
-                $this->info('Statistics:');
-                $this->info("  Total ONUs: {$stats['total_onus']}");
-                $this->info("  Online ONUs: {$stats['online_onus']}");
-                $this->info("  Offline ONUs: {$stats['offline_onus']}");
+                $this->line("  Statistics: Total ONUs: {$stats['total_onus']}, Online: {$stats['online_onus']}, Offline: {$stats['offline_onus']}");
             }
 
             return self::SUCCESS;
         }
 
-        $this->error("✗ Connection failed: {$result['message']}");
+        $unhealthy++;
+        $this->error("✗ {$olt->name} ({$olt->ip_address}) - Unhealthy: {$result['message']}");
 
         // Update health status
         $olt->update([

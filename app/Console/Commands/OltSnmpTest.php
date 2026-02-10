@@ -21,6 +21,7 @@ class OltSnmpTest extends Command
         $community = $this->option('community');
         $version = $this->option('version');
 
+        $oltDevice = null;
         if ($oltId) {
             $olt = Olt::find($oltId);
             if (! $olt) {
@@ -28,6 +29,7 @@ class OltSnmpTest extends Command
                 return 1;
             }
 
+            $oltDevice = $olt;
             $host = $olt->ip_address;
             $community = $community ?? $olt->snmp_community;
             $version = $version ?? $olt->snmp_version;
@@ -39,40 +41,27 @@ class OltSnmpTest extends Command
                 return 1;
             }
 
+            // Create a temporary Olt object for the SNMP client
+            $oltDevice = new Olt([
+                'ip_address' => $host,
+                'snmp_community' => $community,
+                'snmp_version' => $version ?? 'v2c',
+            ]);
+
             $this->info("Running SNMP tests for host: {$host}");
         }
 
         // Helper to test an OID: try walk() then get()
-        $testOid = function (string $oid) use ($snmp, $host, $community) {
+        $testOid = function (string $oid) use ($snmp, $oltDevice) {
             try {
-                $results = $snmp->walk(new class($host, $community) {
-                    public $ip_address;
-                    public $snmp_community;
-                    public function __construct($ip, $community)
-                    {
-                        $this->ip_address = $ip;
-                        $this->snmp_community = $community;
-                    }
-                }, $oid);
-
+                $results = $snmp->walk($oltDevice, $oid);
                 if (! empty($results)) {
                     return ['found', $results];
                 }
-            } catch (\Throwable $e) {
-                // ignore and try get
-            }
+            } catch (\Throwable $e) {}
 
             try {
-                $value = $snmp->get(new class($host, $community) {
-                    public $ip_address;
-                    public $snmp_community;
-                    public function __construct($ip, $community)
-                    {
-                        $this->ip_address = $ip;
-                        $this->snmp_community = $community;
-                    }
-                }, $oid);
-
+                $value = $snmp->get($oltDevice, $oid);
                 if ($value !== null && $value !== false) {
                     return ['found', [$value]];
                 }
@@ -122,4 +111,3 @@ class OltSnmpTest extends Command
         return 0;
     }
 }
-

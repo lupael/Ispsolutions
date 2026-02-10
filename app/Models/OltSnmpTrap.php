@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OltSnmpTrap extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
         'olt_id',
         'tenant_id',
@@ -30,11 +33,6 @@ class OltSnmpTrap extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
 
     public function olt(): BelongsTo
     {

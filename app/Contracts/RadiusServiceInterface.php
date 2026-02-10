@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Contracts;
 
-use App\Models\NetworkUser;
+use App\Models\User;
 
 interface RadiusServiceInterface
 {
@@ -32,7 +32,7 @@ interface RadiusServiceInterface
      *
      * @param array<string, mixed> $attributes
      */
-    public function syncUser(NetworkUser $user, array $attributes = []): bool;
+    public function syncUser(User $user, array $attributes = []): bool;
 
     /**
      * Get accounting data for a user

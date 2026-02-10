@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Contracts\RadiusServiceInterface;
-use App\Models\NetworkUser;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class RadiusSyncUsers extends Command
@@ -32,7 +32,8 @@ class RadiusSyncUsers extends Command
         $status = $this->option('status');
         $force = $this->option('force');
 
-        $query = NetworkUser::query();
+        // Use the User model and filter for subscribers
+        $query = User::where('is_subscriber', true);
 
         if ($status) {
             $query->where('status', $status);

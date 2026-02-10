@@ -24,5 +24,5 @@ interface SnmpClientInterface
      * @param string $oid
      * @return mixed
      */
-    public function get(Olt $olt, string $oid);
+    public function get(Olt $olt, string $oid): mixed;
 }

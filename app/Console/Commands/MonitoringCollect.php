@@ -17,7 +17,7 @@ class MonitoringCollect extends Command
      *
      * @var string
      */
-    protected $signature = 'monitoring:collect 
+    protected $signature = 'monitoring:collect
                             {--type= : Device type to monitor (router/olt/onu)}
                             {--id= : Specific device ID to monitor}';
 
@@ -124,54 +124,18 @@ class MonitoringCollect extends Command
      */
     private function monitorAllDevices(MonitoringServiceInterface $service): int
     {
-        $totalSuccess = 0;
-        $totalFailed = 0;
+        $deviceTypes = ['router', 'olt', 'onu'];
+        $overallResult = self::SUCCESS;
 
-        // Monitor routers
-        $routers = MikrotikRouter::where('status', 'active')->get();
-        if ($routers->isNotEmpty()) {
-            $this->info("Monitoring {$routers->count()} router(s)...");
-            foreach ($routers as $router) {
-                try {
-                    $service->monitorDevice('router', $router->id);
-                    $totalSuccess++;
-                } catch (\Exception $e) {
-                    $totalFailed++;
-                }
+        foreach ($deviceTypes as $type) {
+            $result = $this->monitorDeviceType($service, $type);
+            if ($result === self::FAILURE) {
+                $overallResult = self::FAILURE;
             }
+            $this->newLine();
         }
 
-        // Monitor OLTs
-        $olts = Olt::active()->get();
-        if ($olts->isNotEmpty()) {
-            $this->info("Monitoring {$olts->count()} OLT(s)...");
-            foreach ($olts as $olt) {
-                try {
-                    $service->monitorDevice('olt', $olt->id);
-                    $totalSuccess++;
-                } catch (\Exception $e) {
-                    $totalFailed++;
-                }
-            }
-        }
-
-        // Monitor ONUs
-        $onus = Onu::online()->get();
-        if ($onus->isNotEmpty()) {
-            $this->info("Monitoring {$onus->count()} ONU(s)...");
-            foreach ($onus as $onu) {
-                try {
-                    $service->monitorDevice('onu', $onu->id);
-                    $totalSuccess++;
-                } catch (\Exception $e) {
-                    $totalFailed++;
-                }
-            }
-        }
-
-        $this->newLine();
-        $this->info("All monitoring completed: {$totalSuccess} successful, {$totalFailed} failed");
-
-        return self::SUCCESS;
+        $this->info("All device monitoring completed.");
+        return $overallResult;
     }
 }

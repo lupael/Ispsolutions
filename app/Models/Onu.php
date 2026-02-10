@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Onu extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     /**
      * The attributes that are mass assignable.
@@ -44,6 +45,7 @@ class Onu extends Model
      */
     protected $fillable = [
         'olt_id',
+        'tenant_id',
         'pon_port',
         'onu_id',
         'serial_number',
@@ -85,14 +87,6 @@ class Onu extends Model
     ];
 
     /**
-     * Get the tenant that owns the ONU.
-     */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
-    /**
      * Get the OLT that owns the ONU.
      */
     public function olt(): BelongsTo
@@ -105,17 +99,17 @@ class Onu extends Model
      */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(NetworkUser::class, 'customer_id');
+        return $this->belongsTo(User::class, 'customer_id');
     }
 
     /**
      * Get the network user associated with the ONU (deprecated - use customer()).
-     * 
+     *
      * @deprecated Use customer() instead
      */
     public function networkUser(): BelongsTo
     {
-        return $this->belongsTo(NetworkUser::class, 'customer_id');
+        return $this->belongsTo(User::class, 'customer_id');
     }
 
     /**

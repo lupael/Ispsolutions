@@ -18,7 +18,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class HotspotLoginController extends Controller
 {
@@ -134,7 +133,7 @@ class HotspotLoginController extends Controller
 
             // Only show user-friendly errors, not technical details
             $userMessage = 'Unable to send OTP at this time. Please try again later.';
-            
+
             // If it's an OtpService exception, it's already user-friendly
             if (Str::contains($e->getMessage(), 'OTP') || Str::contains($e->getMessage(), 'try again')) {
                 $userMessage = $e->getMessage();
@@ -233,7 +232,7 @@ class HotspotLoginController extends Controller
 
             // Only show user-friendly errors
             $userMessage = 'Unable to verify OTP. Please try again.';
-            
+
             // If it's an OtpService exception, it's already user-friendly
             if (Str::contains($e->getMessage(), 'OTP') || Str::contains($e->getMessage(), 'attempts')) {
                 $userMessage = $e->getMessage();
@@ -328,7 +327,7 @@ class HotspotLoginController extends Controller
 
         if ($hotspotUser) {
             $sessionId = session('hotspot_auth.session_id');
-            
+
             // Use scenario service to handle logout (Scenario 9)
             if ($sessionId) {
                 $this->scenarioService->handleLogout(
@@ -337,7 +336,7 @@ class HotspotLoginController extends Controller
                     []
                 );
             }
-            
+
             // Clear session in database
             $hotspotUser->clearSession();
 
@@ -454,7 +453,7 @@ class HotspotLoginController extends Controller
         // Check if link has expired
         if (isset($authData['expires_at']) && now()->timestamp > $authData['expires_at']) {
             session()->forget('hotspot_auth');
-            
+
             return redirect()
                 ->route('hotspot.login')
                 ->withErrors(['error' => 'Your access link has expired.']);
@@ -625,7 +624,7 @@ class HotspotLoginController extends Controller
         try {
             // Format MAC address for display (handle various formats)
             $macDisplay = $this->formatMacForDisplay($macAddress);
-            
+
             $message = sprintf(
                 'Login successful! Your device (%s) is now connected. Welcome back!',
                 $macDisplay
@@ -658,12 +657,12 @@ class HotspotLoginController extends Controller
     {
         // Remove any separators
         $cleaned = strtoupper(str_replace([':', '-', '.'], '', $mac));
-        
+
         // Validate length (should be 12 hex characters)
         if (strlen($cleaned) !== 12 || !ctype_xdigit($cleaned)) {
             return 'Unknown Device';
         }
-        
+
         // Format as XX:XX:XX:XX:XX:XX
         return implode(':', str_split($cleaned, 2));
     }
@@ -745,7 +744,7 @@ class HotspotLoginController extends Controller
         // This creates a unique identifier for each device
 
         $fingerprint = $request->ip() . '|' . $request->userAgent();
-        
+
         // Create a hash that looks like a MAC address format
         $hash = md5($fingerprint);
         $mac = substr($hash, 0, 2) . ':' .

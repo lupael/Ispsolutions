@@ -60,7 +60,7 @@ return [
     | Timeout and retry settings for API connections.
     |
     */
-    'timeout' => env('MIKROTIK_TIMEOUT', 10),
+    'timeout' => env('MIKROTIK_TIMEOUT', 30),
     'retry_attempts' => env('MIKROTIK_RETRY_ATTEMPTS', 3),
     'retry_delay' => env('MIKROTIK_RETRY_DELAY', 1), // seconds
     'auto_reconnect' => env('MIKROTIK_AUTO_RECONNECT', true),

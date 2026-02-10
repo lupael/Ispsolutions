@@ -20,7 +20,7 @@ return [
     | Number of days after due date before account is locked.
     |
     */
-    'grace_period_days' => env('BILLING_GRACE_PERIOD', 7),
+    'grace_period_days' => env('BILLING_GRACE_PERIOD', 3),
 
     /*
     |--------------------------------------------------------------------------

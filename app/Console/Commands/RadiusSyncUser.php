@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Contracts\RadiusServiceInterface;
-use App\Models\NetworkUser;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class RadiusSyncUser extends Command
@@ -15,7 +15,7 @@ class RadiusSyncUser extends Command
      *
      * @var string
      */
-    protected $signature = 'radius:sync-user 
+    protected $signature = 'radius:sync-user
                             {user : The username or user ID to sync}
                             {--password= : Optional new password to set}';
 
@@ -37,10 +37,10 @@ class RadiusSyncUser extends Command
         $this->info("Syncing user: {$userIdentifier}");
 
         try {
-            // Try to find user by ID or username
+            // Find user by ID or username, ensuring they are a subscriber
             $user = is_numeric($userIdentifier)
-                ? NetworkUser::findOrFail($userIdentifier)
-                : NetworkUser::where('username', $userIdentifier)->firstOrFail();
+                ? User::where('is_subscriber', true)->findOrFail($userIdentifier)
+                : User::where('is_subscriber', true)->where('username', $userIdentifier)->firstOrFail();
 
             $attributes = $password ? ['password' => $password] : [];
             $success = $radiusService->syncUser($user, $attributes);

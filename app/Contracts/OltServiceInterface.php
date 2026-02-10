@@ -29,9 +29,9 @@ interface OltServiceInterface
     /**
      * Sync ONUs from OLT to database
      *
-     * @return int Number of ONUs synced
+     * @return array{synced: int, new: int, updated: int, failed: int} Sync summary
      */
-    public function syncOnus(int $oltId): int;
+    public function syncOnus(int $oltId): array;
 
     /**
      * Get detailed ONU status

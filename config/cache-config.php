@@ -13,28 +13,28 @@ return [
 
     'ttl' => [
         // Dashboard statistics (5 minutes)
-        'dashboard_stats' => 300,
+        'dashboard_stats' => 120,
 
         // Package listings (15 minutes)
-        'packages' => 900,
+        'packages' => 300,
 
         // Payment gateway configurations (30 minutes)
-        'payment_gateways' => 1800,
+        'payment_gateways' => 300,
 
         // User role permissions (60 minutes)
-        'role_permissions' => 3600,
+        'role_permissions' => 300,
 
         // Network device status (2 minutes)
-        'device_status' => 120,
+        'device_status' => 60,
 
         // Tenant data (10 minutes)
-        'tenant_data' => 600,
+        'tenant_data' => 300,
 
         // Network statistics (5 minutes)
-        'network_stats' => 300,
+        'network_stats' => 120,
 
         // Billing summaries (10 minutes)
-        'billing_summary' => 600,
+        'billing_summary' => 300,
     ],
 
     /*

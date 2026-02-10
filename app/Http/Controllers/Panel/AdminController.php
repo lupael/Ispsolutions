@@ -42,7 +42,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -2691,7 +2690,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
                 ->with('success', "{$deletedCount} IP pool(s) deleted successfully.");
         } catch (\Exception $e) {
             Log::error("Failed to bulk delete IP pools: " . $e->getMessage());
-            
+
             return redirect()->route('panel.admin.network.ipv4-pools')
                 ->with('error', 'Failed to delete IP pools. Please try again.');
         }
@@ -2959,7 +2958,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
                 ->with('success', "{$deletedCount} PPPoE profile(s) deleted successfully.");
         } catch (\Exception $e) {
             Log::error("Failed to bulk delete PPPoE profiles: " . $e->getMessage());
-            
+
             return redirect()->route('panel.admin.network.pppoe-profiles')
                 ->with('error', 'Failed to delete PPPoE profiles. Please try again.');
         }
@@ -4168,7 +4167,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         $operators = User::where('tenant_id', $tenantId)
             ->whereHas('roles', function ($query) {
                 $query->where('slug', 'operator');
@@ -4184,7 +4183,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
@@ -4209,7 +4208,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
@@ -4254,7 +4253,7 @@ $customer = User::where('tenant_id', $tenantId)->findOrFail($id);
     {
         $tenantId = getCurrentTenantId();
         abort_unless($tenantId, 500, 'Tenant context not initialized.');
-        
+
         // Ensure operator belongs to current tenant
         abort_unless($operator->tenant_id === $tenantId, 403, 'Operator not found in your organization.');
         abort_unless($operator->isOperatorRole(), 403, 'User is not an operator.');
