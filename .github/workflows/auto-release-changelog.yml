@@ -46,7 +46,7 @@ jobs:
         run: |
           # Try to get the latest tag
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -z "$LATEST_TAG" ]; then
             # No tags exist, start with 1.0.0
             VERSION="1.0.0"
@@ -54,7 +54,7 @@ jobs:
           else
             # Extract version from tag (remove 'v' prefix if present)
             LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
-            
+
             # Validate version format (should be X.Y.Z where X, Y, Z are numbers)
             if ! [[ "$LATEST_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "Warning: Latest tag '$LATEST_TAG' is not a valid semver. Using 1.0.0"
@@ -67,7 +67,7 @@ jobs:
               echo "Latest tag: $LATEST_TAG, new version: $VERSION"
             fi
           fi
-          
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
@@ -90,8 +90,9 @@ jobs:
           git config user.name "copilot-bot"
           git config user.email "copilot-bot@users.noreply.github.com"
           git add CHANGELOG.md
-          git commit -m "chore: update changelog [skip ci]" || echo "No changes to commit"
-          git push
+          git commit -m "chore: update changelog for release [skip ci]" || echo "No changes to commit"
+          git pull --rebase
+          git push origin HEAD:${{ github.ref_name }}
 
       - name: Check if tag exists
         id: check_tag
