@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\Concerns\FindsAssociatedModel;
+use App\Console\Commands\FindsAssociatedModel;
 use App\Contracts\MonitoringServiceInterface;
 use App\Models\MikrotikRouter;
 use App\Models\Olt;
@@ -62,7 +62,6 @@ class MonitoringCollect extends Command
      * Monitor a specific device
      */
     private function monitorSpecificDevice(MonitoringServiceInterface $service, string $type, int $id): int
-    {
         try {
             $modelClass = $this->getModelClassForType($type);
             // Find the model first to ensure it exists.
@@ -74,17 +73,17 @@ class MonitoringCollect extends Command
 
             $this->line("  Status: {$metrics['status']}");
             if (isset($metrics['cpu_usage'])) {
-                $this->line("  CPU: {$metrics['cpu_usage']}%");
+                $this->line("  CPU: {$metrics['cpu_usage']}% ");
             }
             if (isset($metrics['memory_usage'])) {
-                $this->line("  Memory: {$metrics['memory_usage']}%");
+                $this->line("  Memory: {$metrics['memory_usage']}% ");
             }
 
             $this->info('✓ Monitoring completed');
 
             return self::SUCCESS;
         } catch (ModelNotFoundException) {
-            $this->error("Device of type '{$type}' with ID '{$id}' not found.");
+            $this.error("Device of type '{$type}' with ID '{$id}' not found.");
 
             return self::FAILURE;
         } catch (\Exception $e) {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\Concerns\FindsAssociatedModel;
+use App\Console\Commands\FindsAssociatedModel;
 use App\Contracts\MikrotikServiceInterface;
 use App\Models\MikrotikRouter;
 use App\Models\RadiusSession;

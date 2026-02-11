@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\Concerns\FindsAssociatedModel;
+use App\Console\Commands\FindsAssociatedModel;
 use App\Contracts\OltServiceInterface;
 use App\Models\Olt;
 use Illuminate\Console\Command;
