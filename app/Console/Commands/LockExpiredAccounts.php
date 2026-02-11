@@ -34,10 +34,16 @@ class LockExpiredAccounts extends Command
 
         $this->info('Locking expired accounts...');
 
-        $count = $billingService->lockExpiredAccounts();
+        try {
+            $count = $billingService->lockExpiredAccounts();
 
-        $this->info("Locked {$count} expired account(s).");
+            $this->info("Locked {$count} expired account(s).");
 
-        return Command::SUCCESS;
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $this->error('An error occurred while locking accounts: ' . $e->getMessage());
+
+            return Command::FAILURE;
+        }
     }
 }

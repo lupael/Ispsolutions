@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
-use App\Models\NetworkUser;
 use App\Models\RadAcct;
 use App\Models\User;
 use App\Services\MikrotikService;
@@ -32,8 +31,7 @@ class CustomerDisconnectController extends Controller
         $this->authorize('disconnect', $customer);
 
         try {
-            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
-            if (!$networkUser) {
+            if (!$customer) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No network user found',
@@ -42,12 +40,12 @@ class CustomerDisconnectController extends Controller
 
             $disconnected = false;
 
-            switch ($networkUser->service_type) {
+            switch ($customer->service_type) {
                 case 'pppoe':
-                    $disconnected = $this->disconnectPppoe($networkUser);
+                    $disconnected = $this->disconnectPppoe($customer);
                     break;
                 case 'hotspot':
-                    $disconnected = $this->disconnectHotspot($networkUser);
+                    $disconnected = $this->disconnectHotspot($customer);
                     break;
                 default:
                     return response()->json([
@@ -92,10 +90,10 @@ class CustomerDisconnectController extends Controller
     /**
      * Disconnect PPPoE user.
      */
-    protected function disconnectPppoe(NetworkUser $networkUser): bool
+    protected function disconnectPppoe(User $customer): bool
     {
         // Find active sessions
-        $activeSessions = RadAcct::where('username', $networkUser->username)
+        $activeSessions = RadAcct::where('username', $customer->username)
             ->whereNull('acctstoptime')
             ->get();
 
@@ -119,7 +117,7 @@ class CustomerDisconnectController extends Controller
 
                         // Find and remove PPP session
                         $pppSessions = $this->mikrotikService->query('/ppp/active/print', [
-                            '?name' => $networkUser->username,
+                            '?name' => $customer->username,
                         ]);
 
                         foreach ($pppSessions as $pppSession) {
@@ -131,7 +129,7 @@ class CustomerDisconnectController extends Controller
                     }
                 } catch (\Exception $e) {
                     Log::error('Failed to disconnect PPPoE user via API', [
-                        'username' => $networkUser->username,
+                        'username' => $customer->username,
                         'error' => $e->getMessage(),
                     ]);
                 }

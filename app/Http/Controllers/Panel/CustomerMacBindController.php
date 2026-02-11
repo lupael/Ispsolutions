@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerMacAddress;
 use App\Models\MikrotikRouter;
-use App\Models\NetworkUser;
 use App\Models\RadCheck;
 use App\Models\User;
 use App\Services\AuditLogService;
@@ -73,13 +72,12 @@ class CustomerMacBindController extends Controller
             ]);
 
             // Integrate with RADIUS MAC authentication
-            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
-            if ($networkUser && $networkUser->username) {
+            if ($customer && $customer->username) {
                 try {
                     // Add MAC to RADIUS radcheck table for MAC authentication
                     RadCheck::updateOrCreate(
                         [
-                            'username' => $networkUser->username,
+                            'username' => $customer->username,
                             'attribute' => 'Calling-Station-Id',
                             'value' => $formattedMac,
                         ],
@@ -89,7 +87,7 @@ class CustomerMacBindController extends Controller
                     );
                 } catch (\Exception $e) {
                     Log::warning('Failed to add MAC to RADIUS', [
-                        'username' => $networkUser->username,
+                        'username' => $customer->username,
                         'mac' => $formattedMac,
                         'error' => $e->getMessage(),
                     ]);
@@ -140,20 +138,17 @@ class CustomerMacBindController extends Controller
         try {
             $macAddressValue = $macAddress->mac_address;
 
-            // Get network user for RADIUS integration
-            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
-
             // Integrate with RADIUS MAC authentication
-            if ($networkUser && $networkUser->username) {
+            if ($customer && $customer->username) {
                 try {
                     // Remove MAC from RADIUS radcheck table
-                    RadCheck::where('username', $networkUser->username)
+                    RadCheck::where('username', $customer->username)
                         ->where('attribute', 'Calling-Station-Id')
                         ->where('value', $macAddressValue)
                         ->delete();
                 } catch (\Exception $e) {
                     Log::warning('Failed to remove MAC from RADIUS', [
-                        'username' => $networkUser->username,
+                        'username' => $customer->username,
                         'mac' => $macAddressValue,
                         'error' => $e->getMessage(),
                     ]);
@@ -161,7 +156,7 @@ class CustomerMacBindController extends Controller
             }
 
             // Clear MikroTik MAC binding if applicable
-            if ($networkUser) {
+            if ($customer) {
                 try {
                     $router = MikrotikRouter::where('is_active', true)->first();
                     

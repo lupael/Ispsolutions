@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\FindsAssociatedModel;
 use App\Contracts\OltServiceInterface;
 use App\Models\Olt;
 use Illuminate\Console\Command;
 
 class OltSyncOnus extends Command
 {
+    use FindsAssociatedModel;
+
     /**
      * The name and signature of the console command.
      *
@@ -39,15 +42,17 @@ class OltSyncOnus extends Command
         try {
             if ($oltId) {
                 // Sync specific OLT
-                $olt = Olt::findOrFail($oltId);
+                /** @var Olt $olt */
+                $olt = $this->findModel(Olt::class, (string) $oltId);
 
                 if (! $olt->isActive() && ! $force) {
                     $this->warn("OLT {$olt->name} is not active. Use --force to sync anyway.");
 
                     return self::SUCCESS;
                 }
+                $result = $this->syncOlt($olt, $oltService);
 
-                return $this->syncOlt($olt, $oltService);
+                return $result['success'] ? self::SUCCESS : self::FAILURE;
             }
 
             // Sync all active OLTs
@@ -59,34 +64,19 @@ class OltSyncOnus extends Command
                 return self::SUCCESS;
             }
 
-            $summary = [
-                'synced' => 0,
-                'new' => 0,
-                'updated' => 0,
-                'failed' => 0,
-                'olt_success' => 0,
-                'olt_failed' => 0,
-            ];
+            $summary = ['synced' => 0, 'new' => 0, 'updated' => 0, 'failed' => 0];
+            $oltSuccessCount = 0;
+            $oltFailCount = 0;
 
             foreach ($olts as $olt) {
-                $this->info("Syncing OLT: {$olt->name}");
-
-                try {
-                    $result = $oltService->syncOnus($olt->id);
-
-                    if ($result['synced'] > 0 || $result['failed'] === 0) {
-                        $this->info("  ✓ Synced {$result['synced']} ONUs (New: {$result['new']}, Updated: {$result['updated']}, Failed: {$result['failed']})");
-                        $summary['olt_success']++;
-                        foreach (['synced', 'new', 'updated', 'failed'] as $key) {
-                            $summary[$key] += $result[$key];
-                        }
-                    } else {
-                        $this->warn('  - No ONUs found or sync failed');
-                        $summary['olt_failed']++;
+                $result = $this->syncOlt($olt, $oltService);
+                if ($result['success']) {
+                    $oltSuccessCount++;
+                    foreach (array_keys($summary) as $key) {
+                        $summary[$key] += $result[$key];
                     }
-                } catch (\Exception $e) {
-                    $this->error('  ✗ Error: ' . $e->getMessage());
-                    $summary['olt_failed']++;
+                } else {
+                    $oltFailCount++;
                 }
             }
 
@@ -99,12 +89,12 @@ class OltSyncOnus extends Command
                     ['New ONUs', $summary['new']],
                     ['Updated ONUs', $summary['updated']],
                     ['Failed ONUs', $summary['failed']],
-                    ['Successful OLTs', $summary['olt_success']],
-                    ['Failed OLTs', $summary['olt_failed']],
+                    ['Successful OLTs', $oltSuccessCount],
+                    ['Failed OLTs', $oltFailCount],
                 ]
             );
 
-            return self::SUCCESS;
+            return $oltFailCount > 0 ? self::FAILURE : self::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Error during ONU sync: ' . $e->getMessage());
 
@@ -115,29 +105,30 @@ class OltSyncOnus extends Command
     /**
      * Sync a specific OLT.
      */
-    private function syncOlt(Olt $olt, OltServiceInterface $oltService): int
+    private function syncOlt(Olt $olt, OltServiceInterface $oltService): array
     {
         $this->info("Syncing ONUs from OLT: {$olt->name}");
 
         try {
             $result = $oltService->syncOnus($olt->id);
 
-            if ($result['synced'] > 0 || $result['failed'] === 0) {
-                $this->info("✓ Successfully synced {$result['synced']} ONUs (New: {$result['new']}, Updated: {$result['updated']})");
-                if ($result['failed'] > 0) {
-                    $this->warn("  - Failed to sync {$result['failed']} ONUs.");
-                }
-
-                return self::SUCCESS;
+            if ($result['synced'] === 0 && $result['new'] === 0 && $result['updated'] === 0) {
+                $this->line("  - No new or updated ONUs found.");
+            } else {
+                $this->info("  ✓ Synced {$result['synced']} ONUs (New: {$result['new']}, Updated: {$result['updated']})");
             }
 
-            $this->warn('No ONUs found or sync failed');
+            if ($result['failed'] > 0) {
+                $this->warn("  - Failed to sync {$result['failed']} ONUs.");
+            }
 
-            return self::SUCCESS;
+            $result['success'] = true;
+
+            return $result;
         } catch (\Exception $e) {
-            $this->error('✗ Error: ' . $e->getMessage());
+            $this->error('  ✗ Error: ' . $e->getMessage());
 
-            return self::FAILURE;
+            return ['success' => false, 'synced' => 0, 'new' => 0, 'updated' => 0, 'failed' => 0];
         }
     }
 }

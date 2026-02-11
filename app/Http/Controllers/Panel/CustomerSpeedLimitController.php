@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\CustomerSpeedLimit;
-use App\Models\NetworkUser;
 use App\Models\RadReply;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -24,25 +23,25 @@ class CustomerSpeedLimitController extends Controller
     {
         $this->authorize('editSpeedLimit', $customer);
 
-        $networkUser = NetworkUser::with('package')->where('user_id', $customer->id)->first();
-        
+        $customer->load('servicePackage');
+
         // Get current speed limit configuration from database
         $speedLimitConfig = $customer->speedLimit()->active()->first();
-        
+
         // Get current speed limit from RADIUS
         $speedLimit = null;
-        if ($networkUser) {
-            $radReply = RadReply::where('username', $networkUser->username)
+        if ($customer) {
+            $radReply = RadReply::where('username', $customer->username)
                 ->where('attribute', 'Mikrotik-Rate-Limit')
                 ->first();
-            
+
             if ($radReply) {
                 // Parse format: upload/download (e.g., "512k/1024k", "512/1024", "512k / 1024k")
                 $parts = array_map('trim', explode('/', $radReply->value));
                 if (count($parts) === 2) {
                     $upload = preg_replace('/[^0-9]/', '', $parts[0]);
                     $download = preg_replace('/[^0-9]/', '', $parts[1]);
-                    
+
                     if (is_numeric($upload) && is_numeric($download)) {
                         $speedLimit = [
                             'upload' => (int) $upload,
@@ -55,14 +54,14 @@ class CustomerSpeedLimitController extends Controller
 
         // Get package default speeds
         $packageSpeed = null;
-        if ($networkUser && $networkUser->package) {
+        if ($customer && $customer->servicePackage) {
             $packageSpeed = [
-                'upload' => $networkUser->package->bandwidth_upload,
-                'download' => $networkUser->package->bandwidth_download,
+                'upload' => $customer->servicePackage->bandwidth_upload,
+                'download' => $customer->servicePackage->bandwidth_download,
             ];
         }
 
-        return view('panel.customers.speed-limit.show', compact('customer', 'networkUser', 'speedLimit', 'speedLimitConfig', 'packageSpeed'));
+        return view('panel.customers.speed-limit.show', compact('customer', 'speedLimit', 'speedLimitConfig', 'packageSpeed'));
     }
 
     /**
@@ -79,8 +78,6 @@ class CustomerSpeedLimitController extends Controller
             'expires_at' => 'nullable|date|after:now',
         ]);
 
-        $networkUser = NetworkUser::where('user_id', $customer->id)->firstOrFail();
-
         DB::beginTransaction();
         try {
             $uploadSpeed = (int) $request->input('upload_speed');
@@ -91,10 +88,10 @@ class CustomerSpeedLimitController extends Controller
             // If "0 = managed by router" option is selected
             if ($uploadSpeed === 0 && $downloadSpeed === 0) {
                 // Remove custom rate limit, let router/package manage
-                RadReply::where('username', $networkUser->username)
+                RadReply::where('username', $customer->username)
                     ->where('attribute', 'Mikrotik-Rate-Limit')
                     ->delete();
-                
+
                 // Delete speed limit config
                 CustomerSpeedLimit::where('user_id', $customer->id)->delete();
 
@@ -119,7 +116,7 @@ class CustomerSpeedLimitController extends Controller
 
             // Update RADIUS attribute
             RadReply::updateOrCreate(
-                ['username' => $networkUser->username, 'attribute' => 'Mikrotik-Rate-Limit'],
+                ['username' => $customer->username, 'attribute' => 'Mikrotik-Rate-Limit'],
                 ['op' => ':=', 'value' => $rateLimit]
             );
 
@@ -161,16 +158,15 @@ class CustomerSpeedLimitController extends Controller
     {
         $this->authorize('editSpeedLimit', $customer);
 
-        $networkUser = NetworkUser::where('user_id', $customer->id)->firstOrFail();
-
         DB::beginTransaction();
         try {
-            if (!$networkUser->package) {
+            $customer->load('servicePackage');
+            if (!$customer->servicePackage) {
                 return back()->withErrors(['error' => 'Customer has no package assigned.']);
             }
 
-            $uploadSpeed = $networkUser->package->bandwidth_upload;
-            $downloadSpeed = $networkUser->package->bandwidth_download;
+            $uploadSpeed = $customer->servicePackage->bandwidth_upload;
+            $downloadSpeed = $customer->servicePackage->bandwidth_download;
 
             if (!$uploadSpeed || !$downloadSpeed) {
                 return back()->withErrors(['error' => 'Package has no speed limits defined.']);
@@ -181,7 +177,7 @@ class CustomerSpeedLimitController extends Controller
 
             // Update RADIUS attribute
             RadReply::updateOrCreate(
-                ['username' => $networkUser->username, 'attribute' => 'Mikrotik-Rate-Limit'],
+                ['username' => $customer->username, 'attribute' => 'Mikrotik-Rate-Limit'],
                 ['op' => ':=', 'value' => $rateLimit]
             );
 
@@ -209,12 +205,10 @@ class CustomerSpeedLimitController extends Controller
     {
         $this->authorize('editSpeedLimit', $customer);
 
-        $networkUser = NetworkUser::where('user_id', $customer->id)->firstOrFail();
-
         DB::beginTransaction();
         try {
             // Remove custom rate limit from RADIUS
-            RadReply::where('username', $networkUser->username)
+            RadReply::where('username', $customer->username)
                 ->where('attribute', 'Mikrotik-Rate-Limit')
                 ->delete();
 

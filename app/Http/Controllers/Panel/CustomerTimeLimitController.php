@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerTimeLimit;
-use App\Models\NetworkUser;
 use App\Models\RadReply;
 use App\Models\User;
 use App\Services\AuditLogService;
@@ -73,9 +72,8 @@ class CustomerTimeLimitController extends Controller
             }
 
             // Update RADIUS attributes for session timeout
-            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
-            if ($networkUser && $networkUser->username) {
-                $this->updateRadiusTimeLimits($networkUser->username, $timeLimit);
+            if ($customer && $customer->username) {
+                $this->updateRadiusTimeLimits($customer->username, $timeLimit);
             }
 
             // Audit logging

@@ -48,26 +48,6 @@ class StaffController extends Controller
     }
 
     /**
-     * DEPRECATED: NetworkUser model has been eliminated.
-     * Display network users listing.
-     * Customers should be managed via customer routes instead.
-     */
-    /*
-    public function networkUsers(): View
-    {
-        // Optimized: Use eager loading with select to avoid N+1 queries
-        $networkUsers = NetworkUser::select([
-            'id', 'username', 'email', 'service_type',
-            'package_id', 'status', 'created_at',
-        ])->with('package:id,name,price')
-            ->latest()
-            ->paginate(20);
-
-        return view('panels.staff.network-users.index', compact('networkUsers'));
-    }
-    */
-
-    /**
      * Display tickets listing.
      */
     public function tickets(): View

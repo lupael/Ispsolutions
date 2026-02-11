@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\NetworkUser;
 use App\Models\NetworkUserSession;
 use App\Models\Payment;
 use App\Models\Ticket;
@@ -12,6 +11,7 @@ use App\Models\RadAcct;
 use App\Models\Package;
 use App\Models\PackageChangeRequest;
 use App\Models\DocumentVerification;
+use App\Models\User;
 use App\Services\PdfService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -26,11 +26,7 @@ class CustomerController extends Controller
     public function dashboard(): View
     {
         $user = auth()->user();
-
-        // Optimized: Get customer's network user account with package
-        $networkUser = NetworkUser::where('user_id', $user->id)
-            ->with('package:id,name,price')
-            ->first();
+        $user->load('servicePackage:id,name,price');
 
         // Optimized: Calculate next billing due with minimal data
         $nextInvoice = Invoice::where('user_id', $user->id)
@@ -40,7 +36,7 @@ class CustomerController extends Controller
             ->first();
 
         $stats = [
-            'current_package' => $user->currentPackage()?->name ?? 'No Package',
+            'current_package' => $user->servicePackage?->name ?? 'No Package',
             'account_status' => $user->is_active ? 'Active' : 'Inactive',
             'data_usage' => 0, // To be calculated from sessions
             'billing_due' => $nextInvoice?->total_amount ?? 0,
@@ -49,7 +45,7 @@ class CustomerController extends Controller
         // Get owner information (created_by user)
         $owner = $user->createdBy()->select('id', 'name', 'company_name', 'company_address', 'company_phone', 'email')->first();
 
-        return view('panels.customer.dashboard', compact('stats', 'networkUser', 'owner'));
+        return view('panels.customer.dashboard', compact('stats', 'user', 'owner'));
     }
 
     /**
@@ -90,7 +86,6 @@ class CustomerController extends Controller
     public function usage(): View
     {
         $user = auth()->user();
-        $networkUser = NetworkUser::where('user_id', $user->id)->first();
 
         $sessions = collect();
         $bandwidthData = [
@@ -99,13 +94,13 @@ class CustomerController extends Controller
             'monthly' => [],
         ];
 
-        if ($networkUser) {
-            $sessions = NetworkUserSession::where('user_id', $networkUser->id)
+        if ($user->is_subscriber) {
+            $sessions = NetworkUserSession::where('user_id', $user->id)
                 ->latest()
                 ->paginate(20);
 
             // Get bandwidth data from RadAcct for graphs
-            $bandwidthData = $this->getBandwidthData($networkUser->username);
+            $bandwidthData = $this->getBandwidthData($user->username);
         } else {
             // Return empty paginator when no network user
             $sessions = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -117,7 +112,7 @@ class CustomerController extends Controller
             );
         }
 
-        return view('panels.customer.usage', compact('sessions', 'networkUser', 'bandwidthData'));
+        return view('panels.customer.usage', compact('sessions', 'user', 'bandwidthData'));
     }
 
     /**
@@ -273,7 +268,7 @@ class CustomerController extends Controller
     public function viewPackages(): View
     {
         $user = auth()->user();
-        $currentPackage = $user->currentPackage();
+        $currentPackage = $user->servicePackage;
         
         $packages = Package::where('tenant_id', $user->tenant_id)
             ->where('is_active', true)
@@ -282,7 +277,7 @@ class CustomerController extends Controller
 
         $pendingRequest = PackageChangeRequest::where('user_id', $user->id)
             ->where('status', 'pending')
-            ->with(['requestedPackage'])
+            ->with(['newPackage'])
             ->first();
 
         return view('panels.customer.packages.index', compact('currentPackage', 'packages', 'pendingRequest'));
@@ -303,7 +298,7 @@ class CustomerController extends Controller
             'reason' => 'nullable|string|max:500',
         ]);
 
-        $currentPackage = $user->currentPackage();
+        $currentPackage = $user->servicePackage;
         $requestedPackage = Package::where('tenant_id', $user->tenant_id)
             ->where('is_active', true)
             ->findOrFail($request->package_id);
@@ -329,9 +324,9 @@ class CustomerController extends Controller
         PackageChangeRequest::create([
             'tenant_id' => $user->tenant_id,
             'user_id' => $user->id,
-            'current_package_id' => $currentPackage->id,
-            'requested_package_id' => $request->package_id,
-            'request_type' => 'upgrade',
+            'old_package_id' => $currentPackage->id,
+            'new_package_id' => $request->package_id,
+            'status' => 'pending',
             'reason' => $request->reason,
         ]);
 
@@ -353,7 +348,7 @@ class CustomerController extends Controller
             'reason' => 'nullable|string|max:500',
         ]);
 
-        $currentPackage = $user->currentPackage();
+        $currentPackage = $user->servicePackage;
         $requestedPackage = Package::where('tenant_id', $user->tenant_id)
             ->where('is_active', true)
             ->findOrFail($request->package_id);
@@ -379,9 +374,9 @@ class CustomerController extends Controller
         PackageChangeRequest::create([
             'tenant_id' => $user->tenant_id,
             'user_id' => $user->id,
-            'current_package_id' => $currentPackage->id,
-            'requested_package_id' => $request->package_id,
-            'request_type' => 'downgrade',
+            'old_package_id' => $currentPackage->id,
+            'new_package_id' => $request->package_id,
+            'status' => 'pending',
             'reason' => $request->reason,
         ]);
 

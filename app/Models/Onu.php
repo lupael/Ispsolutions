@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $onu_id
  * @property string $serial_number
  * @property string|null $mac_address
- * @property int|null $network_user_id
+ * @property int|null $customer_id
  * @property string|null $name
  * @property string|null $description
  * @property string $status
@@ -33,6 +33,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $last_sync_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @property-read string $full_pon_path
  */
 class Onu extends Model
 {
@@ -58,6 +60,8 @@ class Onu extends Model
         'signal_tx',
         'distance',
         'ipaddress',
+        'last_seen_at',
+        'last_sync_at',
         // Vendor information
         'model',
         'hw_version',
@@ -88,6 +92,8 @@ class Onu extends Model
 
     /**
      * Get the OLT that owns the ONU.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function olt(): BelongsTo
     {
@@ -96,6 +102,8 @@ class Onu extends Model
 
     /**
      * Get the customer associated with the ONU.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function customer(): BelongsTo
     {
@@ -147,15 +155,11 @@ class Onu extends Model
     /**
      * Get the full PON path for the ONU.
      *
-     * @return string Format: "OLT-Name / PON Port / ONU ID"
+     * @return string
      */
-    public function getFullPonPath(): string
+    public function getFullPonPathAttribute(): string
     {
-        // Only try to load the relationship if the olt_id is set and not already loaded
-        if ($this->olt_id && ! $this->relationLoaded('olt')) {
-            $this->load('olt');
-        }
-
+        // Accessor will automatically lazy-load the 'olt' relationship if not already loaded.
         $oltName = $this->olt?->name ?? 'Unknown OLT';
 
         return "{$oltName} / {$this->pon_port} / {$this->onu_id}";

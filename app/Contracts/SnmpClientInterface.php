@@ -9,7 +9,7 @@ use App\Models\Olt;
 interface SnmpClientInterface
 {
     /**
-     * Walk an OID on the given OLT and return an array of index => value.
+     * Walk an OID on the given OLT and return an array of OID index => value.
      *
      * @param Olt $olt
      * @param string $oid
@@ -22,7 +22,7 @@ interface SnmpClientInterface
      *
      * @param Olt $olt
      * @param string $oid
-     * @return mixed
+     * @return string|int|bool|null The value of the OID, or false/null on failure.
      */
-    public function get(Olt $olt, string $oid): mixed;
+    public function get(Olt $olt, string $oid): string|int|bool|null;
 }

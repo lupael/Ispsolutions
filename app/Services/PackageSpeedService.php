@@ -6,7 +6,7 @@ namespace App\Services;
 
 use App\Contracts\MikrotikServiceInterface;
 use App\Contracts\PackageSpeedServiceInterface;
-use App\Models\NetworkUser;
+use App\Models\User;
 use App\Models\Package;
 use App\Models\PackageProfileMapping;
 use Illuminate\Support\Facades\Log;
@@ -66,10 +66,10 @@ class PackageSpeedService implements PackageSpeedServiceInterface
     public function applySpeedToUser(int $userId, string $method = 'router'): bool
     {
         try {
-            $user = NetworkUser::with('package')->find($userId);
+            $user = User::with('servicePackage')->find($userId);
 
-            if (! $user || ! $user->package) {
-                Log::error('User or package not found', ['user_id' => $userId]);
+            if (! $user || ! $user->servicePackage || !$user->is_subscriber) {
+                Log::error('User, package not found, or user is not a subscriber', ['user_id' => $userId]);
 
                 return false;
             }
@@ -116,7 +116,7 @@ class PackageSpeedService implements PackageSpeedServiceInterface
     /**
      * Apply speed via router
      */
-    private function applySpeedViaRouter(NetworkUser $user): bool
+    private function applySpeedViaRouter(User $user): bool
     {
         try {
             if (! $user->router_id) {
@@ -125,12 +125,12 @@ class PackageSpeedService implements PackageSpeedServiceInterface
                 return false;
             }
 
-            $profile = $this->getProfileForPackage($user->package_id, $user->router_id);
+            $profile = $this->getProfileForPackage($user->service_package_id, $user->router_id);
 
             if (! $profile) {
                 Log::warning('No profile mapping found for package', [
                     'user_id' => $user->id,
-                    'package_id' => $user->package_id,
+                    'package_id' => $user->service_package_id,
                     'router_id' => $user->router_id,
                 ]);
 
@@ -140,7 +140,7 @@ class PackageSpeedService implements PackageSpeedServiceInterface
             $userData = [
                 'router_id' => $user->router_id,
                 'username' => $user->username,
-                'password' => $user->password,
+                'password' => $user->radius_password,
                 'profile' => $profile,
                 'service' => 'pppoe',
             ];

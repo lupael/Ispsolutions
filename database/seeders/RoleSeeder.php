@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
+use App\Models\Tenant;
 use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
@@ -147,11 +148,42 @@ class RoleSeeder extends Seeder
 
         foreach ($roles as $roleData) {
             Role::updateOrCreate(
-                ['slug' => $roleData['slug']],
+                ['slug' => $roleData['slug'], 'tenant_id' => null], // System-level roles have null tenant_id
                 $roleData
             );
         }
 
-        $this->command->info(count($roles) . ' roles seeded successfully with updated hierarchy!');
+        $this->command->info(count($roles) . ' system-level roles seeded successfully.');
+
+        // Seed tenant-specific roles
+        $tenants = Tenant::all();
+        $customerRolesCreated = 0;
+
+        foreach ($tenants as $tenant) {
+            Role::firstOrCreate(
+                ['slug' => 'customer', 'tenant_id' => $tenant->id],
+                [
+                    'name' => 'Customer',
+                    'slug' => 'customer',
+                    'description' => 'External subscriber with access to their own account details, billing, and support. Cannot access internal systems.',
+                    'level' => 100,
+                    'tenant_id' => $tenant->id,
+                    'permissions' => [
+                        'profile.view',
+                        'profile.update',
+                        'billing.view.own',
+                        'invoices.view.own',
+                        'payments.make',
+                        'support.tickets.create',
+                        'support.tickets.view.own',
+                    ],
+                ]
+            );
+            $customerRolesCreated++;
+        }
+
+        if ($customerRolesCreated > 0) {
+            $this->command->info($customerRolesCreated . ' tenant-specific "Customer" roles seeded.');
+        }
     }
 }

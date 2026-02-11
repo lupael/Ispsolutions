@@ -8,6 +8,29 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * OltSnmpTrap Model
+ *
+ * Represents a single SNMP trap message received from an OLT device.
+ *
+ * @property int $id
+ * @property int|null $olt_id
+ * @property int|null $tenant_id
+ * @property string|null $source_ip
+ * @property string|null $trap_type
+ * @property string|null $oid
+ * @property string $severity
+ * @property string|null $message
+ * @property array|null $trap_data
+ * @property bool $is_acknowledged
+ * @property \Illuminate\Support\Carbon|null $acknowledged_at
+ * @property int|null $acknowledged_by
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @property-read \App\Models\Olt|null $olt
+ * @property-read \App\Models\User|null $acknowledgedByUser
+ */
 class OltSnmpTrap extends Model
 {
     use BelongsToTenant;
@@ -21,6 +44,23 @@ class OltSnmpTrap extends Model
     public const SEVERITY_HIGH = 'high';
     public const SEVERITY_CRITICAL = 'critical';
     public const SEVERITY_DISASTER = 'disaster';
+
+    /**
+     * Get all available severity levels.
+     *
+     * @return string[]
+     */
+    public static function getSeverityLevels(): array
+    {
+        return [
+            self::SEVERITY_INFO,
+            self::SEVERITY_WARNING,
+            self::SEVERITY_AVERAGE,
+            self::SEVERITY_HIGH,
+            self::SEVERITY_CRITICAL,
+            self::SEVERITY_DISASTER,
+        ];
+    }
 
     protected $fillable = [
         'olt_id',
@@ -46,6 +86,8 @@ class OltSnmpTrap extends Model
 
     /**
      * Get the OLT that generated the trap.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function olt(): BelongsTo
     {
@@ -54,6 +96,8 @@ class OltSnmpTrap extends Model
 
     /**
      * Get the user who acknowledged the trap.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function acknowledgedByUser(): BelongsTo
     {

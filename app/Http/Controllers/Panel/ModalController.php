@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
-use App\Models\NetworkUser;
 use App\Models\Package;
+use App\Models\User;
 use App\Services\BillingService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,7 +41,7 @@ class ModalController extends Controller
     /**
      * Show quick action modal for customer
      */
-    public function showQuickAction(NetworkUser $customer, string $action): View
+    public function showQuickAction(User $customer, string $action): View
     {
         // Check if user can access this customer (tenant scoping)
         if ($customer->tenant_id !== auth()->user()->tenant_id) {
@@ -63,7 +63,7 @@ class ModalController extends Controller
     /**
      * Execute quick action
      */
-    public function executeQuickAction(Request $request, NetworkUser $customer, string $action)
+    public function executeQuickAction(Request $request, User $customer, string $action)
     {
         // Check if user can access this customer (tenant scoping)
         if ($customer->tenant_id !== auth()->user()->tenant_id) {

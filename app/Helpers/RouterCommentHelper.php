@@ -6,7 +6,7 @@ namespace App\Helpers;
 
 use App\Models\Customer;
 use App\Models\MikrotikRouter;
-use App\Models\NetworkUser;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -31,15 +31,15 @@ class RouterCommentHelper
      * Format: username|user_id|package_id|expiry_date|service_type
      * 
      * @deprecated since v1.1.0 Use getComment() for new implementations (IspBills pattern)
-     * @param NetworkUser $user
+     * @param User $user
      * @return string
      */
-    public static function buildUserComment(NetworkUser $user): string
+    public static function buildUserComment(User $user): string
     {
         $parts = [
             'username' => self::sanitizePipe($user->username),
-            'user_id' => $user->user_id ?? '',
-            'package_id' => $user->package_id ?? '',
+            'user_id' => $user->id ?? '',
+            'package_id' => $user->service_package_id ?? '',
             'expiry_date' => $user->expiry_date?->format('Y-m-d') ?? '',
             'service_type' => self::sanitizePipe($user->service_type ?? 'pppoe'),
         ];
@@ -51,13 +51,13 @@ class RouterCommentHelper
      * Generate router comment string from customer/user data (IspBills pattern)
      * Format: key--value,key--value,...
      * 
-     * @param Model $entity Customer or NetworkUser model
+     * @param Model $entity Customer or User model
      * @return string Formatted comment string
      */
     public static function getComment(Model $entity): string
     {
-        if ($entity instanceof NetworkUser) {
-            return self::getNetworkUserComment($entity);
+        if ($entity instanceof User && $entity->is_subscriber) {
+            return self::getSubscriberComment($entity);
         }
         
         if ($entity instanceof Customer) {
@@ -70,7 +70,7 @@ class RouterCommentHelper
     /**
      * Alias for getComment() for backward compatibility
      * 
-     * @param Model $entity Customer or NetworkUser model
+     * @param Model $entity Customer or User model
      * @return string Formatted comment string
      */
     public static function buildComment(Model $entity): string
@@ -79,32 +79,19 @@ class RouterCommentHelper
     }
     
     /**
-     * Generate comment for NetworkUser (PPPoE user) - IspBills pattern
-     * Format: uid--123,nid--456,name--John Doe,mobile--01712345678,zone--5,pkg--10,exp--2026-12-31,status--active
+     * Generate comment for a subscriber User (PPPoE user) - IspBills pattern
+     * Format: uid--123,name--John Doe,mobile--01712345678,zone--5,pkg--10,exp--2026-12-31,status--active
      * 
-     * Pulls customer information from related user where available
+     * Pulls customer information from the user model
      */
-    protected static function getNetworkUserComment(NetworkUser $user): string
+    protected static function getSubscriberComment(User $user): string
     {
-        // Get related customer information if available
-        $customer = $user->relationLoaded('user') ? $user->user : null;
-        $customerId = $user->user_id ?? null;
-        $customerName = $customer?->name;
-        $customerMobile = $customer?->mobile ?? $customer?->phone ?? null;
-        $customerZone = $customer?->zone_id ?? null;
-        
         $parts = [
-            // uid: owning customer id where possible (falls back to network user id)
-            'uid' => $customerId ?? $user->id,
-            // nid: explicit network user id for troubleshooting/audit
-            'nid' => $user->id,
-            // name: customer name if available, otherwise fall back to username
-            'name' => self::sanitize($customerName ?? $user->username),
-            // mobile: customer mobile/phone if available, otherwise N/A
-            'mobile' => self::sanitize($customerMobile ?? 'N/A'),
-            // zone: prefer customer zone, then network user zone, then N/A
-            'zone' => $customerZone ?? $user->zone_id ?? 'N/A',
-            'pkg' => $user->package_id ?? 'N/A',
+            'uid' => $user->id,
+            'name' => self::sanitize($user->name),
+            'mobile' => self::sanitize($user->mobile ?? $user->phone ?? 'N/A'),
+            'zone' => $user->zone_id ?? 'N/A',
+            'pkg' => $user->service_package_id ?? 'N/A',
             'exp' => $user->expiry_date?->format('Y-m-d') ?? 'N/A',
             'status' => $user->status ?? 'active',
         ];
@@ -297,12 +284,12 @@ class RouterCommentHelper
      * Update the comment for a user on a specific router
      * This method would typically be called via the MikroTik API
      * 
-     * @param NetworkUser $user
+     * @param User $user
      * @param MikrotikRouter $router
      * @param mixed $api MikroTik API client instance
      * @return bool
      */
-    public static function updateRouterComment(NetworkUser $user, MikrotikRouter $router, $api): bool
+    public static function updateRouterComment(User $user, MikrotikRouter $router, $api): bool
     {
         try {
             $comment = self::buildUserComment($user);

@@ -17,7 +17,7 @@ class Invoice extends Model
         'tenant_id',
         'invoice_number',
         'user_id',
-        'package_id',
+        'service_package_id',
         'amount',
         'tax_amount',
         'total_amount',
@@ -46,7 +46,7 @@ class Invoice extends Model
 
     public function package(): BelongsTo
     {
-        return $this->belongsTo(ServicePackage::class, 'package_id');
+        return $this->belongsTo(ServicePackage::class, 'service_package_id');
     }
 
     public function payments(): HasMany

@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OltPerformanceMetric extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'tenant_id',
         'olt_id',
         'cpu_usage',
         'memory_usage',
@@ -36,11 +40,6 @@ class OltPerformanceMetric extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
     public function olt(): BelongsTo
     {
         return $this->belongsTo(Olt::class);
@@ -58,6 +57,16 @@ class OltPerformanceMetric extends Model
 
     public static function recordMetrics(int $oltId, array $metrics): self
     {
-        return static::create(array_merge(['olt_id' => $oltId], $metrics));
+        /** @var \App\Models\Olt|null $olt */
+        $olt = Olt::find($oltId);
+
+        if (! $olt) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException("OLT with ID {$oltId} not found.");
+        }
+
+        return static::create(array_merge([
+            'olt_id' => $oltId,
+            'tenant_id' => $olt->tenant_id,
+        ], $metrics));
     }
 }

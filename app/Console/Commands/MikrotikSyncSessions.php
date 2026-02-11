@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\FindsAssociatedModel;
 use App\Contracts\MikrotikServiceInterface;
 use App\Models\MikrotikRouter;
 use App\Models\RadiusSession;
@@ -11,12 +12,14 @@ use Illuminate\Console\Command;
 
 class MikrotikSyncSessions extends Command
 {
+    use FindsAssociatedModel;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'mikrotik:sync-sessions 
+    protected $signature = 'mikrotik:sync-sessions
                             {--router= : Specific router ID to sync}';
 
     /**
@@ -31,14 +34,15 @@ class MikrotikSyncSessions extends Command
      */
     public function handle(MikrotikServiceInterface $mikrotikService): int
     {
-        $routerId = $this->option('router');
+        $routerIdentifier = $this->option('router');
 
         $this->info('Syncing MikroTik sessions...');
 
         try {
-            if ($routerId) {
+            if ($routerIdentifier) {
                 // Sync specific router
-                $router = MikrotikRouter::findOrFail($routerId);
+                /** @var MikrotikRouter $router */
+                $router = $this->findModel(MikrotikRouter::class, $routerIdentifier);
 
                 return $this->syncRouterSessions($router, $mikrotikService);
             } else {
@@ -52,67 +56,28 @@ class MikrotikSyncSessions extends Command
                 }
 
                 $totalSynced = 0;
-                $failed = 0;
+                $failedRouters = 0;
 
                 foreach ($routers as $router) {
-                    try {
-                        $sessions = $mikrotikService->getActiveSessions($router->id);
-
-                        if (empty($sessions)) {
-                            $this->error("✗ Failed to fetch sessions from {$router->name}");
-                            $failed++;
-
-                            continue;
-                        }
-
-                        // Update local session cache
-                        foreach ($sessions as $session) {
-                            // Normalize session data structure
-                            $sessionId = $session['id'] ?? $session['name'] ?? null;
-                            $username = $session['name'] ?? $session['username'] ?? null;
-                            $ipAddress = $session['address'] ?? $session['framed-ip-address'] ?? null;
-                            $uptime = $session['uptime'] ?? 0;
-                            $bytesIn = $session['bytes-in'] ?? $session['input-octets'] ?? 0;
-                            $bytesOut = $session['bytes-out'] ?? $session['output-octets'] ?? 0;
-
-                            if (! $sessionId || ! $username) {
-                                continue; // Skip invalid session data
-                            }
-
-                            RadiusSession::updateOrCreate(
-                                ['session_id' => $sessionId],
-                                [
-                                    'username' => $username,
-                                    'nas_ip_address' => $router->ip_address,
-                                    'framed_ip_address' => $ipAddress,
-                                    'start_time' => $uptime ? now()->subSeconds((int) $uptime) : null,
-                                    'input_octets' => (int) $bytesIn,
-                                    'output_octets' => (int) $bytesOut,
-                                    'status' => 'active',
-                                ]
-                            );
-                        }
-
-                        $count = count($sessions);
-                        $this->info("✓ Synced {$count} sessions from {$router->name}");
-                        $totalSynced += $count;
-                    } catch (\Exception $e) {
-                        $this->error("✗ Error syncing {$router->name}: " . $e->getMessage());
-                        $failed++;
+                    $result = $this->syncRouterSessions($router, $mikrotikService, false);
+                    if ($result['success']) {
+                        $totalSynced += $result['count'];
+                    } else {
+                        $failedRouters++;
                     }
                 }
 
                 $this->newLine();
                 $this->info('Sync Summary:');
                 $this->info("  Total sessions synced: {$totalSynced}");
-                if ($failed > 0) {
-                    $this->warn("  Failed routers: {$failed}");
+                if ($failedRouters > 0) {
+                    $this->warn("  Failed routers: {$failedRouters}");
                 }
 
-                return $failed > 0 ? Command::FAILURE : Command::SUCCESS;
+                return $failedRouters > 0 ? Command::FAILURE : Command::SUCCESS;
             }
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $this->error('Router not found');
+            $this->error("Router not found: {$routerIdentifier}");
 
             return Command::FAILURE;
         } catch (\Exception $e) {
@@ -122,46 +87,56 @@ class MikrotikSyncSessions extends Command
         }
     }
 
-    private function syncRouterSessions(MikrotikRouter $router, MikrotikServiceInterface $mikrotikService): int
+    /**
+     * @return array{success: bool, count: int}
+     */
+    private function syncRouterSessions(MikrotikRouter $router, MikrotikServiceInterface $mikrotikService, bool $isSingle = true): array
     {
-        $sessions = $mikrotikService->getActiveSessions($router->id);
+        try {
+            $sessions = $mikrotikService->getActiveSessions($router->id);
 
-        if (empty($sessions)) {
-            $this->error('Failed to fetch sessions from router');
+            if (empty($sessions)) {
+                $message = "No active sessions found on router '{$router->name}'";
+                $isSingle ? $this->warn($message) : $this->line("  - {$message}");
 
-            return Command::FAILURE;
-        }
-
-        foreach ($sessions as $session) {
-            // Normalize session data structure
-            $sessionId = $session['id'] ?? $session['name'] ?? null;
-            $username = $session['name'] ?? $session['username'] ?? null;
-            $ipAddress = $session['address'] ?? $session['framed-ip-address'] ?? null;
-            $uptime = $session['uptime'] ?? 0;
-            $bytesIn = $session['bytes-in'] ?? $session['input-octets'] ?? 0;
-            $bytesOut = $session['bytes-out'] ?? $session['output-octets'] ?? 0;
-
-            if (! $sessionId || ! $username) {
-                continue; // Skip invalid session data
+                return ['success' => true, 'count' => 0];
             }
 
-            RadiusSession::updateOrCreate(
-                ['session_id' => $sessionId],
-                [
-                    'username' => $username,
-                    'nas_ip_address' => $router->ip_address,
-                    'framed_ip_address' => $ipAddress,
-                    'start_time' => $uptime ? now()->subSeconds((int) $uptime) : null,
-                    'input_octets' => (int) $bytesIn,
-                    'output_octets' => (int) $bytesOut,
-                    'status' => 'active',
-                ]
-            );
+            $syncedCount = 0;
+            foreach ($sessions as $session) {
+                // Normalize session data structure
+                $sessionId = $session['.id'] ?? $session['name'] ?? null;
+                $username = $session['name'] ?? $session['user'] ?? null;
+                $ipAddress = $session['address'] ?? $session['framed-ip-address'] ?? null;
+                $uptime = $session['uptime'] ?? '0';
+                $bytesIn = $session['bytes-in'] ?? $session['input-octets'] ?? 0;
+                $bytesOut = $session['bytes-out'] ?? $session['output-octets'] ?? 0;
+
+                if (! $sessionId || ! $username) {
+                    continue; // Skip invalid session data
+                }
+
+                RadiusSession::updateOrCreate(
+                    ['session_id' => $sessionId, 'nas_ip_address' => $router->ip_address],
+                    [
+                        'username' => $username,
+                        'framed_ip_address' => $ipAddress,
+                        'start_time' => now()->subSeconds((int) $uptime),
+                        'input_octets' => (int) $bytesIn,
+                        'output_octets' => (int) $bytesOut,
+                        'status' => 'active',
+                    ]
+                );
+                $syncedCount++;
+            }
+
+            $this->info("✓ Synced {$syncedCount} sessions from '{$router->name}'");
+
+            return ['success' => true, 'count' => $syncedCount];
+        } catch (\Exception $e) {
+            $this->error("✗ Error syncing '{$router->name}': " . $e->getMessage());
+
+            return ['success' => false, 'count' => 0];
         }
-
-        $count = count($sessions);
-        $this->info("✓ Synced {$count} sessions from '{$router->name}'");
-
-        return Command::SUCCESS;
     }
 }

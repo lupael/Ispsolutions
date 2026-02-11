@@ -91,6 +91,7 @@ class Olt extends Model
         'username' => 'encrypted',
         'password' => 'encrypted',
         'snmp_community' => 'encrypted',
+        'snmp_port' => 'integer',
         'last_backup_at' => 'datetime',
         'last_health_check_at' => 'datetime',
         'created_at' => 'datetime',
@@ -99,6 +100,8 @@ class Olt extends Model
 
     /**
      * Get the ONUs for the OLT.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function onus(): HasMany
     {
@@ -181,11 +184,25 @@ class Olt extends Model
 
     /**
      * Get the correct management port based on protocol.
+     *
+     * @return int
      */
-    public function getManagementPort(): int
+    public function getManagementPortAttribute(): int
     {
         return $this->management_protocol === 'telnet' && !empty($this->telnet_port)
             ? $this->telnet_port
             : $this->port;
+    }
+
+    /**
+     * Get the count of associated ONUs.
+     * Uses the loaded 'onus_count' attribute if available (from withCount),
+     * otherwise loads it on demand.
+     *
+     * @return int
+     */
+    public function getOnusCountAttribute(): int
+    {
+        return $this->attributes['onus_count'] ?? $this->onus()->count();
     }
 }

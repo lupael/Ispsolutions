@@ -7,7 +7,6 @@ use App\Models\Payment;
 use App\Models\SmsLog;
 use App\Models\RadAcct;
 use App\Models\PackageChangeRequest;
-use App\Models\NetworkUser;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -75,14 +74,13 @@ class HistoryController extends Controller
     public function sessionHistory(Request $request): View
     {
         $user = auth()->user();
-        $networkUser = NetworkUser::where('user_id', $user->id)->first();
 
         $sessions = collect();
         $totalUpload = 0;
         $totalDownload = 0;
 
-        if ($networkUser) {
-            $query = RadAcct::where('username', $networkUser->username);
+        if ($user && $user->username) {
+            $query = RadAcct::where('username', $user->username);
 
             if ($request->filled('start_date')) {
                 $query->whereDate('acctstarttime', '>=', $request->start_date);
@@ -95,7 +93,7 @@ class HistoryController extends Controller
             $sessions = $query->orderBy('acctstarttime', 'desc')->paginate(20);
 
             // Calculate totals
-            $totals = RadAcct::where('username', $networkUser->username)
+            $totals = RadAcct::where('username', $user->username)
                 ->selectRaw('SUM(acctinputoctets) as total_upload, SUM(acctoutputoctets) as total_download')
                 ->first();
 

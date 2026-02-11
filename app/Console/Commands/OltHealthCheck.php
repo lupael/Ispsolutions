@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\FindsAssociatedModel;
 use App\Contracts\OltServiceInterface;
 use App\Models\Olt;
 use Illuminate\Console\Command;
 
 class OltHealthCheck extends Command
 {
+    use FindsAssociatedModel;
+
     /**
      * The name and signature of the console command.
      *
@@ -39,9 +42,12 @@ class OltHealthCheck extends Command
         try {
             if ($oltId) {
                 // Check specific OLT
-                $olt = Olt::findOrFail($oltId);
+                /** @var Olt $olt */
+                $olt = $this->findModel(Olt::class, (string) $oltId);
+                $this->info("Checking OLT: {$olt->name} ({$olt->ip_address})");
+                $isHealthy = $this->checkAndReportOlt($olt, $oltService, $details);
 
-                return $this->checkAndReportOlt($olt, $oltService, $details);
+                return $isHealthy ? self::SUCCESS : self::FAILURE;
             }
 
             // Check all active OLTs
@@ -53,20 +59,33 @@ class OltHealthCheck extends Command
                 return self::SUCCESS;
             }
 
+            $this->info("Checking {$olts->count()} OLT(s)...");
+            $this->newLine();
+
             $healthy = 0;
             $unhealthy = 0;
 
             foreach ($olts as $olt) {
-                $this->checkAndReportOlt($olt, $oltService, $details, $healthy, $unhealthy);
+                if ($this->checkAndReportOlt($olt, $oltService, $details)) {
+                    $healthy++;
+                } else {
+                    $unhealthy++;
+                }
             }
 
             $this->newLine();
             $this->info('Health Check Summary:');
-            $this->info("Healthy OLTs: {$healthy}");
-            $this->info("Unhealthy OLTs: {$unhealthy}");
-            $this->info('Total OLTs: ' . ($healthy + $unhealthy));
+            $this->info("  Healthy OLTs: {$healthy}");
+            if ($unhealthy > 0) {
+                $this->warn("  Unhealthy OLTs: {$unhealthy}");
+            }
+            $this->info('  Total OLTs: ' . ($healthy + $unhealthy));
 
-            return self::SUCCESS;
+            return $unhealthy > 0 ? self::FAILURE : self::SUCCESS;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            $this->error("OLT with ID '{$oltId}' not found.");
+
+            return self::FAILURE;
         } catch (\Exception $e) {
             $this->error('Error during health check: ' . $e->getMessage());
 
@@ -75,45 +94,30 @@ class OltHealthCheck extends Command
     }
 
     /**
-     * Check a specific OLT.
+     * Check a single OLT and report its status.
      */
-    private function checkAndReportOlt(Olt $olt, OltServiceInterface $oltService, bool $details, int &$healthy = 0, int &$unhealthy = 0): int
+    private function checkAndReportOlt(Olt $olt, OltServiceInterface $oltService, bool $details): bool
     {
-        $isSingleCheck = $this->option('olt') !== null;
-
-        if ($isSingleCheck) {
-            $this->info("Checking OLT: {$olt->name} ({$olt->ip_address})");
-        }
-
-        $result = $oltService->testConnection($olt->id);
+        $result = $oltService->testConnection($olt);
 
         if ($result['success']) {
-            $healthy++;
             $this->info("✓ {$olt->name} ({$olt->ip_address}) - Healthy (Latency: {$result['latency']}ms)");
 
-            $olt->update([
-                'health_status' => 'healthy',
-                'last_health_check_at' => now(),
-            ]);
+            $olt->update(['health_status' => 'healthy', 'last_health_check_at' => now()]);
 
             if ($details) {
-                $stats = $oltService->getOltStatistics($olt->id);
-                $this->newLine();
+                $stats = $oltService->getOltStatistics($olt);
                 $this->line("  Statistics: Total ONUs: {$stats['total_onus']}, Online: {$stats['online_onus']}, Offline: {$stats['offline_onus']}");
             }
 
-            return self::SUCCESS;
+            return true;
         }
 
-        $unhealthy++;
         $this->error("✗ {$olt->name} ({$olt->ip_address}) - Unhealthy: {$result['message']}");
 
         // Update health status
-        $olt->update([
-            'health_status' => 'unhealthy',
-            'last_health_check_at' => now(),
-        ]);
+        $olt->update(['health_status' => 'unhealthy', 'last_health_check_at' => now()]);
 
-        return self::FAILURE;
+        return false;
     }
 }

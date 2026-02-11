@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OltConfigurationTemplate extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'tenant_id',
         'name',
         'vendor',
         'model',
@@ -56,9 +60,9 @@ class OltConfigurationTemplate extends Model
                 throw new \InvalidArgumentException("Invalid template variable key: {$key}");
             }
 
-            // Escape the value to prevent injection
-            $escapedValue = htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-            $content = str_replace('{{' . $key . '}}', $escapedValue, $content);
+            // Do not use htmlspecialchars for CLI templates.
+            // Just replace the placeholder with the string value.
+            $content = str_replace('{{' . $key . '}}', (string) $value, $content);
         }
 
         return $content;

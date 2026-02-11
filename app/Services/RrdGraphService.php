@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\NetworkUser;
+use App\Models\User;
 use App\Models\RadAcct;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -149,9 +149,12 @@ class RrdGraphService
     /**
      * Collect bandwidth data from radacct for a customer
      */
-    public function collectCustomerBandwidth(NetworkUser $customer): bool
+    public function collectCustomerBandwidth(User $customer): bool
     {
         try {
+            if (!$customer->is_subscriber) {
+                return false;
+            }
             // Get the latest session data from radacct
             $session = RadAcct::where('username', $customer->username)
                 ->whereNull('acctstoptime')
@@ -308,12 +311,12 @@ class RrdGraphService
             'LINE1:upload_bits#00CC00',
             'AREA:download_bits#0000FF:Download:STACK',
             'LINE1:download_bits#0000CC',
-            'GPRINT:upload_bits:LAST:Current Upload\\: %6.2lf %Sbps',
-            'GPRINT:upload_bits:AVERAGE:Average Upload\\: %6.2lf %Sbps',
-            'GPRINT:upload_bits:MAX:Max Upload\\: %6.2lf %Sbps\\n',
-            'GPRINT:download_bits:LAST:Current Download\\: %6.2lf %Sbps',
-            'GPRINT:download_bits:AVERAGE:Average Download\\: %6.2lf %Sbps',
-            'GPRINT:download_bits:MAX:Max Download\\: %6.2lf %Sbps\\n',
+            'GPRINT:upload_bits:LAST:Current Upload\: %6.2lf %Sbps',
+            'GPRINT:upload_bits:AVERAGE:Average Upload\: %6.2lf %Sbps',
+            'GPRINT:upload_bits:MAX:Max Upload\: %6.2lf %Sbps\n',
+            'GPRINT:download_bits:LAST:Current Download\: %6.2lf %Sbps',
+            'GPRINT:download_bits:AVERAGE:Average Download\: %6.2lf %Sbps',
+            'GPRINT:download_bits:MAX:Max Download\: %6.2lf %Sbps\n',
         ];
     }
     

@@ -90,13 +90,11 @@ class OltService implements OltServiceInterface
     /**
      * Test connection to OLT.
      */
-    public function testConnection(int $oltId): array
+    public function testConnection(Olt $olt): array
     {
         $startTime = microtime(true);
 
         try {
-            $olt = Olt::findOrFail($oltId);
-
             if (! $olt->canConnect()) {
                 return [
                     'success' => false,
@@ -144,6 +142,69 @@ class OltService implements OltServiceInterface
         } catch (\Exception $e) {
             Log::error("Error testing connection to OLT {$oltId}: " . $e->getMessage());
 
+            return [ // This is inside the testConnection method, but $oltId is not defined. Using $olt->id instead.
+                'success' => false,
+                'message' => $e->getMessage(),
+                'latency' => (int) ((microtime(true) - $startTime) * 1000),
+            ];
+        }
+    }
+
+    /**
+     * Test connection to OLT.
+     */
+    public function testConnection(Olt $olt): array
+    {
+        $startTime = microtime(true);
+
+        try {
+            if (! $olt->canConnect()) {
+                return [
+                    'success' => false,
+                    'message' => 'OLT configuration is invalid or incomplete',
+                    'latency' => 0,
+                ];
+            }
+
+            $connection = $this->createConnection($olt);
+
+            if (! $connection->login($olt->username, $olt->password)) {
+                return [
+                    'success' => false,
+                    'message' => 'Authentication failed',
+                    'latency' => (int) ((microtime(true) - $startTime) * 1000),
+                ];
+            }
+
+            // Get vendor-specific commands and test command execution
+            $commands = $this->getVendorCommands($olt);
+            $result = $connection->exec($commands['version']);
+            $connection->disconnect();
+
+            $latency = (int) ((microtime(true) - $startTime) * 1000);
+
+            if ($result === false) {
+                return [
+                    'success' => false,
+                    'message' => 'Command execution failed',
+                    'latency' => $latency,
+                ];
+            }
+
+            // Update health status
+            $olt->update([
+                'health_status' => 'healthy',
+                'last_health_check_at' => now(),
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Connection successful',
+                'latency' => $latency,
+            ];
+        } catch (\Exception $e) {
+            Log::error("Error testing connection to OLT {$olt->id}: " . $e->getMessage());
+
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -158,30 +219,30 @@ class OltService implements OltServiceInterface
     public function discoverOnus(int $oltId): array
     {
         $sshConnectionCreated = false;
-        
+
         try {
             $olt = Olt::findOrFail($oltId);
 
             // Try SNMP discovery first if SNMP is configured
             $oltSnmpService = app(\App\Services\OltSnmpService::class);
-            
+
             if ($olt->snmp_community && $olt->snmp_version) {
                 Log::info('Attempting SNMP-based ONU discovery', [
                     'olt_id' => $oltId,
                     'vendor' => $olt->brand ?? $olt->model,
                 ]);
-                
+
                 $onus = $oltSnmpService->discoverOnusViaSNMP($olt);
-                
+
                 if (!empty($onus)) {
                     Log::info('Successfully discovered ONUs via SNMP', [
                         'olt_id' => $oltId,
                         'count' => count($onus),
                     ]);
-                    
+
                     return $onus;
                 }
-                
+
                 Log::warning('SNMP discovery returned no results, falling back to SSH', [
                     'olt_id' => $oltId,
                 ]);
@@ -193,11 +254,11 @@ class OltService implements OltServiceInterface
 
             // Fallback to SSH-based discovery
             $wasAlreadyConnected = isset($this->connections[$oltId]);
-            
+
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
-            
+
             $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$oltId];
@@ -223,7 +284,7 @@ class OltService implements OltServiceInterface
             Log::error("Error discovering ONUs on OLT {$oltId}: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             // Only clean up connection if we created it in this method call
             if ($sshConnectionCreated && isset($this->connections[$oltId])) {
                 $this->disconnect($oltId);
@@ -232,14 +293,14 @@ class OltService implements OltServiceInterface
             return [];
         }
     }
-    
+
     /**
      * Check if OLT supports SNMP discovery.
      */
     private function canUseSNMP(Olt $olt): bool
     {
-        return !empty($olt->ip_address) 
-            && !empty($olt->snmp_community) 
+        return !empty($olt->ip_address)
+            && !empty($olt->snmp_community)
             && !empty($olt->snmp_version)
             && in_array(strtolower($olt->management_protocol ?? ''), ['snmp', 'both']);
     }
@@ -247,36 +308,36 @@ class OltService implements OltServiceInterface
     /**
      * Sync ONUs from OLT to database.
      */
-    public function syncOnus(int $oltId): int
+    public function syncOnus(int $oltId): array
     {
         try {
             $olt = Olt::findOrFail($oltId);
-            
+
             Log::info("Starting ONU sync for OLT {$oltId}", [
                 'olt_name' => $olt->name,
             ]);
-            
+
             $discoveredOnus = $this->discoverOnus($oltId);
-            
+
             if (empty($discoveredOnus)) {
                 Log::warning("No ONUs discovered on OLT {$oltId}");
-                return 0;
+                return ['synced' => 0, 'new' => 0, 'updated' => 0, 'failed' => 0];
             }
-            
+
             $syncedCount = 0;
             $updatedCount = 0;
             $createdCount = 0;
-            $errorCount = 0;
+            $failedCount = 0;
 
             // Process in batches to avoid memory issues with large OLT configurations
             $batchSize = 100;
             $batches = array_chunk($discoveredOnus, $batchSize);
-            
+
             foreach ($batches as $batchIndex => $batch) {
                 Log::debug("Processing batch " . ($batchIndex + 1) . " of " . count($batches));
-                
+
                 try {
-                    DB::transaction(function () use ($olt, $batch, &$syncedCount, &$updatedCount, &$createdCount): void {
+                    DB::transaction(function () use ($olt, $batch, &$syncedCount, &$updatedCount, &$createdCount, &$failedCount): void {
                         foreach ($batch as $onuData) {
                             try {
                                 // Validate serial number
@@ -285,9 +346,10 @@ class OltService implements OltServiceInterface
                                         'serial_number' => $onuData['serial_number'] ?? 'empty',
                                         'pon_port' => $onuData['pon_port'] ?? 'unknown',
                                     ]);
+                                    $failedCount++;
                                     continue;
                                 }
-                                
+
                                 $onu = Onu::updateOrCreate(
                                     [
                                         'olt_id' => $olt->id,
@@ -314,7 +376,7 @@ class OltService implements OltServiceInterface
                                 } else {
                                     $updatedCount++;
                                 }
-                                
+
                                 $syncedCount++;
                             } catch (\Exception $e) {
                                 Log::error("Error syncing individual ONU", [
@@ -323,6 +385,7 @@ class OltService implements OltServiceInterface
                                     'olt_id' => $olt->id,
                                     'error' => $e->getMessage(),
                                 ]);
+                                $failedCount++;
                                 // Continue with next ONU instead of failing entire batch
                             }
                         }
@@ -331,7 +394,6 @@ class OltService implements OltServiceInterface
                     Log::error("Error processing batch " . ($batchIndex + 1), [
                         'error' => $e->getMessage(),
                     ]);
-                    $errorCount++;
                 }
             }
 
@@ -339,16 +401,17 @@ class OltService implements OltServiceInterface
                 'synced' => $syncedCount,
                 'created' => $createdCount,
                 'updated' => $updatedCount,
-                'errors' => $errorCount,
+                'failed' => $failedCount,
             ]);
 
-            return $syncedCount;
+            return ['synced' => $syncedCount, 'new' => $createdCount, 'updated' => $updatedCount, 'failed' => $failedCount];
         } catch (\Exception $e) {
             Log::error("Error syncing ONUs from OLT {$oltId}: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return 0;
+            // In case of a total failure, return a zeroed-out result that matches the interface
+            return ['synced' => 0, 'new' => 0, 'updated' => 0, 'failed' => count($discoveredOnus ?? [])];
         }
     }
 
@@ -358,28 +421,28 @@ class OltService implements OltServiceInterface
     public function getOnuStatus(int $onuId): array
     {
         $sshConnectionCreated = false;
-        
+
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
-            
+
             // Try SNMP first if configured
             if ($this->canUseSNMP($onu->olt)) {
                 $snmpService = app(OltSnmpService::class);
-                
+
                 Log::info('Attempting SNMP-based ONU status retrieval', [
                     'onu_id' => $onuId,
                     'olt_id' => $onu->olt_id,
                 ]);
-                
+
                 $snmpStatus = $snmpService->getOnuOpticalPower($onu);
-                
+
                 if ($snmpStatus['rx_power'] !== null || $snmpStatus['tx_power'] !== null) {
                     Log::debug('Retrieved ONU status via SNMP', [
                         'onu_id' => $onuId,
                         'rx_power' => $snmpStatus['rx_power'],
                         'tx_power' => $snmpStatus['tx_power'],
                     ]);
-                    
+
                     return [
                         'status' => $onu->status,
                         'signal_rx' => $snmpStatus['rx_power'],
@@ -390,7 +453,7 @@ class OltService implements OltServiceInterface
                         'method' => 'snmp',
                     ];
                 }
-                
+
                 Log::warning('SNMP status retrieval returned no data, falling back to SSH', [
                     'onu_id' => $onuId,
                 ]);
@@ -398,7 +461,7 @@ class OltService implements OltServiceInterface
 
             // Fallback to SSH-based status retrieval
             $wasAlreadyConnected = isset($this->connections[$onu->olt_id]);
-            
+
             if (! $this->ensureConnected($onu->olt_id)) {
                 Log::error("Failed to connect to OLT via SSH for ONU status", [
                     'onu_id' => $onuId,
@@ -406,7 +469,7 @@ class OltService implements OltServiceInterface
                 ]);
                 throw new RuntimeException("Failed to connect to OLT {$onu->olt_id}");
             }
-            
+
             $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$onu->olt_id];
@@ -423,21 +486,15 @@ class OltService implements OltServiceInterface
                 throw new RuntimeException('Failed to execute status command');
             }
 
-            // Parse output (simplified - real implementation varies by vendor)
-            $status = [
-                'status' => $onu->status,
-                'signal_rx' => $onu->signal_rx,
-                'signal_tx' => $onu->signal_tx,
-                'distance' => $onu->distance,
-                'uptime' => null,
-                'last_update' => now()->toIso8601String(),
-                'method' => 'ssh',
-            ];
+            // Parse the detailed output from the SSH command
+            $status = $this->parseOnuDetailOutput($output, $onu->olt);
+            $status['method'] = 'ssh';
+            $status['last_update'] = now()->toIso8601String();
 
             return $status;
         } catch (\Exception $e) {
             Log::error("Error getting ONU {$onuId} status: " . $e->getMessage());
-            
+
             // Only clean up connection if we created it in this method call
             if ($sshConnectionCreated && isset($onu) && isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
                 $this->disconnect($onu->olt_id);
@@ -597,16 +654,16 @@ class OltService implements OltServiceInterface
     public function createBackup(int $oltId): bool
     {
         $sshConnectionCreated = false;
-        
+
         try {
             $olt = Olt::findOrFail($oltId);
 
             $wasAlreadyConnected = isset($this->connections[$oltId]);
-            
+
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
-            
+
             $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$oltId];
@@ -633,7 +690,7 @@ class OltService implements OltServiceInterface
                 Log::error("Failed to save backup file: {$filepath}");
                 throw new RuntimeException("Failed to save backup file");
             }
-            
+
             $fileSize = strlen($output);
 
             // Create backup record
@@ -655,7 +712,7 @@ class OltService implements OltServiceInterface
             return true;
         } catch (\Exception $e) {
             Log::error("Error creating backup for OLT {$oltId}: " . $e->getMessage());
-            
+
             // Only clean up connection if we created it in this method call
             if ($sshConnectionCreated && isset($this->connections[$oltId])) {
                 $this->disconnect($oltId);
@@ -757,24 +814,23 @@ class OltService implements OltServiceInterface
     /**
      * Get OLT statistics.
      */
-    public function getOltStatistics(int $oltId): array
+    public function getOltStatistics(Olt $olt): array
     {
         try {
-            $olt = Olt::withCount([
-                'onus',
-                'onus as online_onus_count' => function ($query) {
-                    $query->where('status', 'online');
-                },
-                'onus as offline_onus_count' => function ($query) {
-                    $query->where('status', 'offline');
-                },
-            ])->findOrFail($oltId);
-
-            if (! $this->ensureConnected($oltId)) {
-                throw new RuntimeException("Failed to connect to OLT {$oltId}");
+            // Eager load counts if they are not already loaded
+            if (! $olt->relationLoaded('onus_count')) {
+                $olt->loadCount([
+                    'onus',
+                    'onus as online_onus_count' => fn ($query) => $query->where('status', 'online'),
+                    'onus as offline_onus_count' => fn ($query) => $query->where('status', 'offline'),
+                ]);
             }
 
-            $connection = $this->connections[$oltId];
+            if (! $this->ensureConnected($olt->id)) {
+                throw new RuntimeException("Failed to connect to OLT {$olt->id}");
+            }
+
+            $connection = $this->connections[$olt->id];
 
             // Get system information (vendor-specific)
             $output = $connection->exec('show system');
@@ -790,7 +846,7 @@ class OltService implements OltServiceInterface
                 'offline_onus' => $olt->offline_onus_count ?? 0,
             ];
         } catch (\Exception $e) {
-            Log::error("Error getting statistics for OLT {$oltId}: " . $e->getMessage());
+            Log::error("Error getting statistics for OLT {$olt->id}: " . $e->getMessage());
 
             return [
                 'uptime' => 0,
@@ -805,332 +861,19 @@ class OltService implements OltServiceInterface
     }
 
     /**
-     * Get port utilization.
+     * Get OLT statistics.
      */
-    public function getPortUtilization(int $oltId): array
+    public function getOltStatistics(Olt $olt): array
     {
         try {
-            if (! $this->ensureConnected($oltId)) {
-                throw new RuntimeException("Failed to connect to OLT {$oltId}");
-            }
-
-            $connection = $this->connections[$oltId];
-
-            // Get port statistics (vendor-specific)
-            $output = $connection->exec('show interface statistics');
-
-            // Parse output (simplified - would parse actual OLT output)
-            return [];
-        } catch (\Exception $e) {
-            Log::error("Error getting port utilization for OLT {$oltId}: " . $e->getMessage());
-
-            return [];
-        }
-    }
-
-    /**
-     * Get bandwidth usage statistics.
-     */
-    public function getBandwidthUsage(int $oltId, string $period = 'hourly'): array
-    {
-        // This would typically query a time-series database or stored statistics
-        // For now, return empty array
-        return [];
-    }
-
-    /**
-     * Create SSH connection to OLT.
-     */
-    private function createConnection(Olt $olt)
-    {
-        // Prefer Telnet if the OLT is configured to use it
-        $protocol = strtolower($olt->management_protocol ?? 'ssh');
-
-        if ($protocol === 'telnet') {
-            return new \App\Services\TelnetClient($olt->ip_address, (int) ($olt->port ?? 23));
-        }
-
-        $connection = new SSH2($olt->ip_address, $olt->port);
-        $connection->setTimeout(30);
-
-        return $connection;
-    }
-
-    /**
-     * Ensure connection to OLT is established.
-     */
-    private function ensureConnected(int $oltId): bool
-    {
-        if (! isset($this->connections[$oltId])) {
-            return $this->connect($oltId);
-        }
-
-        return true;
-    }
-
-    /**
-     * Get vendor-specific commands based on OLT model and name.
-     */
-    private function getVendorCommands(Olt $olt): array
-    {
-        // Use centralized vendor detection
-        $vendor = \App\Helpers\OltVendorDetector::detect($olt);
-
-        // Get commands based on detected vendor
-        return match ($vendor) {
-            'vsol' => $this->getVsolCommands(),
-            'huawei' => $this->getHuaweiCommands(),
-            'zte' => $this->getZteCommands(),
-            'fiberhome' => $this->getFiberhomeCommands(),
-            'bdcom' => $this->getBdcomCommands(),
-            default => $this->getHuaweiCommands(), // Default to Huawei-style commands (most common)
-        };
-    }
-
-    /**
-     * Replace command placeholders with actual values.
-     */
-    private function replaceCommandPlaceholders(string $command, array $params): string
-    {
-        $replacements = [
-            '{port}' => $params['port'] ?? '',
-            '{id}' => $params['id'] ?? '',
-            '{slot}' => $params['slot'] ?? '0',
-        ];
-
-        return str_replace(array_keys($replacements), array_values($replacements), $command);
-    }
-
-    /**
-     * Get VSOL-specific commands.
-     */
-    private function getVsolCommands(): array
-    {
-        return [
-            'version' => 'show version',
-            'onu_list' => 'show onu list',
-            'onu_state' => 'show gpon onu state',
-            'onu_detail' => 'show onu detail-info {port}:{id}',
-            'authorize' => 'interface gpon {port} ; onu add {id}',
-            'unauthorize' => 'interface gpon {port} ; no onu {id}',
-            'reboot' => 'onu reboot {port} {id}',
-            'backup' => 'show running-config',
-            // Some VSOL firmware requires entering privileged mode
-            'enable' => 'enable',
-        ];
-    }
-
-    /**
-     * Get Huawei-specific commands.
-     */
-    private function getHuaweiCommands(): array
-    {
-        return [
-            'version' => 'display version',
-            'onu_list' => 'display ont info summary all',
-            'onu_state' => 'display ont info 0 all',
-            'onu_detail' => 'display ont info {slot} {port} {id}',
-            'authorize' => 'ont confirm {slot} {port} ontid {id}',
-            'unauthorize' => 'undo ont {slot} {port} {id}',
-            'reboot' => 'ont reset {slot} {port} {id}',
-            'backup' => 'display current-configuration',
-        ];
-    }
-
-    /**
-     * Get ZTE-specific commands.
-     */
-    private function getZteCommands(): array
-    {
-        return [
-            'version' => 'show version',
-            'onu_list' => 'show gpon onu uncfg',
-            'onu_state' => 'show pon onu-info',
-            'onu_detail' => 'show gpon onu detail-info gpon-onu_{port}:{id}',
-            'authorize' => 'interface gpon-onu_{port}:{id}',
-            'unauthorize' => 'no interface gpon-onu_{port}:{id}',
-            'reboot' => 'pon-onu-mng gpon-onu_{port}:{id} reboot',
-            'backup' => 'show running-config',
-        ];
-    }
-
-    /**
-     * Get Fiberhome-specific commands.
-     */
-    private function getFiberhomeCommands(): array
-    {
-        return [
-            'version' => 'show version',
-            'onu_list' => 'show onu-list',
-            'onu_state' => 'show onu state',
-            'onu_detail' => 'show onu detail-info onu-index {port}:{id}',
-            'authorize' => 'onu add {port} {id}',
-            'unauthorize' => 'onu delete {port} {id}',
-            'reboot' => 'onu reboot {port} {id}',
-            'backup' => 'show running-config',
-        ];
-    }
-
-    /**
-     * Get BDCOM-specific commands.
-     */
-    private function getBdcomCommands(): array
-    {
-        return [
-            'version' => 'show version',
-            'onu_list' => 'show epon onu-list',
-            'onu_state' => 'show epon onu-info',
-            'onu_detail' => 'show epon onu-detail epon-onu_{port}:{id}',
-            'authorize' => 'epon onu authorize epon-onu_{port}:{id}',
-            'unauthorize' => 'no epon onu authorize epon-onu_{port}:{id}',
-            'reboot' => 'epon onu reboot epon-onu_{port}:{id}',
-            'backup' => 'show running-config',
-        ];
-    }
-
-    /**
-     * Destructor to clean up connections.
-     */
-    public function __destruct()
-    {
-        foreach (array_keys($this->connections) as $oltId) {
-            $this->disconnect($oltId);
-        }
-    }
-
-    /**
-     * Parse ONU list output based on vendor format.
-     */
-    private function parseOnuListOutput(string $output, Olt $olt): array
-    {
-        $vendor = \App\Helpers\OltVendorDetector::detect($olt);
-        $onus = [];
-        $lines = explode("\n", $output);
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) {
-                continue;
-            }
-
-            $onuData = match ($vendor) {
-                'vsol' => $this->parseVsolOnuLine($line),
-                'huawei' => $this->parseHuaweiOnuLine($line),
-                'zte' => $this->parseZteOnuLine($line),
-                'fiberhome' => $this->parseFiberhomeOnuLine($line),
-                default => $this->parseGenericOnuLine($line),
-            };
-
-            if ($onuData) {
-                $onus[] = $onuData;
-            }
-        }
-
-        return $onus;
-    }
-
-    /**
-     * Parse VSOL ONU output line.
-     */
-    private function parseVsolOnuLine(string $line): ?array
-    {
-        // VSOL format: gpon-onu_1/1:1    HWTC12345678    online    0/1/1    1
-        if (preg_match('/gpon-onu[_-](\d+\/\d+):(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
-            return [
-                'pon_port' => $matches[1],
-                'onu_id' => (int) $matches[2],
-                'serial_number' => $matches[3],
-                'status' => strtolower($matches[4]),
-                'signal_rx' => null,
-                'signal_tx' => null,
-                'distance' => null,
-            ];
-        }
-
-        return null;
-    }
-
-    /**
-     * Parse Huawei ONU output line.
-     */
-    private function parseHuaweiOnuLine(string $line): ?array
-    {
-        // Huawei format: 0/1/1    1    HWTC12345678    online    ...
-        if (preg_match('/(\d+\/\d+\/\d+)\s+(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
-            return [
-                'pon_port' => $matches[1],
-                'onu_id' => (int) $matches[2],
-                'serial_number' => $matches[3],
-                'status' => strtolower($matches[4]) === 'online' ? 'online' : 'offline',
-                'signal_rx' => null,
-                'signal_tx' => null,
-                'distance' => null,
-            ];
-        }
-
-        return null;
-    }
-
-    /**
-     * Parse ZTE ONU output line.
-     */
-    private function parseZteOnuLine(string $line): ?array
-    {
-        // ZTE format: gpon-onu_1/1:1    ZTEG12345678    Working    ...
-        if (preg_match('/gpon-onu[_-](\d+\/\d+):(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
-            return [
-                'pon_port' => $matches[1],
-                'onu_id' => (int) $matches[2],
-                'serial_number' => $matches[3],
-                'status' => strtolower($matches[4]) === 'working' ? 'online' : 'offline',
-                'signal_rx' => null,
-                'signal_tx' => null,
-                'distance' => null,
-            ];
-        }
-
-        return null;
-    }
-
-    /**
-     * Parse Fiberhome ONU output line.
-     */
-    private function parseFiberhomeOnuLine(string $line): ?array
-    {
-        // Fiberhome format: 1/1    1    FHTT12345678    online    ...
-        if (preg_match('/(\d+\/\d+)\s+(\d+)\s+([A-Z0-9]+)\s+(\w+)/', $line, $matches)) {
-            return [
-                'pon_port' => $matches[1],
-                'onu_id' => (int) $matches[2],
-                'serial_number' => $matches[3],
-                'status' => strtolower($matches[4]),
-                'signal_rx' => null,
-                'signal_tx' => null,
-                'distance' => null,
-            ];
-        }
-
-        return null;
-    }
-
-    /**
-     * Parse generic ONU output line (fallback).
-     */
-    private function parseGenericOnuLine(string $line): ?array
-    {
-        // Generic format: port/path    id    serial    status
-        if (preg_match('/(\d+[\/\-]\d+(?:[\/\-]\d+)?)[:\s]+(\d+)\s+([A-Z0-9]{8,})\s+(\w+)/', $line, $matches)) {
-            return [
-                'pon_port' => str_replace('-', '/', $matches[1]),
-                'onu_id' => (int) $matches[2],
-                'serial_number' => $matches[3],
-                'status' => strtolower($matches[4]),
-                'signal_rx' => null,
-                'signal_tx' => null,
-                'distance' => null,
-            ];
-        }
-
-        return null;
-    }
+            // Eager load counts if they are not already loaded
+            if (! $olt->relationLoaded('onus_count')) {
+                $olt->loadCount([
+                'onus',
+                'onus as online_onus_count' => function ($query) {
+                    $query->where('status', 'online');
+                },
+                'onus as offline_onus_count' => function ($query) {
+                    $query->where('status', 'offline');
+                },
 }

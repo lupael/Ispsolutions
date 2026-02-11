@@ -3,9 +3,8 @@
 namespace App\Services;
 
 use App\Models\Invoice;
-use App\Models\NetworkUser;
-use App\Models\Payment;
 use App\Models\User;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -94,19 +93,22 @@ class AdvancedAnalyticsService
     public function getCustomerAnalytics(Carbon $startDate, Carbon $endDate, int $tenantId): array
     {
         // Total customers
-        $totalCustomers = NetworkUser::where('tenant_id', $tenantId)->count();
-        $activeCustomers = NetworkUser::where('tenant_id', $tenantId)
-            ->where('status', 'active')
+        $totalCustomers = User::where('tenant_id', $tenantId)->where('is_subscriber', true)->count();
+        $activeCustomers = User::where('tenant_id', $tenantId)
+            ->where('is_subscriber', true)
+            ->where('is_active', true)
             ->count();
 
         // New customers in period
-        $newCustomers = NetworkUser::where('tenant_id', $tenantId)
+        $newCustomers = User::where('tenant_id', $tenantId)
+            ->where('is_subscriber', true)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
 
         // Churned customers (became inactive)
-        $churnedCustomers = NetworkUser::where('tenant_id', $tenantId)
-            ->where('status', 'inactive')
+        $churnedCustomers = User::where('tenant_id', $tenantId)
+            ->where('is_subscriber', true)
+            ->where('is_active', false)
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->count();
 
@@ -145,17 +147,18 @@ class AdvancedAnalyticsService
     public function getServiceAnalytics(Carbon $startDate, Carbon $endDate, int $tenantId): array
     {
         // Service package distribution
-        $packageDistribution = NetworkUser::where('customers.tenant_id', $tenantId)
-            ->join('packages', 'customers.package_id', '=', 'packages.id')
-            ->where('customers.status', 'active')
-            ->where('packages.tenant_id', $tenantId)
+        $packageDistribution = User::where('users.tenant_id', $tenantId)
+            ->where('users.is_subscriber', true)
+            ->join('service_packages', 'users.service_package_id', '=', 'service_packages.id')
+            ->where('users.is_active', true)
+            ->where('service_packages.tenant_id', $tenantId)
             ->select(
-                'packages.name',
-                'packages.price',
-                DB::raw('COUNT(customers.id) as customer_count'),
-                DB::raw('SUM(packages.price) as total_monthly_revenue')
+                'service_packages.name',
+                'service_packages.price',
+                DB::raw('COUNT(users.id) as customer_count'),
+                DB::raw('SUM(service_packages.price) as total_monthly_revenue')
             )
-            ->groupBy('packages.id', 'packages.name', 'packages.price')
+            ->groupBy('service_packages.id', 'service_packages.name', 'service_packages.price')
             ->get();
 
         // Service performance with ARPU calculation
@@ -215,7 +218,8 @@ class AdvancedAnalyticsService
                 ->where('status', 'completed')
                 ->sum('amount');
 
-            $customers = NetworkUser::where('tenant_id', $tenantId)
+            $customers = User::where('tenant_id', $tenantId)
+                ->where('is_subscriber', true)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count();
 
@@ -342,8 +346,8 @@ class AdvancedAnalyticsService
 
     private function getActiveServicePercentage(int $tenantId): float
     {
-        $total = NetworkUser::where('tenant_id', $tenantId)->count();
-        $active = NetworkUser::where('tenant_id', $tenantId)->where('status', 'active')->count();
+        $total = User::where('tenant_id', $tenantId)->where('is_subscriber', true)->count();
+        $active = User::where('tenant_id', $tenantId)->where('is_subscriber', true)->where('is_active', true)->count();
 
         return $total > 0 ? round(($active / $total) * 100, 2) : 0;
     }
@@ -419,11 +423,13 @@ class AdvancedAnalyticsService
         $growthRate = max(-0.5, min(1.0, $growthRate));
 
         // Calculate customer growth from actual data
-        $lastMonthCustomers = NetworkUser::where('tenant_id', $tenantId)
+        $lastMonthCustomers = User::where('tenant_id', $tenantId)
+            ->where('is_subscriber', true)
             ->whereBetween('created_at', [now()->subMonth(), now()])
             ->count();
 
-        $previousMonthCustomers = NetworkUser::where('tenant_id', $tenantId)
+        $previousMonthCustomers = User::where('tenant_id', $tenantId)
+            ->where('is_subscriber', true)
             ->whereBetween('created_at', [now()->subMonths(2), now()->subMonth()])
             ->count();
 
@@ -435,13 +441,15 @@ class AdvancedAnalyticsService
         $customerGrowthRate = max(-0.5, min(1.0, $customerGrowthRate));
 
         // Calculate churn from actual data
-        $lastMonthChurn = NetworkUser::where('tenant_id', $tenantId)
-            ->where('status', 'inactive')
+        $lastMonthChurn = User::where('tenant_id', $tenantId)
+            ->where('is_subscriber', true)
+            ->where('is_active', false)
             ->whereBetween('updated_at', [now()->subMonth(), now()])
             ->count();
 
-        $previousMonthChurn = NetworkUser::where('tenant_id', $tenantId)
-            ->where('status', 'inactive')
+        $previousMonthChurn = User::where('tenant_id', $tenantId)
+            ->where('is_subscriber', true)
+            ->where('is_active', false)
             ->whereBetween('updated_at', [now()->subMonths(2), now()->subMonth()])
             ->count();
 

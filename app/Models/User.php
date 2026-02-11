@@ -1273,4 +1273,31 @@ class User extends Authenticatable
         return $this->belongsTo(SubscriptionPlan::class);
     }
 
+    /**
+     * Accessor for the networkUser attribute.
+     *
+     * Provides backward compatibility for code that expects a NetworkUser relationship.
+     * Since NetworkUser fields are now merged into the User model, this simply returns the User object itself.
+     * This allows legacy calls like `$user->networkUser->username` to still function.
+     *
+     * @return \App\Models\User
+     */
+    public function getNetworkUserAttribute()
+    {
+        return $this;
+    }
+
+    /**
+     * Get the Mikrotik profile ID.
+     *
+     * This accessor provides backward compatibility for services that expect
+     * a `profile_id` directly on the User model or its legacy NetworkUser relationship.
+     * It retrieves the profile ID from the associated service package.
+     *
+     * @return int|null
+     */
+    public function getProfileIdAttribute()
+    {
+        return $this->servicePackage?->pppoe_profile_id;
+    }
 }

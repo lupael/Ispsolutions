@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Invoice;
-use App\Models\NetworkUser;
 use App\Models\Package;
 use App\Models\PackageChangeRequest;
 use App\Models\RadReply;
@@ -35,7 +34,7 @@ class CustomerPackageChangeController extends Controller
      */
     public function edit($id): View
     {
-        $customer = User::with('networkUser.package')->findOrFail($id);
+        $customer = User::with('servicePackage')->findOrFail($id);
         $this->authorize('changePackage', $customer);
 
         $packages = Package::where('is_active', true)
@@ -43,15 +42,12 @@ class CustomerPackageChangeController extends Controller
             ->orderBy('price')
             ->get();
 
-        $networkUser = NetworkUser::where('user_id', $customer->id)->first();
-
         // Get upgrade options and recommendations
         $upgradeOptions = $this->upgradeService->getUpgradeOptions($customer);
 
         return view('panels.admin.customers.change-package', compact(
             'customer',
             'packages',
-            'networkUser',
             'upgradeOptions'
         ));
     }
@@ -97,8 +93,8 @@ class CustomerPackageChangeController extends Controller
 
         DB::beginTransaction();
         try {
-            $networkUser = NetworkUser::where('user_id', $customer->id)->firstOrFail();
-            $oldPackage = $networkUser->package;
+            $customer->load('servicePackage');
+            $oldPackage = $customer->servicePackage;
 
             if ($oldPackage && $oldPackage->id === $newPackage->id) {
                 return back()->with('error', 'Customer is already on this package');
@@ -125,9 +121,9 @@ class CustomerPackageChangeController extends Controller
                 'reason' => $request->reason,
             ]);
 
-            // Update network user package
-            $networkUser->update([
-                'package_id' => $newPackage->id,
+            // Update user service_package_id
+            $customer->update([
+                'service_package_id' => $newPackage->id,
             ]);
 
             // Generate invoice if prorated amount > 0
@@ -136,7 +132,7 @@ class CustomerPackageChangeController extends Controller
             }
 
             // Update RADIUS attributes
-            $this->updateRadiusAttributes($networkUser, $newPackage);
+            $this->updateRadiusAttributes($customer, $newPackage);
 
             // Log action
             AuditLog::create([
@@ -224,7 +220,7 @@ class CustomerPackageChangeController extends Controller
     /**
      * Update RADIUS attributes for new package.
      */
-    protected function updateRadiusAttributes(NetworkUser $networkUser, Package $package): void
+    protected function updateRadiusAttributes(User $customer, Package $package): void
     {
         // Update rate limits
         if ($package->bandwidth_download && $package->bandwidth_upload) {
@@ -232,7 +228,7 @@ class CustomerPackageChangeController extends Controller
             $rateLimit = "{$package->bandwidth_upload}k/{$package->bandwidth_download}k";
 
             RadReply::updateOrCreate(
-                ['username' => $networkUser->username, 'attribute' => 'Mikrotik-Rate-Limit'],
+                ['username' => $customer->username, 'attribute' => 'Mikrotik-Rate-Limit'],
                 ['op' => ':=', 'value' => $rateLimit]
             );
         }
@@ -240,7 +236,7 @@ class CustomerPackageChangeController extends Controller
         // Update session timeout if specified
         if ($package->session_timeout) {
             RadReply::updateOrCreate(
-                ['username' => $networkUser->username, 'attribute' => 'Session-Timeout'],
+                ['username' => $customer->username, 'attribute' => 'Session-Timeout'],
                 ['op' => ':=', 'value' => (string) $package->session_timeout]
             );
         }
@@ -248,7 +244,7 @@ class CustomerPackageChangeController extends Controller
         // Update idle timeout if specified
         if ($package->idle_timeout) {
             RadReply::updateOrCreate(
-                ['username' => $networkUser->username, 'attribute' => 'Idle-Timeout'],
+                ['username' => $customer->username, 'attribute' => 'Idle-Timeout'],
                 ['op' => ':=', 'value' => (string) $package->idle_timeout]
             );
         }
@@ -259,7 +255,7 @@ class CustomerPackageChangeController extends Controller
             if ($fup->data_limit && $fup->reduced_speed_download && $fup->reduced_speed_upload) {
                 // Store FUP configuration in RADIUS reply
                 RadReply::updateOrCreate(
-                    ['username' => $networkUser->username, 'attribute' => 'Mikrotik-Total-Limit'],
+                    ['username' => $customer->username, 'attribute' => 'Mikrotik-Total-Limit'],
                     ['op' => ':=', 'value' => (string) $fup->data_limit]
                 );
             }

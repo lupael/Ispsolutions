@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\FindsAssociatedModel;
 use App\Contracts\RadiusServiceInterface;
 use App\Models\User;
 use Illuminate\Console\Command;
 
 class RadiusSyncUser extends Command
 {
+    use FindsAssociatedModel;
+
     /**
      * The name and signature of the console command.
      *
@@ -37,11 +40,13 @@ class RadiusSyncUser extends Command
         $this->info("Syncing user: {$userIdentifier}");
 
         try {
-            // Find user by ID or username, ensuring they are a subscriber
-            $user = is_numeric($userIdentifier)
-                ? User::where('is_subscriber', true)->findOrFail($userIdentifier)
-                : User::where('is_subscriber', true)->where('username', $userIdentifier)->firstOrFail();
-
+            /** @var User $user */
+            $user = $this->findModel(
+                User::class,
+                $userIdentifier,
+                'username',
+                fn ($query) => $query->where('is_subscriber', true)
+            );
             $attributes = $password ? ['password' => $password] : [];
             $success = $radiusService->syncUser($user, $attributes);
 
@@ -60,15 +65,15 @@ class RadiusSyncUser extends Command
                 $this->info("  - Package: {$package->name}");
             }
 
-            return Command::SUCCESS;
+            return self::SUCCESS;
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             $this->error("User not found: {$userIdentifier}");
 
-            return Command::FAILURE;
+            return self::FAILURE;
         } catch (\Exception $e) {
             $this->error('Sync failed: ' . $e->getMessage());
 
-            return Command::FAILURE;
+            return self::FAILURE;
         }
     }
 }

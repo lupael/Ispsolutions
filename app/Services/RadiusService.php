@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\RadiusServiceInterface;
-use App\Models\NetworkUser;
+use App\Models\User;
 use App\Models\RadAcct;
 use App\Models\RadCheck;
 use App\Models\RadReply;
@@ -92,16 +92,16 @@ class RadiusService implements RadiusServiceInterface
     }
 
     /**
-     * @deprecated This method uses the deprecated NetworkUser model. Use createUser/updateUser/deleteUser directly.
+     * @deprecated This method uses the deprecated User model with is_subscriber. Use createUser/updateUser/deleteUser directly.
      */
-    public function syncUser(NetworkUser $user, array $attributes = []): bool
+    public function syncUser(User $user, array $attributes = []): bool
     {
         try {
             // Check if user exists in RADIUS
             $exists = RadCheck::where('username', $user->username)->exists();
             if ($user->status === 'active') {
                 // Prepare attributes
-                $password = $attributes['password'] ?? $user->password;
+                $password = $attributes['password'] ?? $user->radius_password;
                 $mergedAttributes = array_merge(['password' => $password], $attributes);
                 // Create or update user in RADIUS
                 if ($exists) {

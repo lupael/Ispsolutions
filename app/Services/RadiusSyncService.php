@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\NetworkUser;
 use App\Models\RadAcct;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -22,39 +21,22 @@ class RadiusSyncService
 
     /**
      * Sync user to RADIUS database.
-     *
-     * This method is not implemented as it requires cleartext passwords.
-     * In production, you need to either:
-     * 1. Store cleartext passwords separately (security risk)
-     * 2. Generate temporary passwords and notify users
-     * 3. Use a different authentication method (CHAP, etc.)
-     *
-     * @throws \Exception
      */
     public function syncUser(User $user): bool
     {
-        Log::warning("RadiusSyncService: Cannot sync hashed password to RADIUS for user {$user->id}");
+        if (!$user->is_subscriber) {
+            return false;
+        }
 
-        throw new \Exception(
-            'RADIUS user sync not implemented. User passwords are hashed and cannot be used for RADIUS authentication. ' .
-            'Please implement alternative authentication or password handling.'
-        );
-    }
-
-    /**
-     * Sync network user to RADIUS database.
-     */
-    public function syncNetworkUser(NetworkUser $networkUser): bool
-    {
-        Log::info("RadiusSyncService: Syncing network user {$networkUser->id} to RADIUS");
+        Log::info("RadiusSyncService: Syncing user {$user->id} to RADIUS");
 
         $attributes = [
-            'Framed-IP-Address' => $networkUser->ip_address ?? '',
+            'Framed-IP-Address' => $user->ip_address ?? '',
         ];
 
         return $this->radiusService->createUser(
-            $networkUser->username,
-            $networkUser->password,
+            $user->username,
+            $user->radius_password,
             $attributes
         );
     }
@@ -203,7 +185,7 @@ class RadiusSyncService
     {
         Log::info('RadiusSyncService: Syncing all users to RADIUS' . ($tenantId ? " for tenant {$tenantId}" : ''));
 
-        $query = User::query();
+        $query = User::where('is_subscriber', true);
 
         if ($tenantId) {
             $query->where('tenant_id', $tenantId);

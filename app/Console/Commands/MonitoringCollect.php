@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\FindsAssociatedModel;
 use App\Contracts\MonitoringServiceInterface;
 use App\Models\MikrotikRouter;
 use App\Models\Olt;
 use App\Models\Onu;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class MonitoringCollect extends Command
 {
+    use FindsAssociatedModel;
+
     /**
      * The name and signature of the console command.
      *
@@ -27,6 +31,11 @@ class MonitoringCollect extends Command
      * @var string
      */
     protected $description = 'Collect metrics from all network devices';
+
+    /**
+     * @var string[]
+     */
+    private const DEVICE_TYPES = ['router', 'olt', 'onu'];
 
     /**
      * Execute the console command.
@@ -55,8 +64,13 @@ class MonitoringCollect extends Command
     private function monitorSpecificDevice(MonitoringServiceInterface $service, string $type, int $id): int
     {
         try {
+            $modelClass = $this->getModelClassForType($type);
+            // Find the model first to ensure it exists.
+            $device = $this->findModel($modelClass, (string) $id);
+
             $this->info("Monitoring {$type} #{$id}...");
-            $metrics = $service->monitorDevice($type, $id);
+            // We can now safely pass the ID to the service.
+            $metrics = $service->monitorDevice($type, $device->id);
 
             $this->line("  Status: {$metrics['status']}");
             if (isset($metrics['cpu_usage'])) {
@@ -69,6 +83,10 @@ class MonitoringCollect extends Command
             $this->info('✓ Monitoring completed');
 
             return self::SUCCESS;
+        } catch (ModelNotFoundException) {
+            $this->error("Device of type '{$type}' with ID '{$id}' not found.");
+
+            return self::FAILURE;
         } catch (\Exception $e) {
             $this->error("Failed to monitor {$type} #{$id}: {$e->getMessage()}");
 
@@ -81,12 +99,7 @@ class MonitoringCollect extends Command
      */
     private function monitorDeviceType(MonitoringServiceInterface $service, string $type): int
     {
-        $devices = match ($type) {
-            'router' => MikrotikRouter::where('status', 'active')->get(),
-            'olt' => Olt::active()->get(),
-            'onu' => Onu::online()->get(),
-            default => throw new \InvalidArgumentException("Invalid device type: {$type}"),
-        };
+        $devices = $this->getDevicesForType($type);
 
         if ($devices->isEmpty()) {
             $this->warn("No active {$type}s found");
@@ -116,7 +129,7 @@ class MonitoringCollect extends Command
         $this->newLine(2);
         $this->info("Monitoring completed: {$success} successful, {$failed} failed");
 
-        return self::SUCCESS;
+        return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }
 
     /**
@@ -124,10 +137,9 @@ class MonitoringCollect extends Command
      */
     private function monitorAllDevices(MonitoringServiceInterface $service): int
     {
-        $deviceTypes = ['router', 'olt', 'onu'];
         $overallResult = self::SUCCESS;
 
-        foreach ($deviceTypes as $type) {
+        foreach (self::DEVICE_TYPES as $type) {
             $result = $this->monitorDeviceType($service, $type);
             if ($result === self::FAILURE) {
                 $overallResult = self::FAILURE;
@@ -137,5 +149,33 @@ class MonitoringCollect extends Command
 
         $this->info("All device monitoring completed.");
         return $overallResult;
+    }
+
+    /**
+     * Get the Eloquent model class for a given device type string.
+     *
+     * @return class-string<\Illuminate\Database\Eloquent\Model>
+     */
+    private function getModelClassForType(string $type): string
+    {
+        return match ($type) {
+            'router' => MikrotikRouter::class,
+            'olt' => Olt::class,
+            'onu' => Onu::class,
+            default => throw new \InvalidArgumentException("Invalid device type: {$type}"),
+        };
+    }
+
+    /**
+     * Get a collection of devices for a given type.
+     */
+    private function getDevicesForType(string $type): \Illuminate\Database\Eloquent\Collection
+    {
+        return match ($type) {
+            'router' => MikrotikRouter::where('status', 'active')->get(),
+            'olt' => Olt::active()->get(),
+            'onu' => Onu::online()->get(),
+            default => throw new \InvalidArgumentException("Invalid device type: {$type}"),
+        };
     }
 }

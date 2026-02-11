@@ -61,11 +61,14 @@ class SyncOnusJob implements ShouldBeUnique, ShouldQueue
     {
         try {
             Log::info("Starting queued ONU sync for OLT {$this->oltId}");
-            
-            $count = $oltService->syncOnus($this->oltId);
-            
+
+            $result = $oltService->syncOnus($this->oltId);
+
             Log::info("Completed queued ONU sync for OLT {$this->oltId}", [
-                'synced_count' => $count,
+                'synced' => $result['synced'] ?? 0,
+                'new' => $result['new'] ?? 0,
+                'updated' => $result['updated'] ?? 0,
+                'failed' => $result['failed'] ?? 0,
             ]);
         } catch (\Exception $e) {
             // Catch all exceptions for retry logic - OLT service can throw various exceptions
@@ -74,14 +77,14 @@ class SyncOnusJob implements ShouldBeUnique, ShouldQueue
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             throw $e; // Re-throw to trigger retry mechanism
         }
     }
 
     /**
      * Handle a job failure.
-     * 
+     *
      * Called when all retry attempts are exhausted.
      * Logs the final failure for debugging and monitoring purposes.
      */

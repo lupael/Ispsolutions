@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\MikrotikRouter;
-use App\Models\NetworkUser;
+use App\Models\User;
 use App\Services\MikrotikApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class CustomerBackupController extends Controller
     public function backupCustomer(Request $request, int $customerId): JsonResponse
     {
         try {
-            $customer = NetworkUser::with('package')
+            $customer = User::with('package')
                 ->where('tenant_id', getCurrentTenantId())
                 ->findOrFail($customerId);
 
@@ -116,7 +116,7 @@ class CustomerBackupController extends Controller
                 ], 400);
             }
 
-            $customers = NetworkUser::with('package')
+            $customers = User::with('package')
                 ->where('tenant_id', getCurrentTenantId())
                 ->where('status', 'active')
                 ->get();
@@ -209,7 +209,7 @@ class CustomerBackupController extends Controller
     public function removeCustomer(Request $request, int $customerId): JsonResponse
     {
         try {
-            $customer = NetworkUser::where('tenant_id', getCurrentTenantId())
+            $customer = User::where('tenant_id', getCurrentTenantId())
                 ->findOrFail($customerId);
 
             $routerId = $request->input('router_id');
@@ -258,13 +258,13 @@ class CustomerBackupController extends Controller
     /**
      * Build PPP secret array from customer data.
      */
-    private function buildPppSecret(NetworkUser $customer): array
+    private function buildPppSecret(User $customer): array
     {
         $package = $customer->package;
 
         return [
             'name' => $customer->username,
-            'password' => $customer->password, // Plain password for router
+            'password' => $customer->radius_password, // Plain password for router
             'service' => 'pppoe',
             'profile' => $package?->mikrotik_profile ?? 'default',
             'local-address' => config('mikrotik.ppp_local_address', '10.0.0.1'),

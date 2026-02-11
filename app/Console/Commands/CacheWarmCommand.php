@@ -121,9 +121,10 @@ class CacheWarmCommand extends Command
 
         // Warm dashboard stats (example)
         $stats = [
-            'total_users' => \App\Models\NetworkUser::where('tenant_id', $tenantId)->count(),
-            'active_users' => \App\Models\NetworkUser::where('tenant_id', $tenantId)
-                ->where('status', 'active')->count(),
+            'total_users' => \App\Models\User::where('tenant_id', $tenantId)->where('is_subscriber', true)->count(),
+            'active_users' => \App\Models\User::where('tenant_id', $tenantId)
+                ->where('is_subscriber', true)
+                ->where('is_active', true)->count(),
             'total_invoices' => \App\Models\Invoice::where('tenant_id', $tenantId)->count(),
             'pending_payments' => \App\Models\Payment::where('tenant_id', $tenantId)
                 ->where('status', 'pending')->count(),

@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Invoice;
-use App\Models\NetworkUser;
 use App\Models\Payment;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 
@@ -94,7 +94,7 @@ class PdfExportService
     /**
      * Generate customer statement PDF
      */
-    public function generateStatementPdf(NetworkUser $customer, $startDate, $endDate): \Barryvdh\DomPDF\PDF
+    public function generateStatementPdf(User $customer, $startDate, $endDate): \Barryvdh\DomPDF\PDF
     {
         $invoices = $customer->invoices()
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -207,9 +207,9 @@ class PdfExportService
                 'total_count' => $customers->count(),
                 'active_count' => $customers->where('status', 'active')->count(),
                 'suspended_count' => $customers->where('status', 'suspended')->count(),
-                'by_package' => $customers->groupBy('package_id')->map(fn ($group) => [
+                'by_package' => $customers->groupBy('service_package_id')->map(fn ($group) => [
                     'count' => $group->count(),
-                    'package_name' => $group->first()->package->name ?? 'Unknown',
+                    'package_name' => $group->first()->servicePackage->name ?? 'Unknown',
                 ]),
             ],
             'company' => [

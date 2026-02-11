@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Models\IpPool;
 use App\Models\MikrotikProfile;
 use App\Models\MikrotikRouter;
-use App\Models\NetworkUser;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -65,7 +64,8 @@ class MikrotikImportService
                         ]);
                         $imported++;
                     }
-                } catch (\Exception $e) {
+                } catch (
+Exception $e) {
                     $failed++;
                     $errors[] = "Failed to import pool {$poolData['name']}: {$e->getMessage()}";
                 }
@@ -79,7 +79,8 @@ class MikrotikImportService
                 'failed' => $failed,
                 'errors' => $errors,
             ];
-        } catch (\Exception $e) {
+        } catch (
+Exception $e) {
             DB::rollBack();
             Log::error('Failed to import IP pools', [
                 'tenant_id' => $tenantId,
@@ -239,7 +240,8 @@ class MikrotikImportService
                         ]
                     );
                     $imported++;
-                } catch (\Exception $e) {
+                } catch (
+Exception $e) {
                     $failed++;
                     $errors[] = "Failed to import profile {$profileData['name']}: {$e->getMessage()}";
                 }
@@ -252,7 +254,8 @@ class MikrotikImportService
                 'failed' => $failed,
                 'errors' => $errors,
             ];
-        } catch (\Exception $e) {
+        } catch (
+Exception $e) {
             DB::rollBack();
             Log::error('Failed to import PPP profiles', [
                 'router_id' => $routerId,
@@ -307,34 +310,20 @@ class MikrotikImportService
 
                     foreach ($secretsChunk as $secretData) {
                         try {
-                            // Create user account if not exists
                             // Use a lower bcrypt cost (4 instead of default 10) for bulk imports to improve performance
-                            // This is acceptable as users should be prompted to change passwords after import
-                            // Using Laravel's Hash facade with custom rounds to ensure compatibility with Auth system
                             $hashedPassword = \Illuminate\Support\Facades\Hash::make($secretData['password'], ['rounds' => 4]);
 
-                            $user = User::firstOrCreate(
-                                [
-                                    'mobile' => $secretData['mobile'] ?? $secretData['username'],
-                                    'tenant_id' => $tenantId,
-                                ],
-                                [
-                                    'name' => $secretData['name'] ?? $secretData['username'],
-                                    'email' => $secretData['email'] ?? null,
-                                    'password' => $hashedPassword,
-                                    'role_id' => $this->getCustomerRoleId(),
-                                    'is_active' => true,
-                                ]
-                            );
-
-                            // Create network user
-                            NetworkUser::create([
-                                'username' => $secretData['username'],
-                                'password' => $secretData['password'],
-                                'user_id' => $user->id,
+                            User::create([
+                                'name' => $secretData['name'] ?? $secretData['username'],
+                                'email' => $secretData['email'] ?? null,
+                                'password' => $hashedPassword,
+                                'mobile' => $secretData['mobile'] ?? $secretData['username'],
                                 'tenant_id' => $tenantId,
+                                'is_subscriber' => true,
+                                'username' => $secretData['username'],
+                                'radius_password' => $secretData['password'],
                                 'service_type' => 'pppoe',
-                                'package_id' => $secretData['package_id'] ?? null,
+                                'service_package_id' => $secretData['package_id'] ?? null,
                                 'status' => $secretData['disabled'] ? 'inactive' : 'active',
                                 'is_active' => ! $secretData['disabled'],
                             ]);
@@ -346,7 +335,8 @@ class MikrotikImportService
                             }
 
                             $chunkImported++;
-                        } catch (\Exception $e) {
+                        } catch (
+Exception $e) {
                             $chunkFailed++;
                             $errors[] = "Failed to import customer {$secretData['username']}: {$e->getMessage()}";
                         }
@@ -364,7 +354,8 @@ class MikrotikImportService
                         'total_imported' => $imported,
                         'total_failed' => $failed,
                     ]);
-                } catch (\Exception $e) {
+                } catch (
+Exception $e) {
                     DB::rollBack();
                     Log::error("Failed to process chunk {$chunkIndex} of secrets import", [
                         'error' => $e->getMessage(),
@@ -380,7 +371,8 @@ class MikrotikImportService
                 'failed' => $failed,
                 'errors' => $errors,
             ];
-        } catch (\Exception $e) {
+        } catch (
+Exception $e) {
             Log::error('Failed to import PPP secrets', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
@@ -432,11 +424,11 @@ class MikrotikImportService
      */
     private function backupCustomers(int $tenantId): void
     {
-        $customers = NetworkUser::where('tenant_id', $tenantId)->get();
-        $csv = "id,username,user_id,service_type,package_id,status,is_active,created_at\n";
+        $customers = User::where('tenant_id', $tenantId)->where('is_subscriber', true)->get();
+        $csv = "id,username,service_type,service_package_id,status,is_active,created_at\n";
 
         foreach ($customers as $customer) {
-            $csv .= "{$customer->id},{$customer->username},{$customer->user_id},{$customer->service_type},{$customer->package_id},{$customer->status},{$customer->is_active},{$customer->created_at}\n";
+            $csv .= "{$customer->id},{$customer->username},{$customer->service_type},{$customer->service_package_id},{$customer->status},{$customer->is_active},{$customer->created_at}\n";
         }
 
         $filename = 'customers_backup_' . date('Y-m-d_His') . '.csv';
@@ -473,7 +465,8 @@ class MikrotikImportService
                     'change_tcp_mss' => isset($profile['change-tcp-mss']) ? ($profile['change-tcp-mss'] === 'yes') : true,
                 ];
             }, $profiles);
-        } catch (\Exception $e) {
+        } catch (
+Exception $e) {
             Log::error('Error fetching PPP profiles from router', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
@@ -510,7 +503,7 @@ class MikrotikImportService
             // Normalize secrets to expected format
             return array_map(function ($secret) {
                 return [
-                    // 'username' is required for NetworkUser creation, while 'name' is used for User display name
+                    // 'username' is required for User creation, while 'name' is used for User display name
                     'username' => $secret['name'] ?? '',
                     'name' => $secret['name'] ?? '',
                     'password' => $secret['password'] ?? '',
@@ -522,7 +515,8 @@ class MikrotikImportService
                     'disabled' => isset($secret['disabled']) ? ($secret['disabled'] === 'yes') : false,
                 ];
             }, $secrets);
-        } catch (\Exception $e) {
+        } catch (
+Exception $e) {
             Log::error('Error fetching PPP secrets from router', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),
@@ -645,7 +639,8 @@ class MikrotikImportService
                                 'chunk_size' => count($bulkData),
                                 'total_imported' => $imported,
                             ]);
-                        } catch (\Exception $e) {
+                        } catch (
+Exception $e) {
                             DB::rollBack();
                             $failed += count($ipChunk);
                             $poolName = $poolData['name'] ?? 'Unknown';
@@ -657,7 +652,8 @@ class MikrotikImportService
                             ]);
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (
+Exception $e) {
                     $poolName = $poolData['name'] ?? 'Unknown';
                     $errors[] = "Failed to process pool {$poolName}: {$e->getMessage()}";
                     $failed++; // Increment failed count for the pool that couldn't be parsed
@@ -674,7 +670,8 @@ class MikrotikImportService
                 'failed' => $failed,
                 'errors' => $errors,
             ];
-        } catch (\Exception $e) {
+        } catch (
+Exception $e) {
             Log::error('Failed to import IP pools from router', [
                 'router_id' => $routerId,
                 'error' => $e->getMessage(),

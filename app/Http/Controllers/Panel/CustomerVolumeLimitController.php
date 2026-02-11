@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerVolumeLimit;
-use App\Models\NetworkUser;
 use App\Models\RadReply;
 use App\Models\User;
 use App\Services\AuditLogService;
@@ -67,9 +66,8 @@ class CustomerVolumeLimitController extends Controller
             }
 
             // Update RADIUS attributes for volume limits
-            $networkUser = NetworkUser::where('user_id', $customer->id)->first();
-            if ($networkUser && $networkUser->username) {
-                $this->updateRadiusVolumeLimits($networkUser->username, $volumeLimit);
+            if ($customer->username) {
+                $this->updateRadiusVolumeLimits($customer->username, $volumeLimit);
             }
 
             // Audit logging
