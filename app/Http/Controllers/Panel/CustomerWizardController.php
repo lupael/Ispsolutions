@@ -52,11 +52,13 @@ class CustomerWizardController extends Controller
         $sessionId = Str::uuid()->toString();
         $request->session()->put('wizard_session_id', $sessionId);
 
+        // FIX: Include tenant_id from the authenticated admin
         $tempCustomer = TempCustomer::create([
-            'user_id' => auth()->id(),
+            'tenant_id'  => auth()->user()->tenant_id,
+            'user_id'    => auth()->id(),
             'session_id' => $sessionId,
-            'step' => 1,
-            'data' => [],
+            'step'       => 1,
+            'data'       => [],
         ]);
 
         return redirect()->route('panel.admin.customers.wizard.step', ['step' => 1]);
@@ -223,7 +225,7 @@ class CustomerWizardController extends Controller
     private function processStep3(Request $request, TempCustomer $tempCustomer): RedirectResponse
     {
         $validated = $request->validate([
-            'package_id' => 'required|exists:packages,id',
+            'package_id' => 'required|exists:service_packages,id',
         ]);
 
         $package = ServicePackage::findOrFail($validated['package_id']);
@@ -290,62 +292,48 @@ class CustomerWizardController extends Controller
             DB::beginTransaction();
 
             $allData = $tempCustomer->getAllData();
+            $tenantId = auth()->user()->tenant_id; // Current Admin's Tenant
 
             // Generate username and password
             $username = $allData['pppoe_username'] ?? $this->generateUsername($allData['name']);
             $password = $allData['pppoe_password'] ?? Str::random(10);
 
-            // Create customer user with network credentials
+            // Create customer user with tenant_id
             $customer = User::create([
+                'tenant_id' => $tenantId, // FIX: Multi-tenancy support
                 'name' => $allData['name'],
                 'email' => $allData['email'],
                 'username' => $username,
-                'password' => Hash::make($password), // Hashed for app login
-                'radius_password' => $password, // Plain text for RADIUS
+                'password' => Hash::make($password),
+                'radius_password' => $password,
                 'phone' => $allData['mobile'],
                 'address' => $allData['address'] ?? null,
                 'city' => $allData['city'] ?? null,
                 'state' => $allData['state'] ?? null,
                 'postal_code' => $allData['postal_code'] ?? null,
                 'country' => $allData['country'] ?? null,
-                'operator_level' => User::OPERATOR_LEVEL_CUSTOMER, // Customer level
+                'operator_level' => User::OPERATOR_LEVEL_CUSTOMER,
                 'is_active' => true,
-                'is_subscriber' => true, // Mark as subscriber for customer list filtering
+                'is_subscriber' => true,
                 'activated_at' => now(),
                 'created_by' => auth()->id(),
                 'service_package_id' => $allData['package_id'],
-                // Network service fields
                 'service_type' => $allData['connection_type'] ?? null,
                 'connection_type' => $allData['connection_type'] ?? null,
-                'status' => 'suspended', // Create with suspended status
+                'status' => 'suspended',
                 'zone_id' => $allData['zone_id'] ?? null,
             ]);
 
-            // Assign customer role
             $customer->assignRole('customer');
 
-            // Note: RADIUS provisioning now happens automatically via UserObserver
-            // The observer will sync customer to RADIUS when created
-
-            // Sync to MikroTik if PPPoE (optional, for direct router provisioning)
-            if (isset($allData['connection_type']) && $allData['connection_type'] === 'pppoe') {
-                try {
-                    // MikroTik service may need to be updated to work with User model
-                    // For now, we'll skip this or update MikrotikService later
-                    // $this->mikrotikService->createPPPoEUser($customer);
-                } catch (\Exception $e) {
-                    // Log error but don't fail the transaction
-                    logger()->error('Failed to sync PPPoE user to MikroTik: ' . $e->getMessage());
-                }
-            }
-
-            // Generate first invoice
+            // Generate first invoice with tenant_id
             $package = ServicePackage::findOrFail($allData['package_id']);
             $validityDays = $package->validity_days ?? 30;
             $startDate = now();
             $endDate = $startDate->copy()->addDays($validityDays);
 
-            $invoice = Invoice::create([
+            Invoice::create([
+                'tenant_id' => $tenantId, // FIX: Multi-tenancy support
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'user_id' => $customer->id,
                 'package_id' => $allData['package_id'],
@@ -358,7 +346,7 @@ class CustomerWizardController extends Controller
                 'due_date' => $startDate->copy()->addDays(7),
             ]);
 
-            // Clean up temp customer data
+            // Clean up
             $tempCustomer->delete();
             $request->session()->forget('wizard_session_id');
 
@@ -366,26 +354,25 @@ class CustomerWizardController extends Controller
 
             return redirect()->route('panel.admin.customers.show', $customer)
                 ->with('success', 'Customer created successfully!')
-                ->with('info', "Username: {$username}. Service is suspended until invoice payment.");
+                ->with('info', "Username: {$username}. Service is suspended until payment.");
         } catch (\Exception $e) {
             DB::rollBack();
-            logger()->error('Customer wizard completion failed: ' . $e->getMessage());
+            logger()->error('Customer wizard failed: ' . $e->getMessage());
 
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to create customer: ' . $e->getMessage()]);
         }
     }
 
-    /**
-     * Generate a unique username.
-     */
     private function generateUsername(string $name): string
     {
         $base = strtolower(str_replace(' ', '', $name));
         $username = $base;
         $counter = 1;
 
-        while (User::where('username', $username)->exists()) {
+        // Ensure check is scoped to the current tenant
+        while (User::where('tenant_id', auth()->user()->tenant_id)
+                   ->where('username', $username)->exists()) {
             $username = $base . $counter;
             $counter++;
         }
@@ -393,15 +380,11 @@ class CustomerWizardController extends Controller
         return $username;
     }
 
-    /**
-     * Generate a unique invoice number.
-     */
     private function generateInvoiceNumber(): string
     {
         $prefix = 'INV-';
         $date = now()->format('Ymd');
         $random = str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
-
         return $prefix . $date . '-' . $random;
     }
 }
