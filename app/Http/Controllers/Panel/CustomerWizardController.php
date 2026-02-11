@@ -18,10 +18,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class CustomerWizardController extends Controller
 {
-    private const TOTAL_STEPS = 4;
+    private const TOTAL_STEPS = 3;
 
     public function __construct(
         private MikrotikService $mikrotikService,
@@ -92,7 +93,6 @@ class CustomerWizardController extends Controller
             1 => $this->showStep1($tempCustomer, $data),
             2 => $this->showStep2($tempCustomer, $data),
             3 => $this->showStep3($tempCustomer, $data),
-            4 => $this->showStep4($tempCustomer, $data),
         };
     }
 
@@ -115,7 +115,6 @@ class CustomerWizardController extends Controller
             1 => $this->processStep1($request, $tempCustomer),
             2 => $this->processStep2($request, $tempCustomer),
             3 => $this->processStep3($request, $tempCustomer),
-            4 => $this->processStep4($request, $tempCustomer),
         };
     }
 
@@ -154,7 +153,7 @@ class CustomerWizardController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'mobile' => 'required|string|max:20',
-            'email' => 'required|email|max:255|unique:users,email',
+            'email' => 'sometimes|nullable|email|max:255|unique:users,email',
         ]);
 
         $tempCustomer->setStepData(1, $validated);
@@ -209,14 +208,20 @@ class CustomerWizardController extends Controller
      */
     private function showStep3(TempCustomer $tempCustomer, array $data): View
     {
-        $packages = ServicePackage::where('is_active', true)
+        $packages = ServicePackage::where('tenant_id', auth()->user()->tenant_id)
+            ->where('is_active', true)
             ->orderBy('price')
+            ->get();
+
+        $zones = Zone::where('is_active', true)
+            ->orderBy('name')
             ->get();
 
         return view('panels.shared.customers.wizard.step3', [
             'tempCustomer' => $tempCustomer,
             'data' => $data,
             'packages' => $packages,
+            'zones' => $zones,
             'currentStep' => 3,
             'totalSteps' => self::TOTAL_STEPS,
         ]);
@@ -226,6 +231,12 @@ class CustomerWizardController extends Controller
     {
         $validated = $request->validate([
             'package_id' => 'required|exists:packages,id',
+            'address' => 'required|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:100',
+            'zone_id' => 'nullable|exists:zones,id',
         ]);
 
         $package = ServicePackage::findOrFail($validated['package_id']);
@@ -240,48 +251,11 @@ class CustomerWizardController extends Controller
             return redirect()->back()->with('success', 'Draft saved successfully.');
         }
 
-        return redirect()->route('panel.admin.customers.wizard.step', ['step' => 4]);
-    }
-
-    /**
-     * Step 4: Address & Zone
-     */
-    private function showStep4(TempCustomer $tempCustomer, array $data): View
-    {
-        $zones = Zone::where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        return view('panels.shared.customers.wizard.step4', [
-            'tempCustomer' => $tempCustomer,
-            'data' => $data,
-            'zones' => $zones,
-            'currentStep' => 4,
-            'totalSteps' => self::TOTAL_STEPS,
-        ]);
-    }
-
-    private function processStep4(Request $request, TempCustomer $tempCustomer): RedirectResponse
-    {
-        $validated = $request->validate([
-            'address' => 'required|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
-            'zone_id' => 'nullable|exists:zones,id',
-        ]);
-
-        $tempCustomer->setStepData(4, $validated);
-        $tempCustomer->save();
-
-        if ($request->input('action') === 'save_draft') {
-            return redirect()->back()->with('success', 'Draft saved successfully.');
-        }
-
         // Complete the customer creation process
         return $this->completeCustomerCreation($request, $tempCustomer);
     }
+
+
 
     /**
      * Complete customer creation with suspended status.
@@ -298,11 +272,18 @@ class CustomerWizardController extends Controller
             $username = $allData['pppoe_username'] ?? $this->generateUsername($allData['name']);
             $password = $allData['pppoe_password'] ?? Str::random(10);
 
+            // Generate a unique 5-digit UID
+            $uid = null;
+            do {
+                $uid = mt_rand(10000, 99999);
+            } while (User::withoutGlobalScopes()->where('uid', $uid)->exists());
+
             // Create customer user with tenant_id
             $customer = User::create([
+                'uid' => $uid,
                 'tenant_id' => $tenantId, // FIX: Multi-tenancy support
                 'name' => $allData['name'],
-                'email' => $allData['email'],
+                'email' => $allData['email'] ?? null,
                 'username' => $username,
                 'password' => Hash::make($password),
                 'radius_password' => $password,
@@ -324,7 +305,16 @@ class CustomerWizardController extends Controller
                 'zone_id' => $allData['zone_id'] ?? null,
             ]);
 
-            $customer->assignRole('customer');
+            // Find or create the 'customer' role for the specific tenant
+            $customerRole = Role::firstOrCreate(
+                [
+                    'name' => 'customer',
+                    'guard_name' => 'web',
+                    'tenant_id' => $tenantId,
+                ]
+            );
+
+            $customer->assignRole($customerRole);
 
             // Generate first invoice with tenant_id
             $package = ServicePackage::findOrFail($allData['package_id']);

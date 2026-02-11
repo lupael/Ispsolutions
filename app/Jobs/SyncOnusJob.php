@@ -22,21 +22,21 @@ class SyncOnusJob implements ShouldBeUnique, ShouldQueue
      *
      * @var int
      */
-    public $tries = 3;
+    public int $tries = 3;
 
     /**
      * The maximum number of seconds the job can run before timing out.
      *
      * @var int
      */
-    public $timeout = 600; // 10 minutes
+    public int $timeout = 600; // 10 minutes
 
     /**
      * The number of seconds after which the job's unique lock will be released.
      *
      * @var int
      */
-    public $uniqueFor = 600; // 10 minutes - same as timeout
+    public int $uniqueFor = 600; // 10 minutes - same as timeout
 
     /**
      * Create a new job instance.
