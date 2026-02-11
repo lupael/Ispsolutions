@@ -8,6 +8,7 @@ use App\Models\Onu;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class OnuController extends Controller
@@ -23,7 +24,12 @@ class OnuController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Onu::with(['olt', 'customer']);
+        $tenantId = auth()->user()->tenant_id;
+
+        // Start query on Olt to ensure tenant scoping from the root
+        $query = Onu::query()
+            ->where('tenant_id', $tenantId)
+            ->with(['olt', 'customer']);
 
         // Filter by OLT
         if ($request->filled('olt_id')) {
@@ -46,12 +52,12 @@ class OnuController extends Controller
         }
 
         $onus = $query->orderBy('olt_id')->orderBy('pon_port')->orderBy('onu_id')->paginate(20);
-        $olts = Olt::orderBy('name')->get();
+        $olts = Olt::where('tenant_id', $tenantId)->orderBy('name')->get();
 
         $stats = [
-            'total' => Onu::count(),
-            'online' => Onu::where('status', 'online')->count(),
-            'offline' => Onu::where('status', 'offline')->count(),
+            'total' => Onu::where('tenant_id', $tenantId)->count(),
+            'online' => Onu::where('tenant_id', $tenantId)->where('status', 'online')->count(),
+            'offline' => Onu::where('tenant_id', $tenantId)->where('status', 'offline')->count(),
         ];
 
         return view('panels.admin.onu.index', compact('onus', 'olts', 'stats'));
@@ -75,7 +81,9 @@ class OnuController extends Controller
         $onu->load(['olt', 'customer']);
         
         // Load a limited set of customers for better performance
-        $customers = User::where('is_subscriber', true)->orderBy('username')
+        $customers = User::where('is_subscriber', true)
+            ->where('tenant_id', auth()->user()->tenant_id)
+            ->orderBy('username')
             ->limit(self::MAX_CUSTOMERS_LIMIT)
             ->get();
 
@@ -87,10 +95,15 @@ class OnuController extends Controller
      */
     public function update(Request $request, Onu $onu): RedirectResponse
     {
+        $tenantId = auth()->user()->tenant_id;
+
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'customer_id' => 'nullable|exists:users,id',
+            'customer_id' => [
+                'nullable',
+                Rule::exists('users', 'id')->where('tenant_id', $tenantId)
+            ],
         ]);
 
         $onu->update($validated);

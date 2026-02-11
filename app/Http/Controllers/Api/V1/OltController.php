@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class OltController extends Controller
 {
@@ -106,13 +107,21 @@ class OltController extends Controller
      */
     public function testConnection(int $id): JsonResponse
     {
-        $result = $this->oltService->testConnection($id);
+        $tenantId = auth()->user()->tenant_id;
+        try {
+            $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+            $this->authorize('view', $olt);
 
-        return response()->json([
-            'success' => $result['success'],
-            'message' => $result['success'] ? 'Connection successful' : 'Connection failed',
-            'latency' => $result['latency'] ?? null,
-        ]);
+            $result = $this->oltService->testConnection($olt->id);
+
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['success'] ? 'Connection successful' : 'Connection failed',
+                'latency' => $result['latency'] ?? null,
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'OLT not found.'], 404);
+        }
     }
 
     /**
@@ -162,12 +171,20 @@ class OltController extends Controller
      */
     public function statistics(int $id): JsonResponse
     {
-        $stats = $this->oltService->getOltStatistics($id);
+        $tenantId = auth()->user()->tenant_id;
+        try {
+            $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+            $this->authorize('view', $olt);
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-        ]);
+            $stats = $this->oltService->getOltStatistics($olt->id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats,
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'OLT not found.'], 404);
+        }
     }
 
     /**
@@ -175,12 +192,20 @@ class OltController extends Controller
      */
     public function createBackup(int $id): JsonResponse
     {
-        $success = $this->oltService->createBackup($id);
+        $tenantId = auth()->user()->tenant_id;
+        try {
+            $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+            $this->authorize('update', $olt);
 
-        return response()->json([
-            'success' => $success,
-            'message' => $success ? 'Backup created successfully' : 'Backup creation failed',
-        ]);
+            $success = $this->oltService->createBackup($olt->id);
+
+            return response()->json([
+                'success' => $success,
+                'message' => $success ? 'Backup created successfully' : 'Backup creation failed',
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'OLT not found.'], 404);
+        }
     }
 
     /**
@@ -245,12 +270,20 @@ class OltController extends Controller
      */
     public function portUtilization(int $id): JsonResponse
     {
-        $utilization = $this->oltService->getPortUtilization($id);
+        $tenantId = auth()->user()->tenant_id;
+        try {
+            $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+            $this->authorize('view', $olt);
 
-        return response()->json([
-            'success' => true,
-            'data' => $utilization,
-        ]);
+            $utilization = $this->oltService->getPortUtilization($olt->id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $utilization,
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'OLT not found.'], 404);
+        }
     }
 
     /**
@@ -258,51 +291,66 @@ class OltController extends Controller
      */
     public function bandwidthUsage(int $id, Request $request): JsonResponse
     {
-        $period = $request->input('period', 'daily');
-        $usage = $this->oltService->getBandwidthUsage($id, $period);
+        $tenantId = auth()->user()->tenant_id;
+        try {
+            $olt = Olt::where('tenant_id', $tenantId)->findOrFail($id);
+            $this->authorize('view', $olt);
 
-        return response()->json([
-            'success' => true,
-            'data' => $usage,
-        ]);
+            $period = $request->input('period', 'daily');
+            $usage = $this->oltService->getBandwidthUsage($olt->id, $period);
+
+            return response()->json([
+                'success' => true,
+                'data' => $usage,
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'OLT not found.'], 404);
+        }
     }
 
     /**
      * Get ONU details
      */
+    /**
+     * Get ONU details
+     */
     public function onuDetails(int $onuId): JsonResponse
     {
-        $onu = Onu::with(['olt', 'networkUser'])->findOrFail($onuId);
+        try {
+            $onu = $this->getTenantOnuOrFail($onuId);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $onu->id,
-                'serial_number' => $onu->serial_number,
-                'mac_address' => $onu->mac_address,
-                'pon_port' => $onu->pon_port,
-                'onu_id' => $onu->onu_id,
-                'name' => $onu->name,
-                'description' => $onu->description,
-                'status' => $onu->status,
-                'signal_rx' => $onu->signal_rx,
-                'signal_tx' => $onu->signal_tx,
-                'distance' => $onu->distance,
-                'ipaddress' => $onu->ipaddress,
-                'last_seen_at' => $onu->last_seen_at?->toISOString(),
-                'last_sync_at' => $onu->last_sync_at?->toISOString(),
-                'olt' => [
-                    'id' => $onu->olt->id,
-                    'name' => $onu->olt->name,
-                    'ip_address' => $onu->olt->ip_address,
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $onu->id,
+                    'serial_number' => $onu->serial_number,
+                    'mac_address' => $onu->mac_address,
+                    'pon_port' => $onu->pon_port,
+                    'onu_id' => $onu->onu_id,
+                    'name' => $onu->name,
+                    'description' => $onu->description,
+                    'status' => $onu->status,
+                    'signal_rx' => $onu->signal_rx,
+                    'signal_tx' => $onu->signal_tx,
+                    'distance' => $onu->distance,
+                    'ipaddress' => $onu->ipaddress,
+                    'last_seen_at' => $onu->last_seen_at?->toISOString(),
+                    'last_sync_at' => $onu->last_sync_at?->toISOString(),
+                    'olt' => [
+                        'id' => $onu->olt->id,
+                        'name' => $onu->olt->name,
+                        'ip_address' => $onu->olt->ip_address,
+                    ],
+                    'network_user' => $onu->networkUser ? [
+                        'id' => $onu->networkUser->id,
+                        'username' => $onu->networkUser->username,
+                        'name' => $onu->networkUser->name,
+                    ] : null,
                 ],
-                'network_user' => $onu->networkUser ? [
-                    'id' => $onu->networkUser->id,
-                    'username' => $onu->networkUser->username,
-                    'name' => $onu->networkUser->name,
-                ] : null,
-            ],
-        ]);
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'ONU not found.'], 404);
+        }
     }
 
     /**
@@ -310,12 +358,17 @@ class OltController extends Controller
      */
     public function refreshOnuStatus(int $onuId): JsonResponse
     {
-        $success = $this->oltService->refreshOnuStatus($onuId);
+        try {
+            $this->getTenantOnuOrFail($onuId);
+            $success = $this->oltService->refreshOnuStatus($onuId);
 
-        return response()->json([
-            'success' => $success,
-            'message' => $success ? 'ONU status refreshed' : 'Failed to refresh ONU status',
-        ]);
+            return response()->json([
+                'success' => $success,
+                'message' => $success ? 'ONU status refreshed' : 'Failed to refresh ONU status',
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'ONU not found.'], 404);
+        }
     }
 
     /**
@@ -323,12 +376,17 @@ class OltController extends Controller
      */
     public function authorizeOnu(int $onuId): JsonResponse
     {
-        $success = $this->oltService->authorizeOnu($onuId);
+        try {
+            $this->getTenantOnuOrFail($onuId);
+            $success = $this->oltService->authorizeOnu($onuId);
 
-        return response()->json([
-            'success' => $success,
-            'message' => $success ? 'ONU authorized successfully' : 'Failed to authorize ONU',
-        ]);
+            return response()->json([
+                'success' => $success,
+                'message' => $success ? 'ONU authorized successfully' : 'Failed to authorize ONU',
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'ONU not found.'], 404);
+        }
     }
 
     /**
@@ -336,12 +394,17 @@ class OltController extends Controller
      */
     public function unauthorizeOnu(int $onuId): JsonResponse
     {
-        $success = $this->oltService->unauthorizeOnu($onuId);
+        try {
+            $this->getTenantOnuOrFail($onuId);
+            $success = $this->oltService->unauthorizeOnu($onuId);
 
-        return response()->json([
-            'success' => $success,
-            'message' => $success ? 'ONU unauthorized successfully' : 'Failed to unauthorize ONU',
-        ]);
+            return response()->json([
+                'success' => $success,
+                'message' => $success ? 'ONU unauthorized successfully' : 'Failed to unauthorize ONU',
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'ONU not found.'], 404);
+        }
     }
 
     /**
@@ -349,12 +412,17 @@ class OltController extends Controller
      */
     public function rebootOnu(int $onuId): JsonResponse
     {
-        $success = $this->oltService->rebootOnu($onuId);
+        try {
+            $this->getTenantOnuOrFail($onuId);
+            $success = $this->oltService->rebootOnu($onuId);
 
-        return response()->json([
-            'success' => $success,
-            'message' => $success ? 'ONU reboot initiated' : 'Failed to reboot ONU',
-        ]);
+            return response()->json([
+                'success' => $success,
+                'message' => $success ? 'ONU reboot initiated' : 'Failed to reboot ONU',
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json(['success' => false, 'message' => 'ONU not found.'], 404);
+        }
     }
 
     /**
@@ -362,16 +430,24 @@ class OltController extends Controller
      */
     public function bulkOnuOperations(Request $request): JsonResponse
     {
+        $tenantId = auth()->user()->tenant_id;
+
         $validator = Validator::make($request->all(), [
             'onu_ids' => 'required|array',
-            'onu_ids.*' => 'required|integer|exists:onus,id',
+            'onu_ids.*' => [
+                'required',
+                'integer',
+                Rule::exists('onus', 'id')->where(function ($query) use ($tenantId) {
+                    $query->whereHas('olt', fn ($q) => $q->where('tenant_id', $tenantId));
+                }),
+            ],
             'operation' => 'required|string|in:authorize,unauthorize,reboot,refresh',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
+                'message' => 'Validation failed. Ensure all ONUs belong to your tenant.',
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -382,6 +458,7 @@ class OltController extends Controller
         $successCount = 0;
 
         foreach ($onuIds as $onuId) {
+            // Authorization is implicitly handled by the validator above
             $success = match ($operation) {
                 'authorize' => $this->oltService->authorizeOnu($onuId),
                 'unauthorize' => $this->oltService->unauthorizeOnu($onuId),
@@ -576,5 +653,24 @@ class OltController extends Controller
             'message' => "Acknowledged {$count} traps",
             'count' => $count,
         ]);
+    }
+
+    /**
+     * Find an ONU within the current tenant or fail.
+     *
+     * @throws ModelNotFoundException
+     */
+    private function getTenantOnuOrFail(int $onuId): Onu
+    {
+        $tenantId = auth()->user()->tenant_id;
+
+        $onu = Onu::where('id', $onuId)
+            ->whereHas('olt', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->firstOrFail();
+
+        // Authorize the action against the parent OLT
+        $this->authorize('update', $onu->olt);
+
+        return $onu;
     }
 }

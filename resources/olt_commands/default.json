@@ -1,0 +1,10 @@
+{
+    "enable": "enable",
+    "version": "show version",
+    "onu_state": "show gpon onu state",
+    "onu_detail": "show gpon onu detail-info gpon-onu_{{port}}:{{id}}",
+    "authorize": "interface gpon-onu_{{port}}:{{id}} authorize",
+    "unauthorize": "no interface gpon-onu_{{port}}:{{id}} authorize",
+    "reboot": "interface gpon-onu_{{port}}:{{id}} reboot",
+    "backup": "show running-config"
+}

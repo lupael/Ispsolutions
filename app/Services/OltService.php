@@ -140,69 +140,6 @@ class OltService implements OltServiceInterface
                 'latency' => $latency,
             ];
         } catch (\Exception $e) {
-            Log::error("Error testing connection to OLT {$oltId}: " . $e->getMessage());
-
-            return [ // This is inside the testConnection method, but $oltId is not defined. Using $olt->id instead.
-                'success' => false,
-                'message' => $e->getMessage(),
-                'latency' => (int) ((microtime(true) - $startTime) * 1000),
-            ];
-        }
-    }
-
-    /**
-     * Test connection to OLT.
-     */
-    public function testConnection(Olt $olt): array
-    {
-        $startTime = microtime(true);
-
-        try {
-            if (! $olt->canConnect()) {
-                return [
-                    'success' => false,
-                    'message' => 'OLT configuration is invalid or incomplete',
-                    'latency' => 0,
-                ];
-            }
-
-            $connection = $this->createConnection($olt);
-
-            if (! $connection->login($olt->username, $olt->password)) {
-                return [
-                    'success' => false,
-                    'message' => 'Authentication failed',
-                    'latency' => (int) ((microtime(true) - $startTime) * 1000),
-                ];
-            }
-
-            // Get vendor-specific commands and test command execution
-            $commands = $this->getVendorCommands($olt);
-            $result = $connection->exec($commands['version']);
-            $connection->disconnect();
-
-            $latency = (int) ((microtime(true) - $startTime) * 1000);
-
-            if ($result === false) {
-                return [
-                    'success' => false,
-                    'message' => 'Command execution failed',
-                    'latency' => $latency,
-                ];
-            }
-
-            // Update health status
-            $olt->update([
-                'health_status' => 'healthy',
-                'last_health_check_at' => now(),
-            ]);
-
-            return [
-                'success' => true,
-                'message' => 'Connection successful',
-                'latency' => $latency,
-            ];
-        } catch (\Exception $e) {
             Log::error("Error testing connection to OLT {$olt->id}: " . $e->getMessage());
 
             return [
@@ -861,19 +798,43 @@ class OltService implements OltServiceInterface
     }
 
     /**
-     * Get OLT statistics.
+     * Get vendor-specific commands from JSON file.
+     *
+     * @throws RuntimeException
      */
-    public function getOltStatistics(Olt $olt): array
+    private function getVendorCommands(Olt $olt): array
     {
-        try {
-            // Eager load counts if they are not already loaded
-            if (! $olt->relationLoaded('onus_count')) {
-                $olt->loadCount([
-                'onus',
-                'onus as online_onus_count' => function ($query) {
-                    $query->where('status', 'online');
-                },
-                'onus as offline_onus_count' => function ($query) {
-                    $query->where('status', 'offline');
-                },
+        $vendor = strtolower($olt->brand ?? $olt->model ?? 'default');
+        $filePath = resource_path("olt_commands/{$vendor}.json");
+
+        if (! file_exists($filePath)) {
+            Log::warning("No command file found for OLT vendor: {$vendor}. Falling back to default.", [
+                'olt_id' => $olt->id,
+            ]);
+            $filePath = resource_path('olt_commands/default.json');
+        }
+
+        if (! file_exists($filePath)) {
+            throw new RuntimeException('Default OLT command file not found.');
+        }
+
+        $commands = json_decode(file_get_contents($filePath), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new RuntimeException("Failed to parse command file: {$filePath}. Error: " . json_last_error_msg());
+        }
+
+        return $commands;
+    }
+
+    /**
+     * Create a new SSH2 connection object.
+     */
+    private function createConnection(Olt $olt): SSH2
+    {
+        $connection = new SSH2($olt->ip_address, $olt->port);
+        $connection->setTimeout(10);
+
+        return $connection;
+    }
 }

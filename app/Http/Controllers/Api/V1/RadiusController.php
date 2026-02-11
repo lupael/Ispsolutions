@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class RadiusController extends Controller
 {
@@ -264,6 +265,8 @@ class RadiusController extends Controller
      */
     public function createUser(Request $request): JsonResponse
     {
+        $this->authorize('manage-radius');
+
         $validator = Validator::make($request->all(), [
             'username' => 'required|string|max:255|unique:radcheck,username',
             'password' => 'required|string|min:6',
@@ -301,6 +304,8 @@ class RadiusController extends Controller
      */
     public function updateUser(Request $request, string $username): JsonResponse
     {
+        $this->authorize('manage-radius');
+
         $validator = Validator::make($request->all(), [
             'password' => 'nullable|string|min:6',
             'attributes' => 'nullable|array',
@@ -342,6 +347,8 @@ class RadiusController extends Controller
      */
     public function deleteUser(string $username): JsonResponse
     {
+        $this->authorize('manage-radius');
+
         $success = $this->radiusService->deleteUser($username);
 
         if (! $success) {

@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 /**
  * NetworkUserController - kept for backward API compatibility.
@@ -30,11 +31,17 @@ class NetworkUserController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('manage-customers');
+        Log::info('Listing network users', ['request' => $request->all()]);
+
+        $tenantId = auth()->user()->tenant_id;
+
         $query = User::select([
             'id', 'name', 'username', 'email', 'service_type',
             'service_package_id as package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
         ])->where('is_subscriber', true)
+          ->where('tenant_id', $tenantId)
           ->with(['servicePackage:id,name,price,bandwidth_upload,bandwidth_download']);
 
         if ($request->has('service_type')) {
@@ -65,6 +72,9 @@ class NetworkUserController extends Controller
      */
     public function store(StoreNetworkUserRequest $request): JsonResponse
     {
+        $this->authorize('manage-customers');
+        Log::info('Creating a new network user', ['request' => $request->validated()]);
+
         // Use the new transform method to get properly mapped data
         $userData = $request->transformForUserModel();
         
@@ -75,11 +85,12 @@ class NetworkUserController extends Controller
         
         $user = User::create($userData);
 
-        // Sync to RADIUS using User's method (observer will handle this automatically)
-        // But we'll call it explicitly for immediate sync
-        if ($userData['radius_password'] && $user->username) {
-            $user->syncToRadius(['password' => $userData['radius_password']]);
-        }
+        // The UserObserver will automatically handle syncing to RADIUS.
+        // if ($userData['radius_password'] && $user->username) {
+        //     $user->syncToRadius(['password' => $userData['radius_password']]);
+        // }
+
+        Log::info('Successfully created network user', ['user_id' => $user->id]);
 
         return response()->json([
             'message' => 'Customer created successfully',
@@ -93,11 +104,17 @@ class NetworkUserController extends Controller
      */
     public function show(int $id): JsonResponse
     {
+        $this->authorize('manage-customers');
+        Log::info('Showing network user', ['id' => $id]);
+
+        $tenantId = auth()->user()->tenant_id;
+
         $user = User::select([
             'id', 'name', 'username', 'email', 'service_type',
             'service_package_id as package_id', 'status', 'tenant_id',
             'created_at', 'updated_at',
         ])->where('is_subscriber', true)
+          ->where('tenant_id', $tenantId)
           ->with([
             'servicePackage:id,name,price,bandwidth_upload,bandwidth_download',
         ])->findOrFail($id);
@@ -111,15 +128,22 @@ class NetworkUserController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = User::where('is_subscriber', true)->findOrFail($id);
+        $this->authorize('manage-customers');
+        Log::info('Updating network user', ['id' => $id, 'request' => $request->all()]);
+
+        $tenantId = auth()->user()->tenant_id;
+        $user = User::where('is_subscriber', true)
+            ->where('tenant_id', $tenantId)
+            ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'email' => [
                 'nullable',
                 'email',
-                function ($attribute, $value, $fail) use ($id) {
+                function ($attribute, $value, $fail) use ($id, $tenantId) {
                     $exists = User::where('email', $value)
                         ->where('is_subscriber', true)
+                        ->where('tenant_id', $tenantId)
                         ->where('id', '!=', $id)
                         ->exists();
                     if ($exists) {
@@ -133,6 +157,7 @@ class NetworkUserController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Network user update validation failed', ['id' => $id, 'errors' => $validator->errors()]);
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
@@ -151,6 +176,7 @@ class NetworkUserController extends Controller
 
         // Observer will handle RADIUS sync automatically
         // No need to call radiusService directly
+        Log::info('Successfully updated network user', ['user_id' => $user->id]);
 
         return response()->json([
             'message' => 'Customer updated successfully',
@@ -164,10 +190,18 @@ class NetworkUserController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $user = User::where('is_subscriber', true)->findOrFail($id);
+        $this->authorize('manage-customers');
+        Log::info('Deleting network user', ['id' => $id]);
+
+        $tenantId = auth()->user()->tenant_id;
+        $user = User::where('is_subscriber', true)
+            ->where('tenant_id', $tenantId)
+            ->findOrFail($id);
 
         // Observer will handle RADIUS deletion automatically
         $user->delete();
+
+        Log::info('Successfully deleted network user', ['user_id' => $id]);
 
         return response()->json([
             'message' => 'Customer deleted successfully',
@@ -177,16 +211,24 @@ class NetworkUserController extends Controller
     /**
      * Sync customer to RADIUS.
      * Note: Now uses User model with is_subscriber = true.
+     * This method is likely redundant as the UserObserver should handle this automatically on update.
      */
     public function syncToRadius(Request $request, int $id): JsonResponse
     {
-        $user = User::where('is_subscriber', true)->findOrFail($id);
+        $this->authorize('manage-customers');
+        Log::info('Syncing network user to RADIUS', ['id' => $id]);
+
+        $tenantId = auth()->user()->tenant_id;
+        $user = User::where('is_subscriber', true)
+            ->where('tenant_id', $tenantId)
+            ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'password' => 'nullable|string|min:6',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Network user sync validation failed', ['id' => $id, 'errors' => $validator->errors()]);
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
@@ -199,10 +241,13 @@ class NetworkUserController extends Controller
         $success = $user->syncToRadius(['password' => $password]);
 
         if (! $success) {
+            Log::error('Failed to sync network user to RADIUS', ['user_id' => $id]);
             return response()->json([
                 'message' => 'Failed to sync customer to RADIUS',
             ], 400);
         }
+
+        Log::info('Successfully synced network user to RADIUS', ['user_id' => $id]);
 
         return response()->json([
             'message' => 'Customer synced to RADIUS successfully',
