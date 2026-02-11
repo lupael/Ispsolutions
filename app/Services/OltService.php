@@ -156,6 +156,7 @@ class OltService implements OltServiceInterface
     public function discoverOnus(int $oltId): array
     {
         $sshConnectionCreated = false;
+        $onus = [];
 
         try {
             $olt = Olt::findOrFail($oltId);
@@ -165,14 +166,14 @@ class OltService implements OltServiceInterface
 
             if ($olt->snmp_community && $olt->snmp_version) {
                 Log::info('Attempting SNMP-based ONU discovery', [
-                    'olt_id' => $oltId,
-                    'vendor' => $olt->brand ?? $olt->model,
+                    'olt_id' => $olt->id,
+                    'vendor' => $olt->brand,
                 ]);
 
                 $onus = $oltSnmpService->discoverOnusViaSNMP($olt);
 
                 if (!empty($onus)) {
-                    Log::info('Successfully discovered ONUs via SNMP', [
+                    Log::info('Discovered ONUs via SNMP', [
                         'olt_id' => $oltId,
                         'count' => count($onus),
                     ]);
@@ -181,7 +182,7 @@ class OltService implements OltServiceInterface
                 }
 
                 Log::warning('SNMP discovery returned no results, falling back to SSH', [
-                    'olt_id' => $oltId,
+                    'olt_id' => $olt->id,
                 ]);
             } else {
                 Log::info('SNMP not configured, using SSH-based discovery', [
@@ -191,16 +192,13 @@ class OltService implements OltServiceInterface
 
             // Fallback to SSH-based discovery
             $wasAlreadyConnected = isset($this->connections[$oltId]);
-
             if (! $this->ensureConnected($oltId)) {
                 throw new RuntimeException("Failed to connect to OLT {$oltId}");
             }
-
             $sshConnectionCreated = !$wasAlreadyConnected;
 
             $connection = $this->connections[$oltId];
             $commands = $this->getVendorCommands($olt);
-            $onus = [];
 
             // Execute ONU state command (vendor-specific)
             $output = $connection->exec($commands['onu_state']);
@@ -215,20 +213,17 @@ class OltService implements OltServiceInterface
             $onus = $this->parseOnuListOutput($output, $olt);
 
             Log::info('Discovered ' . count($onus) . " ONUs on OLT {$oltId} via SSH");
-
-            return $onus;
         } catch (\Exception $e) {
             Log::error("Error discovering ONUs on OLT {$oltId}: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-
-            // Only clean up connection if we created it in this method call
+        } finally {
+            // Ensure connection is closed if it was opened by this method
             if ($sshConnectionCreated && isset($this->connections[$oltId])) {
                 $this->disconnect($oltId);
             }
-
-            return [];
         }
+        return $onus;
     }
 
     /**
@@ -358,6 +353,7 @@ class OltService implements OltServiceInterface
     public function getOnuStatus(int $onuId): array
     {
         $sshConnectionCreated = false;
+        $status = [];
 
         try {
             $onu = Onu::with('olt')->findOrFail($onuId);
@@ -424,20 +420,13 @@ class OltService implements OltServiceInterface
             }
 
             // Parse the detailed output from the SSH command
-            $status = $this->parseOnuDetailOutput($output, $onu->olt);
+            $status = $this->parseOnuDetailOutput($output, $onu->olt) ?: [];
             $status['method'] = 'ssh';
             $status['last_update'] = now()->toIso8601String();
-
-            return $status;
         } catch (\Exception $e) {
             Log::error("Error getting ONU {$onuId} status: " . $e->getMessage());
 
-            // Only clean up connection if we created it in this method call
-            if ($sshConnectionCreated && isset($onu) && isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
-                $this->disconnect($onu->olt_id);
-            }
-
-            return [
+            $status = [
                 'status' => 'unknown',
                 'signal_rx' => null,
                 'signal_tx' => null,
@@ -446,7 +435,12 @@ class OltService implements OltServiceInterface
                 'last_update' => now()->toIso8601String(),
                 'method' => 'error',
             ];
+        } finally {
+            if ($sshConnectionCreated && isset($onu) && isset($onu->olt_id) && isset($this->connections[$onu->olt_id])) {
+                $this->disconnect($onu->olt_id);
+            }
         }
+        return $status;
     }
 
     /**
@@ -591,6 +585,7 @@ class OltService implements OltServiceInterface
     public function createBackup(int $oltId): bool
     {
         $sshConnectionCreated = false;
+        $onus = [];
 
         try {
             $olt = Olt::findOrFail($oltId);

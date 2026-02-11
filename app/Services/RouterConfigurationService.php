@@ -13,7 +13,7 @@ class RouterConfigurationService
     /**
      * Configure RADIUS authentication on the router
      * Complete one-click setup following IspBills pattern
-     * 
+     *
      * Note: This is a placeholder for future implementation when RouterOS API client
      * with comm() method is available. Current MikrotikService implementation uses
      * a different API pattern.
@@ -43,7 +43,7 @@ class RouterConfigurationService
 
     /**
      * Configure RADIUS client on the router
-     * 
+     *
      * Note: Placeholder - requires RouterOS API implementation
      */
     public function configureRadiusClient($api, MikrotikRouter $router, Nas $nas): void
@@ -53,7 +53,7 @@ class RouterConfigurationService
         $existing = $api->comm('/radius/print', [
             '?comment' => 'ISP Solution RADIUS Server',
         ]);
-        
+
         foreach ($existing as $item) {
             $api->comm('/radius/remove', [
                 '.id' => $item['.id'],
@@ -138,7 +138,7 @@ class RouterConfigurationService
     {
         try {
             $mikrotikService = app(MikrotikService::class);
-            
+
             if (!$mikrotikService->connectRouter($router->id)) {
                 return [
                     'success' => false,
@@ -194,7 +194,7 @@ class RouterConfigurationService
     {
         try {
             $mikrotikService = app(MikrotikService::class);
-            
+
             if (!$mikrotikService->connectRouter($router->id)) {
                 return [
                     'success' => false,
@@ -271,7 +271,7 @@ class RouterConfigurationService
     {
         try {
             $mikrotikService = app(MikrotikService::class);
-            
+
             if (!$mikrotikService->connectRouter($router->id)) {
                 return [
                     'configured' => false,

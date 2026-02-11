@@ -26,12 +26,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.invoice', $data)
-            ->setPaper('a4')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.invoice', $data));
     }
 
     /**
@@ -72,12 +67,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.receipt', $data)
-            ->setPaper('a4')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.receipt', $data));
     }
 
     /**
@@ -124,12 +114,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.statement', $data)
-            ->setPaper('a4')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.statement', $data));
     }
 
     /**
@@ -155,12 +140,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.billing', $data)
-            ->setPaper('a4', 'landscape')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.billing', $data), 'landscape');
     }
 
     /**
@@ -187,12 +167,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.payment', $data)
-            ->setPaper('a4', 'landscape')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.payment', $data), 'landscape');
     }
 
     /**
@@ -218,12 +193,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.customer', $data)
-            ->setPaper('a4', 'landscape')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.customer', $data), 'landscape');
     }
 
     /**
@@ -251,12 +221,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.income-expense-report', $reportData)
-            ->setPaper('a4', 'landscape')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.income-expense-report', $reportData), 'landscape');
     }
 
     /**
@@ -284,12 +249,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.expense-report', $reportData)
-            ->setPaper('a4', 'landscape')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.expense-report', $reportData), 'landscape');
     }
 
     /**
@@ -317,12 +277,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.transactions', $reportData)
-            ->setPaper('a4', 'landscape')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.transactions', $reportData), 'landscape');
     }
 
     /**
@@ -347,12 +302,7 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.vat-collections', $reportData)
-            ->setPaper('a4', 'landscape')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.vat-collections', $reportData), 'landscape');
     }
 
     /**
@@ -382,11 +332,6 @@ class PdfExportService
             ],
         ];
 
-        return Pdf::loadView('pdf.reports.statement-of-account', $reportData)
-            ->setPaper('a4')
-            ->setOption('margin-top', 10)
-            ->setOption('margin-bottom', 10)
-            ->setOption('margin-left', 10)
-            ->setOption('margin-right', 10);
+        return $this->configurePdf(Pdf::loadView('pdf.reports.statement-of-account', $reportData));
     }
 }

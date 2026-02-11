@@ -192,6 +192,26 @@ class OltSnmpService
     }
 
     /**
+     * Get ONU signal levels (alias for getOnuOpticalPower for backward compatibility).
+     *
+     * Note: The $olt parameter is kept for backward compatibility with code that
+     * passes it, but is not used. The OLT relationship is accessed via $onu->olt.
+     *
+     * @return array Array with status, rx_power, tx_power, and distance
+     */
+    public function getOnuSignalLevels(Onu $onu): array
+    {
+        $powerData = $this->getOnuOpticalPower($onu); // Pass only the ONU
+
+        return [
+            'status' => $onu->status ?? 'unknown',
+            'rx_power' => $powerData['rx_power'],
+            'tx_power' => $powerData['tx_power'],
+            'distance' => $powerData['distance'],
+        ];
+    }
+
+    /**
      * Get real-time RX/TX power levels for an ONU.
      *
      * @return array Array with rx_power, tx_power, and distance

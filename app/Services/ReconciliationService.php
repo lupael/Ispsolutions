@@ -57,8 +57,8 @@ class ReconciliationService
             })->sum('amount');
 
             // Calculate reconciliation
-            $adjustedBookBalance = $bookBalance - $outstandingDeposits + $outstandingWithdrawals;
-            $difference = $statementBalance - $adjustedBookBalance;
+            $reconciledBalance = $statementBalance + $outstandingDeposits - $outstandingWithdrawals;
+            $difference = $reconciledBalance - $bookBalance;
 
             $isReconciled = abs($difference) < 0.01;
 
@@ -76,7 +76,7 @@ class ReconciliationService
                 'book_balance' => $bookBalance,
                 'outstanding_deposits' => $outstandingDeposits,
                 'outstanding_withdrawals' => $outstandingWithdrawals,
-                'adjusted_book_balance' => $adjustedBookBalance,
+                'reconciled_balance' => $reconciledBalance,
                 'difference' => $difference,
                 'is_reconciled' => $isReconciled,
                 'cleared_count' => count($clearedTransactions),
