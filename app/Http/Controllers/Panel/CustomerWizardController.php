@@ -225,7 +225,7 @@ class CustomerWizardController extends Controller
     private function processStep3(Request $request, TempCustomer $tempCustomer): RedirectResponse
     {
         $validated = $request->validate([
-            'package_id' => 'required|exists:service_packages,id',
+            'package_id' => 'required|exists:packages,id',
         ]);
 
         $package = ServicePackage::findOrFail($validated['package_id']);
