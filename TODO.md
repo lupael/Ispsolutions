@@ -58,7 +58,7 @@ This file tracks the progress of the ISP Solution refactoring, based on the arch
 ---
 
 ## 5. Router & Network Integration
-- [ ] Refactor MikroTik API calls into modular services.
+- [x] Refactor MikroTik API calls into modular services.
 - [ ] Move hardcoded IP ranges/firewall rules into config files.
 - [ ] Add error handling for router API failures.
 - [ ] Validate suspended user blocking via firewall rules.

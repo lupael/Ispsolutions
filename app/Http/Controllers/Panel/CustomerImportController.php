@@ -1,0 +1,12 @@
+<?php
+
+namespace App\Http\Controllers\Panel;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+class CustomerImportController extends Controller
+{
+    public function index() {}
+    public function store() {}
+}

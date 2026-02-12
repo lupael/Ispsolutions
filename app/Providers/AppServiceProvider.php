@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
             return new \App\Services\PhpSnmpClient();
         });
 
-
+        $this->app->bind(\App\Contracts\MikrotikServiceInterface::class, \App\Services\MikrotikService::class);
     }
 
     /**
