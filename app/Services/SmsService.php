@@ -117,61 +117,62 @@ class SmsService
      */
     public function sendSms(string $phoneNumber, string $message, ?string $gateway = null, ?int $userId = null, ?int $tenantId = null): bool
     {
-        $gateway = $gateway ?? config('sms.default_gateway', 'twilio');
+        $gateways = $gateway ? [$gateway] : array_keys(config('sms'));
         $smsLog = null;
 
-        try {
-            // Create SMS log
-            $smsLog = $this->logSms($phoneNumber, $message, SmsLog::STATUS_PENDING, null, $userId, null, $tenantId);
+        foreach ($gateways as $gateway) {
+            try {
+                // Create SMS log
+                $smsLog = $this->logSms($phoneNumber, $message, SmsLog::STATUS_PENDING, null, $userId, null, $tenantId);
 
-            $result = match ($gateway) {
-                'twilio' => $this->sendViaTwilio($phoneNumber, $message),
-                'nexmo' => $this->sendViaNexmo($phoneNumber, $message),
-                'bulksms' => $this->sendViaBulkSms($phoneNumber, $message),
-                'bangladeshi' => $this->sendViaBangladeshiGateway($phoneNumber, $message),
-                // Bangladeshi SMS gateways
-                'maestro' => $this->sendViaMaestro($phoneNumber, $message),
-                'robi' => $this->sendViaRobi($phoneNumber, $message),
-                'm2mbd' => $this->sendViaM2mbd($phoneNumber, $message),
-                'bangladeshsms' => $this->sendViaBangladeshSms($phoneNumber, $message),
-                'bulksmsbd' => $this->sendViaBulkSmsBd($phoneNumber, $message),
-                'btssms' => $this->sendViaBtsSms($phoneNumber, $message),
-                '880sms' => $this->sendVia880Sms($phoneNumber, $message),
-                'bdsmartpay' => $this->sendViaBdSmartPay($phoneNumber, $message),
-                'elitbuzz' => $this->sendViaElitbuzz($phoneNumber, $message),
-                'sslwireless' => $this->sendViaSslWireless($phoneNumber, $message),
-                'adnsms' => $this->sendViaAdnSms($phoneNumber, $message),
-                '24smsbd' => $this->sendVia24SmsBd($phoneNumber, $message),
-                'smsnet' => $this->sendViaSmsNet($phoneNumber, $message),
-                'brandsms' => $this->sendViaBrandSms($phoneNumber, $message),
-                'metrotel' => $this->sendViaMetrotel($phoneNumber, $message),
-                'dianahost' => $this->sendViaDianahost($phoneNumber, $message),
-                'smsinbd' => $this->sendViaSmsInBd($phoneNumber, $message),
-                'dhakasoftbd' => $this->sendViaDhakasoftBd($phoneNumber, $message),
-                default => throw new \Exception("Unsupported SMS gateway: {$gateway}"),
-            };
+                $result = match ($gateway) {
+                    'twilio' => $this->sendViaTwilio($phoneNumber, $message),
+                    'nexmo' => $this->sendViaNexmo($phoneNumber, $message),
+                    'bulksms' => $this->sendViaBulkSms($phoneNumber, $message),
+                    'bangladeshi' => $this->sendViaBangladeshiGateway($phoneNumber, $message),
+                    // Bangladeshi SMS gateways
+                    'maestro' => $this->sendViaMaestro($phoneNumber, $message),
+                    'robi' => $this->sendViaRobi($phoneNumber, $message),
+                    'm2mbd' => $this->sendViaM2mbd($phoneNumber, $message),
+                    'bangladeshsms' => $this->sendViaBangladeshSms($phoneNumber, $message),
+                    'bulksmsbd' => $this->sendViaBulkSmsBd($phoneNumber, $message),
+                    'btssms' => $this->sendViaBtsSms($phoneNumber, $message),
+                    '880sms' => $this->sendVia880Sms($phoneNumber, $message),
+                    'bdsmartpay' => $this->sendViaBdSmartPay($phoneNumber, $message),
+                    'elitbuzz' => $this->sendViaElitbuzz($phoneNumber, $message),
+                    'sslwireless' => $this->sendViaSslWireless($phoneNumber, $message),
+                    'adnsms' => $this->sendViaAdnSms($phoneNumber, $message),
+                    '24smsbd' => $this->sendVia24SmsBd($phoneNumber, $message),
+                    'smsnet' => $this->sendViaSmsNet($phoneNumber, $message),
+                    'brandsms' => $this->sendViaBrandSms($phoneNumber, $message),
+                    'metrotel' => $this->sendViaMetrotel($phoneNumber, $message),
+                    'dianahost' => $this->sendViaDianahost($phoneNumber, $message),
+                    'smsinbd' => $this->sendViaSmsInBd($phoneNumber, $message),
+                    'dhakasoftbd' => $this->sendViaDhakasoftBd($phoneNumber, $message),
+                    default => false,
+                };
 
-            // Update log status
-            if ($result && $smsLog) {
-                $smsLog->markAsSent();
-            } elseif ($smsLog) {
-                $smsLog->markAsFailed('Gateway returned false');
+                // Update log status
+                if ($result && $smsLog) {
+                    $smsLog->markAsSent();
+                    return true;
+                } elseif ($smsLog) {
+                    $smsLog->markAsFailed('Gateway returned false');
+                }
+            } catch (\Exception $e) {
+                Log::error('SMS sending failed', [
+                    'phone' => $phoneNumber,
+                    'gateway' => $gateway,
+                    'error' => $e->getMessage(),
+                ]);
+
+                if ($smsLog) {
+                    $smsLog->markAsFailed($e->getMessage());
+                }
             }
-
-            return $result;
-        } catch (\Exception $e) {
-            Log::error('SMS sending failed', [
-                'phone' => $phoneNumber,
-                'gateway' => $gateway,
-                'error' => $e->getMessage(),
-            ]);
-
-            if ($smsLog) {
-                $smsLog->markAsFailed($e->getMessage());
-            }
-
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -445,20 +446,19 @@ class SmsService
     {
         $apiKey = config('sms.maestro.api_key');
         $senderId = config('sms.maestro.sender_id');
-        $apiUrl = config('sms.maestro.api_url', 'https://api.maestrosms.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('Maestro SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -479,20 +479,19 @@ class SmsService
     {
         $apiKey = config('sms.robi.api_key');
         $senderId = config('sms.robi.sender_id');
-        $apiUrl = config('sms.robi.api_url', 'https://esms.mimsms.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('Robi SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -513,20 +512,19 @@ class SmsService
     {
         $apiKey = config('sms.m2mbd.api_key');
         $senderId = config('sms.m2mbd.sender_id');
-        $apiUrl = config('sms.m2mbd.api_url', 'https://api.m2mbd.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('M2M BD SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -547,18 +545,18 @@ class SmsService
     {
         $apiKey = config('sms.bangladeshsms.api_key');
         $senderId = config('sms.bangladeshsms.sender_id');
-        $apiUrl = config('sms.bangladeshsms.api_url', 'https://api.bangladeshsms.com/send');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('BangladeshSMS credentials not configured');
 
             return false;
         }
 
         $response = Http::asForm()->post($apiUrl, [
-            'api_key' => $apiKey,
-            'sender_id' => $senderId,
-            'phone' => $phoneNumber,
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
             'message' => $message,
         ]);
 
@@ -580,19 +578,18 @@ class SmsService
     {
         $apiKey = config('sms.bulksmsbd.api_key');
         $senderId = config('sms.bulksmsbd.sender_id');
-        $apiUrl = config('sms.bulksmsbd.api_url', 'https://api.bulksmsbd.com/api/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('BulkSMSBD credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'number' => $phoneNumber,
-            'senderid' => $senderId,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
             'message' => $message,
         ]);
 
@@ -614,20 +611,19 @@ class SmsService
     {
         $apiKey = config('sms.btssms.api_key');
         $senderId = config('sms.btssms.sender_id');
-        $apiUrl = config('sms.btssms.api_url', 'https://api.btssms.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('BTS SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -648,20 +644,19 @@ class SmsService
     {
         $apiKey = config('sms.880sms.api_key');
         $senderId = config('sms.880sms.sender_id');
-        $apiUrl = config('sms.880sms.api_url', 'https://api.880sms.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('880 SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -682,18 +677,18 @@ class SmsService
     {
         $apiKey = config('sms.bdsmartpay.api_key');
         $senderId = config('sms.bdsmartpay.sender_id');
-        $apiUrl = config('sms.bdsmartpay.api_url', 'https://api.bdsmartpay.com/sms');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('BD Smart Pay SMS credentials not configured');
 
             return false;
         }
 
         $response = Http::asForm()->post($apiUrl, [
-            'api_key' => $apiKey,
-            'senderid' => $senderId,
-            'number' => $phoneNumber,
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
             'message' => $message,
         ]);
 
@@ -715,20 +710,19 @@ class SmsService
     {
         $apiKey = config('sms.elitbuzz.api_key');
         $senderId = config('sms.elitbuzz.sender_id');
-        $apiUrl = config('sms.elitbuzz.api_url', 'https://api.elitbuzz-bd.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('Elitbuzz SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -748,22 +742,20 @@ class SmsService
     protected function sendViaSslWireless(string $phoneNumber, string $message): bool
     {
         $apiKey = config('sms.sslwireless.api_key');
-        $sid = config('sms.sslwireless.sid');
         $senderId = config('sms.sslwireless.sender_id');
-        $apiUrl = config('sms.sslwireless.api_url', 'https://smsplus.sslwireless.com/api/v3/send-sms');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $sid || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('SSL Wireless SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::asJson()->post($apiUrl, [
-            'api_token' => $apiKey,
-            'sid' => $sid,
-            'sms' => $message,
-            'msisdn' => $phoneNumber,
-            'csms_id' => uniqid(),
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -784,20 +776,19 @@ class SmsService
     {
         $apiKey = config('sms.adnsms.api_key');
         $senderId = config('sms.adnsms.sender_id');
-        $apiUrl = config('sms.adnsms.api_url', 'https://api.adnsms.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('ADN SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -818,20 +809,19 @@ class SmsService
     {
         $apiKey = config('sms.24smsbd.api_key');
         $senderId = config('sms.24smsbd.sender_id');
-        $apiUrl = config('sms.24smsbd.api_url', 'https://api.24smsbd.com/api/v1/SendSMS');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('24 SMS BD credentials not configured');
 
             return false;
         }
 
         $response = Http::asForm()->post($apiUrl, [
-            'ApiKey' => $apiKey,
-            'SenderId' => $senderId,
-            'Message' => $message,
-            'MobileNumber' => $phoneNumber,
-            'Is_Unicode' => false,
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -852,20 +842,19 @@ class SmsService
     {
         $apiKey = config('sms.smsnet.api_key');
         $senderId = config('sms.smsnet.sender_id');
-        $apiUrl = config('sms.smsnet.api_url', 'https://api.smsnet.com.bd/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('SMS Net credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -886,20 +875,19 @@ class SmsService
     {
         $apiKey = config('sms.brandsms.api_key');
         $senderId = config('sms.brandsms.sender_id');
-        $apiUrl = config('sms.brandsms.api_url', 'https://api.brandsms.com.bd/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('Brand SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -920,20 +908,19 @@ class SmsService
     {
         $apiKey = config('sms.metrotel.api_key');
         $senderId = config('sms.metrotel.sender_id');
-        $apiUrl = config('sms.metrotel.api_url', 'https://api.metrotel.com.bd/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('Metrotel SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -954,20 +941,19 @@ class SmsService
     {
         $apiKey = config('sms.dianahost.api_key');
         $senderId = config('sms.dianahost.sender_id');
-        $apiUrl = config('sms.dianahost.api_url', 'https://sms.dianahost.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('Dianahost SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -988,20 +974,19 @@ class SmsService
     {
         $apiKey = config('sms.smsinbd.api_key');
         $senderId = config('sms.smsinbd.sender_id');
-        $apiUrl = config('sms.smsinbd.api_url', 'https://api.smsinbd.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('SMS in BD credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
@@ -1022,20 +1007,19 @@ class SmsService
     {
         $apiKey = config('sms.dhakasoftbd.api_key');
         $senderId = config('sms.dhakasoftbd.sender_id');
-        $apiUrl = config('sms.dhakasoftbd.api_url', 'https://api.dhakasoftbd.com/smsapi');
+        $apiUrl = 'https://api.smsapi.com/sms.do';
 
-        if (! $apiKey || ! $senderId) {
+        if (! $apiKey) {
             Log::warning('Dhakasoft BD SMS credentials not configured');
 
             return false;
         }
 
-        $response = Http::get($apiUrl, [
-            'api_key' => $apiKey,
-            'type' => 'text',
-            'contacts' => $phoneNumber,
-            'senderid' => $senderId,
-            'msg' => $message,
+        $response = Http::asForm()->post($apiUrl, [
+            'token' => $apiKey,
+            'from' => $senderId,
+            'to' => $phoneNumber,
+            'message' => $message,
         ]);
 
         if ($response->successful()) {
