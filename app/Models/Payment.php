@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Enums\PaymentStatus;
 
 class Payment extends Model
 {
@@ -21,8 +22,8 @@ class Payment extends Model
         'payment_gateway_id',
         'amount',
         'transaction_id',
-        'status', // pending, completed, failed, refunded
-        'payment_method', // gateway, card, cash, bank_transfer
+        'status',
+        'payment_method',
         'payment_data', // JSON field for gateway response
         'payment_type', // hotspot_recharge, installation, equipment, etc.
         'paid_at',
@@ -35,6 +36,7 @@ class Payment extends Model
         'payment_data' => 'array',
         'paid_at' => 'datetime',
         'payment_date' => 'date',
+        'status' => PaymentStatus::class,
     ];
 
     public function user(): BelongsTo
@@ -59,21 +61,21 @@ class Payment extends Model
 
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === PaymentStatus::PAID;
     }
 
     // Optimized query scopes with indexed filters
     public function scopeCompleted(Builder $query): Builder
     {
-        return $query->where('status', 'completed');
+        return $query->where('status', PaymentStatus::PAID);
     }
 
     public function scopePending(Builder $query): Builder
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', PaymentStatus::UNPAID);
     }
 
-    public function scopeByStatus(Builder $query, string $status): Builder
+    public function scopeByStatus(Builder $query, PaymentStatus $status): Builder
     {
         return $query->where('status', $status);
     }

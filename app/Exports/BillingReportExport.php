@@ -95,6 +95,7 @@ class BillingReportInvoicesSheet implements FromArray, WithTitle
                 'Billing Period Start',
                 'Due Date',
                 'Payment Date',
+                'Payment Method',
             ],
         ];
 
@@ -113,6 +114,7 @@ class BillingReportInvoicesSheet implements FromArray, WithTitle
                 $invoice->billing_period_start?->format('Y-m-d') ?? 'N/A',
                 $invoice->due_date?->format('Y-m-d') ?? 'N/A',
                 $invoice->paid_at?->format('Y-m-d') ?? 'N/A',
+                $invoice->payments->last()->payment_method ?? 'N/A',
             ];
         }
 
