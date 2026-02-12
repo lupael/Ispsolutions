@@ -401,7 +401,8 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     Route::post('/ip-pools/migrate/start', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'start'])->name('ip-pools.migrate.start');
     Route::get('/ip-pools/migration-progress/{migrationId}', [\App\Http\Controllers\Panel\IpPoolMigrationController::class, 'index'])->name('ip-pools.migration-progress');
 
-    // Network Device Management - Legacy routes (kept for backward compatibility)
+
+
     // These redirect to the more organized /network/* routes
     Route::get('/mikrotik', function () {
         return redirect()->route('panel.admin.network.routers');
@@ -597,12 +598,14 @@ Route::prefix('panel/admin')->name('panel.admin.')->middleware(['auth', 'role:ad
     });
 
     // Network Devices Management
-    Route::get('/network/routers', [AdminController::class, 'routers'])->name('network.routers');
-    Route::get('/network/routers/create', [AdminController::class, 'routersCreate'])->name('network.routers.create');
-    Route::post('/network/routers', [AdminController::class, 'routersStore'])->name('network.routers.store');
-    Route::get('/network/routers/{id}/edit', [AdminController::class, 'routersEdit'])->name('network.routers.edit');
-    Route::put('/network/routers/{id}', [AdminController::class, 'routersUpdate'])->name('network.routers.update');
-    Route::delete('/network/routers/{id}', [AdminController::class, 'routersDestroy'])->middleware('password.confirm')->name('network.routers.destroy');
+    Route::resource('routers', \App\Http\Controllers\RouterController::class);
+    Route::get('/routers/{router}/configure', [\App\Http\Controllers\Panel\RouterConfigurationController::class, 'create'])->name('routers.configure');
+    Route::post('/routers/{router}/configure', [\App\Http\Controllers\Panel\RouterConfigurationController::class, 'store'])->name('routers.configure.store');
+    Route::get('/customers/{customer}/query', [\App\Http\Controllers\QueryInRouterController::class, 'getOnlineStatus'])->name('customers.query');
+    Route::post('/routers/{router}/transfer/{customer}', [\App\Http\Controllers\RouterToRadiusController::class, 'transfer'])->name('routers.transfer');
+    Route::post('/import-request/{customer_import_request}/sync', [\App\Http\Controllers\Panel\MikrotikDbSyncController::class, 'sync'])->name('import.request.sync');
+
+    // These redirect to the more organized /network/* routes
 
     // Router Provisioning Routes
     Route::prefix('routers/provision')->name('routers.provision.')->group(function () {
