@@ -17,6 +17,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Contracts\SnmpClientInterface::class, function ($app) {
             return new \App\Services\PhpSnmpClient();
         });
+
+
     }
 
     /**

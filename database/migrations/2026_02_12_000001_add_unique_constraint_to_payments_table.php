@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate-support-facades-schema;
-use Illuminate-database-schema-blueprint;
-use Illuminate-database-migrations-migration;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {

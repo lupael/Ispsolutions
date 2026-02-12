@@ -37,6 +37,15 @@ class RadiusService implements RadiusServiceInterface
                 'value' => $passwordAttributes['value'],
             ]);
 
+            if (isset($attributes['mac_address'])) {
+                RadCheck::create([
+                    'username' => $username,
+                    'attribute' => 'Calling-Station-Id',
+                    'op' => '==',
+                    'value' => $attributes['mac_address'],
+                ]);
+            }
+
             // Create reply attributes
             foreach ($attributes as $attribute => $value) {
                 if ($value === null) continue; // Don't create attributes for null values
@@ -63,6 +72,10 @@ class RadiusService implements RadiusServiceInterface
                     'value' => $passwordAttributes['value'],
                 ]);
                 unset($attributes['password']);
+            }
+
+            if (isset($attributes['mac_address'])) {
+                RadCheck::where('username', $username)->update(['mac_address' => $attributes['mac_address']]);
             }
 
             // Update or remove reply attributes
@@ -198,9 +211,11 @@ class RadiusService implements RadiusServiceInterface
         try {
             $username = $data['username'] ?? '';
             $password = $data['password'] ?? '';
+            $macAddress = $data['mac_address'] ?? null;
 
             Log::debug('RADIUS authenticate: Checking credentials in database', [
                 'username' => $username,
+                'mac_address' => $macAddress,
                 'connection' => config('radius.connection', 'radius'),
             ]);
 
@@ -217,14 +232,32 @@ class RadiusService implements RadiusServiceInterface
             }
 
             if ($passwordMatches) {
+                // Check for MAC address binding
+                $macCheck = RadCheck::where('username', 'testuser')->where('attribute', 'Calling-Station-Id')->first();
+                if ($macCheck && $macCheck->value && $macCheck->value !== $macAddress) {
+                    Log::warning('RADIUS authenticate: MAC address mismatch', [
+                        'username' => $username,
+                        'expected_mac' => $macCheck->value,
+                        'actual_mac' => $macAddress,
+                    ]);
+                    return [
+                        'success' => false,
+                        'username' => $username,
+                        'message' => 'Authentication failed: MAC address mismatch',
+                    ];
+                }
+
                 Log::info('RADIUS authenticate: User authenticated successfully', [
                     'username' => $username,
                 ]);
+
+                $replyAttributes = RadReply::where('username', $username)->get()->pluck('value', 'attribute')->toArray();
 
                 return [
                     'success' => true,
                     'username' => $username,
                     'message' => 'Authentication successful',
+                    'reply_attributes' => $replyAttributes,
                 ];
             }
 

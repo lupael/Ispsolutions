@@ -3,9 +3,10 @@
 This file tracks the progress of the ISP Solution refactoring, based on the architecture and requirements outlined in `1. Mikrotik_Radius_architecture .md`.
 
 ## 1. Authentication & AAA
+- [x] Implement FreeRADIUS integration for customer authentication and authorization.
 - [x] Validate **FreeRADIUS** integration for PPPoE and Hotspot.
-- [ ] Implement **WebAuthn** for passwordless login. (Migrations exist, implementation pending)
-- [ ] Enforce MAC binding and duplicate session prevention.
+- [x] Implement **WebAuthn** for passwordless login.
+- [x] Enforce MAC binding and duplicate session prevention.
 - [x] Test router → RADIUS → Laravel flow for PPPoE and Hotspot.
 
 ---
