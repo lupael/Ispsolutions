@@ -41,6 +41,7 @@ class PaymentGatewayService
                 'nagad' => $this->initiateNagadPayment($invoice, $config, $gateway->test_mode),
                 'sslcommerz' => $this->initiateSSLCommerzPayment($invoice, $config, $gateway->test_mode),
                 'stripe' => $this->initiateStripePayment($invoice, $config, $gateway->test_mode),
+                'aamarpay' => $this->initiateAamarPayPayment($invoice, $config, $gateway->test_mode),
                 default => throw new \Exception("Unsupported payment gateway: {$gatewaySlug}"),
             };
         } catch (\Exception $e) {

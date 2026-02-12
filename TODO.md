@@ -12,11 +12,11 @@ This file tracks the progress of the ISP Solution refactoring, based on the arch
 ---
 
 ## 2. Billing & Payments
-- [ ] Implement daily vs monthly billing cycles.
+- [x] Implement daily vs monthly billing cycles.
 - [x] Ensure prepaid/postpaid logic consistency.
-- [ ] Validate commission splits across reseller hierarchy.
-- [ ] Add SQL constraints to prevent duplicate bills/payments.
-- [ ] Test invoice generation (PDF/Excel).
+- [x] Validate commission splits across reseller hierarchy.
+- [x] Add SQL constraints to prevent duplicate bills/payments.
+- [x] Test invoice generation (PDF/Excel).
 - [x] **Monthly Billing Customers**: Auto-generate bills on the 1st of each month.
 - [x] **Network Access Termination**: Ensure service is cut off immediately upon package expiry.
 
@@ -26,7 +26,7 @@ This file tracks the progress of the ISP Solution refactoring, based on the arch
 - [x] Integrate and test each provider.
 - [x] Standardize API wrapper for SMS sending.
 - [x] Add fallback mechanism if one provider fails.
-- [ ] Log all SMS transactions for audit.
+- [x] Log all SMS transactions for audit.
 - [x] **Customer Notifications**: Send SMS before account expiry.
 
 ---

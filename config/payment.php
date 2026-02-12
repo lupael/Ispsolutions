@@ -45,6 +45,12 @@ return [
             'enabled' => env('STRIPE_ENABLED', false),
             'test_mode' => env('STRIPE_TEST_MODE', true),
         ],
+
+        'aamarpay' => [
+            'name' => 'aamarPay',
+            'enabled' => env('AAMARPAY_ENABLED', false),
+            'test_mode' => env('AAMARPAY_TEST_MODE', true),
+        ],
     ],
 
     /*
