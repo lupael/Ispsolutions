@@ -25,14 +25,18 @@ class HotspotLoginController extends Controller
     protected HotspotScenarioDetectionService $scenarioService;
     protected SmsService $smsService;
 
+    protected HotspotService $hotspotService;
+
     public function __construct(
         OtpService $otpService,
         HotspotScenarioDetectionService $scenarioService,
-        SmsService $smsService
+        SmsService $smsService,
+        HotspotService $hotspotService
     ) {
         $this->otpService = $otpService;
         $this->scenarioService = $scenarioService;
         $this->smsService = $smsService;
+        $this->hotspotService = $hotspotService;
     }
 
     /**
@@ -677,6 +681,9 @@ class HotspotLoginController extends Controller
 
         // Update user's login session
         $hotspotUser->updateLoginSession($macAddress, $sessionId);
+
+        // Sync to RADIUS
+        $this->hotspotService->syncToRadius($hotspotUser);
 
         // Store auth data in session
         session([

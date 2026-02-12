@@ -27,6 +27,11 @@ class BillingService
             // Determine billing period based on package type
             [$periodStart, $periodEnd, $dueDate] = $this->calculateBillingPeriod($package, $billingDate);
 
+            // Adjust due date for prepaid customers
+            if ($user->payment_type === 'prepaid') {
+                $dueDate = $billingDate;
+            }
+
             $invoice = Invoice::create([
                 'tenant_id' => $user->tenant_id,
                 'invoice_number' => $this->generateInvoiceNumber(),

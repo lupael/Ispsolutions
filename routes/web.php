@@ -34,9 +34,23 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login/webauthn-options', [AuthController::class, 'generateAssertionOptions'])->name('login.webauthn.options');
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+use App\Http\Controllers\Auth\WebAuthnController;
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // WebAuthn Routes
+    Route::prefix('webauthn')->name('webauthn.')->group(function () {
+        Route::get('/', [WebAuthnController::class, 'index'])->name('index');
+        Route::post('/generate-creation-options', [WebAuthnController::class, 'generateCreationOptions'])->name('generate-creation-options');
+        Route::post('/store-credential', [WebAuthnController::class, 'storeCredential'])->name('store-credential');
+        Route::post('/generate-assertion-options', [WebAuthnController::class, 'generateAssertionOptions'])->name('generate-assertion-options');
+    });
+});
+
 
 // Language switcher route (Task 6.2)
 Route::post('/language/switch', [LanguageController::class, 'switch'])->middleware('auth')->name('language.switch');

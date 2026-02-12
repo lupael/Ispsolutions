@@ -10,6 +10,28 @@ use Illuminate\Support\Str;
 
 class HotspotService
 {
+    private $radiusService;
+
+    public function __construct(RadiusService $radiusService)
+    {
+        $this->radiusService = $radiusService;
+    }
+
+    public function syncToRadius(HotspotUser $hotspotUser): bool
+    {
+        if (empty($hotspotUser->mac_address)) {
+            return false;
+        }
+
+        return $this->radiusService->createUser(
+            $hotspotUser->mac_address,
+            $hotspotUser->mac_address,
+            [
+                'Simultaneous-Use' => 1,
+            ]
+        );
+    }
+
     /**
      * Generate and send OTP for hotspot user signup
      */

@@ -1,16 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Database\Factories;
 
 use App\Models\MikrotikRouter;
-use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MikrotikRouter>
- */
 class MikrotikRouterFactory extends Factory
 {
     protected $model = MikrotikRouter::class;
@@ -18,34 +12,12 @@ class MikrotikRouterFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Router-' . $this->faker->city(),
-            'ip_address' => $this->faker->localIpv4(),
+            'name' => $this->faker->word,
+            'ip_address' => $this->faker->ipv4,
             'api_port' => 8728,
             'username' => 'admin',
-            'password' => 'password123',
+            'password' => 'password',
             'status' => 'active',
-            'tenant_id' => null,
         ];
-    }
-
-    public function active(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'active',
-        ]);
-    }
-
-    public function inactive(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'inactive',
-        ]);
-    }
-
-    public function withTenant(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'tenant_id' => Tenant::factory(),
-        ]);
     }
 }

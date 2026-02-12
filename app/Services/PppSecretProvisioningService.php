@@ -18,6 +18,29 @@ use Illuminate\Support\Facades\Log;
  */
 class PppSecretProvisioningService
 {
+    private $api;
+
+    public function setApi($api)
+    {
+        $this->api = $api;
+    }
+
+    private function getApi(MikrotikRouter $router)
+    {
+        if ($this->api) {
+            return $this->api;
+        }
+
+        return new RouterosAPI([
+            'host' => $router->ip_address,
+            'user' => $router->username,
+            'pass' => $router->password,
+            'port' => $router->api_port,
+            'timeout' => (int) config('services.mikrotik.timeout', 30),
+            'debug' => config('app.debug'),
+        ]);
+    }
+
     /**
      * Provision (create or update) a PPP secret on router
      * 
@@ -33,15 +56,7 @@ class PppSecretProvisioningService
         ?MikrotikProfile $profile = null,
         ?string $staticIp = null
     ): bool {
-        // Connect to router
-        $api = new RouterosAPI([
-            'host' => $router->ip_address,
-            'user' => $router->username,
-            'pass' => $router->password,
-            'port' => $router->api_port,
-            'timeout' => (int) config('services.mikrotik.timeout', 30),
-            'debug' => config('app.debug'),
-        ]);
+        $api = $this->getApi($router);
 
         if (!$api->connect()) {
             Log::error('Cannot connect to router for PPP secret provisioning', [
@@ -75,6 +90,11 @@ class PppSecretProvisioningService
             // Add static IP if provided
             if ($staticIp) {
                 $pppSecret['remote-address'] = $staticIp;
+            }
+
+            // Add MAC address binding if available
+            if (!empty($customer->mac_address)) {
+                $pppSecret['caller-id'] = $customer->mac_address;
             }
             
             // Add customer metadata comment (IspBills pattern)
@@ -139,14 +159,7 @@ class PppSecretProvisioningService
         MikrotikRouter $router,
         bool $delete = false
     ): bool {
-        $api = new RouterosAPI([
-            'host' => $router->ip_address,
-            'user' => $router->username,
-            'pass' => $router->password,
-            'port' => $router->api_port,
-            'timeout' => (int) config('services.mikrotik.timeout', 30),
-            'debug' => config('app.debug'),
-        ]);
+        $api = $this->getApi($router);
 
         if (!$api->connect()) {
             Log::error('Cannot connect to router for PPP secret deprovisioning', [
@@ -234,6 +247,7 @@ class PppSecretProvisioningService
         // Create profile on router
         $profileData = [
             'name' => $profile->name,
+            'on-up' => ':local sessions [/ppp active print count-only where name=$user]; :if ( $sessions > 1) do={ :log info ("disconnecting " . $user . " duplicate" ); /ppp active remove [find where (name=$user && uptime<00:00:30 )]; }',
         ];
         
         if ($profile->local_address) {

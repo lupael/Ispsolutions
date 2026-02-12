@@ -6,6 +6,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Laragear\WebAuthn\WebAuthn;
+use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -22,6 +25,18 @@ class AuthController extends Controller
      */
     public function login(Request $request): RedirectResponse
     {
+        if ($request->has('webauthn')) {
+            return $this->loginWithWebAuthn($request);
+        }
+
+        return $this->loginWithPassword($request);
+    }
+
+    /**
+     * Handle login with password.
+     */
+    protected function loginWithPassword(Request $request): RedirectResponse
+    {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
@@ -37,6 +52,53 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
+    }
+
+    /**
+     * Handle login with WebAuthn.
+     */
+    protected function loginWithWebAuthn(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'webauthn' => ['required', 'array'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
+        if (WebAuthn::validateAssertion($request->all(), $user)) {
+            Auth::login($user, $request->boolean('remember'));
+
+            $request->session()->regenerate();
+
+            return $this->redirectToDashboard();
+        }
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.failed'),
+        ]);
+    }
+
+    /**
+     * Generate WebAuthn assertion options.
+     */
+    public function generateAssertionOptions(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found.'], 404);
+        }
+
+        return WebAuthn::generateAssertion($user);
     }
 
     /**

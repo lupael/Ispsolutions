@@ -1,32 +1,27 @@
-✅ Developer TODO Checklist 
+# ISP Solution Refactor Todo List
 
-## 1. Laravel 12.x Upgrade
-- [x] All upgrade tasks completed, including dependency updates, refactoring, and validation of routes, middleware, and authentication flows.
+This file tracks the progress of the ISP Solution refactoring, based on the architecture and requirements outlined in `1. Mikrotik_Radius_architecture .md`.
 
----
-## 2. Authentication & AAA
-- [ ] Validate **FreeRADIUS** integration for PPPoE and Hotspot.
-- [ ] Implement **WebAuthn** for passwordless login.
-  - [ ] Backend routes and controller are in place.
-  - [ ] Created a test page for registration and login.
-  - [ ] Integrated WebAuthn into login and profile pages.
+## 1. Authentication & AAA
+- [x] Validate **FreeRADIUS** integration for PPPoE and Hotspot.
+- [ ] Implement **WebAuthn** for passwordless login. (Migrations exist, implementation pending)
 - [ ] Enforce MAC binding and duplicate session prevention.
-- [ ] Test router → RADIUS → Laravel flow for PPPoE and Hotspot.
+- [x] Test router → RADIUS → Laravel flow for PPPoE and Hotspot.
 
 ---
 
-## 5. Billing & Payments
+## 2. Billing & Payments
 - [ ] Implement daily vs monthly billing cycles.
-- [ ] Ensure prepaid/postpaid logic consistency.
+- [x] Ensure prepaid/postpaid logic consistency.
 - [ ] Validate commission splits across reseller hierarchy.
 - [ ] Add SQL constraints to prevent duplicate bills/payments.
 - [ ] Test invoice generation (PDF/Excel).
 - [x] **Monthly Billing Customers**: Auto-generate bills on the 1st of each month.
-- [ ] **Network Access Termination**: Ensure service is cut off immediately upon package expiry.
+- [x] **Network Access Termination**: Ensure service is cut off immediately upon package expiry.
 
 ---
 
-## 6. SMS Gateway Providers Integration
+## 3. SMS Gateway Providers Integration
 - [ ] Integrate and test each provider:
   - [ ] Maestro
   - [ ] Robi
@@ -51,7 +46,7 @@
 
 ---
 
-## 7. Payment Gateway Integration
+## 4. Payment Gateway Integration
 - [ ] **Local Gateways**:
   - [ ] bKash (Checkout, Tokenized Checkout, Standard Payment)
   - [ ] Nagad Mobile Financial Service
@@ -77,7 +72,7 @@
 
 ---
 
-## 8. Router & Network Integration
+## 5. Router & Network Integration
 - [ ] Refactor MikroTik API calls into modular services.
 - [ ] Move hardcoded IP ranges/firewall rules into config files.
 - [ ] Add error handling for router API failures.
@@ -86,37 +81,8 @@
 
 ---
 
-## 9. Database Schema & Integrity
+## 6. Database Schema & Integrity
 - [ ] Add foreign key constraints for customer–bill–payment relationships.
 - [ ] Enforce unique indexes for usernames, MAC addresses, and IPs.
 - [ ] Run migrations to clean deprecated fields.
 - [ ] Document schema with ERD diagrams.
-
----
-
-## 10. Frontend & UX
-- [ ] Align dashboards with Metronic demo1.
-- [ ] Ensure role-based visibility of menus and charts.
-- [ ] Validate Chart.js and Mapael integrations.
-- [ ] Refactor Axios calls to standardized API endpoints.
-- [ ] **Customer Registration**: Implement mobile phone number registration flow.
-
----
-
-## 11. Testing & CI/CD
-- [ ] Implement **PestPHP** or PHPUnit tests.
-- [ ] Add frontend tests with Vitest/Jest.
-- [ ] Run static analysis with PHPStan/Larastan.
-- [ ] Enforce coding standards with PHP-CS-Fixer.
-- [ ] Configure CI/CD pipeline for automated builds and tests.
-
----
-
-## 12. Documentation
-- [ ] Update developer onboarding guide with stack requirements.
-- [ ] Document Vite + Tailwind build process.
-- [ ] Provide migration notes for Laravel 12 changes.
-- [ ] Maintain Markdown checklists for each module.
-- [ ] Create Postman collection for API endpoints.
-
-

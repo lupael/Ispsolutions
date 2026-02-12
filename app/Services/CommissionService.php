@@ -63,21 +63,13 @@ class CommissionService
      */
     protected function getCommissionRate(User $operator): float
     {
-        // Default commission rates by role
-        $defaultRates = [
-            'operator' => 10.0, // 10%
-            'reseller' => 10.0, // 10% (legacy name for backward compatibility)
-            'sub-operator' => 5.0, // 5%
-            'sub-reseller' => 5.0, // 5% (legacy name for backward compatibility)
-        ];
-
         // Using hasAnyRole for better performance (single DB query)
         if ($operator->hasAnyRole(['operator', 'reseller'])) {
-            return $defaultRates['operator'];
+            return (float) config('commission.rates.operator.direct', 0);
         }
 
         if ($operator->hasAnyRole(['sub-operator', 'sub-reseller'])) {
-            return $defaultRates['sub-operator'];
+            return (float) config('commission.rates.sub-operator.direct', 0);
         }
 
         return 0;
@@ -140,7 +132,7 @@ class CommissionService
                     // Using hasAnyRole for better performance
                     if ($parentOperator->hasAnyRole(['operator', 'reseller'])) {
                         // Calculate parent operator commission (smaller percentage)
-                        $parentRate = 3.0; // 3% for parent operator
+                        $parentRate = (float) config('commission.rates.sub-operator.parent', 0);
                         $parentAmount = $payment->amount * ($parentRate / 100);
 
                         $commissions[] = Commission::create([

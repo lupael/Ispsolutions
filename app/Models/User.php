@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
+use Laragear\WebAuthn\WebAuthnAuthentication;
 
 /**
  * User Model
@@ -52,8 +54,9 @@ use Illuminate\Notifications\Notifiable;
  *    - Operators can set prices for their Sub-Operators only
  *    - Operators cannot manage or override pricing set by Admin
  */
-class User extends Authenticatable
+class User extends Authenticatable implements WebAuthnAuthenticatable
 {
+    use WebAuthnAuthentication;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use BelongsToTenant, HasAuditLog, HasFactory, Notifiable, SoftDeletes;
 
