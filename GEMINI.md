@@ -1,40 +1,22 @@
-# GEMINI.md: AI Collaboration Guide for ISPSolution
+# Gemini Development Guide for ISP Solution
 
-This document provides project-specific context and instructions for AI models (like Gemini CLI) interacting with the `ispsolution` repository.
+This document provides guidance for AI developers working on the ISP Solution project. All development must adhere to the architecture and principles outlined in `1. Mikrotik_Radius_architecture .md`.
 
-## 1. Project Overview & Persona
-* **Project Name:** ISPSolution
-* **Domain:** Internet Service Provider (ISP) Management System.
-* **Core Purpose:** Managing broadband subscribers, billing, billing alerts, inventory, and network monitoring (MikroTik integration).
-* **AI Persona:** You are a Senior Full-Stack Developer and Network Engineer. You prioritize security (especially for billing data), performance in database queries, and reliability in MikroTik API interactions.
+## Core Architecture Principles
 
-## 2. Technology Stack
-* **Backend:** PHP (Laravel Framework)
-* **Frontend:** Blade Templates / Bootstrap (AdminLte style)
-* **Database:** MySQL / MariaDB
-* **Key Integrations:** * MikroTik RouterOS API (for user authentication and speed limiting)
-    * Payment Gateways (e.g., SSLCommerz, bKash)
-    * SMS Gateways (for billing alerts)
+- **Framework**: Laravel (PHP)
+- **Authentication**: FreeRADIUS for AAA (Authentication, Authorization, Accounting).
+- **Network Integration**: MikroTik routers via RouterOS API.
+- **Database**: Dual MySQL databases (one for the application, one for FreeRADIUS).
+- **Architecture**: Service-oriented architecture. Core logic is in `app/Services`.
+- **Multi-Tenancy**: The application supports multiple tenants.
 
-## 3. Project Structure & Entry Points
-* `/app/Http/Controllers`: Contains the core business logic for subscribers and billing.
-* `/app/Models`: Database schemas (User, Subscriber, Invoice, Package).
-* `/resources/views`: UI components and dashboards.
-* `/routes`: Web and API route definitions.
-* `/config`: Application and MikroTik configuration settings.
+## Development Guidelines
 
-## 4. Coding Conventions & Standards
-* **Pattern:** Follow standard Laravel MVC patterns and PSR-12 coding standards.
-* **Security:** Always use Eloquent or Query Builder to prevent SQL injection. Ensure all billing routes have strict middleware protection.
-* **Naming:** Use CamelCase for Controllers and snake_case for database columns.
-* **MikroTik Logic:** When writing scripts for RouterOS interaction, include error handling for connection timeouts and API failures.
+1.  **Read the Architecture Document**: Before making any changes, review `1. Mikrotik_Radius_architecture .md` to understand the system design.
+2.  **Follow the TODO List**: The development progress is tracked in `TODO.md`. Follow the tasks in this file.
+3.  **Service-Oriented Approach**: For new business logic, create or use services in `app/Services`.
+4.  **Existing Conventions**: Adhere to the existing coding style, naming conventions, and architectural patterns.
+5.  **Testing**: Write tests for new features and bug fixes.
 
-## 5. Development Workflow
-* **Migrations:** Always suggest creating a migration file when suggesting database changes.
-* **Testing:** New features should include unit tests for the calculation logic (e.g., prorated billing).
-* **Commits:** Use conventional commits (e.g., `feat:`, `fix:`, `docs:`).
-
-## 6. Specific AI Instructions
-* **Billing Logic:** If asked to modify billing, ensure you account for "Expiries" and "Grace Periods."
-* **Optimization:** When generating queries for the "Subscriber List," always use pagination and eager loading to avoid N+1 issues.
-* **API Documentation:** If generating new API endpoints, provide a sample JSON response.
+By following these guidelines, we can ensure consistent and high-quality development.

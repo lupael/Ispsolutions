@@ -1,0 +1,28 @@
+# --- Huge Dependency Folders ---
+vendor/
+node_modules/
+public/build/
+public/storage/
+
+# --- Temporary & Cache Files ---
+storage/
+bootstrap/cache/
+.phpunit.cache/
+
+# --- Environment & Logs ---
+.env
+*.log
+.git/
+
+# --- Legacy/Sample Restriction ---
+# We ignore the logic inside sample but we keep the folder name
+# visible if your tool supports "structural indexing"
+sample/
+
+# --- Media & Binary ---
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.pdf
+*.zip
