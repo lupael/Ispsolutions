@@ -5,18 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Olt;
-use App\Models\Onu;
 use Illuminate\Support\Facades\Log;
 
-/**
- * OLT SNMP Multi-Vendor Service
- *
- * Provides SNMP-based discovery and monitoring for multiple OLT vendors:
- * - VSOL
- * - Huawei
- * - ZTE
- * - BDCOM
- */
 class OltSnmpService
 {
     private bool $isSnmpAvailable;
@@ -26,494 +16,69 @@ class OltSnmpService
         $this->isSnmpAvailable = extension_loaded('snmp');
     }
 
-    /**
-     * Vendor-specific OID mappings for ONU discovery and monitoring.
-     */
     private const VENDOR_OIDS = [
         'vsol' => [
-            'onu_list' => '.1.3.6.1.4.1.13464.1.11.4.1.1.2',      // ontSN
-            'onu_status' => '.1.3.6.1.4.1.13464.1.11.4.1.1.3',      // ontStatus
-            'onu_online_status' => '.1.3.6.1.4.1.13464.1.11.4.1.1.3', // ontStatus
-            'onu_rx_power' => '.1.3.6.1.4.1.13464.1.11.4.1.1.22',     // ontReceivedOpticalPower
-            'onu_tx_power' => '.1.3.6.1.4.1.13464.1.11.4.1.1.23',     // ontMeanOpticalLaunchPower
-            'onu_distance' => '.1.3.6.1.4.1.13464.1.11.4.1.1.32',     // ontDistance
-            'onu_model' => '.1.3.6.1.4.1.17409.2.3.4.1.1.10',        // onuChipVendor
-            'onu_hw_version' => '.1.3.6.1.4.1.17409.2.3.4.1.1.12',     // onuChipVersion
-            'onu_sw_version' => '.1.3.6.1.4.1.17409.2.3.4.1.1.13',     // onuSoftwareVersion
-        ],
-        'huawei' => [
-            'onu_list' => '.1.3.6.1.4.1.2011.6.128.1.1.2.43.1.3', // ONU serial numbers
-            'onu_status' => '.1.3.6.1.4.1.2011.6.128.1.1.2.46.1.15', // ONU run state
-            'onu_rx_power' => '.1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4', // RX optical power
-            'onu_tx_power' => '.1.3.6.1.4.1.2011.6.128.1.1.2.51.1.6', // TX optical power
-            'onu_distance' => '.1.3.6.1.4.1.2011.6.128.1.1.2.53.1.1', // Distance
-            'onu_model' => '.1.3.6.1.4.1.2011.5.104.1.1.1.1.2',     // hwGonuEquipId
-            'onu_hw_version' => '.1.3.6.1.4.1.2011.5.104.1.1.1.1.14',    // hwGonuChipVendor
-            'onu_sw_version' => '.1.3.6.1.4.1.2011.5.104.1.1.1.1.8',     // hwGonuSwVersion (assumption)
-        ],
-        'zte' => [
-            'onu_list' => '.1.3.6.1.4.1.3902.1012.3.28.1.1.5', // ONU serial numbers
-            'onu_status' => '.1.3.6.1.4.1.3902.1012.3.28.2.1.5', // ONU status
-            'onu_rx_power' => '.1.3.6.1.4.1.3902.1012.3.50.12.1.1.10', // RX power
-            'onu_tx_power' => '.1.3.6.1.4.1.3902.1012.3.50.12.1.1.9', // TX power
-            'onu_distance' => '.1.3.6.1.4.1.3902.1012.3.28.2.1.9', // Distance
-            'onu_model' => '.1.3.6.1.4.1.3902.1082.120.1.1.1.1.2',    // zxAnPonRmOnuModel
-            'onu_hw_version' => '.1.3.6.1.4.1.3902.1082.120.1.1.1.1.3',    // zxAnPonRmOnuHwVersion
-            'onu_sw_version' => '.1.3.6.1.4.1.3902.1082.120.1.1.1.1.4',    // zxAnPonRmOnuSwVersion
-        ],
-        'bdcom' => [
-            'onu_list' => '.1.3.6.1.4.1.3320.101.11.1.1.3', // ONU serial numbers
-            'onu_status' => '.1.3.6.1.4.1.3320.101.11.1.1.7', // ONU status
-            'onu_rx_power' => '.1.3.6.1.4.1.3320.101.108.1.1.9', // RX power
-            'onu_tx_power' => '.1.3.6.1.4.1.3320.101.108.1.1.10', // TX power
-            'onu_distance' => '.1.3.6.1.4.1.3320.101.11.1.1.8', // Distance
-            'onu_model' => '.1.3.6.1.4.1.3320.101.10.1.1.2',     // ONU Model ID
-            'onu_hw_version' => '.1.3.6.1.4.1.3320.101.10.1.1.1',     // ONU Vendor ID
-            'onu_sw_version' => null, // Not available
+            'onu_list'          => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.3', 
+            'onu_status'        => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.9',
+            'onu_rx_power'      => '.1.3.6.1.4.1.37950.1.1.5.12.2.1.8.1.3', 
+            'onu_tx_power'      => '.1.3.6.1.4.1.37950.1.1.5.12.2.1.8.1.7', 
+            'onu_distance'      => '.1.3.6.1.4.1.37950.1.1.5.12.2.1.4.1.2', 
+            'onu_model'         => '.1.3.6.1.4.1.37950.1.1.5.12.1.25.1.5', 
         ],
     ];
 
-    /**
-     * Discover ONUs via SNMP OID walk.
-     *
-     * @return array Array of discovered ONUs with their details
-     */
     public function discoverOnusViaSNMP(Olt $olt): array
     {
+        if (!$this->isSnmpAvailable || !$olt->snmp_community) return [];
+
         try {
-            if (! $this->canUseSNMP($olt)) {
-                throw new \RuntimeException('SNMP is not configured for this OLT');
-            }
+            // Decrypt the community string ("billing")
+            $community = decrypt($olt->snmp_community);
+            $vendor = strtolower($olt->brand ?? 'vsol'); 
+            $oids = self::VENDOR_OIDS[$vendor] ?? self::VENDOR_OIDS['vsol'];
 
-            $vendor = \App\Helpers\OltVendorDetector::detect($olt);
-            $oids = self::VENDOR_OIDS[$vendor] ?? null;
+            Log::info("Polling OLT {$olt->ip_address} with community: {$community}");
 
-            if (! $oids) {
-                throw new \RuntimeException("Unsupported vendor: {$vendor}");
-            }
+            $onuSerials = @snmp2_real_walk($olt->ip_address, $community, $oids['onu_list'], 1000000, 3);
 
-            // Perform SNMP walk for ONU list
-            $onuSerials = $this->snmpWalk($olt, $oids['onu_list']);
-
-            if (empty($onuSerials)) {
-                Log::warning('No ONUs discovered via SNMP', [
-                    'olt_id' => $olt->id,
-                    'vendor' => $vendor,
-                ]);
-
+            if (!$onuSerials) {
+                Log::warning("SNMP Walk returned no data for {$olt->ip_address}. Check OLT Access Lists.");
                 return [];
             }
 
-            $discoveredOnus = [];
-
+            $onus = [];
             foreach ($onuSerials as $index => $serial) {
-                $onu = [
-                    'serial_number' => $this->cleanSerialNumber($serial),
-                    'pon_port' => $this->extractPonPort($index, $vendor),
-                    'onu_id' => $this->extractOnuId($index, $vendor),
-                    'status' => 'discovered',
-                    'signal_rx' => null,
-                    'signal_tx' => null,
-                    'distance' => null,
-                    'model' => null,
-                    'hw_version' => null,
-                    'sw_version' => null,
+                $parts = explode('.', $index);
+                $onuId = (int) end($parts);
+                $port = (string) ($parts[count($parts) - 2] ?? '0');
+
+                $onus[] = [
+                    'serial_number' => $this->cleanValue($serial),
+                    'pon_port'      => $port,
+                    'onu_id'        => $onuId,
+                    'status'        => 'online',
+                    'signal_rx'     => $this->convertPower(@snmp2_get($olt->ip_address, $community, $oids['onu_rx_power'].'.'.$index)),
+                    'signal_tx'     => $this->convertPower(@snmp2_get($olt->ip_address, $community, $oids['onu_tx_power'].'.'.$index)),
+                    'distance'      => (int) @snmp2_get($olt->ip_address, $community, $oids['onu_distance'].'.'.$index),
+                    'model'         => $this->cleanValue((string)@snmp2_get($olt->ip_address, $community, $oids['onu_model'].'.'.$index)),
                 ];
-
-                // Try to get additional details
-                $status = $this->getSnmpValue($olt, $oids['onu_online_status'] . '.' . $index);
-                $onu['status'] = $this->parseOnuStatus($status, $vendor);
-
-                $rxPower = $this->getSnmpValue($olt, $oids['onu_rx_power'] . '.' . $index);
-                $onu['signal_rx'] = $this->convertOpticalPower($rxPower, $vendor);
-
-                $txPower = $this->getSnmpValue($olt, $oids['onu_tx_power'] . '.' . $index);
-                $onu['signal_tx'] = $this->convertOpticalPower($txPower, $vendor);
-
-                $distance = $this->getSnmpValue($olt, $oids['onu_distance'] . '.' . $index);
-                $onu['distance'] = $this->convertDistance($distance, $vendor);
-
-                // Get vendor specific details
-                if (isset($oids['onu_model'])) {
-                    $model = $this->getSnmpValue($olt, $oids['onu_model'] . '.' . $index);
-                    $onu['model'] = $this->cleanSnmpString($model);
-                }
-
-                if (isset($oids['onu_hw_version'])) {
-                    $hwVersion = $this->getSnmpValue($olt, $oids['onu_hw_version'] . '.' . $index);
-                    $onu['hw_version'] = $this->cleanSnmpString($hwVersion);
-                }
-
-                if (isset($oids['onu_sw_version'])) {
-                    $swVersion = $this->getSnmpValue($olt, $oids['onu_sw_version'] . '.' . $index);
-                    $onu['sw_version'] = $this->cleanSnmpString($swVersion);
-                }
-
-                $discoveredOnus[] = $onu;
             }
-
-            Log::info('Discovered ONUs via SNMP', [
-                'olt_id' => $olt->id,
-                'vendor' => $vendor,
-                'count' => count($discoveredOnus),
-            ]);
-
-            return $discoveredOnus;
-
+            return $onus;
         } catch (\Exception $e) {
-            Log::error('Error discovering ONUs via SNMP', [
-                'olt_id' => $olt->id,
-                'error' => $e->getMessage(),
-            ]);
-
+            Log::error("SNMP Discovery Error: " . $e->getMessage());
             return [];
         }
     }
 
-    /**
-     * Get ONU signal levels (alias for getOnuOpticalPower for backward compatibility).
-     *
-     * Note: The $olt parameter is kept for backward compatibility with code that
-     * passes it, but is not used. The OLT relationship is accessed via $onu->olt.
-     *
-     * @param Olt $olt OLT instance (unused, kept for backward compatibility)
-     * @return array Array with status, rx_power, tx_power, and distance
-     */
-    public function getOnuSignalLevels(Onu $onu): array
-    {
-        $powerData = $this->getOnuOpticalPower($onu); // Pass only the ONU
-
-        return [
-            'status' => $onu->status ?? 'unknown',
-            'rx_power' => $powerData['rx_power'],
-            'tx_power' => $powerData['tx_power'],
-            'distance' => $powerData['distance'],
-        ];
+    private function cleanValue($val): string {
+        return strtoupper(str_replace(['STRING: ', 'Hex-STRING: ', ' ', '"'], '', (string)$val));
     }
 
-    /**
-     * Get real-time RX/TX power levels for an ONU.
-     *
-     * @return array Array with rx_power, tx_power, and distance
-     */
-    public function getOnuOpticalPower(Onu $onu): array
-    {
-        try {
-            $olt = $onu->olt;
-
-            if (! $this->canUseSNMP($olt)) {
-                throw new \RuntimeException('SNMP is not configured for this OLT');
-            }
-
-            $vendor = \App\Helpers\OltVendorDetector::detect($olt);
-            $oids = self::VENDOR_OIDS[$vendor] ?? null;
-
-            if (! $oids) {
-                throw new \RuntimeException("Unsupported vendor: {$vendor}");
-            }
-
-            // Build SNMP index from PON port and ONU ID
-            $index = $this->buildSnmpIndex($onu->pon_port, $onu->onu_id, $vendor);
-
-            $result = [
-                'rx_power' => null,
-                'tx_power' => null,
-                'distance' => null,
-            ];
-
-            // Get RX power
-            $rxPower = $this->getSnmpValue($olt, $oids['onu_rx_power'] . '.' . $index);
-            $result['rx_power'] = $this->convertOpticalPower($rxPower, $vendor);
-
-            // Get TX power
-            $txPower = $this->getSnmpValue($olt, $oids['onu_tx_power'] . '.' . $index);
-            $result['tx_power'] = $this->convertOpticalPower($txPower, $vendor);
-
-            // Get distance
-            $distance = $this->getSnmpValue($olt, $oids['onu_distance'] . '.' . $index);
-            $result['distance'] = $this->convertDistance($distance, $vendor);
-
-            return $result;
-
-        } catch (\Exception $e) {
-            Log::error('Error getting ONU optical power', [
-                'onu_id' => $onu->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'rx_power' => null,
-                'tx_power' => null,
-                'distance' => null,
-            ];
-        }
-    }
-
-    /**
-     * Check if SNMP can be used for this OLT.
-     */
-    private function canUseSNMP(Olt $olt): bool
-    {
-        return ! empty($olt->snmp_community)
-            && ! empty($olt->snmp_version)
-            && in_array(strtolower($olt->management_protocol ?? ''), ['snmp', 'both']);
-    }
-
-    /**
-     * Perform SNMP walk.
-     *
-     * NOTE: This requires the PHP SNMP extension to be installed.
-     * If the extension is not available, this will return an empty array.
-     */
-    private function snmpWalk(Olt $olt, string $oid): array
-    {
-        // Check if SNMP extension is available
-        if (!$this->isSnmpAvailable) {
-            Log::warning('SNMP extension not loaded, cannot perform SNMP walk', [
-                'olt_id' => $olt->id,
-                'oid' => $oid,
-            ]);
-
-            return [];
-        }
-
-        try {
-            $version = strtolower($olt->snmp_version ?? 'v2c');
-            $community = $olt->snmp_community;
-            $port = $olt->snmp_port ?? 161;
-
-            $result = match ($version) {
-                'v1' => @snmprealwalk($olt->ip_address, $community, $oid, 1000000, 3),
-                'v2c', 'v2' => @snmp2_real_walk($olt->ip_address, $community, $oid, 1000000, 3),
-                'v3' => [], // SNMPv3 requires additional parameters - not implemented yet
-                default => [],
-            };
-
-            if ($result === false) {
-                Log::warning('SNMP walk failed', [
-                    'olt_id' => $olt->id,
-                    'oid' => $oid,
-                    'error' => error_get_last()['message'] ?? 'Unknown error',
-                ]);
-
-                return [];
-            }
-
-            return $result ?: [];
-        } catch (\Exception $e) {
-            Log::error('SNMP walk exception', [
-                'olt_id' => $olt->id,
-                'oid' => $oid,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [];
-        }
-    }
-
-    /**
-     * Perform SNMP get.
-     *
-     * NOTE: This requires the PHP SNMP extension to be installed.
-     * If the extension is not available, this will return null.
-     */
-    private function snmpGet(Olt $olt, string $oid): mixed
-    {
-        // Check if SNMP extension is available
-        if (!$this->isSnmpAvailable) {
-            Log::warning('SNMP extension not loaded, cannot perform SNMP get', [
-                'olt_id' => $olt->id,
-                'oid' => $oid,
-            ]);
-
-            return null;
-        }
-
-        try {
-            $version = strtolower($olt->snmp_version ?? 'v2c');
-            $community = $olt->snmp_community;
-            $port = $olt->snmp_port ?? 161;
-
-            $result = match ($version) {
-                'v1' => @snmpget($olt->ip_address, $community, $oid, 1000000, 3),
-                'v2c', 'v2' => @snmp2_get($olt->ip_address, $community, $oid, 1000000, 3),
-                'v3' => null, // SNMPv3 requires additional parameters - not implemented yet
-                default => null,
-            };
-
-            if ($result === false) {
-                Log::warning('SNMP get failed', [
-                    'olt_id' => $olt->id,
-                    'oid' => $oid,
-                    'error' => error_get_last()['message'] ?? 'Unknown error',
-                ]);
-
-                return null;
-            }
-
-            return $result;
-        } catch (\Exception $e) {
-            Log::error('SNMP get exception', [
-                'olt_id' => $olt->id,
-                'oid' => $oid,
-                'error' => $e->getMessage(),
-            ]);
-
-            return null;
-        }
-    }
-
-    /**
-     * Wrapper for snmpGet with built-in error handling.
-     */
-    private function getSnmpValue(Olt $olt, string $oid): mixed
-    {
-        try {
-            $value = $this->snmpGet($olt, $oid);
-            if ($value !== null && $value !== false) {
-                return $value;
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to get SNMP value', [
-                'olt_id' => $olt->id,
-                'oid' => $oid,
-                'error' => $e->getMessage(),
-            ]);
-        }
-        return null;
-    }
-
-    /**
-     * Clean serial number from SNMP response.
-     */
-    private function cleanSerialNumber(string $serial): string
-    {
-        // Remove common prefixes and clean the serial
-        $serial = trim($serial);
-        $serial = preg_replace('/^(STRING: |HEX-STRING: )/', '', $serial);
-        $serial = str_replace(' ', '', $serial);
-
-        return strtoupper($serial);
-    }
-
-    /**
-     * Extract PON port from SNMP index.
-     */
-    private function extractPonPort(string $index, string $vendor): string
-    {
-        // Vendor-specific index parsing
-        // This is simplified - real implementation varies by vendor
-
-        $parts = explode('.', $index);
-
-        return match ($vendor) {
-            'vsol' => ($parts[2] ?? '0') . '/' . ($parts[3] ?? '0'),
-            'huawei' => ($parts[0] ?? '0') . '/' . ($parts[1] ?? '0'),
-            'zte' => $parts[0] ?? '0/0',
-            'bdcom' => $parts[0] ?? '0/0',
-            default => '0/0',
-        };
-    }
-
-    /**
-     * Extract ONU ID from SNMP index.
-     */
-    private function extractOnuId(string $index, string $vendor): int
-    {
-        $parts = explode('.', $index);
-
-        return (int) ($parts[2] ?? 0);
-    }
-
-    /**
-     * Build SNMP index from PON port and ONU ID.
-     *
-     * @throws \RuntimeException If PON port format is invalid and cannot be parsed
-     */
-    private function buildSnmpIndex(string $ponPort, int $onuId, string $vendor): string
-    {
-        // Ensure ponPort is a string and has the expected format
-        $ponPort = (string) $ponPort;
-        $parts = explode('/', $ponPort);
-
-        // Validate port format (should have at least 2 parts: slot/port or chassis/slot/port)
-        if (count($parts) < 2) {
-            $message = "Invalid PON port format for SNMP index: {$ponPort}. Expected format: slot/port (e.g., '0/1')";
-            Log::error($message, [
-                'pon_port' => $ponPort,
-                'vendor' => $vendor,
-                'onu_id' => $onuId,
-            ]);
-            throw new \RuntimeException($message);
-        }
-
-        return match ($vendor) {
-            'vsol' => "{$parts[0]}/{$parts[1]}/{$onuId}",
-            'huawei' => "{$parts[0]}.{$parts[1]}.{$onuId}",
-            'zte' => "{$parts[0]}.{$parts[1]}.{$onuId}",
-            'bdcom' => "{$parts[0]}.{$parts[1]}.{$onuId}",
-            default => "{$parts[0]}.{$parts[1]}.{$onuId}",
-        };
-    }
-
-    /**
-     * Parse ONU status from SNMP response.
-     *
-     * @param mixed $status
-     */
-    private function parseOnuStatus($status, string $vendor): string
-    {
-        if ($status === null) {
-            return 'unknown';
-        }
-
-        // Vendor-specific status code parsing
-        return match ($vendor) {
-            'vsol' => $status == 1 ? 'online' : 'offline',
-            'huawei' => $status == 1 ? 'online' : 'offline',
-            'zte' => $status == 1 ? 'online' : 'offline',
-            'bdcom' => $status == 1 ? 'online' : 'offline',
-            default => 'unknown',
-        };
-    }
-
-    /**
-     * Convert optical power value to dBm.
-     *
-     * @param mixed $value
-     */
-    private function convertOpticalPower($value, string $vendor): ?float
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        // Vendor-specific power conversion
-        // Most vendors return power in 0.01 dBm units
-        return (float) $value / 100;
-    }
-
-    /**
-     * Convert distance value to meters.
-     *
-     * @param mixed $value
-     */
-    private function convertDistance($value, string $vendor): ?int
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        // Vendor-specific distance conversion
-        return (int) $value;
-    }
-    private function cleanSnmpString(string $string): string
-    {
-        // Remove common prefixes and clean the string
-        $string = trim($string);
-        $string = preg_replace('/^(STRING: |HEX-STRING: )/', '', $string);
-        $string = str_replace('"', '', $string);
-
-        return trim($string);
+    private function convertPower($value): ?float {
+        if ($value === false || $value === null) return null;
+        $val = (float) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+        if (!$val || $val == 65535) return null;
+        // V-SOL scaling logic
+        return ($val > 32767) ? ($val - 65536) / 100 : $val / 100;
     }
 }

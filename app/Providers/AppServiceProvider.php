@@ -13,9 +13,20 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Bind SNMP client interface to the PHP implementation
-        // Uses PHP SNMP extension when available; tests can mock SnmpClientInterface.
         $this->app->singleton(\App\Contracts\SnmpClientInterface::class, function ($app) {
             return new \App\Services\PhpSnmpClient();
+        });
+
+        // CRITICAL: Bind OltServiceInterface to OltService implementation
+        // This fixes the TypeError in your Artisan commands
+        $this->app->bind(
+            \App\Contracts\OltServiceInterface::class,
+            \App\Services\OltService::class
+        );
+
+        // Singleton for OltSnmpService to handle V-SOL OIDs
+        $this->app->singleton(\App\Services\OltSnmpService::class, function ($app) {
+            return new \App\Services\OltSnmpService();
         });
     }
 
@@ -39,18 +50,6 @@ class AppServiceProvider extends ServiceProvider
             \App\Listeners\ImportPppCustomersListener::class
         );
 
-        // Note: UserCreated and PasswordChanged events need to be created
-        // and fired from the appropriate places (CustomerController, AuthController, etc.)
-        // Uncomment these when those events are implemented:
-        // \Illuminate\Support\Facades\Event::listen(
-        //     \App\Events\UserCreated::class,
-        //     \App\Listeners\ProvisionUserAfterCreation::class
-        // );
-        // \Illuminate\Support\Facades\Event::listen(
-        //     \App\Events\PasswordChanged::class,
-        //     \App\Listeners\UpdateRouterOnPasswordChange::class
-        // );
-
         // Register policies
         Gate::policy(\App\Models\User::class, \App\Policies\CustomerPolicy::class);
         Gate::policy(\App\Models\MikrotikRouter::class, \App\Policies\MikrotikRouterPolicy::class);
@@ -69,21 +68,17 @@ class AppServiceProvider extends ServiceProvider
 
         // Define authorization gates for new features
         Gate::define('view-audit-logs', function ($user) {
-            // Only allow admins, super admins, developers, and operators to view audit logs
-            return $user->operator_level <= 30; // Developer, Super Admin, Admin, Operator
+            return $user->operator_level <= 30; 
         });
 
         Gate::define('manage-api-keys', function ($user) {
-            // Only allow admins and higher to manage API keys
-            return $user->operator_level <= 20; // Developer, Super Admin, Admin
+            return $user->operator_level <= 20; 
         });
 
         Gate::define('view-analytics', function ($user) {
-            // Only allow operators and higher to view analytics
-            return $user->operator_level <= 40; // Developer, Super Admin, Admin, Operator, Sub-operator
+            return $user->operator_level <= 40; 
         });
 
-        // Define gates for network device management
         Gate::define('manage-network-devices', function ($user) {
             return $this->canManageResource($user, 'network.manage');
         });
@@ -95,12 +90,18 @@ class AppServiceProvider extends ServiceProvider
             ]);
         }
 
+        // Add the sync command to the console
+        if (class_exists(\App\Console\Commands\OltSyncOnus::class)) {
+            $this->commands([
+                \App\Console\Commands\OltSyncOnus::class,
+            ]);
+        }
+
         Gate::define('manage-packages', function ($user) {
             return $this->canManageResource($user, 'packages.manage');
         });
 
         Gate::define('set-suboperator-pricing', function ($user) {
-            // Operators can set prices for their Sub-Operators
             return $user->isOperatorRole()
                 || $user->isAdmin()
                 || $user->isDeveloper()
@@ -108,15 +109,12 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('manage-customers', function ($user) {
-            // Allow admins and higher to manage customers
-            // This gate is used by routes requiring customer management access
-            return $user->operator_level <= 20; // Developer, Super Admin, Admin
+            return $user->operator_level <= 20;
         });
     }
 
     /**
      * Helper method to check if user can manage a resource.
-     * Only Admin can manage by default. Staff/Manager can manage if they have explicit permission.
      */
     private function canManageResource($user, string $permission): bool
     {
