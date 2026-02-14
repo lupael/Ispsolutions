@@ -1,9 +1,9 @@
 # ISP Solution Refactor Todo List
 
-This file tracks the progress of the ISP Solution refactoring, based on the architecture and requirements outlined in `1. Mikrotik_Radius_architecture .md`.
+This file tracks the progress of the ISP Solution refactoring, based on the architecture and requirements outlined in `1. Mikrotik_Radius_architecture.md`.
 
 ## 1. Authentication & AAA
-- [ ] Implement FreeRADIUS integration for customer authentication and authorization as per mentioned at 1. Mikrotik_Radius_architecture .md.
+- [ ] Implement FreeRADIUS integration for customer authentication and authorization as per mentioned at `1. Mikrotik_Radius_architecture.md`
 - [ ] Validate **FreeRADIUS** integration for PPPoE and Hotspot.
 - [x] Implement **WebAuthn** for passwordless login.
 - [x] Enforce MAC binding and duplicate session prevention.
@@ -58,7 +58,7 @@ This file tracks the progress of the ISP Solution refactoring, based on the arch
 ---
 
 ## 5. Router & Network Integration
-- [ ] Refactor MikroTik API calls into modular services (Must follow requirment mentioned at 1. Mikrotik_Radius_architecture .md).
+- [ ] Refactor MikroTik API calls into modular services, Must follow requirment mentioned at `1. Mikrotik_Radius_architecture.md`.
 - [ ] Move hardcoded IP ranges/firewall rules into config files.
 - [ ] Add error handling for router API failures.
 - [ ] Validate suspended user blocking via firewall rules.
@@ -67,7 +67,7 @@ This file tracks the progress of the ISP Solution refactoring, based on the arch
 ---
 
 ## 6. Database Schema & Integrity
-- [ ] Add foreign key constraints for customer–bill–payment relationships.
+- [ ] Add foreign key constraints for customer �bill–payment relationships.
 - [ ] Enforce unique indexes for usernames, MAC addresses, and IPs.
 - [ ] Run migrations to clean deprecated fields.
 - [ ] Document schema with ERD diagrams.
