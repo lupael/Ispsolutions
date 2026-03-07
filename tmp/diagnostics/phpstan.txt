@@ -1,0 +1,28 @@
+Note: Using configuration file /home/runner/work/Ispsolutions/Ispsolutions/phpstan.neon.
+::error file=app/Console/Commands/MonitoringCollect.php,line=65,col=0::Syntax error, unexpected T_TRY, expecting ';' or '{' on line 65
+::error ::Internal error: An option named "version" already exists. while analysing file /home/runner/work/Ispsolutions/Ispsolutions/app/Console/Commands/OltSnmpTest.php%0A%0ARun PHPStan with -v option and post the stack trace to:%0Ahttps://github.com/larastan/larastan/issues/new?template=bug-report.md%0A
+ ------ ----------------------------------------------------------------- 
+  Line   app/Console/Commands/MonitoringCollect.php                       
+ ------ ----------------------------------------------------------------- 
+  65     Syntax error, unexpected T_TRY, expecting ';' or '{' on line 65  
+ ------ ----------------------------------------------------------------- 
+
+ -- --------------------------------------------------------------------------- 
+     Error                                                                      
+ -- --------------------------------------------------------------------------- 
+     Internal error: An option named "version" already exists. while analysing  
+     file                                                                       
+     /home/runner/work/Ispsolutions/Ispsolutions/app/Console/Commands/OltSnmpT  
+     est.php                                                                    
+                                                                                
+     Run PHPStan with -v option and post the stack trace to:                    
+     https://github.com/larastan/larastan/issues/new?template=bug-report.md     
+                                                                                
+ -- --------------------------------------------------------------------------- 
+
+ [ERROR] Found 2 errors                                                         
+
+⚠️  Result is incomplete because of severe errors. ⚠️
+   Fix these errors first and then re-run PHPStan
+   to get all reported errors.
+
