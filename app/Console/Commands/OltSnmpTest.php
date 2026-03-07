@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 
 class OltSnmpTest extends Command
 {
-    protected $signature = 'olt:snmp-test {--olt-id=} {--host=} {--community=} {--version=}';
+    protected $signature = 'olt:snmp-test {--olt-id=} {--host=} {--community=} {--snmp-version=}';
 
     protected $description = 'Run quick SNMP checks against an OLT to see which vendor OIDs are available.';
 
@@ -19,7 +19,7 @@ class OltSnmpTest extends Command
         $oltId = $this->option('olt-id');
         $host = $this->option('host');
         $community = $this->option('community');
-        $version = $this->option('version');
+        $version = $this->option('snmp-version');
 
         $oltDevice = null;
         if ($oltId) {
