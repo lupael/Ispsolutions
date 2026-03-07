@@ -1,0 +1,123 @@
+name: "Deep Project Investigation & Auto-Repair"
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Runs daily at 6 AM UTC
+  workflow_dispatch:     # Allows manual trigger via GitHub Actions UI
+
+env:
+  PHP_VERSION: '8.4'
+
+jobs:
+  deep-maintenance:
+    name: 🤖 Autonomous Architect Cycle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Environment & Dependencies
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          tools: composer:v2
+
+      - name: Initialize App & Database
+        run: |
+          composer config platform.php ${{ env.PHP_VERSION }}
+          composer update --no-progress --ignore-platform-req=php
+          touch database/database.sqlite
+          php artisan migrate:fresh --force
+        shell: bash
+
+      - name: Initialize Gemini CLI
+        run: |
+          npm install -g @google/gemini-cli
+          mkdir -p ~/.gemini
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > ~/.gemini/.env
+        shell: bash
+
+      - name: 1. Deep Investigation
+        run: |
+          mkdir -p Document/investigations/$(date +%Y-%m-%d)
+          
+          # Generalized Universal Prompt
+          UNIVERSAL_SCAN="
+            Act as a Senior Laravel Architect. 
+            Scan the entire project for technical debt, architectural flaws, missing files (like factories or traits), and PHP 8.4/Laravel 12 upgrade issues. 
+            Generate a strict, prioritized TODO checklist of fixes in Document/investigations/$(date +%Y-%m-%d)/analysis.md.
+          "
+          
+          # Try 3.1 Flash first, fallback to 2.5 Pro
+          gemini -y -m gemini-3.1-flash -p "$UNIVERSAL_SCAN" || \
+          gemini -y -m gemini-2.5-pro -p "$UNIVERSAL_SCAN"
+        shell: bash
+
+      - name: 2. Autonomous Repair (Any Bug)
+        run: |
+          # The agent dynamically fixes whatever it found in Step 1
+          UNIVERSAL_REPAIR="
+            ACT AS AN AUTONOMOUS DEVELOPER.
+            Read Document/investigations/$(date +%Y-%m-%d)/analysis.md.
+            
+            TASKS:
+            1. Execute the items on your TODO checklist to resolve the architectural flaws or bugs you found.
+            2. If you are fixing tests, ensure you address the root cause (e.g., missing database traits, missing factories, or unmocked routes).
+            3. Overwrite files using the 'write_file' tool.
+            4. Log exactly what you changed in Document/investigations/$(date +%Y-%m-%d)/execution_log.md.
+          "
+
+          gemini -y -m gemini-3.1-flash -p "$UNIVERSAL_REPAIR" || \
+          gemini -y -m gemini-2.5-pro -p "$UNIVERSAL_REPAIR"
+        shell: bash
+
+      - name: 3. Verify & Self-Correct
+        run: |
+          composer dump-autoload
+          
+          # Run tests. If they fail, capture the exact output to feed back to the AI.
+          if ! vendor/bin/phpunit --colors=never > phpunit_output.txt 2>&1; then
+            echo "Tests failed. Triggering Self-Correction loop..."
+            
+            # Capture the top 200 lines to avoid CLI 'Argument list too long' crashes
+            ERROR_LOG=$(head -n 200 phpunit_output.txt)
+            
+            # Send the exact crash log back to Gemini 2.5 Pro for debugging
+            gemini -y -m gemini-2.5-pro -p "The tests failed. Analyze this exact output: $ERROR_LOG. Use 'write_file' to fix these remaining errors immediately."
+            
+            # Re-run tests after the AI's second attempt
+            vendor/bin/phpunit --colors=never
+          else
+            echo "All tests passed successfully."
+          fi
+        shell: bash
+
+      - name: 4. PR & Finalize
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git config user.name "Gemini Architect"
+          git config user.email "gemini-bot@google.com"
+          
+          # Only create PR if the AI actually changed code
+          if [ -n "$(git status --porcelain)" ]; then
+            # Added Unix timestamp to branch name to allow multiple manual runs per day safely
+            BRANCH_NAME="ai/maintenance-$(date +%Y-%m-%d)-$(date +%s)"
+            git checkout -b $BRANCH_NAME
+            git add .
+            git commit -m "docs & fix: daily automated maintenance"
+            git push origin $BRANCH_NAME
+            
+            # Create PR and Auto-Merge
+            PR_URL=$(gh pr create --title "🤖 Maintenance & Repair: $(date +%Y-%m-%d)" --body "Deep investigation report and automated test repairs applied via dynamic bug analysis." --base main --head $BRANCH_NAME)
+            gh pr merge $PR_URL --admin --squash --delete-branch
+          else
+            echo "No changes detected. Codebase is clean. Skipping PR."
+          fi
+        shell: bash
