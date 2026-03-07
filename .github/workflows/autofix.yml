@@ -3,6 +3,7 @@ name: "Autonomous Laravel Agent (Full Auto)"
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 on:
   push:
@@ -27,9 +28,11 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, xml, bcmath, curl, intl, sqlite3, zip, gd
           tools: composer:v2
 
       - name: Run Diagnostics
+          # We generate the logs that Gemini will use as its "mission briefing"
         id: diagnostics
         run: |
           composer config platform.php 8.4.0
@@ -43,8 +46,10 @@ jobs:
         if: env.HAS_ERRORS == 'true'
         run: |
           npm install -g @google/gemini-cli
-          # Feed logs to Gemini and force-write the fixes to the workspace
-          gemini -p "Fix the PHP 8.4 compatibility errors found in tmp/diagnostics/ for the files in this repo. Apply fixes directly." --write
+          # --prompt (-p): Headless mode
+          # --yolo (-y): Auto-approve all file writes/shell commands
+          # --approval-mode yolo: Explicitly allows the agent to modify the workspace
+          gemini -p "Fix the PHP 8.4 compatibility errors found in tmp/diagnostics/ for the files in this repo. Focus on resolving the static analysis and test failures." --yolo --approval-mode yolo
         env:
           GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
@@ -57,15 +62,16 @@ jobs:
           commit-message: "fix: autonomous AI repair for PHP 8.4"
           branch: "ai/fix-applied-${{ github.run_id }}"
           title: "🤖 Autonomous Fix Applied"
-          body: "This PR was generated and applied by Gemini. Merging automatically once CI passes."
+          body: "This PR was generated and applied by the Gemini CLI Agent. Merging automatically once CI passes."
+          labels: automated-fix
 
       - name: Enable Auto-Merge & Approve
         if: steps.cpr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          # 1. Self-approve the PR to satisfy branch protection
+          # 1. Approve as the PAT user to satisfy branch protection
           gh pr review ${{ steps.cpr.outputs.pull-request-number }} --approve
           
-          # 2. Queue for automatic merge
+          # 2. Set to auto-merge (squash) once status checks pass
           gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --auto --squash
