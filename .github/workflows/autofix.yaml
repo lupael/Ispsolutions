@@ -1,0 +1,105 @@
+name: "Autonomous Laravel Agent"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  APP_ENV: ci
+  PHP_VERSION: '8.3'
+
+jobs:
+  analyze:
+    name: 🔍 Analyze & Test
+    runs-on: ubuntu-latest
+    outputs:
+      has_failures: ${{ steps.check-results.outputs.failed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, xml, bcmath, curl, intl, sqlite3
+
+      - name: Install Dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Run Diagnostics
+        id: diagnostics
+        run: |
+          mkdir -p tmp/diagnostics
+          # Run Pint (Style)
+          vendor/bin/pint --test || echo "STYLE_ERR=1" >> $GITHUB_ENV
+          # Run Larastan (Static Analysis)
+          vendor/bin/phpstan analyse --no-progress > tmp/diagnostics/phpstan.txt 2>&1 || echo "STATIC_ERR=1" >> $GITHUB_ENV
+          # Run PHPUnit (Tests)
+          vendor/bin/phpunit --colors=never > tmp/diagnostics/phpunit.txt 2>&1 || echo "TEST_ERR=1" >> $GITHUB_ENV
+          # Capture Laravel Log
+          [ -f storage/logs/laravel.log ] && tail -n 100 storage/logs/laravel.log > tmp/diagnostics/laravel.log
+        shell: bash
+
+      - name: Check Results
+        id: check-results
+        run: |
+          if [ "$STYLE_ERR" = "1" ] || [ "$STATIC_ERR" = "1" ] || [ "$TEST_ERR" = "1" ]; then
+            echo "failed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-logs
+          path: tmp/diagnostics/
+          retention-days: 1
+
+  trigger-gemini-fix:
+    name: 🤖 Trigger Gemini Fix
+    needs: analyze
+    if: needs.analyze.outputs.has_failures == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Logs
+        uses: actions/download-artifact@v4
+        with:
+          name: diagnostic-logs
+          path: diagnostics/
+
+      - name: Create PR & Tag Gemini
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: diagnostic report for Gemini"
+          branch: "ai/fix-attempt"
+          delete-branch: true
+          title: "🛠 AI Fix Requested: CI Failures on Main"
+          body: |
+            ## 🚨 CI Failure Detected
+            @gemini-code-assist please analyze the logs in the `diagnostics/` folder and propose code fixes for this branch.
+            
+            **Errors to address:**
+            - Check `phpunit.txt` for logic errors.
+            - Check `phpstan.txt` for type safety issues.
+          labels: autofix, automated
+
+      - name: Post Command Comment
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          # Manually trigger the Gemini App to start the review/fix process
+          gh pr comment $PR_NUMBER --body "/gemini review and suggest fixes for the errors in the diagnostics folder"
