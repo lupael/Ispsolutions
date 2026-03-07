@@ -89,7 +89,7 @@ class DateHelper
 
         // Handle dates in the past
         if ($diffInDays < 0) {
-            $absDays = abs($diffInDays);
+            $absDays = (int) abs($diffInDays);
             if ($absDays === 0) {
                 return 'Today';
             } elseif ($absDays === 1) {
@@ -102,9 +102,9 @@ class DateHelper
         }
 
         // Handle dates in the future
-        if ($diffInDays === 0) {
+        } elseif ($diffInDays === 0) {
             return 'Today';
-        } elseif ($diffInDays === 1) {
+        } elseif ((int)$diffInDays === 1) {
             return 'Tomorrow';
         } else {
             return $short 
@@ -140,7 +140,7 @@ class DateHelper
                 : "Expired {$absDays} " . ($absDays === 1 ? 'day' : 'days') . " ago";
         } elseif ($diffInDays === 0) {
             return 'Expires today';
-        } elseif ($diffInDays === 1) {
+        } elseif ((int)$diffInDays === 1) {
             return 'Expires tomorrow';
         } else {
             return $short 

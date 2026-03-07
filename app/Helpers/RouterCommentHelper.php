@@ -40,7 +40,7 @@ class RouterCommentHelper
             'username' => self::sanitizePipe($user->username),
             'user_id' => $user->id ?? '',
             'package_id' => $user->service_package_id ?? '',
-            'expiry_date' => $user->expiry_date?->format('Y-m-d') ?? '',
+            'expiry_date' => $user->expiry_date ? \Illuminate\Support\Carbon::parse($user->expiry_date)->format('Y-m-d') : '',
             'service_type' => self::sanitizePipe($user->service_type ?? 'pppoe'),
         ];
 
@@ -92,7 +92,7 @@ class RouterCommentHelper
             'mobile' => self::sanitize($user->mobile ?? $user->phone ?? 'N/A'),
             'zone' => $user->zone_id ?? 'N/A',
             'pkg' => $user->service_package_id ?? 'N/A',
-            'exp' => $user->expiry_date?->format('Y-m-d') ?? 'N/A',
+            'exp' => $user->expiry_date ? \Illuminate\Support\Carbon::parse($user->expiry_date)->format('Y-m-d') : 'N/A',
             'status' => $user->status ?? 'active',
         ];
         
@@ -110,7 +110,7 @@ class RouterCommentHelper
             'name' => self::sanitize($customer->name),
             'mobile' => self::sanitize($customer->mobile ?? $customer->phone ?? 'N/A'),
             'zone' => $customer->zone_id ?? 'N/A',
-            'exp' => $customer->expiry_date?->format('Y-m-d') ?? 'N/A',
+            'exp' => $customer->expiry_date ? \Illuminate\Support\Carbon::parse($customer->expiry_date)->format('Y-m-d') : 'N/A',
             'status' => $customer->status ?? 'active',
         ];
         

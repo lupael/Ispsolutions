@@ -1,28 +1,50 @@
 Note: Using configuration file /home/runner/work/Ispsolutions/Ispsolutions/phpstan.neon.
-::error file=app/Console/Commands/MonitoringCollect.php,line=65,col=0::Syntax error, unexpected T_TRY, expecting ';' or '{' on line 65
-::error ::Internal error: An option named "version" already exists. while analysing file /home/runner/work/Ispsolutions/Ispsolutions/app/Console/Commands/OltSnmpTest.php%0A%0ARun PHPStan with -v option and post the stack trace to:%0Ahttps://github.com/larastan/larastan/issues/new?template=bug-report.md%0A
- ------ ----------------------------------------------------------------- 
-  Line   app/Console/Commands/MonitoringCollect.php                       
- ------ ----------------------------------------------------------------- 
-  65     Syntax error, unexpected T_TRY, expecting ';' or '{' on line 65  
- ------ ----------------------------------------------------------------- 
-
- -- --------------------------------------------------------------------------- 
-     Error                                                                      
- -- --------------------------------------------------------------------------- 
-     Internal error: An option named "version" already exists. while analysing  
-     file                                                                       
-     /home/runner/work/Ispsolutions/Ispsolutions/app/Console/Commands/OltSnmpT  
-     est.php                                                                    
-                                                                                
-     Run PHPStan with -v option and post the stack trace to:                    
-     https://github.com/larastan/larastan/issues/new?template=bug-report.md     
-                                                                                
- -- --------------------------------------------------------------------------- 
-
- [ERROR] Found 2 errors                                                         
-
-⚠️  Result is incomplete because of severe errors. ⚠️
-   Fix these errors first and then re-run PHPStan
-   to get all reported errors.
-
+::error file=app/Console/Commands/CheckSmsBalanceCommand.php,line=106,col=0::Cannot call method diffInHours() on string.
+::error file=app/Console/Commands/Concerns/FindsAssociatedModel.php,line=10,col=0::Trait App\Console\Commands\Concerns\FindsAssociatedModel is used zero times and is not analysed.
+::error file=app/Console/Commands/FindsAssociatedModel.php (in context of class App/Console/Commands/MikrotikImportSecrets),line=23,col=0::Deprecated in PHP 8.4: Parameter #4 $queryCallback (Closure) is implicitly nullable via default value null.
+::error file=app/Console/Commands/FindsAssociatedModel.php (in context of class App/Console/Commands/MikrotikSyncSessions),line=23,col=0::Deprecated in PHP 8.4: Parameter #4 $queryCallback (Closure) is implicitly nullable via default value null.
+::error file=app/Console/Commands/FindsAssociatedModel.php (in context of class App/Console/Commands/MonitoringCollect),line=23,col=0::Deprecated in PHP 8.4: Parameter #4 $queryCallback (Closure) is implicitly nullable via default value null.
+::error file=app/Console/Commands/FindsAssociatedModel.php (in context of class App/Console/Commands/OltHealthCheck),line=23,col=0::Deprecated in PHP 8.4: Parameter #4 $queryCallback (Closure) is implicitly nullable via default value null.
+::error file=app/Console/Commands/FindsAssociatedModel.php (in context of class App/Console/Commands/OltSyncOnus),line=23,col=0::Deprecated in PHP 8.4: Parameter #4 $queryCallback (Closure) is implicitly nullable via default value null.
+::error file=app/Console/Commands/FindsAssociatedModel.php (in context of class App/Console/Commands/RadiusSyncUser),line=23,col=0::Deprecated in PHP 8.4: Parameter #4 $queryCallback (Closure) is implicitly nullable via default value null.
+::error file=app/Console/Commands/MikrotikSyncSessions.php,line=47,col=0::Method App\Console\Commands\MikrotikSyncSessions::handle() should return int but returns array<string, bool|int>.
+::error file=app/Console/Commands/MonitoringAggregateDaily.php,line=34,col=0::Call to an undefined method App\Contracts\MonitoringServiceInterface::aggregateDailyData().
+::error file=app/Console/Commands/MonitoringAggregateHourly.php,line=34,col=0::Call to an undefined method App\Contracts\MonitoringServiceInterface::aggregateHourlyData().
+::error file=app/Console/Commands/MonitoringCollect.php,line=73,col=0::Access to an undefined property Illuminate\Database\Eloquent\Model::$id.
+::error file=app/Console/Commands/MonitoringCollect.php,line=87,col=0::Function error not found.
+::error file=app/Console/Commands/MonitoringCollect.php,line=118,col=0::Access to an undefined property Illuminate\Database\Eloquent\Model::$id.
+::error file=app/Console/Commands/MonitoringCollect.php,line=123,col=0::Access to an undefined property Illuminate\Database\Eloquent\Model::$id.
+::error file=app/Console/Commands/OltHealthCheck.php,line=101,col=0::Parameter #1 $olt of method App\Contracts\OltServiceInterface::testConnection() expects App\Contracts\Olt, App\Models\Olt given.
+::error file=app/Console/Commands/OltHealthCheck.php,line=109,col=0::Parameter #1 $olt of method App\Contracts\OltServiceInterface::getOltStatistics() expects App\Contracts\Olt, App\Models\Olt given.
+::error file=app/Console/Commands/OltSnmpTest.php,line=101,col=0::Call to function is_array() with array will always evaluate to true.
+::error file=app/Console/Commands/ProcessAutoDebitPayments.php,line=129,col=0::Cannot call method isToday() on string.
+::error file=app/Console/Commands/RouterBackupCommand.php,line=63,col=0::Access to an undefined property App\Models\RouterConfigurationBackup::$backup_name.
+::error file=app/Console/Commands/SendSubscriptionRemindersCommand.php,line=51,col=0::Relation 'tenant' is not found in App\Models\Subscription model.
+::error file=app/Contracts/OltServiceInterface.php,line=26,col=0::PHPDoc tag `@param` for parameter $olt with type App\Models\Olt is not subtype of native type App\Contracts\Olt.
+::error file=app/Contracts/OltServiceInterface.php,line=26,col=0::Parameter $olt of method App\Contracts\OltServiceInterface::testConnection() has invalid type App\Contracts\Olt.
+::error file=app/Contracts/OltServiceInterface.php,line=106,col=0::PHPDoc tag `@param` for parameter $olt with type App\Models\Olt is not subtype of native type App\Contracts\Olt.
+::error file=app/Contracts/OltServiceInterface.php,line=106,col=0::Parameter $olt of method App\Contracts\OltServiceInterface::getOltStatistics() has invalid type App\Contracts\Olt.
+::error file=app/Exports/RechargeCardsExport.php,line=47,col=0::Using nullsafe property access "?->name" on left side of ?? is unnecessary. Use -> instead.
+::error file=app/Exports/RechargeCardsExport.php,line=48,col=0::Using nullsafe property access "?->name" on left side of ?? is unnecessary. Use -> instead.
+::error file=app/Exports/RechargeCardsExport.php,line=49,col=0::Using nullsafe property access "?->name" on left side of ?? is unnecessary. Use -> instead.
+::error file=app/Helpers/DateHelper.php,line=100,col=0::Strict comparison using === between 0|float|int<2, max> and 1 will always evaluate to false.
+::error file=app/Helpers/DateHelper.php,line=112,col=0::Strict comparison using === between int<2, max> and 1 will always evaluate to false.
+::error file=app/Helpers/DateHelper.php,line=148,col=0::Strict comparison using === between int<2, max> and 1 will always evaluate to false.
+::error file=app/Helpers/RouterCommentHelper.php,line=43,col=0::Cannot call method format() on string.
+::error file=app/Helpers/RouterCommentHelper.php,line=95,col=0::Cannot call method format() on string.
+::error file=app/Helpers/RouterCommentHelper.php,line=113,col=0::Cannot call method format() on string.
+::error file=app/Helpers/RouterCommentHelper.php,line=268,col=0::Strict comparison using === between mixed~(0|0.0|''|'0'|'N/A'|array{}|false|null) and '' will always evaluate to false.
+::error file=app/Http/Controllers/Api/DataController.php,line=,col=0::Ignored error pattern #^Relation 'user' is not found in App\\Models\\NetworkUser model\.$# (larastan.relationExistence) in path /home/runner/work/Ispsolutions/Ispsolutions/app/Http/Controllers/Api/DataController.php was not matched in reported errors.
+::error file=app/Http/Controllers/Api/DataController.php,line=192,col=0::Access to an undefined property App\Models\Package::$validity_formats.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=25,col=0::Call to an undefined method App\Http\Controllers\Api\V1\CardDistributorController::middleware().
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=68,col=0::Parameter #3 $callback of static method Illuminate\Cache\Repository::remember() contains unresolvable type.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=85,col=0::Parameter #1 $callback of method Illuminate\Support\Collection<int,App\Models\User>::map() contains unresolvable type.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=88,col=0::Access to an undefined property App\Models\User::$country_code.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=89,col=0::Access to an undefined property App\Models\User::$country_code.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=91,col=0::Access to an undefined property App\Models\User::$balance.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=92,col=0::Access to an undefined property App\Models\User::$last_payment_date.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=148,col=0::Call to static method where() on an unknown class App\Models\Card.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=225,col=0::Call to static method where() on an unknown class App\Models\CardSale.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=322,col=0::Call to static method where() on an unknown class App\Models\Card.
+::error file=app/Http/Controllers/Api/V1/CardDistributorController.php,line=336,col=0::Call to static method create() on an unknown class App\Models\CardSale.
+::error file=app/Http/Controllers/Api/V1/NetworkUserController.php,line=25,col=0::Property App\Http\Controllers\Api\V1\NetworkUserController::$radiusService is never read, only written.

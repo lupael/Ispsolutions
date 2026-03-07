@@ -31,7 +31,7 @@ class MonitoringAggregateDaily extends Command
         $this->info('Aggregating hourly bandwidth data to daily summaries...');
 
         try {
-            $processed = $monitoringService->aggregateDailyData();
+            $processed = $monitoringService->aggregateData('hourly', 'daily');
 
             if ($processed > 0) {
                 $this->info("✓ Aggregated {$processed} hourly records to daily summaries");

@@ -44,7 +44,8 @@ class MikrotikSyncSessions extends Command
                 /** @var MikrotikRouter $router */
                 $router = $this->findModel(MikrotikRouter::class, $routerIdentifier);
 
-                return $this->syncRouterSessions($router, $mikrotikService);
+                $result = $this->syncRouterSessions($router, $mikrotikService);
+                return $result['success'] ? Command::SUCCESS : Command::FAILURE;
             } else {
                 // Sync all active routers
                 $routers = MikrotikRouter::where('status', 'active')->get();

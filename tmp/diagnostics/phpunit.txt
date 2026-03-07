@@ -6,45 +6,45 @@ Configuration: /home/runner/work/Ispsolutions/Ispsolutions/phpunit.xml
 .....EEEEEEEEEEE.....EEEEEEEEEEEEE......F..F..................F  63 / 773 (  8%)
 F.......F......EEEEEEEEEEEE.............EEEEEEEEEEEEEEEEEEEEEEE 126 / 773 ( 16%)
 EEEEEEEEEEEEEEEEEEEEEEEEEEEE......FFFFFFFFFF.....EEEEEE....EEEE 189 / 773 ( 24%)
-EEEEEEEEE.........EE...........EEEE.E.EEEEEEPHP Fatal error:  Class App\Services\MonitoringService contains 1 abstract method and must therefore be declared abstract or implement the remaining methods (App\Contracts\MonitoringServiceInterface::aggregateData) in /home/runner/work/Ispsolutions/Ispsolutions/app/Services/MonitoringService.php on line 19
+EEEEEEEEE.........EE...........EEEE.E.EEEEEEEEEEEEEEEEEEEEEEEEE 252 / 773 ( 32%)
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEFFFFFEE.EEEEEEEEEEEEEEEEE 315 / 773 ( 40%)
+EEE...........................FFE......EEEEEEEEEEEEEEEEEEEEEEEE 378 / 773 ( 48%)
+EEEEEEEEEEEEEE.FF...EE.EE..EEEEEEEEE.FFEFEFF.EEEEEEEEEEEEEEEEEE 441 / 773 ( 57%)
+EEEE.....FFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE..E 504 / 773 ( 65%)
+EEEEEEEEEFEEFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.........EEEE 567 / 773 ( 73%)
+EEEEEEEEEEEEEEEE.........EEEEE..EEEEEEEEEEEEEEEE.EEEEEEEEEEE... 630 / 773 ( 81%)
+........EEE.E...EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE 693 / 773 ( 89%)
+EEEEEEEEEEEEEEEEE.EE.E...EEEEEEEEEEEEEEEEEEE.........EEEEEEEEEE 756 / 773 ( 97%)
+EEE..............                                               773 / 773 (100%)
 
-In MonitoringService.php line 19:
-                                                                               
-  Class App\Services\MonitoringService contains 1 abstract method and must th  
-  erefore be declared abstract or implement the remaining methods (App\Contra  
-  cts\MonitoringServiceInterface::aggregateData)                               
-                                                                               
+Time: 01:25.118, Memory: 194.50 MB
 
+There were 527 errors:
 
-In MonitoringService.php line 19:
-                                                                               
-  Class App\Services\MonitoringService contains 1 abstract method and must th  
-  erefore be declared abstract or implement the remaining methods (App\Contra  
-  cts\MonitoringServiceInterface::aggregateData)                               
-                                                                               
+1) Tests\Unit\BelongsToTenantTraitTest::test_user_package_join_does_not_produce_ambiguous_column_error
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 table roles has no column named guard_name (Connection: sqlite, Database: :memory:, SQL: insert into "roles" ("guard_name", "slug", "tenant_id", "name", "description", "level", "permissions", "updated_at", "created_at") values (web, developer, ?, Developer, Supreme authority across all tenants. Can create and manage Super Admins. Source code owner with unrestricted permissions., 0, ["*"], 2026-03-07 17:56:53, 2026-03-07 17:56:53))
 
-
-In MonitoringService.php line 19:
-                                                                               
-  Class App\Services\MonitoringService contains 1 abstract method and must th  
-  erefore be declared abstract or implement the remaining methods (App\Contra  
-  cts\MonitoringServiceInterface::aggregateData)                               
-                                                                               
-
-
-In MonitoringService.php line 19:
-                                                                               
-  Class App\Services\MonitoringService contains 1 abstract method and must th  
-  erefore be declared abstract or implement the remaining methods (App\Contra  
-  cts\MonitoringServiceInterface::aggregateData)                               
-                                                                               
-
-
-In MonitoringService.php line 19:
-                                                                               
-  Class App\Services\MonitoringService contains 1 abstract method and must th  
-  erefore be declared abstract or implement the remaining methods (App\Contra  
-  cts\MonitoringServiceInterface::aggregateData)                               
-                                                                               
-
-
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Connection.php:573
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Connection.php:537
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/Processor.php:32
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4140
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1219
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Support/helpers.php:388
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1218
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:725
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1958
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:725
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:712
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:740
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2540
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2556
+/home/runner/work/Ispsolutions/Ispsolutions/database/seeders/RoleSeeder.php:150
+/home/runner/work/Ispsolutions/Ispsolutions/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:36

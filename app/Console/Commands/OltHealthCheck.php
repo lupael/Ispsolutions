@@ -98,7 +98,7 @@ class OltHealthCheck extends Command
      */
     private function checkAndReportOlt(Olt $olt, OltServiceInterface $oltService, bool $details): bool
     {
-        $result = $oltService->testConnection($olt);
+        $result = $oltService->testConnection($olt->id);
 
         if ($result['success']) {
             $this->info("✓ {$olt->name} ({$olt->ip_address}) - Healthy (Latency: {$result['latency']}ms)");

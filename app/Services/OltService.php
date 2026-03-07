@@ -58,8 +58,8 @@ class OltService implements OltServiceInterface
     
     public function disconnect(int $oltId): bool { return true; }
 
-    public function testConnection($olt): array {
-        return ['success' => true, 'message' => 'Service Active'];
+    public function testConnection(int $oltId): array {
+        return ['success' => true, 'message' => 'Service Active', 'latency' => 0];
     }
 
     public function authorizeOnu(int $onuId): bool { return true; }

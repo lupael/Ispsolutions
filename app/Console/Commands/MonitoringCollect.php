@@ -66,11 +66,12 @@ class MonitoringCollect extends Command
         try {
             $modelClass = $this->getModelClassForType($type);
             // Find the model first to ensure it exists.
+            /** @var \Illuminate\Database\Eloquent\Model $device */
             $device = $this->findModel($modelClass, (string) $id);
 
             $this->info("Monitoring {$type} #{$id}...");
             // We can now safely pass the ID to the service.
-            $metrics = $service->monitorDevice($type, $device->id);
+            $metrics = $service->monitorDevice($type, (int) $device->getKey());
 
             $this->line("  Status: {$metrics['status']}");
             if (isset($metrics['cpu_usage'])) {
@@ -115,12 +116,12 @@ class MonitoringCollect extends Command
 
         foreach ($devices as $device) {
             try {
-                $service->monitorDevice($type, $device->id);
+                $service->monitorDevice($type, (int) $device->getKey());
                 $success++;
             } catch (\Exception $e) {
                 $failed++;
                 $this->newLine();
-                $this->error("Failed {$type} #{$device->id}: {$e->getMessage()}");
+                $this->error("Failed {$type} #" . $device->getKey() . ": {$e->getMessage()}");
             }
             $bar->advance();
         }
