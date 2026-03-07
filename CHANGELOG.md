@@ -180,6 +180,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
+- autonomous AI repair for PHP 8.4 ([cd71cf6](../../commit/cd71cf64a20dc7dd348745e764fa980431cb6795))
 - autonomous AI repair (Flash-Lite) ([547a2de](../../commit/547a2de3994f346cb4000c347092d428378e92ad))
 - include diagnostic logs for AI review ([3ced91b](../../commit/3ced91bd27a5f99fee329db54ba0703037fc45be))
 
