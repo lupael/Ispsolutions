@@ -62,6 +62,7 @@ class MonitoringCollect extends Command
      * Monitor a specific device
      */
     private function monitorSpecificDevice(MonitoringServiceInterface $service, string $type, int $id): int
+    {
         try {
             $modelClass = $this->getModelClassForType($type);
             // Find the model first to ensure it exists.

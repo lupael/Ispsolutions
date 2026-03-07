@@ -1,0 +1,1873 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.18
+Configuration: /home/runner/work/Ispsolutions/Ispsolutions/phpunit.xml
+
+.....EEEEEEEEEEE.....EEEEEEEEEEEEE......F..F..................F  63 / 773 (  8%)
+F.......F......EEEEEEEEEEEE.............EEEEEEEEEEEEEEEEEEEEEEE 126 / 773 ( 16%)
+EEEEEEEEEEEEEEEEEEEEEEEEEEEE......FFFFFFFFFF.....EEEEEE....EEEE 189 / 773 ( 24%)
+EEEEEEEEE.........EE...........EEEE.E.EEEEEEPHP Fatal error:  Class App\Services\MonitoringService contains 1 abstract method and must therefore be declared abstract or implement the remaining methods (App\Contracts\MonitoringServiceInterface::aggregateData) in /home/runner/work/Ispsolutions/Ispsolutions/app/Services/MonitoringService.php on line 19
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+
+
+In MonitoringService.php line 19:
+                                                                               
+  Class App\Services\MonitoringService contains 1 abstract method and must th  
+  erefore be declared abstract or implement the remaining methods (App\Contra  
+  cts\MonitoringServiceInterface::aggregateData)                               
+                                                                               
+

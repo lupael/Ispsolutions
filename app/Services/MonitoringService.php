@@ -226,6 +226,25 @@ class MonitoringService implements MonitoringServiceInterface
     }
 
     /**
+     * Aggregate bandwidth data from a source period to a target period.
+     *
+     * @param string $sourcePeriod The source period (e.g., 'raw', 'hourly', 'daily').
+     * @param string $targetPeriod The target period (e.g., 'hourly', 'daily', 'monthly').
+     *
+     * @return int Number of records processed
+     */
+    public function aggregateData(string $sourcePeriod, string $targetPeriod): int
+    {
+        return match ($targetPeriod) {
+            'hourly' => $this->aggregateHourlyData(),
+            'daily' => $this->aggregateDailyData(),
+            'weekly' => $this->aggregateWeeklyData(),
+            'monthly' => $this->aggregateMonthlyData(),
+            default => 0,
+        };
+    }
+
+    /**
      * Aggregate raw bandwidth data to hourly
      */
     public function aggregateHourlyData(): int
