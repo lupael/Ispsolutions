@@ -14,6 +14,7 @@ env:
 
 jobs:
   analyze-and-fix:
+    name: 🤖 Fix & Auto-Merge
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,37 +29,47 @@ jobs:
           tools: composer:v2
 
       - name: Run Diagnostics
-        id: diag
+        id: diagnostics
         run: |
           composer config platform.php 8.4.0
           composer update --no-progress --ignore-platform-reqs
           mkdir -p tmp/diagnostics
           vendor/bin/phpstan analyse --no-progress > tmp/diagnostics/phpstan.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
+          vendor/bin/phpunit --colors=never > tmp/diagnostics/phpunit.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
         shell: bash
 
       - name: Apply AI Fixes
         if: env.HAS_ERRORS == 'true'
         run: |
           npm install -g @google/gemini-cli
-          # -y is the ONLY flag needed for auto-approval in 2026
-          # -p triggers the headless/non-interactive mode
-          gemini -y -p "Fix PHP 8.4 errors in tmp/diagnostics/ for the files in this repo."
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          
+          # 1. Create the .gemini directory and .env file to guarantee auth
+          mkdir -p ~/.gemini
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > ~/.gemini/.env
+          
+          # 2. Run the agent with -y (YOLO) for autonomous file writing
+          # -p is the headless prompt
+          gemini -y -p "Fix the PHP 8.4 errors in tmp/diagnostics/ by editing the files in this workspace."
+        shell: bash
 
       - name: Create & Auto-Merge PR
         if: env.HAS_ERRORS == 'true'
+        id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          commit-message: "fix: automated AI repair"
-          branch: "ai/fix-${{ github.run_id }}"
+          commit-message: "fix: autonomous AI repair for PHP 8.4"
+          branch: "ai/fix-applied-${{ github.run_id }}"
           title: "🤖 Autonomous Fix Applied"
-          body: "Applied by Gemini Agent. Auto-merging on success."
+          body: "This PR was generated and applied by the Gemini CLI Agent. Auto-merging once CI passes."
 
       - name: Enable Auto-Merge
+        if: steps.cpr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          gh pr review --approve "$(gh pr list --limit 1 --json number -q '.[0].number')" || true
-          gh pr merge --auto --squash "$(gh pr list --limit 1 --json number -q '.[0].number')"
+          # 1. Self-approve (using your PAT identity)
+          gh pr review ${{ steps.cpr.outputs.pull-request-number }} --approve
+          
+          # 2. Queue for auto-merge
+          gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --auto --squash
