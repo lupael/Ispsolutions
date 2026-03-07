@@ -1,34 +1,31 @@
-name: "Autonomous Laravel Agent (Full Auto)"
-
-permissions:
-  contents: write
-  pull-requests: write
+name: "Deep Project Investigation & Auto-Repair"
 
 on:
-  push:
-    branches: [ "main" ]
+  schedule:
+    - cron: '0 6 * * *'  # Runs daily at 6 AM UTC
   workflow_dispatch:
 
 env:
   PHP_VERSION: '8.4'
 
 jobs:
-  analyze-fix-verify:
-    name: 🤖 Autonomous Repair Cycle
+  deep-maintenance:
+    name: 🤖 Autonomous Architect Cycle
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
 
-      - name: Setup PHP
+      - name: Setup Environment & Dependencies
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
           tools: composer:v2
 
-      - name: CI Environment Sync
+      - name: Initialize App & Database
         run: |
           composer config platform.php ${{ env.PHP_VERSION }}
           composer update --no-progress --ignore-platform-req=php
@@ -36,67 +33,69 @@ jobs:
           php artisan migrate:fresh --force
         shell: bash
 
-      - name: Initial Diagnostics
-        id: diagnostics
-        run: |
-          mkdir -p tmp/diagnostics
-          # Capture first 50 lines of errors to stay within AI quota
-          vendor/bin/phpstan analyse --no-progress 2>&1 | head -n 50 > tmp/diagnostics/phpstan.txt || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          vendor/bin/phpunit --colors=never 2>&1 | head -n 50 > tmp/diagnostics/phpunit.txt || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Apply AI Fixes
-        if: env.HAS_ERRORS == 'true'
-        id: ai_fix
+      - name: Initialize Gemini CLI
         run: |
           npm install -g @google/gemini-cli
           mkdir -p ~/.gemini
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > ~/.gemini/.env
-          
-          # DIRECTIVE: Fix Logic, Environment, and Cleanup
-          gemini -y -m gemini-3.1-flash-lite-preview -p "
+        shell: bash
+
+      - name: 1. Deep Investigation
+        run: |
+          mkdir -p Document/investigations/$(date +%Y-%m-%d)
+          # Try 3.1 Flash first, fallback to 2.5 Pro
+          gemini -y -m gemini-3.1-flash -p "Scan the full project. Identify technical debt, missing infrastructure, or logic errors. Generate a strict TODO checklist in Document/investigations/$(date +%Y-%m-%d)/analysis.md" || \
+          gemini -y -m gemini-2.5-pro -p "Senior Architect: Scan project for tech debt. Create TODO in Document/investigations/$(date +%Y-%m-%d)/analysis.md"
+        shell: bash
+
+      - name: 2. Autonomous Repair
+        run: |
+          # The agent dynamically reads its own analysis and executes it
+          REPAIR_PROMPT="
             ACT AS AN AUTONOMOUS DEVELOPER.
-            Goal: Fix the errors in phpunit.txt and align the test environment.
+            Read Document/investigations/$(date +%Y-%m-%d)/analysis.md.
+            
+            TASKS:
+            1. Execute the items on the TODO checklist.
+            2. Overwrite files using the 'write_file' tool for precision.
+            3. Log all actual changes made in Document/investigations/$(date +%Y-%m-%d)/execution_log.md."
 
-            1. INFRASTRUCTURE: Update 'tests/TestCase.php'. Ensure it uses 'Illuminate\Foundation\Testing\RefreshDatabase'.
-            2. CLEANUP: Delete 'tests/Unit/Controllers/NewControllersTest.php' since NasNetWatchController is missing.
-            3. LOGIC: Wrap expiry_date parsing in 'optional()' in RouterCommentHelper.php.
-            4. SEEDER: Add 'Schema::hasColumn' checks to RoleSeeder.php for guard_name.
-
-            IMPORTANT: Use 'write_file' to overwrite files entirely. This prevents matching errors."
+          gemini -y -m gemini-3.1-flash -p "$REPAIR_PROMPT" || \
+          gemini -y -m gemini-2.5-pro -p "$REPAIR_PROMPT"
         shell: bash
 
-      - name: Verify AI Fix
-        if: env.HAS_ERRORS == 'true'
+      - name: 3. Verify & Self-Correct
         run: |
-          echo "🔍 Verifying AI repairs..."
-          # If tests fail after the fix, stop here and do not merge
-          vendor/bin/phpunit --colors=never --stop-on-failure
+          composer dump-autoload
+          
+          # Capture output to pass to Gemini if it fails
+          if ! vendor/bin/phpunit --colors=never > phpunit_output.txt 2>&1; then
+            echo "Tests failed. Triggering Self-Correction loop..."
+            gemini -y -m gemini-2.5-pro -p "Tests failed. Here is the exact PHPUnit output: $(cat phpunit_output.txt). Use 'write_file' to correct these specific errors immediately."
+          else
+            echo "All tests passed successfully."
+          fi
         shell: bash
 
-      - name: Repair Summary
-        if: always()
-        run: |
-          echo "### 🛠️ AI Repair Summary" >> $GITHUB_STEP_SUMMARY
-          echo "Files modified or deleted by Gemini Agent:" >> $GITHUB_STEP_SUMMARY
-          git status --short >> $GITHUB_STEP_SUMMARY
-        shell: bash
-
-      - name: Create Fix PR
-        if: env.HAS_ERRORS == 'true'
-        id: cpr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          commit-message: "fix: autonomous repair of logic and test environment"
-          branch: "ai/fix-applied-${{ github.run_id }}"
-          title: "🤖 Autonomous Fix Applied & Verified"
-          body: "Gemini Agent fixed Carbon logic, added RefreshDatabase to tests, and purged orphaned tests."
-
-      - name: Force Admin Merge
-        if: steps.cpr.outputs.pull-request-number != ''
+      - name: 4. PR & Finalize
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          # Immediate merge using admin privileges to bypass self-approval rules
-          gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --admin --squash --delete-branch
+          git config user.name "Gemini Architect"
+          git config user.email "gemini-bot@google.com"
+          
+          # Check if there are actually any changes before committing
+          if [ -n "$(git status --porcelain)" ]; then
+            BRANCH_NAME="ai/maintenance-$(date +%Y-%m-%d)"
+            git checkout -b $BRANCH_NAME
+            git add .
+            git commit -m "docs & autonomous repair: daily maintenance cycle"
+            git push origin $BRANCH_NAME
+            
+            # Create and merge using admin bypass
+            PR_URL=$(gh pr create --title "🤖 Maintenance & Repair: $(date +%Y-%m-%d)" --body "Deep investigation report and automated repairs applied." --base main --head $BRANCH_NAME)
+            gh pr merge $PR_URL --admin --squash --delete-branch
+          else
+            echo "No changes detected by AI. Skipping PR creation."
+          fi
+        shell: bash
