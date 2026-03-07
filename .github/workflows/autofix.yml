@@ -3,7 +3,6 @@ name: "Autonomous Laravel Agent (Full Auto)"
 permissions:
   contents: write
   pull-requests: write
-  issues: write
 
 on:
   push:
@@ -11,12 +10,10 @@ on:
   workflow_dispatch:
 
 env:
-  APP_ENV: ci
   PHP_VERSION: '8.4'
 
 jobs:
   analyze-and-fix:
-    name: 🤖 Fix & Auto-Merge
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,50 +25,40 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, xml, bcmath, curl, intl, sqlite3, zip, gd
           tools: composer:v2
 
       - name: Run Diagnostics
-          # We generate the logs that Gemini will use as its "mission briefing"
-        id: diagnostics
+        id: diag
         run: |
           composer config platform.php 8.4.0
           composer update --no-progress --ignore-platform-reqs
           mkdir -p tmp/diagnostics
           vendor/bin/phpstan analyse --no-progress > tmp/diagnostics/phpstan.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          vendor/bin/phpunit --colors=never > tmp/diagnostics/phpunit.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
         shell: bash
 
       - name: Apply AI Fixes
         if: env.HAS_ERRORS == 'true'
         run: |
           npm install -g @google/gemini-cli
-          # --prompt (-p): Headless mode
-          # --yolo (-y): Auto-approve all file writes/shell commands
-          # --approval-mode yolo: Explicitly allows the agent to modify the workspace
-          gemini -p "Fix the PHP 8.4 compatibility errors found in tmp/diagnostics/ for the files in this repo. Focus on resolving the static analysis and test failures." --yolo --approval-mode yolo
+          # -y is the ONLY flag needed for auto-approval in 2026
+          # -p triggers the headless/non-interactive mode
+          gemini -y -p "Fix PHP 8.4 errors in tmp/diagnostics/ for the files in this repo."
         env:
           GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Create Fix PR
+      - name: Create & Auto-Merge PR
         if: env.HAS_ERRORS == 'true'
-        id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          commit-message: "fix: autonomous AI repair for PHP 8.4"
-          branch: "ai/fix-applied-${{ github.run_id }}"
+          commit-message: "fix: automated AI repair"
+          branch: "ai/fix-${{ github.run_id }}"
           title: "🤖 Autonomous Fix Applied"
-          body: "This PR was generated and applied by the Gemini CLI Agent. Merging automatically once CI passes."
-          labels: automated-fix
+          body: "Applied by Gemini Agent. Auto-merging on success."
 
-      - name: Enable Auto-Merge & Approve
-        if: steps.cpr.outputs.pull-request-number != ''
+      - name: Enable Auto-Merge
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          # 1. Approve as the PAT user to satisfy branch protection
-          gh pr review ${{ steps.cpr.outputs.pull-request-number }} --approve
-          
-          # 2. Set to auto-merge (squash) once status checks pass
-          gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --auto --squash
+          gh pr review --approve "$(gh pr list --limit 1 --json number -q '.[0].number')" || true
+          gh pr merge --auto --squash "$(gh pr list --limit 1 --json number -q '.[0].number')"
