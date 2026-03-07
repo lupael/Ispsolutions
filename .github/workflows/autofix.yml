@@ -12,7 +12,7 @@ on:
 
 env:
   APP_ENV: ci
-  PHP_VERSION: '8.3'
+  PHP_VERSION: '8.3' # Updated to match your package requirements
 
 jobs:
   analyze-and-trigger:
@@ -26,27 +26,33 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, xml, bcmath, curl, intl, sqlite3
+          extensions: mbstring, xml, bcmath, curl, intl, sqlite3, zip
           coverage: none
+          tools: composer:v2
 
-      - name: Resolve Composer Platform Trap
+      - name: Fix Composer Platform & Update
         run: |
-          # Force composer to ignore the 8.2 config and use the actual 8.3 runner
+          # 1. Remove any hardcoded 8.2 platform requirement from composer.json
           composer config platform.php ${{ env.PHP_VERSION }}
-          # Install ignoring the mismatched lock file requirements for now
-          composer install --no-progress --prefer-dist --no-interaction --ignore-platform-req=php
+          
+          # 2. Perform a non-interactive update to align the lock file with the runner
+          # This solves the zipstream-php 3.2.1 / PHP 8.3 requirement mismatch
+          composer update --no-progress --prefer-dist --no-interaction
         shell: bash
 
       - name: Run Diagnostics
         id: diagnostics
         run: |
           mkdir -p tmp/diagnostics
-          # 1. Static Analysis
+          # 1. Static Analysis (PHPStan)
           vendor/bin/phpstan analyse --no-progress > tmp/diagnostics/phpstan.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          # 2. Styling
+          
+          # 2. Styling (Pint)
           vendor/bin/pint --test || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          # 3. Tests
+          
+          # 3. Tests (PHPUnit)
           vendor/bin/phpunit --colors=never > tmp/diagnostics/phpunit.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
+          
           # 4. Logs
           [ -f storage/logs/laravel.log ] && tail -n 100 storage/logs/laravel.log > tmp/diagnostics/laravel.log
         shell: bash
@@ -67,7 +73,7 @@ jobs:
             
             **Action Required:**
             1. Analyze `phpunit.txt` and `phpstan.txt`.
-            2. Propose a fix for the PHP version mismatch in `composer.json`.
+            2. Verify the PHP 8.3 alignment in `composer.json`.
             3. Suggest code fixes as inline comments.
           labels: autofix, automated
 
@@ -77,5 +83,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
-          # Official Gemini Code Assist app command
-          gh pr comment $PR_NUMBER --body "/gemini review and fix the errors found in the diagnostics folder, specifically the PHP 8.3 version requirement in composer.json"
+          gh pr comment $PR_NUMBER --body "/gemini review and fix the errors found in the diagnostics folder, specifically ensuring all dependencies are compatible with PHP 8.3"
