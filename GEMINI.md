@@ -1,6 +1,6 @@
 # Gemini Development Guide for ISP Solution
 
-This document provides guidance for AI developers working on the ISP Solution project. All development must adhere to the architecture and principles outlined in `1. Mikrotik_Radius_architecture.md`.
+This document provides guidance for AI developers working on the ISP Solution project. All development must adhere to the architecture and principles outlined in `1. Mikrotik_Radius_architecture.md` and `DEPRECATING_NETWORK_USERS_MIGRATION_GUIDE.md`.
 
 ## Core Architecture Principles
 
