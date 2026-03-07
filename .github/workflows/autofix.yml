@@ -15,9 +15,12 @@ env:
   PHP_VERSION: '8.3'
 
 jobs:
-  analyze-and-fix:
+  analyze-and-trigger:
     name: 🔍 Analyze & Trigger Gemini
     runs-on: ubuntu-latest
+    outputs:
+      has_failures: ${{ steps.check-results.outputs.failed }}
+      pr_number: ${{ steps.cpr.outputs.pull_request_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,54 +30,73 @@ jobs:
         with:
           php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, xml, bcmath, curl, intl, sqlite3
-          # This ensures the OS version matches your app needs
-          ini-values: platform.php=${{ env.PHP_VERSION }} 
+          coverage: none
 
-      - name: Install Dependencies
-        # Added --ignore-platform-req=php to bypass the lock file version trap
+      - name: Resolve Composer Platform Trap
         run: |
+          # Force composer to ignore the 8.2 lock and use the runner's 8.3
+          composer config platform.php ${{ env.PHP_VERSION }}
           composer install --no-progress --prefer-dist --no-interaction --ignore-platform-req=php
-          npm ci
+        shell: bash
 
       - name: Run Diagnostics
-        id: diagnostics
+        id: run-diag
         run: |
           mkdir -p tmp/diagnostics
-          # 1. Static Analysis
-          vendor/bin/phpstan analyse --no-progress > tmp/diagnostics/phpstan.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          # 2. Styling
-          vendor/bin/pint --test || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          # 3. Tests
-          vendor/bin/phpunit --colors=never > tmp/diagnostics/phpunit.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          # 4. Logs
+          # Run Larastan, Pint, and PHPUnit. Record failures.
+          vendor/bin/phpstan analyse --no-progress > tmp/diagnostics/phpstan.txt 2>&1 || echo "FAIL=true" >> $GITHUB_ENV
+          vendor/bin/pint --test || echo "FAIL=true" >> $GITHUB_ENV
+          vendor/bin/phpunit --colors=never > tmp/diagnostics/phpunit.txt 2>&1 || echo "FAIL=true" >> $GITHUB_ENV
           [ -f storage/logs/laravel.log ] && tail -n 100 storage/logs/laravel.log > tmp/diagnostics/laravel.log
         shell: bash
 
+      - name: Check Results
+        id: check-results
+        run: |
+          if [ "$FAIL" = "true" ]; then
+            echo "failed=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Fix PR
-        if: env.HAS_ERRORS == 'true'
+        if: env.FAIL == 'true'
         id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "fix: automated diagnostic report for Gemini"
+          commit-message: "fix(ci): diagnostic report for Gemini"
           branch: "ai/fix-attempt-${{ github.run_id }}"
           delete-branch: true
-          title: "🛠 AI Fix Requested: CI Failures Detected"
+          title: "🛠 AI Fix Requested: CI Failures on Main"
           body: |
             ## 🚨 CI Failure Detected
-            @gemini-code-assist please review the failures in the `tmp/diagnostics/` folder.
+            @gemini-code-assist please review the logs in `tmp/diagnostics/`. 
             
-            **Action Required:**
-            1. Analyze `phpunit.txt` and `phpstan.txt`.
-            2. Suggest code fixes as inline comments.
-            3. Use `/gemini review` to refresh if needed.
+            **Current Issue:** PHP version mismatch (locked to 8.2, packages need 8.3).
+            **Goal:** Fix code and update `composer.json` platform to 8.3.
           labels: autofix, automated
 
-      - name: Trigger Gemini Bot
+      - name: Summon Gemini
         if: steps.cpr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
-          # Official Gemini Code Assist app command
-          gh pr comment $PR_NUMBER --body "/gemini review and fix the errors documented in the diagnostics folder"
+          gh pr comment ${{ steps.cpr.outputs.pull_request_number }} --body "/gemini review and fix the errors found in diagnostics. Ensure composer.json is updated to PHP 8.3."
+
+  validate-and-merge:
+    name: ✅ Validate & Auto-Merge
+    needs: analyze-and-trigger
+    if: needs.analyze-and-trigger.outputs.has_failures == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Gemini
+        run: sleep 60 # Give the bot time to process the first trigger
+
+      - name: Auto-Merge if Passed
+        uses: "pascalgn/automerge-action@v0.16.2"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MERGE_METHOD: "squash"
+          MERGE_LABELS: "autofix"
+          MERGE_FILTER_AUTHOR: "gemini-code-assist[bot]"
+          MERGE_RETRIES: "10"
+          MERGE_RETRY_SLEEP: "30000" # Wait 30s between checks for AI commits
