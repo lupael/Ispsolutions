@@ -12,7 +12,7 @@ on:
 
 env:
   APP_ENV: ci
-  PHP_VERSION: '8.3' # Updated to match your package requirements
+  PHP_VERSION: '8.4' # Aligned with ispsolution's latest requirements
 
 jobs:
   analyze-and-trigger:
@@ -26,17 +26,17 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, xml, bcmath, curl, intl, sqlite3, zip
+          extensions: mbstring, xml, bcmath, curl, intl, sqlite3, zip, gd
           coverage: none
           tools: composer:v2
 
-      - name: Fix Composer Platform & Update
+      - name: Fix Composer Platform & Sync
         run: |
-          # 1. Remove any hardcoded 8.2 platform requirement from composer.json
-          composer config platform.php ${{ env.PHP_VERSION }}
+          # Force the platform to 8.4 to satisfy zipstream-php 3.x
+          composer config platform.php 8.4.0
           
-          # 2. Perform a non-interactive update to align the lock file with the runner
-          # This solves the zipstream-php 3.2.1 / PHP 8.3 requirement mismatch
+          # Remove the old lock file and re-install to clear the 8.2/8.3 "Trap"
+          # This is necessary because your project depends on phpspreadsheet/zipstream
           composer update --no-progress --prefer-dist --no-interaction
         shell: bash
 
@@ -44,17 +44,12 @@ jobs:
         id: diagnostics
         run: |
           mkdir -p tmp/diagnostics
-          # 1. Static Analysis (PHPStan)
+          # 1. Static Analysis
           vendor/bin/phpstan analyse --no-progress > tmp/diagnostics/phpstan.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          
-          # 2. Styling (Pint)
+          # 2. Styling
           vendor/bin/pint --test || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          
-          # 3. Tests (PHPUnit)
+          # 3. Tests
           vendor/bin/phpunit --colors=never > tmp/diagnostics/phpunit.txt 2>&1 || echo "HAS_ERRORS=true" >> $GITHUB_ENV
-          
-          # 4. Logs
-          [ -f storage/logs/laravel.log ] && tail -n 100 storage/logs/laravel.log > tmp/diagnostics/laravel.log
         shell: bash
 
       - name: Create Fix PR
@@ -65,16 +60,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "fix: automated diagnostic report for Gemini"
           branch: "ai/fix-attempt-${{ github.run_id }}"
-          delete-branch: true
           title: "🛠 AI Fix Requested: CI Failures Detected"
           body: |
-            ## 🚨 CI Failure Detected
-            @gemini-code-assist please review the failures in the `tmp/diagnostics/` folder.
+            ## 🚨 CI Failure Detected in ispsolution
+            @gemini-code-assist please review the diagnostics in `tmp/diagnostics/`.
             
-            **Action Required:**
-            1. Analyze `phpunit.txt` and `phpstan.txt`.
-            2. Verify the PHP 8.3 alignment in `composer.json`.
-            3. Suggest code fixes as inline comments.
+            **Focus Areas:**
+            1. Resolve PHP 8.4 compatibility issues.
+            2. Fix any failures in `phpunit.txt`.
           labels: autofix, automated
 
       - name: Trigger Gemini Bot
@@ -83,4 +76,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
-          gh pr comment $PR_NUMBER --body "/gemini review and fix the errors found in the diagnostics folder, specifically ensuring all dependencies are compatible with PHP 8.3"
+          gh pr comment $PR_NUMBER --body "/gemini review errors and fix dependencies for PHP 8.4"
