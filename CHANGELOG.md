@@ -178,6 +178,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add VSOL ONU discovery fix and documentation ([ebd951f](../../commit/ebd951f5339dff14e5b902e699f669272460a80b))
 
+### 🐛 Bug Fixes
+
+- include diagnostic logs for AI review ([3ced91b](../../commit/3ced91bd27a5f99fee329db54ba0703037fc45be))
+
 ### 🔧 Chores
 
 - force resolve composer conflicts to match origin ([2ed7579](../../commit/2ed7579651be206c7887c075266f321a911a5768))
