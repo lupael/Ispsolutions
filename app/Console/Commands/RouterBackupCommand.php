@@ -59,8 +59,8 @@ class RouterBackupCommand extends Command
         if ($backup) {
             $this->info("✓ Backup created successfully");
             $this->table(
-                ['ID', 'Name', 'Type', 'Created At'],
-                [[$backup->id, $backup->backup_name, $backup->backup_type, $backup->created_at]]
+                ['ID', 'Notes', 'Type', 'Created At'],
+                [[$backup->id, $backup->notes, $backup->backup_type, $backup->created_at]]
             );
             return 0;
         }

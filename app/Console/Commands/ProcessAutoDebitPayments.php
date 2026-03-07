@@ -126,7 +126,7 @@ class ProcessAutoDebitPayments extends Command
 
         // Check if customer hasn't been charged today already
         $lastAttemptToday = $customer->auto_debit_last_attempt 
-            && $customer->auto_debit_last_attempt->isToday();
+            && \Illuminate\Support\Carbon::parse($customer->auto_debit_last_attempt)->isToday();
 
         return ! $lastAttemptToday;
     }

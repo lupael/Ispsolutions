@@ -102,7 +102,9 @@ class CheckSmsBalanceCommand extends Command
             return true;
         }
 
+        $notifiedAt = \Illuminate\Support\Carbon::parse($user->sms_low_balance_notified_at);
+
         // Only notify once per day
-        return $user->sms_low_balance_notified_at->diffInHours(now()) >= 24;
+        return $notifiedAt->diffInHours(now()) >= 24;
     }
 }

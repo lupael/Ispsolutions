@@ -20,10 +20,10 @@ interface OltServiceInterface
     /**
      * Test the connection to an OLT and return latency.
      *
-     * @param \App\Models\Olt $olt The OLT model instance.
+     * @param int $oltId The OLT ID.
      * @return array{success: bool, message: string, latency: int}
      */
-    public function testConnection(Olt $olt): array;
+    public function testConnection(int $oltId): array;
 
     // ONU Discovery and Management
     /**

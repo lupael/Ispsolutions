@@ -98,7 +98,7 @@ class OltSnmpTest extends Command
                 [$status, $values] = $testOid($oid);
 
                 if ($status === 'found') {
-                    $this->info("[FOUND] {$label} ({$oid}) - sample: " . (is_array($values) && count($values) ? substr((string) json_encode(array_slice($values, 0, 3)), 0, 300) : 'N/A'));
+                    $this->info("[FOUND] {$label} ({$oid}) - sample: " . (count($values) ? substr((string) json_encode(array_slice($values, 0, 3)), 0, 300) : 'N/A'));
                 } else {
                     $this->warn("[MISSING] {$label} ({$oid})");
                 }

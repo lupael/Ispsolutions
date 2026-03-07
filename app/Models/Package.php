@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Cache;
  *
  * Represents internet service packages for customers.
  * CRITICAL: Uses BelongsToTenant trait to ensure tenant isolation and prevent data leaks.
+ *
+ * @property array $validity_formats
+ * @property int $total_octet_limit
  */
 class Package extends Model
 {

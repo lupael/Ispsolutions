@@ -20,7 +20,7 @@ trait FindsAssociatedModel
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    protected function findModel(string $modelClass, string $identifier, string $searchColumn = 'name', \Closure $queryCallback = null): Model
+    protected function findModel(string $modelClass, string $identifier, string $searchColumn = 'name', ?\Closure $queryCallback = null): Model
     {
         $query = $modelClass::query();
 

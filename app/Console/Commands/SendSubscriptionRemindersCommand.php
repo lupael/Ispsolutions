@@ -53,7 +53,7 @@ class SendSubscriptionRemindersCommand extends Command
                     now()->addDays($daysAhead)->startOfDay(),
                     now()->addDays($daysAhead)->endOfDay(),
                 ])
-                ->with('tenant.owner')
+                ->with('tenant')
                 ->get();
 
             if ($expiringSubscriptions->isEmpty()) {
