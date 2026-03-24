@@ -38,21 +38,20 @@ cp .env.example .env
 # 3. Start Docker services
 make up
 
-# 4. Install dependencies
-make install
+# 4. Install PHP and Node dependencies
+make install-deps
 
-# 5. Generate app key and run migrations
+# 5. Generate app key and run migrations inside the container
 docker-compose exec app php artisan key:generate
-make migrate
+docker-compose exec app php artisan migrate
 
-# 6. (Optional) Seed demo data
-make seed
+# 6. (Optional) Seed demo data inside the container
+docker-compose exec app php artisan db:seed
 
 # 7. Build frontend assets
 make build
 
 # Access at: http://localhost:8000
-# Email testing: http://localhost:8025
 ```
 
 ### Option B: Local Development
@@ -70,7 +69,7 @@ php artisan key:generate
 
 # 4. Configure .env for your databases
 # DB_* → Application database
-# DB_RADIUS_* → RADIUS database (separate MySQL)
+# RADIUS_DB_* → RADIUS database (separate MySQL)
 
 # 5. Run migrations (both databases)
 php artisan migrate
@@ -87,15 +86,13 @@ npm run dev
 
 ### Default Demo Credentials
 
-After seeding:
+After seeding, the following test account is created by `DatabaseSeeder.php`:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Developer | dev@example.com | password |
-| Super Admin | superadmin@example.com | password |
-| Admin | admin@example.com | password |
-| Operator | operator@example.com | password |
-| Customer | customer@example.com | password |
+| Email | Password | Note |
+|-------|----------|------|
+| test@example.com | (see seeder) | Test subscriber user |
+
+Additional seeded accounts (operators, admins) are defined in `OperatorSeeder` and related seeders. Check `database/seeders/` for the complete list and use `php artisan tinker` or the password reset flow to access them.
 
 ---
 
@@ -399,8 +396,8 @@ class NetworkLinkController extends Controller
             'capacity_mbps' => 'nullable|integer|min:1',
         ]);
 
-        $this->service->create($validated);
-        return redirect()->route('admin.network-links.index')
+        $this->service->create(array_merge($validated, ['operator_id' => auth()->id()]));
+        return redirect()->route('panel.admin.network-links.index')
             ->with('success', 'Network link created.');
     }
 }
@@ -409,9 +406,9 @@ class NetworkLinkController extends Controller
 ### Step 5: Register Routes
 
 ```php
-// In routes/web.php, within the admin middleware group
+// In routes/web.php, within the admin middleware group (prefix 'panel/admin', name 'panel.admin.')
 Route::resource('network-links', NetworkLinkController::class)
-    ->names('admin.network-links');
+    ->names('panel.admin.network-links');
 ```
 
 ### Step 6: Create Blade Views
@@ -449,7 +446,7 @@ class NetworkLinkTest extends TestCase
         $to = NetworkDevice::factory()->create(['tenant_id' => $admin->tenant_id]);
 
         $response = $this->actingAs($admin)
-            ->post(route('admin.network-links.store'), [
+            ->post(route('panel.admin.network-links.store'), [
                 'from_device_id' => $from->id,
                 'to_device_id' => $to->id,
                 'link_type' => 'fiber',
@@ -470,7 +467,7 @@ class NetworkLinkTest extends TestCase
 
 ### Overview
 
-The RADIUS database is a **separate MySQL instance** configured in `.env` as `DB_RADIUS_*`. The system maintains two databases:
+The RADIUS database is a **separate MySQL instance** configured in `.env` as `RADIUS_DB_*`. The system maintains two databases:
 - **App DB**: All application data, users, billing, etc.
 - **RADIUS DB**: `radcheck`, `radreply`, `radacct`, `nas`
 
@@ -809,9 +806,9 @@ $package = Package::factory()->create([
 For tests involving RADIUS operations, use the `radius` connection with SQLite:
 
 ```php
-// In .env.testing
-DB_RADIUS_CONNECTION=sqlite
-DB_RADIUS_DATABASE=:memory:
+// In phpunit.xml (already configured) or .env.testing
+RADIUS_DB_CONNECTION=sqlite
+RADIUS_DB_DATABASE=:memory:
 ```
 
 ```php
@@ -1028,7 +1025,7 @@ docker-compose ps radius-db
 docker-compose exec app php artisan radius:install --check
 
 # Verify .env settings
-grep DB_RADIUS .env
+grep RADIUS_DB_ .env
 ```
 
 **MikroTik API connection fails:**
@@ -1117,7 +1114,7 @@ php artisan pail --filter="RADIUS"
 | DB tables | snake_case plural | `billing_profiles` |
 | DB columns | snake_case | `tenant_id` |
 | Routes | kebab-case | `network-links` |
-| Route names | dot notation | `admin.network-links.index` |
+| Route names | dot notation | `panel.admin.network-links.index` |
 | Blade files | kebab-case | `network-link-form.blade.php` |
 | Blade dirs | kebab-case | `panels/admin/network-links/` |
 
@@ -1203,7 +1200,7 @@ chore(deps): update axios to 1.12.0
 
 **Decision:** Use a separate MySQL instance for FreeRADIUS data.  
 **Reason:** FreeRADIUS requires a specific schema it manages directly. Keeping it separate prevents conflicts with Laravel migrations and allows FreeRADIUS to be upgraded independently.  
-**Implementation:** `DB_RADIUS_*` env vars, `radius` database connection, RADIUS models use `protected $connection = 'radius'`.
+**Implementation:** `RADIUS_DB_*` env vars, `radius` database connection, RADIUS models use `protected $connection = 'radius'`.
 
 ### ADR-002: `is_subscriber` Flag for Customers
 

@@ -805,12 +805,11 @@ make test
 
 ```yaml
 # Services in docker-compose.yml
-app:        PHP 8.2-FPM application
-nginx:      Web server (port 8000)
-db:         MySQL 8.0 application database (port 3306)
-radius-db:  MySQL 8.0 RADIUS database (port 3307)
-redis:      Cache and queues (port 6379)
-mailpit:    Email testing (ports 1025, 8025)
+app:          PHP 8.2 application container (runs `php artisan serve` on port 8000)
+db:           MySQL 8.0 application database (port 3306)
+radius-db:    MySQL 8.0 RADIUS database (port 3307)
+redis:        Cache and queues (port 6379)
+mock-mikrotik: Mock MikroTik server for testing (port 8728)
 ```
 
 ### Makefile Commands
@@ -818,7 +817,8 @@ mailpit:    Email testing (ports 1025, 8025)
 ```bash
 make up           # Start all containers
 make down         # Stop all containers
-make install      # Install Composer + NPM dependencies
+make setup        # Initial project setup (copy .env, install deps, generate key)
+make install-deps # Install Composer + NPM dependencies
 make migrate      # Run migrations
 make seed         # Seed demo data
 make test         # Run test suite
@@ -858,7 +858,7 @@ Key scheduled tasks:
 | Variable | Purpose |
 |----------|---------|
 | `DB_*` | Application database connection |
-| `DB_RADIUS_*` | RADIUS database connection |
+| `RADIUS_DB_*` | RADIUS database connection |
 | `REDIS_*` | Redis connection |
 | `MIKROTIK_HOST` | Default MikroTik router |
 | `RADIUS_SERVER_IP` | FreeRADIUS server IP |

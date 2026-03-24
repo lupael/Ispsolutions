@@ -296,7 +296,7 @@ These items block production operation or cause correctness issues.
 
 ## 11. Documentation
 
-- [ ] 🟡 Update `README.md` to reference new `OVERVIEW.md` and `WALKTHROUGH.md`
+- [x] ✅ Update `README.md` to reference new `OVERVIEW.md` and `WALKTHROUGH.md`
 - [ ] 🟡 Create/update `INSTALLATION.md` with complete production install steps
 - [ ] 🟡 Create `POST_DEPLOYMENT_STEPS.md` with post-go-live checklist
 - [ ] 🟡 Update `TODO.md` (decommissioning checklist) to mark completed items

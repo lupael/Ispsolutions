@@ -544,8 +544,6 @@ If authentication fails:
 ## 📚 Documentation
 
 ### Getting Started
-- **[OVERVIEW.md](OVERVIEW.md)** - Comprehensive codebase overview (start here for new contributors)
-- **[WALKTHROUGH.md](WALKTHROUGH.md)** - Step-by-step developer walkthrough
 - **[INSTALLATION.md](INSTALLATION.md)** - Complete automated installation guide
 - **[ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md](ONBOARDING_ROUTER_CONFIGURATION_GUIDE.md)** - Complete onboarding & router configuration guide
 - **[ONBOARDING_IMPLEMENTATION.md](ONBOARDING_IMPLEMENTATION.md)** - Implementation details for onboarding features
