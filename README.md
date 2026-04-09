@@ -561,6 +561,11 @@ If authentication fails:
 - **[Staff Guide](docs/guides/STAFF_GUIDE.md)** - Level 80: Support
 - **[Customer Guide](docs/guides/CUSTOMER_GUIDE.md)** - Level 100: Self-service
 
+### Core Reference (Start Here)
+- **[OVERVIEW.md](OVERVIEW.md)** - Comprehensive codebase overview (modules, architecture, tech stack)
+- **[WALKTHROUGH.md](WALKTHROUGH.md)** - Step-by-step developer guide (setup, patterns, debugging)
+- **[FINAL_TODO.md](FINAL_TODO.md)** - Prioritized task list for all outstanding work
+
 ### Technical Documentation
 - **[API Documentation](docs/API.md)** - Complete REST API reference
 - **[Testing Guide](docs/TESTING.md)** - How to run and write tests
